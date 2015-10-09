@@ -13,6 +13,7 @@ import android.util.Log;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
@@ -25,6 +26,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.net.ProtocolException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -146,7 +148,7 @@ public class DavResource {
         final int depth = parser.getDepth();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+        while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1 &&
                     XmlUtils.NS_WEBDAV.equals(parser.getNamespace()) && "response".equals(parser.getName()))
                 parseMultiStatus_Response(parser);
@@ -164,7 +166,7 @@ public class DavResource {
         PropertyCollection properties = new PropertyCollection();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+        while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 String ns = parser.getNamespace(), name = parser.getName();
                 if (XmlUtils.NS_WEBDAV.equals(ns))
@@ -194,7 +196,12 @@ public class DavResource {
                             href = location.resolve(sHref);
                             break;
                         case "status":
-                            status = StatusLine.parse(parser.nextText());
+                            try {
+                                status = StatusLine.parse(parser.nextText());
+                            } catch(ProtocolException e) {
+                                Constants.log.warn("Invalid status line, treating as 500 Server Error");
+                                status = new StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line");
+                            }
                             break;
                         case "propstat":
                             PropertyCollection prop = parseMultiStatus_PropStat(parser);
@@ -229,7 +236,7 @@ public class DavResource {
         if (UrlUtils.omitTrailingSlash(href).equals(UrlUtils.omitTrailingSlash(location))) {
             // it's about ourselves
             target = this;
-        } else {
+        } else if (location.scheme().equals(href.scheme()) && location.host().equals(href.host()) && location.port() == href.port()) {
             List<String> locationSegments = location.pathSegments(), hrefSegments = href.pathSegments();
 
             // don't compare trailing slash segment ("")
@@ -237,9 +244,9 @@ public class DavResource {
             if ("".equals(locationSegments.get(nBasePathSegments-1)))
                 nBasePathSegments--;
 
-            /* example:   locationSegments  = [ "dav", "" ]
+            /* example:   locationSegments  = [ "davCollection", "" ]
                           nBasePathSegments = 1
-                          hrefSegments      = [ "dav", "member" ]
+                          hrefSegments      = [ "davCollection", "aMember" ]
             */
 
             if (hrefSegments.size() > nBasePathSegments) {
@@ -250,6 +257,7 @@ public class DavResource {
                         break;
                     }
                 }
+
                 if (sameBasePath)
                     members.add(target = new DavResource(httpClient, href));
             }
@@ -270,7 +278,7 @@ public class DavResource {
         PropertyCollection prop = null;
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+        while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 String ns = parser.getNamespace(), name = parser.getName();
                 if (XmlUtils.NS_WEBDAV.equals(ns))
@@ -279,7 +287,12 @@ public class DavResource {
                             prop = parseMultiStatus_Prop(parser);
                             break;
                         case "status":
-                            status = StatusLine.parse(parser.nextText());
+                            try {
+                                status = StatusLine.parse(parser.nextText());
+                            } catch(ProtocolException e) {
+                                Constants.log.warn("Invalid status line, treating as 500 Server Error");
+                                status = new StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line");
+                            }
                     }
             }
             eventType = parser.next();
@@ -298,7 +311,7 @@ public class DavResource {
         PropertyCollection prop = new PropertyCollection();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+        while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 Property.Name name = new Property.Name(parser.getNamespace(), parser.getName());
                 Property property = registry.create(name, parser);

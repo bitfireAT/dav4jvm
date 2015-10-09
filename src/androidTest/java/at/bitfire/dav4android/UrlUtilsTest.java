@@ -11,4 +11,9 @@ public class UrlUtilsTest extends TestCase {
         assertEquals(HttpUrl.parse("http://host/resource"), UrlUtils.omitTrailingSlash(HttpUrl.parse("http://host/resource/")));
     }
 
+    public void testWithTrailingSlash() {
+        assertEquals(HttpUrl.parse("http://host/resource/"), UrlUtils.withTrailingSlash(HttpUrl.parse("http://host/resource")));
+        assertEquals(HttpUrl.parse("http://host/resource/"), UrlUtils.withTrailingSlash(HttpUrl.parse("http://host/resource/")));
+    }
+
 }

@@ -40,7 +40,7 @@ public class ResourceType implements Property {
                 final int depth = parser.getDepth();
 
                 int eventType = parser.getEventType();
-                while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+                while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
                     if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth + 1) {
                         String namespace = parser.getNamespace(), name = parser.getName();
 

@@ -44,7 +44,7 @@ public class DisplayName implements Property {
                 final int depth = parser.getDepth();
 
                 int eventType = parser.getEventType();
-                while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+                while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
                     if (eventType == XmlPullParser.TEXT && parser.getDepth() == depth)
                         displayName.displayName = parser.getText();
                     eventType = parser.next();

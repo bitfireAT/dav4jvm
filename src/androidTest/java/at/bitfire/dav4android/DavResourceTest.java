@@ -95,7 +95,23 @@ public class DavResourceTest extends TestCase {
         } catch(InvalidDavResponseException e) {
         }
 
-        // multi-status response with <response>/<status> element indicating failure
+        // * multi-status response with invalid <status> in <response>
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                         "  <response>" +
+                         "    <href>/dav</href>" +
+                         "    <status>Invalid Status Line</status>" +
+                         "  </response>" +
+                         "</multistatus>"));
+        try {
+            dav.propfind(0, ResourceType.NAME);
+            fail("Expected HttpException");
+        } catch(HttpException e) {
+        }
+
+        // * multi-status response with <response>/<status> element indicating failure
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(207)
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
@@ -110,6 +126,25 @@ public class DavResourceTest extends TestCase {
             fail("Expected HttpException");
         } catch(HttpException e) {
         }
+
+        // * multi-status response with invalid <status> in <propstat>
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <resourcetype><collection/></resourcetype>" +
+                        "      </prop>" +
+                        "      <status>Invalid Status Line</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"));
+        dav.propfind(0, ResourceType.NAME);
+        assertNull(dav.properties.get(ResourceType.NAME));
+
 
         /*** POSITIVE TESTS ***/
 
@@ -158,13 +193,12 @@ public class DavResourceTest extends TestCase {
         assertEquals(0, dav.members.size());
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
-        // TODO hrefs with :, @ etc.
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(207)
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
                 .setBody("<multistatus xmlns='DAV:'>" +
                         "  <response>" +
-                        "    <href>/dav/</href>" +
+                        "    <href>" + url.toString() + "</href>" +
                         "    <propstat>" +
                         "      <prop>" +
                         "        <resourcetype><collection/></resourcetype>" +
