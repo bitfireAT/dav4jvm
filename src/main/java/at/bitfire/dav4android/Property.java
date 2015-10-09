@@ -8,6 +8,9 @@
 
 package at.bitfire.dav4android;
 
+import android.provider.UserDictionary;
+import android.text.TextUtils;
+
 import lombok.RequiredArgsConstructor;
 
 public interface Property {
@@ -16,6 +19,16 @@ public interface Property {
     class Name {
         public final String namespace;
         public final String name;
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Name) {
+                Name n = (Name)o;
+                return  TextUtils.equals(namespace, n.namespace) &&
+                        TextUtils.equals(name, n.name);
+            } else
+                return super.equals(o);
+        }
 
         @Override
         public String toString() {

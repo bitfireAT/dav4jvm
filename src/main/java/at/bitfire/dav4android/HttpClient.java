@@ -20,7 +20,12 @@ public class HttpClient extends OkHttpClient {
     public HttpClient() {
         super();
 
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
+            @Override
+            public void log(String message) {
+                Constants.log.trace(message);
+            }
+        });
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         networkInterceptors().add(logging);
     }

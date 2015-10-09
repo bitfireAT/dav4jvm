@@ -34,11 +34,9 @@ public class CalendarColor implements Property {
                 final int depth = parser.getDepth();
 
                 int eventType = parser.getEventType();
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    if (eventType == XmlPullParser.TEXT && parser.getDepth() == depth) {
+                while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+                    if (eventType == XmlPullParser.TEXT && parser.getDepth() == depth)
                         calendarColor.color = parser.getText();
-                    } else if (eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)
-                        break;
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException |IOException e) {
@@ -49,5 +47,4 @@ public class CalendarColor implements Property {
             return calendarColor;
         }
     }
-
 }

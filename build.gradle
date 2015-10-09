@@ -23,6 +23,7 @@ dependencies {
     compile 'com.squareup.okhttp:okhttp:2.6.0-SNAPSHOT'
     compile 'com.squareup.okhttp:logging-interceptor:2.6.0-SNAPSHOT'
     provided 'org.projectlombok:lombok:1.16.6'
+    compile 'org.slf4j:slf4j-android:1.7.12'
 
     androidTestCompile 'com.squareup.okhttp:mockwebserver:2.6.0-SNAPSHOT'
 }

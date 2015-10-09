@@ -20,19 +20,22 @@ import com.squareup.okhttp.internal.http.StatusLine;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
+import at.bitfire.dav4android.property.ResourceType;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 
 @RequiredArgsConstructor
 public class DavResource {
@@ -43,15 +46,14 @@ public class DavResource {
 
     final HttpUrl location;
     final PropertyCollection properties = new PropertyCollection();
+    final Set<DavResource> members = new HashSet<>();
 
     static private PropertyRegistry registry = PropertyRegistry.DEFAULT;
 
 
-    @SneakyThrows(XmlPullParserException.class)
-    public void propfind(Property.Name... reqProp) throws IOException, HttpException, DavException {
+    public void propfind(int depth, Property.Name... reqProp) throws IOException, HttpException, DavException {
         // build XML request body
-        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        XmlSerializer serializer = factory.newSerializer();
+        XmlSerializer serializer = XmlUtils.newSerializer();
         StringWriter writer = new StringWriter();
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
@@ -68,7 +70,7 @@ public class DavResource {
         Response response = httpClient.newCall(new Request.Builder()
                 .url(location)
                 .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
-                .header("Depth", "0")
+                .header("Depth", String.valueOf(depth))
                 .build()).execute();
 
         checkStatus(response);
@@ -77,21 +79,26 @@ public class DavResource {
             throw new InvalidDavResponseException("Expected 207 Multi-Status");
 
         if (response.body() == null)
-            throw new InvalidDavResponseException("Received 207 Multi-Status without body");
+            throw new InvalidDavResponseException("Received multi-status response without body");
 
         MediaType mediaType = response.body().contentType();
         if (mediaType != null) {
             String type = mediaType.type() + "/" + mediaType.subtype();
             if (!"application/xml".equals(type) || "text/xml".equals(type))
                 throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
-        }
+        } else
+            Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
+
+        if (depth > 0)
+            // collection listing requested, drop old member information
+            members.clear();
 
         processMultiStatus(response.body().charStream());
     }
 
 
     protected void checkStatus(int code, String message) throws HttpException {
-        if (code/100 == 1 || code/100 == 2)
+        if (code/100 == 2)
             // everything OK
             return;
 
@@ -139,14 +146,10 @@ public class DavResource {
         final int depth = parser.getDepth();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-            if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
-                String ns = parser.getNamespace(), name = parser.getName();
-                if (XmlUtils.NS_WEBDAV.equals(ns) && "response".equals(name))
-                    parseMultiStatus_Response(parser);
-
-            } else if (eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)
-                break;
+        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1 &&
+                    XmlUtils.NS_WEBDAV.equals(parser.getNamespace()) && "response".equals(parser.getName()))
+                parseMultiStatus_Response(parser);
             eventType = parser.next();
         }
     }
@@ -158,16 +161,37 @@ public class DavResource {
 
         HttpUrl href = null;
         StatusLine status = null;
-        PropertyCollection properties = null;
+        PropertyCollection properties = new PropertyCollection();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT) {
+        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 String ns = parser.getNamespace(), name = parser.getName();
                 if (XmlUtils.NS_WEBDAV.equals(ns))
                     switch (name) {
                         case "href":
-                            href = location.resolve(parser.nextText());
+                            String sHref = parser.nextText();
+                            if (!sHref.startsWith("/")) {
+                                /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
+                                   URLs. However, some servers reply with relative paths. */
+                                int firstColon = sHref.indexOf(':');
+                                if (firstColon != -1) {
+                                    /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
+                                       which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
+                                       For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
+                                       with "./" to allow resolving by HttpUrl. */
+                                    boolean hierarchical = false;
+                                    try {
+                                        if ("://".equals(sHref.substring(firstColon, firstColon + 3)))
+                                            hierarchical = true;
+                                    } catch (IndexOutOfBoundsException e) {
+                                        // no "://"
+                                    }
+                                    if (!hierarchical)
+                                        sHref = "./" + sHref;
+                                }
+                            }
+                            href = location.resolve(sHref);
                             break;
                         case "status":
                             status = StatusLine.parse(parser.nextText());
@@ -175,26 +199,67 @@ public class DavResource {
                         case "propstat":
                             PropertyCollection prop = parseMultiStatus_PropStat(parser);
                             if (prop != null)
-                                properties = prop;
+                                properties.merge(prop);
                             break;
                         case "location":
                             throw new UnsupportedDavException("Redirected child resources are not supported yet");
                     }
-            } else if (eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)
-                break;
+            }
             eventType = parser.next();
         }
 
         if (href == null) {
-            Log.w(Constants.LOG_TAG, "Ignoring invalid <response> without <href>");
+            Constants.log.warn("Ignoring <response> without valid <href>");
             return;
         }
+
+        // if we know this resource is a collection, make sure href has a trailing slash (for clarity and resolving relative paths)
+        ResourceType type = (ResourceType)properties.get(ResourceType.NAME);
+        if (type != null && type.types.contains(ResourceType.WEBDAV_COLLECTION))
+            href = UrlUtils.withTrailingSlash(href);
+
+        Constants.log.debug("Received <response> for " + href + ", status: " + status + ", properties: " + properties);
 
         if (status != null)
             // treat an HTTP error of a single response (i.e. requested resource or a member) like an HTTP error of the requested resource
             checkStatus(status);
 
-        Log.d(Constants.LOG_TAG, "Received <response> for " + href + ", status: " + status + ", properties: " + properties);
+        // Which resource does this <response> represent?
+        DavResource target = null;
+        if (UrlUtils.omitTrailingSlash(href).equals(UrlUtils.omitTrailingSlash(location))) {
+            // it's about ourselves
+            target = this;
+        } else {
+            List<String> locationSegments = location.pathSegments(), hrefSegments = href.pathSegments();
+
+            // don't compare trailing slash segment ("")
+            int nBasePathSegments = locationSegments.size();
+            if ("".equals(locationSegments.get(nBasePathSegments-1)))
+                nBasePathSegments--;
+
+            /* example:   locationSegments  = [ "dav", "" ]
+                          nBasePathSegments = 1
+                          hrefSegments      = [ "dav", "member" ]
+            */
+
+            if (hrefSegments.size() > nBasePathSegments) {
+                boolean sameBasePath = true;
+                for (int i = 0; i < nBasePathSegments; i++) {
+                    if (!locationSegments.get(i).equals(hrefSegments.get(i))) {
+                        sameBasePath = false;
+                        break;
+                    }
+                }
+                if (sameBasePath)
+                    members.add(target = new DavResource(httpClient, href));
+            }
+        }
+
+        // set properties for target
+        if (target != null)
+            target.properties.merge(properties);
+        else
+            Constants.log.warn("Received <response> for resource that was not requested");
     }
 
     private PropertyCollection parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -205,7 +270,7 @@ public class DavResource {
         PropertyCollection prop = null;
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT) {
+        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 String ns = parser.getNamespace(), name = parser.getName();
                 if (XmlUtils.NS_WEBDAV.equals(ns))
@@ -216,8 +281,7 @@ public class DavResource {
                         case "status":
                             status = StatusLine.parse(parser.nextText());
                     }
-            } else if (eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)
-                break;
+            }
             eventType = parser.next();
         }
 
@@ -234,7 +298,7 @@ public class DavResource {
         PropertyCollection prop = new PropertyCollection();
 
         int eventType = parser.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT) {
+        while (eventType != XmlPullParser.END_DOCUMENT && !(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
                 Property.Name name = new Property.Name(parser.getNamespace(), parser.getName());
                 Property property = registry.create(name, parser);

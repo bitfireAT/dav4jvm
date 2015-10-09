@@ -25,7 +25,7 @@ public class PropertyCollection {
     protected Map<String, Map<String, Property>> properties = null;
 
 
-    Property get(@NonNull Property.Name name) {
+    public Property get(@NonNull Property.Name name) {
         if (properties == null)
             return null;
 
@@ -36,7 +36,7 @@ public class PropertyCollection {
         return nsProperties.get(name.name);
     }
 
-    Map<Property.Name, Property> getMap() {
+    public Map<Property.Name, Property> getMap() {
         HashMap<Property.Name, Property> map = new HashMap<>();
         if (properties != null) {
             for (String namespace : properties.keySet()) {
@@ -48,7 +48,7 @@ public class PropertyCollection {
         return Collections.unmodifiableMap(map);
     }
 
-    void put(Property.Name name, Property property) {
+    public void put(Property.Name name, Property property) {
         if (properties == null)
             properties = new HashMap<>();
 
@@ -58,6 +58,23 @@ public class PropertyCollection {
 
         nsProperties.put(name.name, property);
     }
+
+    public int size() {
+        if (properties == null)
+            return 0;
+        int size = 0;
+        for (Map<String, Property> nsProperties : properties.values())
+            size += nsProperties.size();
+        return size;
+    }
+
+
+    public void merge(PropertyCollection another) {
+        Map<Property.Name, Property> properties = another.getMap();
+        for (Property.Name name : properties.keySet())
+            put(name, properties.get(name));
+    }
+
 
     @Override
     public String toString() {

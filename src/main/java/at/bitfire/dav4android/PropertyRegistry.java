@@ -7,6 +7,8 @@ import java.util.Map;
 
 import at.bitfire.dav4android.property.CalendarColor;
 import at.bitfire.dav4android.property.DisplayName;
+import at.bitfire.dav4android.property.ResourceType;
+import at.bitfire.dav4android.property.SupportedAddressData;
 
 public class PropertyRegistry {
 
@@ -14,7 +16,13 @@ public class PropertyRegistry {
 
     static final PropertyRegistry DEFAULT = new PropertyRegistry();
     static {
+        DEFAULT.register(new ResourceType.Factory());
         DEFAULT.register(new DisplayName.Factory());
+
+        // CardDAV
+        DEFAULT.register(new SupportedAddressData.Factory());
+
+        // CalDAV
         DEFAULT.register(new CalendarColor.Factory());
     }
 
