@@ -8,7 +8,9 @@ import lombok.SneakyThrows;
 
 public class XmlUtils {
 
-    public static final String NS_WEBDAV = "DAV:";
+    public static final String
+            NS_WEBDAV = "DAV:",
+            NS_APPLE_ICAL = "http://apple.com/ns/ical/";
 
     private static final XmlPullParserFactory factory;
     static {

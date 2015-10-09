@@ -1,17 +1,23 @@
 package at.bitfire.dav4android;
 
+import com.squareup.okhttp.Authenticator;
+import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.net.Proxy;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
+import at.bitfire.dav4android.property.CalendarColor;
 import at.bitfire.dav4android.property.DisplayName;
 
 public class DavResourceTest extends TestCase {
@@ -130,20 +136,39 @@ public class DavResourceTest extends TestCase {
                 .setResponseCode(207)
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
                 .setBody("<multistatus xmlns='DAV:'>" +
-                         "  <response>" +
-                         "    <href>/dav</href>" +
-                         "    <propstat>" +
-                         "      <prop>" +
-                         "        <displayname>My DAV Collection</displayname>" +
-                         "      </prop>" +
-                         "      <status>HTTP/1.1 200 OK</status>" +
-                         "    </propstat>" +
-                         "  </response>" +
-                         "</multistatus>"));
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <displayname>My DAV Collection</displayname>" +
+                        "      </prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"));
         dav.propfind(DisplayName.NAME);
         // TODO assert zero members, but changed properties
 
         // TODO hrefs with :, @ etc.
+    }
+
+    public void testPublicPropfind() throws IOException, HttpException, DavException {
+        httpClient.setAuthenticator(new Authenticator() {
+            @Override
+            public Request authenticate(Proxy proxy, Response response) throws IOException {
+                String credential = Credentials.basic("test", "test");
+                return response.request().newBuilder()
+                        .header("Authorization", credential)
+                        .build();
+            }
+
+            @Override
+            public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
+                return null;
+            }
+        });
+        DavResource dav = new DavResource(httpClient, HttpUrl.parse("https://demo.owncloud.org/remote.php/caldav/calendars/test/personal"));
+        dav.propfind(DisplayName.NAME, CalendarColor.NAME);
     }
 
 }

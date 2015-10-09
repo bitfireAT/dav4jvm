@@ -16,6 +16,11 @@ public interface Property {
     class Name {
         public final String namespace;
         public final String name;
+
+        @Override
+        public String toString() {
+            return name + "(" + namespace + ")";
+        }
     }
 
 }

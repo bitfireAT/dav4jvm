@@ -37,12 +37,14 @@ import lombok.SneakyThrows;
 @RequiredArgsConstructor
 public class DavResource {
 
-    final public MediaType MEDIA_TYPE_XML = MediaType.parse("application/xml; charset=utf-8");
+    public final MediaType MEDIA_TYPE_XML = MediaType.parse("application/xml; charset=utf-8");
 
-    final protected OkHttpClient httpClient;
+    protected final OkHttpClient httpClient;
 
     final HttpUrl location;
     final PropertyCollection properties = new PropertyCollection();
+
+    static private PropertyRegistry registry = PropertyRegistry.DEFAULT;
 
 
     @SneakyThrows(XmlPullParserException.class)
@@ -66,6 +68,7 @@ public class DavResource {
         Response response = httpClient.newCall(new Request.Builder()
                 .url(location)
                 .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
+                .header("Depth", "0")
                 .build()).execute();
 
         checkStatus(response);
@@ -155,6 +158,7 @@ public class DavResource {
 
         HttpUrl href = null;
         StatusLine status = null;
+        PropertyCollection properties = null;
 
         int eventType = parser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -169,7 +173,9 @@ public class DavResource {
                             status = StatusLine.parse(parser.nextText());
                             break;
                         case "propstat":
-                            parseMultiStatus_PropStat(parser);
+                            PropertyCollection prop = parseMultiStatus_PropStat(parser);
+                            if (prop != null)
+                                properties = prop;
                             break;
                         case "location":
                             throw new UnsupportedDavException("Redirected child resources are not supported yet");
@@ -188,14 +194,15 @@ public class DavResource {
             // treat an HTTP error of a single response (i.e. requested resource or a member) like an HTTP error of the requested resource
             checkStatus(status);
 
-        Log.d(Constants.LOG_TAG, "Received <response> for " + href + ", status: " + status);
+        Log.d(Constants.LOG_TAG, "Received <response> for " + href + ", status: " + status + ", properties: " + properties);
     }
 
-    private void parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private PropertyCollection parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {
         // <!ELEMENT propstat (prop, status, error?, responsedescription?) >
         final int depth = parser.getDepth();
 
         StatusLine status = null;
+        PropertyCollection prop = null;
 
         int eventType = parser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -204,7 +211,7 @@ public class DavResource {
                 if (XmlUtils.NS_WEBDAV.equals(ns))
                     switch (name) {
                         case "prop":
-                            parseMultiStatus_Prop(parser);
+                            prop = parseMultiStatus_Prop(parser);
                             break;
                         case "status":
                             status = StatusLine.parse(parser.nextText());
@@ -214,23 +221,32 @@ public class DavResource {
             eventType = parser.next();
         }
 
-        if (status != null && status.code/100 == 2)
-            Log.i(Constants.LOG_TAG, "Received valid properties");
+        if (status == null || status.code/100 == 2)
+            return prop;
+
+        return null;
     }
 
-    private void parseMultiStatus_Prop(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private PropertyCollection parseMultiStatus_Prop(XmlPullParser parser) throws IOException, XmlPullParserException {
         // <!ELEMENT prop ANY >
         final int depth = parser.getDepth();
+
+        PropertyCollection prop = new PropertyCollection();
 
         int eventType = parser.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1) {
-                String ns = parser.getNamespace(), name = parser.getName();
-                // process property
-                Log.i(Constants.LOG_TAG, "Processing property " + ns + name);
+                Property.Name name = new Property.Name(parser.getNamespace(), parser.getName());
+                Property property = registry.create(name, parser);
+                if (property != null)
+                    prop.put(name, property);
+                else
+                    Log.i(Constants.LOG_TAG, "Ignoring unknown/unparseable property " + name);
             }
             eventType = parser.next();
         }
+
+        return prop;
     }
 
 }
