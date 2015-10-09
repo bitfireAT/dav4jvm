@@ -12,9 +12,6 @@ import lombok.RequiredArgsConstructor;
 
 public interface Property {
 
-    String NS_WEBDAV = "DAV:";
-
-
     @RequiredArgsConstructor
     class Name {
         public final String namespace;

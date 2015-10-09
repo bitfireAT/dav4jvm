@@ -6,7 +6,7 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.dav4android;
+package at.bitfire.dav4android.exception;
 
 import lombok.RequiredArgsConstructor;
 

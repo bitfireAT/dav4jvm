@@ -9,6 +9,9 @@
 package at.bitfire.dav4android;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.logging.HttpLoggingInterceptor;
+
+import java.util.logging.Level;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +20,9 @@ public class HttpClient extends OkHttpClient {
     public HttpClient() {
         super();
 
-        // TODO add logging
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        networkInterceptors().add(logging);
     }
 
 }

@@ -6,12 +6,13 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.dav4android.properties;
+package at.bitfire.dav4android.property;
 
 import at.bitfire.dav4android.Property;
+import at.bitfire.dav4android.XmlUtils;
 
 public class DisplayName implements Property {
 
-    public static final Name NAME = new Name(NS_WEBDAV, "displayname");
+    public static final Name NAME = new Name(XmlUtils.NS_WEBDAV, "displayname");
 
 }
