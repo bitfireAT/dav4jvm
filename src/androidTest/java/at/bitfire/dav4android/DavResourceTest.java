@@ -17,7 +17,7 @@ import at.bitfire.dav4android.property.ResourceType;
 
 public class DavResourceTest extends TestCase {
 
-    OkHttpClient httpClient = new HttpClient();
+    OkHttpClient httpClient = new OkHttpClient();
     MockWebServer mockServer = new MockWebServer();
 
     @Override

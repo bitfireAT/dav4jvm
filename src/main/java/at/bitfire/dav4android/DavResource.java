@@ -43,6 +43,7 @@ public class DavResource {
     public final MediaType MEDIA_TYPE_XML = MediaType.parse("application/xml; charset=utf-8");
 
     protected final OkHttpClient httpClient;
+    protected static final int MAX_REDIRECTS = 5;
 
     public HttpUrl location;
     public final PropertyCollection properties = new PropertyCollection();
@@ -76,13 +77,11 @@ public class DavResource {
         httpClient.setFollowRedirects(false);
 
         Response response = null;
-        for (int attempt = 0; attempt < 3; attempt++) {
-            Constants.log.info("Attempt " + attempt);
+        for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
             response = httpClient.newCall(new Request.Builder()
                     .url(location)
                     .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
                     .header("Depth", String.valueOf(depth))
-                    .header("Authorization", Credentials.basic("XXXXXXXXXXXX", "XXXXXXXXx"))    // TODO
                     .build()).execute();
 
             if (response.code()/100 == 3) {

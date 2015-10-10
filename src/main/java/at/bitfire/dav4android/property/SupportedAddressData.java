@@ -39,8 +39,8 @@ public class SupportedAddressData implements Property {
                 while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
                     if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth+1 &&
                             XmlUtils.NS_CARDDAV.equals(parser.getNamespace()) && "address-data-type".equals(parser.getName())) {
-                        String  contentType = parser.getAttributeValue(XmlUtils.NS_CARDDAV, "content-type"),
-                                version = parser.getAttributeValue(XmlUtils.NS_CARDDAV, "version");
+                        String  contentType = parser.getAttributeValue(null, "content-type"),
+                                version = parser.getAttributeValue(null, "version");
                         if (contentType != null) {
                             if (version != null)
                                 contentType += "; version=" + version;
