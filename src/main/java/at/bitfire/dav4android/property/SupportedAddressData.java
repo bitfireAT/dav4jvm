@@ -49,7 +49,7 @@ public class SupportedAddressData implements Property {
                     }
                     eventType = parser.next();
                 }
-            } catch(XmlPullParserException |IOException e) {
+            } catch(XmlPullParserException|IOException e) {
                 Log.e(Constants.LOG_TAG, "Couldn't parse <resourcetype>", e);
                 return null;
             }

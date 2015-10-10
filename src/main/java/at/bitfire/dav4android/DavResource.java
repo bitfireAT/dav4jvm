@@ -10,6 +10,7 @@ package at.bitfire.dav4android;
 
 import android.util.Log;
 
+import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.net.ProtocolException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,20 +37,23 @@ import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
 import at.bitfire.dav4android.property.ResourceType;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class DavResource {
 
     public final MediaType MEDIA_TYPE_XML = MediaType.parse("application/xml; charset=utf-8");
 
     protected final OkHttpClient httpClient;
 
-    final HttpUrl location;
-    final PropertyCollection properties = new PropertyCollection();
-    final Set<DavResource> members = new HashSet<>();
+    public HttpUrl location;
+    public final PropertyCollection properties = new PropertyCollection();
+    public final Set<DavResource> members = new HashSet<>();
 
     static private PropertyRegistry registry = PropertyRegistry.DEFAULT;
+
+    public DavResource(OkHttpClient httpClient, HttpUrl location) {
+        this.httpClient = httpClient;
+        this.location = location;
+    }
 
 
     public void propfind(int depth, Property.Name... reqProp) throws IOException, HttpException, DavException {
@@ -69,11 +72,31 @@ public class DavResource {
         serializer.endTag(XmlUtils.NS_WEBDAV, "propfind");
         serializer.endDocument();
 
-        Response response = httpClient.newCall(new Request.Builder()
-                .url(location)
-                .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
-                .header("Depth", String.valueOf(depth))
-                .build()).execute();
+        // redirects must not followed automatically (as it may rewrite PROPFIND requests to GET requests)
+        httpClient.setFollowRedirects(false);
+
+        Response response = null;
+        for (int attempt = 0; attempt < 3; attempt++) {
+            Constants.log.info("Attempt " + attempt);
+            response = httpClient.newCall(new Request.Builder()
+                    .url(location)
+                    .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
+                    .header("Depth", String.valueOf(depth))
+                    .header("Authorization", Credentials.basic("XXXXXXXXXXXX", "XXXXXXXXx"))    // TODO
+                    .build()).execute();
+
+            if (response.code()/100 == 3) {
+                String href = response.header("Location");
+                if (href != null) {
+                    HttpUrl newLocation = location.resolve(href);
+                    if (newLocation != null)
+                        location = newLocation;
+                    else
+                        throw new HttpException(500, "Redirect without Location");
+                }
+            } else
+                break;
+        }
 
         checkStatus(response);
 
@@ -85,8 +108,8 @@ public class DavResource {
 
         MediaType mediaType = response.body().contentType();
         if (mediaType != null) {
-            String type = mediaType.type() + "/" + mediaType.subtype();
-            if (!"application/xml".equals(type) || "text/xml".equals(type))
+            if (!("application".equals(mediaType.type()) || "text".equals(mediaType.type())) ||
+                    !"xml".equals(mediaType.subtype()))
                 throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
         } else
             Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
@@ -222,7 +245,7 @@ public class DavResource {
 
         // if we know this resource is a collection, make sure href has a trailing slash (for clarity and resolving relative paths)
         ResourceType type = (ResourceType)properties.get(ResourceType.NAME);
-        if (type != null && type.types.contains(ResourceType.WEBDAV_COLLECTION))
+        if (type != null && type.types.contains(ResourceType.COLLECTION))
             href = UrlUtils.withTrailingSlash(href);
 
         Constants.log.debug("Received <response> for " + href + ", status: " + status + ", properties: " + properties);

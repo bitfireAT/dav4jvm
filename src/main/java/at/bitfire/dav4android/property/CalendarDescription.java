@@ -1,3 +1,11 @@
+/*
+ * Copyright © 2013 – 2015 Ricki Hirner (bitfire web engineering).
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v3.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/gpl.html
+ */
+
 package at.bitfire.dav4android.property;
 
 import android.util.Log;
@@ -14,10 +22,10 @@ import at.bitfire.dav4android.XmlUtils;
 import lombok.ToString;
 
 @ToString
-public class CalendarColor implements Property {
-    public static final Name NAME = new Name(XmlUtils.NS_APPLE_ICAL, "calendar-color");
+public class CalendarDescription implements Property {
+    public static final Name NAME = new Name(XmlUtils.NS_CALDAV, "calendar-description");
 
-    public String color;
+    public String description;
 
 
     public static class Factory implements PropertyFactory {
@@ -27,24 +35,25 @@ public class CalendarColor implements Property {
         }
 
         @Override
-        public CalendarColor create(XmlPullParser parser) {
-            CalendarColor calendarColor = new CalendarColor();
+        public CalendarDescription create(XmlPullParser parser) {
+            CalendarDescription description = new CalendarDescription();
 
             try {
+                // <!ELEMENT calendar-description (#PCDATA)>
                 final int depth = parser.getDepth();
 
                 int eventType = parser.getEventType();
                 while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
                     if (eventType == XmlPullParser.TEXT && parser.getDepth() == depth)
-                        calendarColor.color = parser.getText();
+                        description.description = parser.getText();
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <calendar-color>", e);
+                Log.e(Constants.LOG_TAG, "Couldn't parse <calendar-description>", e);
                 return null;
             }
 
-            return calendarColor;
+            return description;
         }
     }
 }

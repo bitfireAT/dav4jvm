@@ -7,8 +7,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 import at.bitfire.dav4android.Constants;
@@ -21,7 +19,10 @@ import lombok.ToString;
 public class ResourceType implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_WEBDAV, "resourcetype");
 
-    public static final Name WEBDAV_COLLECTION = new Name(XmlUtils.NS_WEBDAV, "collection");
+    public static final Name
+            COLLECTION = new Name(XmlUtils.NS_WEBDAV, "collection"),
+            ADDRESSBOOK = new Name(XmlUtils.NS_CARDDAV, "addressbook"),
+            CALENDAR = new Name(XmlUtils.NS_CALDAV, "calendar");
 
     public final Set<Property.Name> types = new HashSet<>();
 
@@ -44,16 +45,20 @@ public class ResourceType implements Property {
                     if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth + 1) {
                         String namespace = parser.getNamespace(), name = parser.getName();
 
-                        // use pre-defined objects to allow types.contains()
+                        // use static objects to allow types.contains()
                         Name typeName = new Name(parser.getNamespace(), parser.getName());
-                        if (WEBDAV_COLLECTION.equals(typeName))
-                            typeName = WEBDAV_COLLECTION;
+                        if (COLLECTION.equals(typeName))
+                            typeName = COLLECTION;
+                        else if (ADDRESSBOOK.equals(typeName))
+                            typeName = ADDRESSBOOK;
+                        else if (CALENDAR.equals(typeName))
+                            typeName = CALENDAR;
 
                         type.types.add(typeName);
                     }
                     eventType = parser.next();
                 }
-            } catch(XmlPullParserException |IOException e) {
+            } catch(XmlPullParserException|IOException e) {
                 Log.e(Constants.LOG_TAG, "Couldn't parse <resourcetype>", e);
                 return null;
             }

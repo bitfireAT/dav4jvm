@@ -5,7 +5,12 @@ import org.xmlpull.v1.XmlPullParser;
 import java.util.HashMap;
 import java.util.Map;
 
+import at.bitfire.dav4android.property.AddressbookDescription;
+import at.bitfire.dav4android.property.AddressbookHomeSet;
 import at.bitfire.dav4android.property.CalendarColor;
+import at.bitfire.dav4android.property.CalendarDescription;
+import at.bitfire.dav4android.property.CalendarHomeSet;
+import at.bitfire.dav4android.property.CurrentUserPrincipal;
 import at.bitfire.dav4android.property.DisplayName;
 import at.bitfire.dav4android.property.ResourceType;
 import at.bitfire.dav4android.property.SupportedAddressData;
@@ -18,11 +23,16 @@ public class PropertyRegistry {
     static {
         DEFAULT.register(new ResourceType.Factory());
         DEFAULT.register(new DisplayName.Factory());
+        DEFAULT.register(new CurrentUserPrincipal.Factory());
 
         // CardDAV
+        DEFAULT.register(new AddressbookHomeSet.Factory());
+        DEFAULT.register(new AddressbookDescription.Factory());
         DEFAULT.register(new SupportedAddressData.Factory());
 
         // CalDAV
+        DEFAULT.register(new CalendarHomeSet.Factory());
+        DEFAULT.register(new CalendarDescription.Factory());
         DEFAULT.register(new CalendarColor.Factory());
     }
 

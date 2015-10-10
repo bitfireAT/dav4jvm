@@ -1,25 +1,17 @@
 package at.bitfire.dav4android;
 
-import com.squareup.okhttp.Authenticator;
-import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
-import java.net.Proxy;
-import java.nio.charset.Charset;
-import java.util.Collection;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
-import at.bitfire.dav4android.property.CalendarColor;
 import at.bitfire.dav4android.property.DisplayName;
 import at.bitfire.dav4android.property.ResourceType;
 
@@ -259,7 +251,7 @@ public class DavResourceTest extends TestCase {
         boolean ok[] = new boolean[4];
         for (DavResource member : dav.members) {
             if (url.resolve("/dav/subcollection/").equals(member.location)) {
-                assertTrue(((ResourceType) member.properties.get(ResourceType.NAME)).types.contains(ResourceType.WEBDAV_COLLECTION));
+                assertTrue(((ResourceType) member.properties.get(ResourceType.NAME)).types.contains(ResourceType.COLLECTION));
                 assertEquals("A Subfolder", ((DisplayName) member.properties.get(DisplayName.NAME)).displayName);
                 ok[0] = true;
             } else if (url.resolve("/dav/uid@host:file").equals(member.location)) {
