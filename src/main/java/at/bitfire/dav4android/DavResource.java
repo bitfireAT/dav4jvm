@@ -10,7 +10,6 @@ package at.bitfire.dav4android;
 
 import android.util.Log;
 
-import com.squareup.okhttp.Credentials;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -18,6 +17,7 @@ import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.internal.http.StatusLine;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -56,6 +56,23 @@ public class DavResource {
         this.location = location;
     }
 
+
+    public ResponseBody get(String accept) throws IOException, HttpException {
+        Response response = httpClient.newCall(new Request.Builder()
+                .get()
+                .url(location)
+                .header("Accept", accept)
+                .build()).execute();
+        checkStatus(response);
+
+        // put Content-Type to getcontenttype DAV property
+
+        ResponseBody body = response.body();
+        if (body == null)
+            throw new HttpException(500, "Expected GET response body");
+
+        return body;
+    }
 
     public void propfind(int depth, Property.Name... reqProp) throws IOException, HttpException, DavException {
         // build XML request body
@@ -98,20 +115,7 @@ public class DavResource {
         }
 
         checkStatus(response);
-
-        if (response.code() != 207)
-            throw new InvalidDavResponseException("Expected 207 Multi-Status");
-
-        if (response.body() == null)
-            throw new InvalidDavResponseException("Received multi-status response without body");
-
-        MediaType mediaType = response.body().contentType();
-        if (mediaType != null) {
-            if (!("application".equals(mediaType.type()) || "text".equals(mediaType.type())) ||
-                    !"xml".equals(mediaType.subtype()))
-                throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
-        } else
-            Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
+        assertMultiStatus(response);
 
         if (depth > 0)
             // collection listing requested, drop old member information
@@ -135,6 +139,22 @@ public class DavResource {
 
     protected void checkStatus(StatusLine status) throws HttpException {
         checkStatus(status.code, status.message);
+    }
+
+    protected void assertMultiStatus(Response response) throws DavException {
+        if (response.code() != 207)
+            throw new InvalidDavResponseException("Expected 207 Multi-Status");
+
+        if (response.body() == null)
+            throw new InvalidDavResponseException("Received multi-status response without body");
+
+        MediaType mediaType = response.body().contentType();
+        if (mediaType != null) {
+            if (!("application".equals(mediaType.type()) || "text".equals(mediaType.type())) ||
+                    !"xml".equals(mediaType.subtype()))
+                throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
+        } else
+            Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
     }
 
 

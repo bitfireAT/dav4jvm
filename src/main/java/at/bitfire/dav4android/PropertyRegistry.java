@@ -14,6 +14,7 @@ import at.bitfire.dav4android.property.CalendarTimezone;
 import at.bitfire.dav4android.property.CurrentUserPrincipal;
 import at.bitfire.dav4android.property.CurrentUserPrivilegeSet;
 import at.bitfire.dav4android.property.DisplayName;
+import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
 import at.bitfire.dav4android.property.SupportedAddressData;
 import at.bitfire.dav4android.property.SupportedCalendarComponentSet;
@@ -26,6 +27,7 @@ public class PropertyRegistry {
     static {
         DEFAULT.register(new ResourceType.Factory());
         DEFAULT.register(new DisplayName.Factory());
+        DEFAULT.register(new GetETag.Factory());
         DEFAULT.register(new CurrentUserPrincipal.Factory());
         DEFAULT.register(new CurrentUserPrivilegeSet.Factory());
 
