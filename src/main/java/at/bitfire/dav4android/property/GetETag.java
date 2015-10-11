@@ -19,11 +19,19 @@ import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
 import at.bitfire.dav4android.PropertyFactory;
 import at.bitfire.dav4android.XmlUtils;
+import lombok.ToString;
 
+@ToString
 public class GetETag implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_WEBDAV, "getetag");
 
     public String eTag;
+
+    private GetETag() {}
+
+    public GetETag(String eTag) {
+        this.eTag = eTag;
+    }
 
 
     public static class Factory implements PropertyFactory {

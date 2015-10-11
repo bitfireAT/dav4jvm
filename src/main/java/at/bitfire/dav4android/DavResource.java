@@ -8,6 +8,7 @@
 
 package at.bitfire.dav4android;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.squareup.okhttp.HttpUrl;
@@ -36,11 +37,13 @@ import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
+import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
+import lombok.NonNull;
 
 public class DavResource {
 
-    public final MediaType MEDIA_TYPE_XML = MediaType.parse("application/xml; charset=utf-8");
+    public final MediaType MIME_XML = MediaType.parse("application/xml; charset=utf-8");
 
     protected final OkHttpClient httpClient;
     protected static final int MAX_REDIRECTS = 5;
@@ -57,7 +60,13 @@ public class DavResource {
     }
 
 
-    public ResponseBody get(String accept) throws IOException, HttpException {
+    public String fileName() {
+        List<String> pathSegments = location.pathSegments();
+        return pathSegments.get(pathSegments.size()-1);
+    }
+
+
+    public ResponseBody get(String accept) throws IOException, HttpException, DavException {
         Response response = httpClient.newCall(new Request.Builder()
                 .get()
                 .url(location)
@@ -65,14 +74,39 @@ public class DavResource {
                 .build()).execute();
         checkStatus(response);
 
-        // put Content-Type to getcontenttype DAV property
+        String eTag = response.header("ETag");
+        if (TextUtils.isEmpty(eTag))
+            throw new DavException("Server didn't send ETag in GET response");
+        properties.put(GetETag.NAME, new GetETag(eTag));
 
         ResponseBody body = response.body();
         if (body == null)
-            throw new HttpException(500, "Expected GET response body");
+            throw new HttpException(599, "Expected GET response body");
+
+        // TODO properties.put(GetContentType.NAME, body.contentType());
 
         return body;
     }
+
+    public void put(@NonNull RequestBody body, String ifMatchETag, String ifNoneMatchETag) throws IOException {
+        Request.Builder builder = new Request.Builder()
+                .put(body)
+                .url(location);
+        if (ifMatchETag != null)
+            builder.header("If-Match", ifMatchETag);
+        if (ifNoneMatchETag != null)
+            builder.header("If-None-Match", ifNoneMatchETag);
+        httpClient.newCall(builder.build()).execute();
+    }
+
+    public void delete(@NonNull String ifMatchETag) throws IOException, HttpException {
+        httpClient.newCall(new Request.Builder()
+                .delete()
+                .url(location)
+                .header("If-Match", ifMatchETag)
+                .build()).execute();
+    }
+
 
     public void propfind(int depth, Property.Name... reqProp) throws IOException, HttpException, DavException {
         // build XML request body
@@ -97,7 +131,7 @@ public class DavResource {
         for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
             response = httpClient.newCall(new Request.Builder()
                     .url(location)
-                    .method("PROPFIND", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
+                    .method("PROPFIND", RequestBody.create(MIME_XML, writer.toString()))
                     .header("Depth", String.valueOf(depth))
                     .build()).execute();
 
@@ -275,7 +309,7 @@ public class DavResource {
 
         // Which resource does this <response> represent?
         DavResource target = null;
-        if (UrlUtils.omitTrailingSlash(href).equals(UrlUtils.omitTrailingSlash(location))) {
+        if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location))) {
             // it's about ourselves
             target = this;
         } else if (location.scheme().equals(href.scheme()) && location.host().equals(href.host()) && location.port() == href.port()) {
@@ -367,5 +401,4 @@ public class DavResource {
 
         return prop;
     }
-
 }

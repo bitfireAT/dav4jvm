@@ -9,6 +9,7 @@
 package at.bitfire.dav4android;
 
 import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -23,6 +24,11 @@ import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 
 public class DavAddressBook extends DavResource {
+
+    public static final MediaType
+            MIME_VCARD3_UTF8 = MediaType.parse("text/vcard;charset=utf-8"),
+            MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0");
+
 
     public DavAddressBook(OkHttpClient httpClient, HttpUrl location) {
         super(httpClient, location);
@@ -47,7 +53,7 @@ public class DavAddressBook extends DavResource {
 
         Response response = httpClient.newCall(new Request.Builder()
                 .url(location)
-                .method("REPORT", RequestBody.create(MEDIA_TYPE_XML, writer.toString()))
+                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
                 .header("Depth", "1")
                 .build()).execute();
 

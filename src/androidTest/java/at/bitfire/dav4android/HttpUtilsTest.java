@@ -18,13 +18,6 @@ import java.util.List;
 
 public class HttpUtilsTest extends TestCase {
 
-    public void testHttpUrl() {
-        assertEquals(
-                HttpUrl.parse("http://example.com/my@dav/"),
-                HttpUrl.parse("http://example.com/my%40dav/")
-        );
-    }
-
     public void testParseWwwAuthenticate() {
         List<HttpUtils.AuthScheme> schemes = HttpUtils.parseWwwAuthenticate(new String[]{ "Basic realm=\"test\"" });
         assertEquals(1, schemes.size());
