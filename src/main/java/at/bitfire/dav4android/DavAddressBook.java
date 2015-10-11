@@ -35,11 +35,15 @@ public class DavAddressBook extends DavResource {
     }
 
     public void queryMemberETags() throws IOException, HttpException, DavException {
-        // build XML request body
+        /* <!ELEMENT addressbook-query ((DAV:allprop |
+                                         DAV:propname |
+                                         DAV:prop)?, filter, limit?)>
+        */
         XmlSerializer serializer = XmlUtils.newSerializer();
         StringWriter writer = new StringWriter();
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
+        serializer.setPrefix("", XmlUtils.NS_WEBDAV);
         serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-query");
         serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
         serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
@@ -55,6 +59,54 @@ public class DavAddressBook extends DavResource {
                 .url(location)
                 .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
                 .header("Depth", "1")
+                .build()).execute();
+
+        checkStatus(response);
+        assertMultiStatus(response);
+
+        members.clear();
+        processMultiStatus(response.body().charStream());
+    }
+
+    public void multiget(HttpUrl[] urls, boolean vCard4) throws IOException, HttpException, DavException {
+        /* <!ELEMENT addressbook-multiget ((DAV:allprop |
+                                            DAV:propname |
+                                            DAV:prop)?,
+                                            DAV:href+)>
+        */
+        XmlSerializer serializer = XmlUtils.newSerializer();
+        StringWriter writer = new StringWriter();
+        serializer.setOutput(writer);
+        serializer.startDocument("UTF-8", null);
+        serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-multiget");
+        serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
+        serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype");
+        serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype");
+        serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
+        serializer.endTag(XmlUtils.NS_WEBDAV, "getetag");
+        serializer.startTag(XmlUtils.NS_CARDDAV, "address-data");
+        if (vCard4) {
+            serializer.attribute(null, "content-type", "text/vcard");
+            serializer.attribute(null, "version", "4.0");
+        }
+        serializer.endTag(XmlUtils.NS_CARDDAV, "address-data");
+        serializer.endTag(XmlUtils.NS_WEBDAV, "prop");
+        for (HttpUrl url : urls) {
+            serializer.startTag(XmlUtils.NS_WEBDAV, "href");
+            serializer.text(url.encodedPath());
+            serializer.endTag(XmlUtils.NS_WEBDAV, "href");
+        }
+        serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-multiget");
+        serializer.endDocument();
+
+        // redirects must not followed automatically (as it may rewrite REPORT requests to GET requests)
+        httpClient.setFollowRedirects(false);
+
+        Response response = httpClient.newCall(new Request.Builder()
+                .url(location)
+                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
                 .build()).execute();
 
         checkStatus(response);

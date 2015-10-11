@@ -39,6 +39,7 @@ import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
 import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
+import lombok.Cleanup;
 import lombok.NonNull;
 
 public class DavResource {
@@ -65,6 +66,11 @@ public class DavResource {
         return pathSegments.get(pathSegments.size()-1);
     }
 
+    @Override
+    public String toString() {
+        return location.toString();
+    }
+
 
     public ResponseBody get(String accept) throws IOException, HttpException, DavException {
         Response response = httpClient.newCall(new Request.Builder()
@@ -88,7 +94,7 @@ public class DavResource {
         return body;
     }
 
-    public void put(@NonNull RequestBody body, String ifMatchETag, String ifNoneMatchETag) throws IOException {
+    public void put(@NonNull RequestBody body, String ifMatchETag, String ifNoneMatchETag) throws IOException, HttpException {
         Request.Builder builder = new Request.Builder()
                 .put(body)
                 .url(location);
@@ -96,15 +102,23 @@ public class DavResource {
             builder.header("If-Match", ifMatchETag);
         if (ifNoneMatchETag != null)
             builder.header("If-None-Match", ifNoneMatchETag);
-        httpClient.newCall(builder.build()).execute();
+        Response response = httpClient.newCall(builder.build()).execute();
+        checkStatus(response);
+
+        String eTag = response.header("ETag");
+        if (TextUtils.isEmpty(eTag))
+            properties.remove(GetETag.NAME);
+        else
+            properties.put(GetETag.NAME, new GetETag(eTag));
     }
 
     public void delete(@NonNull String ifMatchETag) throws IOException, HttpException {
-        httpClient.newCall(new Request.Builder()
+        Response response = httpClient.newCall(new Request.Builder()
                 .delete()
                 .url(location)
                 .header("If-Match", ifMatchETag)
                 .build()).execute();
+        checkStatus(response);
     }
 
 
@@ -113,7 +127,9 @@ public class DavResource {
         XmlSerializer serializer = XmlUtils.newSerializer();
         StringWriter writer = new StringWriter();
         serializer.setOutput(writer);
+        serializer.setPrefix("", XmlUtils.NS_WEBDAV);
         serializer.startDocument("UTF-8", null);
+        serializer.setPrefix("", XmlUtils.NS_WEBDAV);
         serializer.startTag(XmlUtils.NS_WEBDAV, "propfind");
         serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
         for (Property.Name prop : reqProp) {
@@ -155,7 +171,8 @@ public class DavResource {
             // collection listing requested, drop old member information
             members.clear();
 
-        processMultiStatus(response.body().charStream());
+        @Cleanup Reader reader = response.body().charStream();
+        processMultiStatus(reader);
     }
 
 

@@ -59,6 +59,15 @@ public class PropertyCollection {
         nsProperties.put(name.name, property);
     }
 
+    public void remove(Property.Name name) {
+        if (properties == null)
+            return;
+
+        Map<String, Property> nsProperties = properties.get(name.namespace);
+        if (nsProperties != null)
+            nsProperties.remove(name.name);
+    }
+
     public int size() {
         if (properties == null)
             return 0;
