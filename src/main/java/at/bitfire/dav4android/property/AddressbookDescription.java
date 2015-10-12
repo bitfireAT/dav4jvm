@@ -52,7 +52,7 @@ public class AddressbookDescription implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <addressbook-description>", e);
+                Constants.log.error("Couldn't parse <addressbook-description>", e);
                 return null;
             }
 

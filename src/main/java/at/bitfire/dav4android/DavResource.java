@@ -36,6 +36,7 @@ import java.util.Set;
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
+import at.bitfire.dav4android.exception.PreconditionFailedException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
 import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
@@ -63,7 +64,7 @@ public class DavResource {
 
     public String fileName() {
         List<String> pathSegments = location.pathSegments();
-        return pathSegments.get(pathSegments.size()-1);
+        return pathSegments.get(pathSegments.size() - 1);
     }
 
     @Override
@@ -94,14 +95,18 @@ public class DavResource {
         return body;
     }
 
-    public void put(@NonNull RequestBody body, String ifMatchETag, String ifNoneMatchETag) throws IOException, HttpException {
+    public void put(@NonNull RequestBody body, String ifMatchETag, boolean ifNoneMatch) throws IOException, HttpException {
         Request.Builder builder = new Request.Builder()
                 .put(body)
                 .url(location);
+
         if (ifMatchETag != null)
-            builder.header("If-Match", ifMatchETag);
-        if (ifNoneMatchETag != null)
-            builder.header("If-None-Match", ifNoneMatchETag);
+            // only overwrite specific version
+            builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
+        if (ifNoneMatch)
+            // don't overwrite anything existing
+            builder.header("If-None-Match", "*");
+
         Response response = httpClient.newCall(builder.build()).execute();
         checkStatus(response);
 
@@ -112,12 +117,13 @@ public class DavResource {
             properties.put(GetETag.NAME, new GetETag(eTag));
     }
 
-    public void delete(@NonNull String ifMatchETag) throws IOException, HttpException {
-        Response response = httpClient.newCall(new Request.Builder()
+    public void delete(String ifMatchETag) throws IOException, HttpException {
+        Request.Builder builder = new Request.Builder()
                 .delete()
-                .url(location)
-                .header("If-Match", ifMatchETag)
-                .build()).execute();
+                .url(location);
+        if (ifMatchETag != null)
+            builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
+        Response response = httpClient.newCall(builder.build()).execute();
         checkStatus(response);
     }
 
@@ -181,7 +187,12 @@ public class DavResource {
             // everything OK
             return;
 
-        throw new HttpException(code, message);
+        switch (code) {
+            case 412:
+                throw new PreconditionFailedException(message);
+            default:
+                throw new HttpException(code, message);
+        }
     }
 
     protected void checkStatus(Response response) throws HttpException {

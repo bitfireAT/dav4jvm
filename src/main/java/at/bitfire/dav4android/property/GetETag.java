@@ -8,6 +8,7 @@
 
 package at.bitfire.dav4android.property;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
 import at.bitfire.dav4android.PropertyFactory;
+import at.bitfire.dav4android.StringUtils;
 import at.bitfire.dav4android.XmlUtils;
 import lombok.ToString;
 
@@ -29,8 +31,19 @@ public class GetETag implements Property {
 
     private GetETag() {}
 
-    public GetETag(String eTag) {
-        this.eTag = eTag;
+    public GetETag(String rawETag)
+    {
+        /* entity-tag = [ weak ] opaque-tag
+           weak       = "W/"
+           opaque-tag = quoted-string
+        */
+
+        // remove trailing "W/"
+        if (rawETag.startsWith("W/") && rawETag.length() >= 3)
+            // entity tag is weak (doesn't matter for us)
+            rawETag = rawETag.substring(2);
+
+        eTag = StringUtils.decodeQuotedString(rawETag);
     }
 
 
@@ -42,17 +55,14 @@ public class GetETag implements Property {
 
         @Override
         public GetETag create(XmlPullParser parser) {
-            GetETag getETag = new GetETag();
-
+            // <!ELEMENT getetag (#PCDATA) >
+            // ETag = "ETag" ":" entity-tag
             try {
-                int eventType = parser.getEventType();
-                getETag.eTag = parser.nextText();
-            } catch(XmlPullParserException |IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <getetag>", e);
+                return new GetETag(parser.nextText());
+            } catch(XmlPullParserException|IOException e) {
+                Constants.log.error("Couldn't parse <getetag>", e);
                 return null;
             }
-
-            return getETag;
         }
     }
 }

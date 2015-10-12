@@ -56,7 +56,7 @@ public class AddressbookHomeSet implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <addressbook-home-set>", e);
+                Constants.log.error("Couldn't parse <addressbook-home-set>", e);
                 return null;
             }
 
