@@ -8,10 +8,16 @@
 
 package at.bitfire.dav4android.exception;
 
+import com.squareup.okhttp.Response;
+
 public class PreconditionFailedException extends HttpException {
 
-    public PreconditionFailedException(String message) {
-        super(412, message);
+    public PreconditionFailedException(Response response) {
+        super(response);
+    }
+
+    public PreconditionFailedException(int status, String message) {
+        super(status, message);
     }
 
 }

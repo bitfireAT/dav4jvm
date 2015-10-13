@@ -182,25 +182,25 @@ public class DavResource {
     }
 
 
-    protected void checkStatus(int code, String message) throws HttpException {
+    protected void checkStatus(int code, String message, Response response) throws HttpException {
         if (code/100 == 2)
             // everything OK
             return;
 
         switch (code) {
             case 412:
-                throw new PreconditionFailedException(message);
+                throw response != null ? new PreconditionFailedException(response) : new PreconditionFailedException(code, message);
             default:
-                throw new HttpException(code, message);
+                throw response != null ? new HttpException(response) : new HttpException(code, message);
         }
     }
 
     protected void checkStatus(Response response) throws HttpException {
-        checkStatus(response.code(), response.message());
+        checkStatus(response.code(), response.message(), response);
     }
 
     protected void checkStatus(StatusLine status) throws HttpException {
-        checkStatus(status.code, status.message);
+        checkStatus(status.code, status.message, null);
     }
 
     protected void assertMultiStatus(Response response) throws DavException {

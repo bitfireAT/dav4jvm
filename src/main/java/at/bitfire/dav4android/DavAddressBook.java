@@ -38,6 +38,7 @@ public class DavAddressBook extends DavResource {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
+           <!ELEMENT filter (prop-filter*)>
         */
         XmlSerializer serializer = XmlUtils.newSerializer();
         StringWriter writer = new StringWriter();
@@ -49,6 +50,8 @@ public class DavAddressBook extends DavResource {
         serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
         serializer.endTag(XmlUtils.NS_WEBDAV, "getetag");
         serializer.endTag(XmlUtils.NS_WEBDAV, "prop");
+        serializer.startTag(XmlUtils.NS_CARDDAV, "filter");
+        serializer.endTag(XmlUtils.NS_CARDDAV, "filter");
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-query");
         serializer.endDocument();
 
