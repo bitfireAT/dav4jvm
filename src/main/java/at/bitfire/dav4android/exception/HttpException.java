@@ -79,9 +79,12 @@ public class HttpException extends Exception implements Serializable {
         this.response = formatted.toString();
     }
 
-
     private static void appendByte(StringBuilder formatted, byte b) {
-        if (b >= 0x20 && b <= 0x7E)     // printable ASCII
+        if (b == '\r')
+            formatted.append("[CR]");
+        else if (b == '\n')
+            formatted.append("[LF]\n");
+        else if (b >= 0x20 && b <= 0x7E)     // printable ASCII
             formatted.append((char)b);
         else
             formatted.append("[" + Integer.toHexString(b) + "]");

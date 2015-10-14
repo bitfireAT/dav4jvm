@@ -6,6 +6,8 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -17,7 +19,7 @@ import lombok.ToString;
 public class CalendarColor implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_APPLE_ICAL, "calendar-color");
 
-    public String color;
+    public Integer color;
 
 
     public static class Factory implements PropertyFactory {
@@ -36,7 +38,7 @@ public class CalendarColor implements Property {
                 int eventType = parser.getEventType();
                 while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
                     if (eventType == XmlPullParser.TEXT && parser.getDepth() == depth)
-                        calendarColor.color = parser.getText();
+                        calendarColor.color = parseARGBColor(parser.getText());
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
@@ -46,5 +48,21 @@ public class CalendarColor implements Property {
 
             return calendarColor;
         }
+
+        public static Integer parseARGBColor(String davColor) {
+            Integer color = null;
+            if (davColor != null) {
+                Pattern p = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?");
+                Matcher m = p.matcher(davColor);
+                if (m.find()) {
+                    int color_rgb = Integer.parseInt(m.group(1), 16);
+                    int color_alpha = m.group(2) != null ? (Integer.parseInt(m.group(2), 16) & 0xFF) : 0xFF;
+                    color = (color_alpha << 24) | color_rgb;
+                } else
+                    Constants.log.warn("Couldn't parse color " + davColor + ", using DAVdroid green");
+            }
+            return color;
+        }
+
     }
 }

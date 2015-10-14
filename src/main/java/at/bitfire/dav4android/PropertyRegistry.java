@@ -9,6 +9,7 @@ import at.bitfire.dav4android.property.AddressData;
 import at.bitfire.dav4android.property.AddressbookDescription;
 import at.bitfire.dav4android.property.AddressbookHomeSet;
 import at.bitfire.dav4android.property.CalendarColor;
+import at.bitfire.dav4android.property.CalendarData;
 import at.bitfire.dav4android.property.CalendarDescription;
 import at.bitfire.dav4android.property.CalendarHomeSet;
 import at.bitfire.dav4android.property.CalendarTimezone;
@@ -48,6 +49,7 @@ public class PropertyRegistry {
         DEFAULT.register(new CalendarDescription.Factory());
         DEFAULT.register(new CalendarTimezone.Factory());
         DEFAULT.register(new SupportedCalendarComponentSet.Factory());
+        DEFAULT.register(new CalendarData.Factory());
     }
 
 
