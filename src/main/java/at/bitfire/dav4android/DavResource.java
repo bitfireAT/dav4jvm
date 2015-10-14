@@ -37,6 +37,7 @@ import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.PreconditionFailedException;
+import at.bitfire.dav4android.exception.ServiceUnavailableException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
 import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
@@ -190,6 +191,8 @@ public class DavResource {
         switch (code) {
             case 412:
                 throw response != null ? new PreconditionFailedException(response) : new PreconditionFailedException(code, message);
+            case 503:
+                throw response != null ? new ServiceUnavailableException(response) : new ServiceUnavailableException(code, message);
             default:
                 throw response != null ? new HttpException(response) : new HttpException(code, message);
         }
