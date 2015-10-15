@@ -10,14 +10,14 @@ package at.bitfire.dav4android.exception;
 
 import com.squareup.okhttp.Response;
 
-public class PreconditionFailedException extends HttpException {
+public class UnauthorizedException extends HttpException {
 
-    public PreconditionFailedException(Response response) {
+    public UnauthorizedException(Response response) {
         super(response);
     }
 
-    public PreconditionFailedException(String message) {
-        super(412, message);
+    public UnauthorizedException(String message) {
+        super(401, message);
     }
 
 }

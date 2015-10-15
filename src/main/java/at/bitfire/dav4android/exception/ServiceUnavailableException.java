@@ -20,8 +20,8 @@ public class ServiceUnavailableException extends HttpException {
 
     public Date retryAfter;
 
-    public ServiceUnavailableException(int status, String message) {
-        super(status, message);
+    public ServiceUnavailableException(String message) {
+        super(503, message);
         retryAfter = null;
     }
 
