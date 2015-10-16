@@ -8,52 +8,138 @@
 
 package at.bitfire.dav4android;
 
-import android.text.TextUtils;
-
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
 
 public class HttpUtils {
 
+    private static final Pattern authSchemeWithParam = Pattern.compile("^([^ ]+) +(.*)$");
+
+
     public static List<AuthScheme> parseWwwAuthenticate(String[] wwwAuths) {
+        /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge
+
+           challenge      = auth-scheme 1*SP 1#auth-param
+           auth-scheme    = token
+           auth-param     = token "=" ( token | quoted-string )
+
+           We call the auth-param tokens: <name>=<value>
+
+           token          = 1*<any CHAR except CTLs or separators>
+           separators     = "(" | ")" | "<" | ">" | "@"
+                          | "," | ";" | ":" | "\" | <">
+                          | "/" | "[" | "]" | "?" | "="
+                          | "{" | "}" | SP | HT
+
+           quoted-string  = ( <"> *(qdtext | quoted-pair ) <"> )
+           qdtext         = <any TEXT except <">>
+           quoted-pair    = "\" CHAR
+      */
+
         List<AuthScheme> schemes = new LinkedList<>();
         for (String wwwAuth : wwwAuths) {
-            StringTokenizer tok = new StringTokenizer(wwwAuth.trim(), ",");
+            // Step 1: tokenize by ',', but take into account that auth-param values may contain quoted-pair values with ',' in it (these ',' have to be ignored)
+            // Auth-scheme and auth-param names are tokens and thus must not contain the '"' separator.
+            List<String> tokens = new LinkedList<>();
+            StringBuilder token = new StringBuilder();
 
+            boolean inQuotes = false;
+            int len = wwwAuth.length();
+            for (int i = 0; i < len; i++) {
+                char c = wwwAuth.charAt(i);
+
+                boolean literal = false;
+                if (c == '"')
+                    inQuotes = !inQuotes;
+                else if (inQuotes && c == '\\' && i+1 < len) {
+                    token.append(c);
+
+                    c = wwwAuth.charAt(++i);
+                    literal = true;
+                }
+
+                if (c == ',' && !inQuotes && !literal) {
+                    tokens.add(token.toString());
+                    token = new StringBuilder();
+                } else
+                    token.append(c);
+            }
+            if (token.length() != 0)
+                tokens.add(token.toString());
+
+            /* Step 2: determine token type after trimming:
+                "<authSchemes> <auth-param>"        new auth scheme + 1 param
+                "<auth-param>"                      add param to previous auth scheme
+                Take into account that the second type may contain quoted spaces.
+                The auth scheme name must not contain separators (including quotes).
+             */
+            List<AuthScheme> authSchemes = new LinkedList<>();
+            List<String> authParams = new LinkedList<>();
             AuthScheme scheme = null;
-            while (tok.hasMoreTokens()) {
-                String token = tok.nextToken().trim();
-                Constants.log.debug("Token: " + token);
-                if (token.contains(" ")) {
-                    String parts[] = token.split(" +");
-                    schemes.add(scheme = new AuthScheme(parts[0]));
-                    scheme.params.add(parts[1]);
+            for (String s : tokens) {
+                s = s.trim();
+
+                Matcher matcher = authSchemeWithParam.matcher(s);
+                if (matcher.matches()) {
+                    // auth-scheme with auth-param
+                    schemes.add(scheme = new AuthScheme(matcher.group(1)));
+                    scheme.addRawParam(matcher.group(2));
+                } else if (scheme != null) {
+                    // if there was an auth-scheme before, this must be an auth-param
+                    scheme.addRawParam(s);
                 } else {
-                    if (scheme != null)
-                        scheme.params.add(token);
-                    else
-                        schemes.add(scheme = new AuthScheme(token));
+                    // there was not auth-scheme before, so this must be an auth-scheme
+                    schemes.add(scheme = new AuthScheme(s));
                 }
             }
         }
 
-        Constants.log.debug("Server authentication schemes: ");
+        /*Constants.log.trace("Server authentication schemes: ");
         for (AuthScheme scheme : schemes)
-            Constants.log.debug("  - " + scheme);
+            Constants.log.trace("  - " + scheme);*/
+
         return schemes;
     }
 
     @RequiredArgsConstructor
     public static class AuthScheme {
-        public final String scheme;
-        public final List<String> params = new LinkedList<>();
+        Pattern nameValue = Pattern.compile("^([^=]+)=(.*)$");
+
+        public final String name;
+        public final Map<String, String> params = new HashMap<>();
+        public final List<String> unnamedParams = new LinkedList<>();
+
+        public void addRawParam(String authParam) {
+            Matcher m = nameValue.matcher(authParam);
+            if (m.matches()) {
+                String  name = m.group(1),
+                        value = m.group(2);
+                int len = value.length();
+                if (value.charAt(0) == '"' && value.charAt(len-1) == '"') {
+                    // quoted-string
+                    value = value
+                            .substring(1, len-1)
+                            .replace("\\\"", "\"");
+                }
+                params.put(name, value);
+            } else
+                unnamedParams.add(authParam);
+        }
 
         @Override
         public String toString() {
-            return scheme + "(" + TextUtils.join(",", params) + ")";
+            StringBuilder s = new StringBuilder();
+            s.append(name + "(");
+            for (String name : params.keySet())
+                s.append(name + "=[" + params.get(name) + "],");
+            s.append(")");
+            return s.toString();
         }
     }
 }
