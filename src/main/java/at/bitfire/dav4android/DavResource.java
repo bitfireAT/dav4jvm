@@ -36,6 +36,7 @@ import java.util.Set;
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
+import at.bitfire.dav4android.exception.NotFoundException;
 import at.bitfire.dav4android.exception.UnauthorizedException;
 import at.bitfire.dav4android.exception.PreconditionFailedException;
 import at.bitfire.dav4android.exception.ServiceUnavailableException;
@@ -192,6 +193,8 @@ public class DavResource {
         switch (code) {
             case 401:
                 throw response != null ? new UnauthorizedException(response) : new UnauthorizedException(message);
+            case 404:
+                throw response != null ? new NotFoundException(response) : new NotFoundException(message);
             case 412:
                 throw response != null ? new PreconditionFailedException(response) : new PreconditionFailedException(message);
             case 503:

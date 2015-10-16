@@ -1,9 +1,12 @@
 package at.bitfire.dav4android;
 
+import android.text.TextUtils;
+
 import com.squareup.okhttp.HttpUrl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 public class UrlUtils {
 
@@ -21,6 +24,20 @@ public class UrlUtils {
         } catch (URISyntaxException e) {
             return false;
         }
+    }
+
+    /**
+     * Returns the last non-empty path segment of the given URL, or "" if none.
+     */
+    public static String lastSegment(HttpUrl url) {
+        String segment = "";
+        List<String> segments = url.pathSegments();
+        for (int i = segments.size()-1; i >= 0; i--) {
+            segment = segments.get(i);
+            if (!TextUtils.isEmpty(segment))
+                break;
+        }
+        return segment;
     }
 
     public static HttpUrl omitTrailingSlash(HttpUrl url) {
