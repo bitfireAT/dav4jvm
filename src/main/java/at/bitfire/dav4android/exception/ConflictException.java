@@ -12,14 +12,14 @@ import com.squareup.okhttp.Response;
 
 import java.net.HttpURLConnection;
 
-public class PreconditionFailedException extends HttpException {
+public class ConflictException extends HttpException {
 
-    public PreconditionFailedException(Response response) {
+    public ConflictException(Response response) {
         super(response);
     }
 
-    public PreconditionFailedException(String message) {
-        super(HttpURLConnection.HTTP_PRECON_FAILED, message);
+    public ConflictException(String message) {
+        super(HttpURLConnection.HTTP_CONFLICT, message);
     }
 
 }

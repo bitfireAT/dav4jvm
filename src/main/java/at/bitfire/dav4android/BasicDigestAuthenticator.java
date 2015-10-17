@@ -235,11 +235,11 @@ public class BasicDigestAuthenticator implements Authenticator {
                     else if ("auth-int".equals(qop))
                         qopAuthInt = true;
 
-                // prefer auth
-                if (qopAuth)
-                    return Auth;
-                else if (qopAuthInt)
+                // prefer auth-int as it provides more protection
+                if (qopAuthInt)
                     return AuthInt;
+                else if (qopAuth)
+                    return Auth;
             }
             return null;
         }

@@ -24,6 +24,14 @@ public class HttpException extends Exception implements Serializable {
 
     public final String request, response;
 
+    public HttpException(String message) {
+        super(message);
+        this.message = message;
+
+        this.status = -1;
+        this.request = this.response = null;
+    }
+
     public HttpException(int status, String message) {
         super(status + " " + message);
         this.status = status;

@@ -28,11 +28,13 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import at.bitfire.dav4android.exception.ConflictException;
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
@@ -41,6 +43,7 @@ import at.bitfire.dav4android.exception.UnauthorizedException;
 import at.bitfire.dav4android.exception.PreconditionFailedException;
 import at.bitfire.dav4android.exception.ServiceUnavailableException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
+import at.bitfire.dav4android.property.GetContentType;
 import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
 import lombok.Cleanup;
@@ -59,9 +62,18 @@ public class DavResource {
 
     static private PropertyRegistry registry = PropertyRegistry.DEFAULT;
 
+    /**
+     * Creates a new DavResource which represents a WebDAV resource at the given location.
+     * @param httpClient    OkHttpClient to access this object
+     * @param location      location of the WebDAV resource
+     */
     public DavResource(OkHttpClient httpClient, HttpUrl location) {
         this.httpClient = httpClient;
         this.location = location;
+
+        // Don't follow redirects (only useful for GET/POST).
+        // This means we have to handle 30x responses manually.
+        httpClient.setFollowRedirects(false);
     }
 
 
@@ -76,41 +88,75 @@ public class DavResource {
     }
 
 
-    public ResponseBody get(String accept) throws IOException, HttpException, DavException {
-        Response response = httpClient.newCall(new Request.Builder()
-                .get()
-                .url(location)
-                .header("Accept", accept)
-                .build()).execute();
+    /**
+     * Sends a GET request to the resource. Note that this method expects the server to
+     * return an ETag (which is required for CalDAV and CardDAV, but not for WebDAV in general).
+     * @param accept    content of Accept header (must not be null, but may be &#42;&#47;* )
+     * @return          response body
+     * @throws DavException    on WebDAV errors, or when the response doesn't contain an ETag
+     */
+    public ResponseBody get(@NonNull String accept) throws IOException, HttpException, DavException {
+        Response response = null;
+        for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
+            response = httpClient.newCall(new Request.Builder()
+                    .get()
+                    .url(location)
+                    .header("Accept", accept)
+                    .build()).execute();
+            if (response.isRedirect())
+                processRedirection(response);
+            else
+                break;
+        }
         checkStatus(response);
 
         String eTag = response.header("ETag");
         if (TextUtils.isEmpty(eTag))
-            throw new DavException("Server didn't send ETag in GET response");
+            // CalDAV servers MUST return ETag on GET [https://tools.ietf.org/html/rfc4791#section-5.3.4]
+            // CardDAV servers MUST return ETag on GET [https://tools.ietf.org/html/rfc6352#section-6.3.2.3]
+            throw new DavException("Received GET response without ETag");
         properties.put(GetETag.NAME, new GetETag(eTag));
 
         ResponseBody body = response.body();
         if (body == null)
-            throw new HttpException(599, "Expected GET response body");
+            throw new HttpException("GET without response body");
 
-        // TODO properties.put(GetContentType.NAME, body.contentType());
+        MediaType mimeType = body.contentType();
+        if (mimeType != null)
+            properties.put(GetContentType.NAME, new GetContentType(mimeType));
 
         return body;
     }
 
-    public void put(@NonNull RequestBody body, String ifMatchETag, boolean ifNoneMatch) throws IOException, HttpException {
-        Request.Builder builder = new Request.Builder()
-                .put(body)
-                .url(location);
+    /**
+     * Sends a PUT request to the resource.
+     * @param body              new resource body to upload
+     * @param ifMatchETag       value of "If-Match" header to set, or null to omit
+     * @param ifNoneMatch       indicates whether "If-None-Match: *" ("don't overwrite anything existing") header shall be sent
+     * @return                  true if the request was redirected successfully, i.e. #{@link #location} and maybe resource name may have changed
+     */
+    public boolean put(@NonNull RequestBody body, String ifMatchETag, boolean ifNoneMatch) throws IOException, HttpException {
+        boolean redirected = false;
+        Response response = null;
+        for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
+            Request.Builder builder = new Request.Builder()
+                    .put(body)
+                    .url(location);
 
-        if (ifMatchETag != null)
-            // only overwrite specific version
-            builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
-        if (ifNoneMatch)
-            // don't overwrite anything existing
-            builder.header("If-None-Match", "*");
+            if (ifMatchETag != null)
+                // only overwrite specific version
+                builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
+            if (ifNoneMatch)
+                // don't overwrite anything existing
+                builder.header("If-None-Match", "*");
 
-        Response response = httpClient.newCall(builder.build()).execute();
+            response = httpClient.newCall(builder.build()).execute();
+            if (response.isRedirect()) {
+                processRedirection(response);
+                redirected = true;
+            } else
+                break;
+        }
         checkStatus(response);
 
         String eTag = response.header("ETag");
@@ -118,8 +164,15 @@ public class DavResource {
             properties.remove(GetETag.NAME);
         else
             properties.put(GetETag.NAME, new GetETag(eTag));
+
+        return redirected;
     }
 
+    /**
+     * Sends a DELETE request to the resource.
+     * @param ifMatchETag       value of "If-Match" header to set, or null to omit
+     * @throws HttpException    on HTTP errors, including redirections
+     */
     public void delete(String ifMatchETag) throws IOException, HttpException {
         Request.Builder builder = new Request.Builder()
                 .delete()
@@ -131,6 +184,13 @@ public class DavResource {
     }
 
 
+    /**
+     * Sends a PROPFIND request to the resource. Expects and processes a 207 multi-status response.
+     * #{@link #properties} are updated according to the multi-status response.
+     * #{@link #members} is re-built according to the multi-status response (i.e. previous member entries won't be retained).
+     * @param depth      "Depth" header to send, e.g. 0 or 1
+     * @param reqProp    properties to request
+     */
     public void propfind(int depth, Property.Name... reqProp) throws IOException, HttpException, DavException {
         // build XML request body
         XmlSerializer serializer = XmlUtils.newSerializer();
@@ -159,17 +219,9 @@ public class DavResource {
                     .method("PROPFIND", RequestBody.create(MIME_XML, writer.toString()))
                     .header("Depth", String.valueOf(depth))
                     .build()).execute();
-
-            if (response.code()/100 == 3) {
-                String href = response.header("Location");
-                if (href != null) {
-                    HttpUrl newLocation = location.resolve(href);
-                    if (newLocation != null)
-                        location = newLocation;
-                    else
-                        throw new HttpException(500, "Redirect without Location");
-                }
-            } else
+            if (response.isRedirect())
+                processRedirection(response);
+            else
                 break;
         }
 
@@ -185,19 +237,23 @@ public class DavResource {
     }
 
 
+    // status handling
+
     protected void checkStatus(int code, String message, Response response) throws HttpException {
         if (code/100 == 2)
             // everything OK
             return;
 
         switch (code) {
-            case 401:
+            case HttpURLConnection.HTTP_UNAUTHORIZED:
                 throw response != null ? new UnauthorizedException(response) : new UnauthorizedException(message);
-            case 404:
+            case HttpURLConnection.HTTP_NOT_FOUND:
                 throw response != null ? new NotFoundException(response) : new NotFoundException(message);
-            case 412:
+            case HttpURLConnection.HTTP_CONFLICT:
+                throw response != null ? new ConflictException(response) : new ConflictException(message);
+            case HttpURLConnection.HTTP_PRECON_FAILED:
                 throw response != null ? new PreconditionFailedException(response) : new PreconditionFailedException(message);
-            case 503:
+            case HttpURLConnection.HTTP_UNAVAILABLE:
                 throw response != null ? new ServiceUnavailableException(response) : new ServiceUnavailableException(message);
             default:
                 throw response != null ? new HttpException(response) : new HttpException(code, message);
@@ -228,6 +284,22 @@ public class DavResource {
             Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
     }
 
+    void processRedirection(Response response) throws HttpException {
+        HttpUrl target = null;
+
+        String href = response.header("Location");
+        if (href != null)
+            target = location.resolve(href);
+
+        if (target != null) {
+            Constants.log.debug("Received redirection, new location=" + target);
+            location = target;
+        } else
+            throw new HttpException("Received redirection without new location");
+    }
+
+
+    // multi-status handling
 
     protected void processMultiStatus(Reader reader) throws IOException, HttpException, DavException {
         XmlPullParser parser = XmlUtils.newPullParser();
@@ -319,7 +391,7 @@ public class DavResource {
                         case "propstat":
                             PropertyCollection prop = parseMultiStatus_PropStat(parser);
                             if (prop != null)
-                                properties.merge(prop);
+                                properties.merge(prop, false);
                             break;
                         case "location":
                             throw new UnsupportedDavException("Redirected child resources are not supported yet");
@@ -378,7 +450,7 @@ public class DavResource {
 
         // set properties for target
         if (target != null)
-            target.properties.merge(properties);
+            target.properties.merge(properties, true);
         else
             Constants.log.warn("Received <response> for resource that was not requested");
     }
@@ -411,10 +483,11 @@ public class DavResource {
             eventType = parser.next();
         }
 
-        if (status == null || status.code/100 == 2)
-            return prop;
+        if (status.code/100 != 2)
+            // not successful, null out property values so that they can be removed when merging in parseMultiStatus_Response
+            prop.nullAllValues();
 
-        return null;
+        return prop;
     }
 
     private PropertyCollection parseMultiStatus_Prop(XmlPullParser parser) throws IOException, XmlPullParserException {

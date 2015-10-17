@@ -10,6 +10,8 @@ package at.bitfire.dav4android.exception;
 
 import com.squareup.okhttp.Response;
 
+import java.net.HttpURLConnection;
+
 public class NotFoundException extends HttpException {
 
     public NotFoundException(Response response) {
@@ -17,7 +19,7 @@ public class NotFoundException extends HttpException {
     }
 
     public NotFoundException(String message) {
-        super(404, message);
+        super(HttpURLConnection.HTTP_NOT_FOUND, message);
     }
 
 }

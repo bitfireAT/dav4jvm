@@ -78,10 +78,28 @@ public class PropertyCollection {
     }
 
 
-    public void merge(PropertyCollection another) {
+    public void merge(PropertyCollection another, boolean removeNullValues) {
         Map<Property.Name, Property> properties = another.getMap();
-        for (Property.Name name : properties.keySet())
-            put(name, properties.get(name));
+        for (Property.Name name : properties.keySet()) {
+            Property prop = properties.get(name);
+            if (!removeNullValues || prop != null)
+                put(name, prop);
+            else
+                remove(name);
+        }
+    }
+
+    public void nullAllValues() {
+        if (properties == null)
+            return;
+
+        for (String namespace : properties.keySet()) {
+            Map<String, Property> nsProperties = properties.get(namespace);
+            if (nsProperties != null) {
+                for (String name : nsProperties.keySet())
+                    nsProperties.put(name, null);
+            }
+        }
     }
 
 

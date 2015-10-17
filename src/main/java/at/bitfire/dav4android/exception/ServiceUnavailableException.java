@@ -11,6 +11,7 @@ package at.bitfire.dav4android.exception;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpDate;
 
+import java.net.HttpURLConnection;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -21,7 +22,7 @@ public class ServiceUnavailableException extends HttpException {
     public Date retryAfter;
 
     public ServiceUnavailableException(String message) {
-        super(503, message);
+        super(HttpURLConnection.HTTP_UNAVAILABLE, message);
         retryAfter = null;
     }
 

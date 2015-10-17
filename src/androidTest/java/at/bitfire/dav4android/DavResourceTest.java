@@ -1,24 +1,37 @@
 package at.bitfire.dav4android;
 
 import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
+import at.bitfire.dav4android.exception.PreconditionFailedException;
 import at.bitfire.dav4android.property.DisplayName;
+import at.bitfire.dav4android.property.GetCTag;
+import at.bitfire.dav4android.property.GetContentType;
+import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
 
 public class DavResourceTest extends TestCase {
 
-    OkHttpClient httpClient = new OkHttpClient();
-    MockWebServer mockServer = new MockWebServer();
+    private static final String
+            sampleText = "SAMPLE RESPONSE";
+
+    private OkHttpClient httpClient = new OkHttpClient();
+    private MockWebServer mockServer = new MockWebServer();
+
 
     @Override
     public void setUp() throws IOException {
@@ -30,9 +43,151 @@ public class DavResourceTest extends TestCase {
         mockServer.shutdown();
     }
 
+    private HttpUrl sampleUrl() {
+        return mockServer.url("/dav/");
+    }
+
+
+    public void testGet() throws InterruptedException, IOException, HttpException, DavException {
+        HttpUrl url = sampleUrl();
+        DavResource dav = new DavResource(httpClient, url);
+
+        /* POSITIVE TEST CASES */
+
+        // 200 OK
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setHeader("ETag", "W/\"My Weak ETag\"")
+                .setHeader("Content-Type", "application/x-test-result")
+                .setBody(sampleText));
+        ResponseBody body = dav.get("*/*");
+        assertEquals(sampleText, body.string());
+        assertEquals("My Weak ETag", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
+        assertEquals("application/x-test-result", ((GetContentType) dav.properties.get(GetContentType.NAME)).type);
+
+        RecordedRequest rq = mockServer.takeRequest();
+        assertEquals("GET", rq.getMethod());
+        assertEquals(url.encodedPath(), rq.getPath());
+        assertEquals("*/*", rq.getHeader("Accept"));
+
+        // 302 Moved Temporarily + 200 OK
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+                .setHeader("Location", "/target")
+                .setBody("This resource was moved."));
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setHeader("ETag", "\"StrongETag\"")
+                .setBody(sampleText));
+        body = dav.get("*/*");
+        assertEquals(sampleText, body.string());
+        assertEquals("StrongETag", ((GetETag) dav.properties.get(GetETag.NAME)).eTag);
+
+        rq = mockServer.takeRequest();
+        rq = mockServer.takeRequest();
+        assertEquals("GET", rq.getMethod());
+        assertEquals("/target", rq.getPath());
+
+        /* NEGATIVE TEST CASES */
+
+        // 200 OK without ETag in response
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(sampleText));
+        try {
+            body = dav.get("*/*");
+            fail();
+        } catch (DavException e) {
+        }
+    }
+
+    public void testPut() throws InterruptedException, IOException, HttpException, DavException {
+        HttpUrl url = sampleUrl();
+        DavResource dav = new DavResource(httpClient, url);
+
+        /* POSITIVE TEST CASES */
+
+        // no preconditions, 201 Created
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_CREATED)
+                .setHeader("ETag", "W/\"Weak PUT ETag\""));
+        assertFalse(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, false));
+        assertEquals("Weak PUT ETag", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
+
+        RecordedRequest rq = mockServer.takeRequest();
+        assertEquals("PUT", rq.getMethod());
+        assertEquals(url.encodedPath(), rq.getPath());
+        assertNull(rq.getHeader("If-Match"));
+        assertNull(rq.getHeader("If-None-Match"));
+
+        // precondition: If-None-Match, 301 Moved Permanently + 204 No Content, no ETag in response
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_MOVED_PERM)
+                .setHeader("Location", "/target"));
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT));
+        assertTrue(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, true));
+        assertEquals(url.resolve("/target"), dav.location);
+        assertNull(dav.properties.get(GetETag.NAME));
+
+        rq = mockServer.takeRequest();
+        rq = mockServer.takeRequest();
+        assertEquals("PUT", rq.getMethod());
+        assertEquals("*", rq.getHeader("If-None-Match"));
+
+        // precondition: If-Match, 412 Precondition Failed
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_PRECON_FAILED));
+        try {
+            dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), "ExistingETag", false);
+            fail();
+        } catch(PreconditionFailedException e) {
+        }
+        rq = mockServer.takeRequest();
+        assertEquals("\"ExistingETag\"", rq.getHeader("If-Match"));
+        assertNull(rq.getHeader("If-None-Match"));
+    }
+
+    public void testDelete() throws InterruptedException, IOException, HttpException {
+        HttpUrl url = sampleUrl();
+        DavResource dav = new DavResource(httpClient, url);
+
+        /* POSITIVE TEST CASES */
+
+        // no preconditions, 204 No Content
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT));
+        dav.delete(null);
+
+        RecordedRequest rq = mockServer.takeRequest();
+        assertEquals("DELETE", rq.getMethod());
+        assertEquals(url.encodedPath(), rq.getPath());
+        assertNull(rq.getHeader("If-Match"));
+
+        // precondition: If-Match, 200 OK
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody("Resource has been deleted."));
+        dav.delete("DeleteOnlyThisETag");
+
+        rq = mockServer.takeRequest();
+        assertEquals("\"DeleteOnlyThisETag\"", rq.getHeader("If-Match"));
+
+        /* NEGATIVE TEST CASES */
+
+        // 302 Moved Temporarily
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP));
+        try {
+            dav.delete(null);
+            fail();
+        } catch(HttpException e) {
+            // we don't follow redirects on DELETE
+        }
+    }
 
     public void testPropfindAndMultiStatus() throws IOException, HttpException, DavException {
-        HttpUrl url = mockServer.url("/dav/");
+        HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
 
         /*** NEGATIVE TESTS ***/
@@ -181,7 +336,7 @@ public class DavResourceTest extends TestCase {
                          "  </response>" +
                          "</multistatus>"));
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
-        assertEquals("My DAV Collection", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
+        assertEquals("My DAV Collection", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
         assertEquals(0, dav.members.size());
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
@@ -269,23 +424,55 @@ public class DavResourceTest extends TestCase {
             assertTrue(singleOK);
     }
 
-    /*public void testPublicPropfind() throws IOException, HttpException, DavException {
-        httpClient.setAuthenticator(new Authenticator() {
-            @Override
-            public Request authenticate(Proxy proxy, Response response) throws IOException {
-                String credential = Credentials.basic("test", "test");
-                return response.request().newBuilder()
-                        .header("Authorization", credential)
-                        .build();
-            }
+    public void testPropfindUpdateProperties() throws IOException, HttpException, DavException {
+        HttpUrl url = sampleUrl();
+        DavResource dav = new DavResource(httpClient, url);
 
-            @Override
-            public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-                return null;
-            }
-        });
-        DavResource dav = new DavResource(httpClient, HttpUrl.parse("https://demo.owncloud.org/remote.php/caldav/calendars/test/personal"));
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME, CalendarColor.NAME);
-    }*/
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                         "  <response>" +
+                         "    <href>/dav</href>" +
+                         "    <propstat>" +
+                         "      <prop>" +
+                         "        <displayname>DisplayName 1</displayname>" +
+                         "        <getetag>ETag 1</getetag>" +
+                         "        <getctag xmlns=\"http://calendarserver.org/ns/\">CTag 1</getctag>" +
+                         "      </prop>" +
+                         "      <status>HTTP/1.1 200 OK</status>" +
+                         "    </propstat>" +
+                         "  </response>" +
+                         "</multistatus>"));
+        dav.propfind(0, DisplayName.NAME, GetETag.NAME, GetCTag.NAME);
+        assertEquals("DisplayName 1", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
+        assertEquals("ETag 1", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
+        assertEquals("CTag 1", ((GetCTag) dav.properties.get(GetCTag.NAME)).cTag);
+
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <displayname>DisplayName 2</displayname>" +
+                        "      </prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <getetag/>" +
+                        "      </prop>" +
+                        "      <status>HTTP/1.1 404 Not Found</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"));
+        dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
+        assertEquals("DisplayName 2", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
+        assertNull(dav.properties.get(GetETag.NAME));
+        assertEquals("CTag 1", ((GetCTag)dav.properties.get(GetCTag.NAME)).cTag);
+    }
 
 }

@@ -10,6 +10,8 @@ package at.bitfire.dav4android.property;
 
 import android.util.Log;
 
+import com.squareup.okhttp.MediaType;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -28,6 +30,10 @@ public class GetContentType implements Property {
     public String type;
 
     private GetContentType() {}
+
+    public GetContentType(MediaType mediaType) {
+        type = mediaType.toString();
+    }
 
 
     public static class Factory implements PropertyFactory {
