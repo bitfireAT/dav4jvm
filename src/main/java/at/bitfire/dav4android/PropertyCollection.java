@@ -78,14 +78,31 @@ public class PropertyCollection {
     }
 
 
+    /**
+     * Merges another #{@link PropertyCollection} into #{@link #properties}.
+     * Existing properties will be overwritten.
+     * @param another           property collection to take the properties from
+     * @param removeNullValues  Indicates how "another" properties with null values should be treated.
+     *                          <ul>
+     *                          <li>#{@code true}:  If the "another" property value is #{@code null}, the property will be removed in #{@link #properties}.</li>
+     *                          <li>#{@code false}: If the "another" property value is #{@code null}, the property in #{@link #properties} will be set to null, too,
+                                    but only if it doesn't exist yet. This means values in #{@link #properties} will never be overwritten by #{@code null}.</li>
+     *                          </ul>
+     */
     public void merge(PropertyCollection another, boolean removeNullValues) {
         Map<Property.Name, Property> properties = another.getMap();
         for (Property.Name name : properties.keySet()) {
             Property prop = properties.get(name);
-            if (!removeNullValues || prop != null)
+
+            if (prop != null)
                 put(name, prop);
-            else
-                remove(name);
+            else {
+                // prop == null
+                if (removeNullValues)
+                    remove(name);
+                else if (get(name) == null)     // never overwrite non-null values
+                    put(name, null);
+            }
         }
     }
 

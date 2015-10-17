@@ -48,6 +48,25 @@ public class DavResourceTest extends TestCase {
     }
 
 
+    public void testOptions() throws InterruptedException, IOException, HttpException, DavException {
+        HttpUrl url = sampleUrl();
+        DavResource dav = new DavResource(httpClient, url);
+
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setHeader("DAV", "1,2,3, hyperactive-access"));
+        dav.options();
+        assertTrue(dav.capabilities.contains("1"));
+        assertTrue(dav.capabilities.contains("2"));
+        assertTrue(dav.capabilities.contains("3"));
+        assertTrue(dav.capabilities.contains("hyperactive-access"));
+
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK));
+        dav.options();
+        assertTrue(dav.capabilities.isEmpty());
+    }
+
     public void testGet() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -422,6 +441,35 @@ public class DavResourceTest extends TestCase {
         }
         for (boolean singleOK : ok)
             assertTrue(singleOK);
+
+
+        /*** SPECIAL CASES ***/
+
+        // same property is sent as 200 OK and 404 Not Found in same <response> (seen in iCloud)
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>" + url.toString() + "</href>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <resourcetype><collection/></resourcetype>" +
+                        "        <displayname>My DAV Collection</displayname>" +
+                        "      </prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <resourcetype/>" +
+                        "      </prop>" +
+                        "      <status>HTTP/1.1 404 Not Found</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"));
+        dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
+        assertTrue(((ResourceType) dav.properties.get(ResourceType.NAME)).types.contains(ResourceType.COLLECTION));
+        assertEquals("My DAV Collection", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
     }
 
     public void testPropfindUpdateProperties() throws IOException, HttpException, DavException {

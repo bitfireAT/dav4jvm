@@ -44,6 +44,7 @@ public class DavAddressBook extends DavResource {
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV);
         serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-query");
             serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
                 serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
@@ -81,6 +82,7 @@ public class DavAddressBook extends DavResource {
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV);
         serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-multiget");
         serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
         serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype");      // to determine the character set

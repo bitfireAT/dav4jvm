@@ -57,6 +57,7 @@ public class DavResource {
     protected static final int MAX_REDIRECTS = 5;
 
     public HttpUrl location;
+    public final Set<String> capabilities = new HashSet<>();
     public final PropertyCollection properties = new PropertyCollection();
     public final Set<DavResource> members = new HashSet<>();
 
@@ -85,6 +86,22 @@ public class DavResource {
     @Override
     public String toString() {
         return location.toString();
+    }
+
+
+    public void options() throws IOException, HttpException, DavException {
+        capabilities.clear();
+
+        Response response = httpClient.newCall(new Request.Builder()
+                .method("OPTIONS", null)
+                .url(location)
+                .build()).execute();
+        checkStatus(response);
+
+        String dav = response.header("DAV");
+        if (dav != null)
+            for (String capability : TextUtils.split(dav, ","))
+                capabilities.add(capability.trim());
     }
 
 
@@ -183,7 +200,6 @@ public class DavResource {
         checkStatus(response);
     }
 
-
     /**
      * Sends a PROPFIND request to the resource. Expects and processes a 207 multi-status response.
      * #{@link #properties} are updated according to the multi-status response.
@@ -197,6 +213,8 @@ public class DavResource {
         StringWriter writer = new StringWriter();
         serializer.setOutput(writer);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV);
+        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV);
         serializer.startDocument("UTF-8", null);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
         serializer.startTag(XmlUtils.NS_WEBDAV, "propfind");
@@ -452,7 +470,7 @@ public class DavResource {
         if (target != null)
             target.properties.merge(properties, true);
         else
-            Constants.log.warn("Received <response> for resource that was not requested");
+            Constants.log.warn("Received <response> not for self and not for member resource");
     }
 
     private PropertyCollection parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {

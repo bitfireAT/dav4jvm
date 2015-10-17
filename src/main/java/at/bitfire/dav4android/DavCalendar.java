@@ -49,6 +49,7 @@ public class DavCalendar extends DavResource {
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV);
         serializer.startTag(XmlUtils.NS_CALDAV, "calendar-query");
             serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
                 serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
@@ -91,6 +92,7 @@ public class DavCalendar extends DavResource {
         serializer.setOutput(writer);
         serializer.startDocument("UTF-8", null);
         serializer.setPrefix("", XmlUtils.NS_WEBDAV);
+        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV);
         serializer.startTag(XmlUtils.NS_CALDAV, "calendar-multiget");
         serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
         serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype");      // to determine the character set
