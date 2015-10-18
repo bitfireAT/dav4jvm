@@ -15,6 +15,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import org.slf4j.Logger;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -29,8 +30,8 @@ public class DavAddressBook extends DavResource {
             MIME_VCARD3_UTF8 = MediaType.parse("text/vcard;charset=utf-8"),
             MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0");
 
-    public DavAddressBook(OkHttpClient httpClient, HttpUrl location) {
-        super(httpClient, location);
+    public DavAddressBook(Logger log, OkHttpClient httpClient, HttpUrl location) {
+        super(log, httpClient, location);
     }
 
     public void addressbookQuery() throws IOException, HttpException, DavException {

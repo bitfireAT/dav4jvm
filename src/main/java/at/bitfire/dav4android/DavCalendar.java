@@ -15,6 +15,7 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
+import org.slf4j.Logger;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -28,8 +29,8 @@ public class DavCalendar extends DavResource {
     public static final MediaType
             MIME_ICALENDAR = MediaType.parse("text/calendar;charset=utf-8");
 
-    public DavCalendar(OkHttpClient httpClient, HttpUrl location) {
-        super(httpClient, location);
+    public DavCalendar(Logger log, OkHttpClient httpClient, HttpUrl location) {
+        super(log, httpClient, location);
     }
 
     public void calendarQuery(String component) throws IOException, HttpException, DavException {

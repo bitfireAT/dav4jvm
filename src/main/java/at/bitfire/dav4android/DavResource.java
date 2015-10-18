@@ -9,7 +9,6 @@
 package at.bitfire.dav4android;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
@@ -21,6 +20,7 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.internal.http.StatusLine;
 
+import org.slf4j.Logger;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -39,9 +39,9 @@ import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import at.bitfire.dav4android.exception.InvalidDavResponseException;
 import at.bitfire.dav4android.exception.NotFoundException;
-import at.bitfire.dav4android.exception.UnauthorizedException;
 import at.bitfire.dav4android.exception.PreconditionFailedException;
 import at.bitfire.dav4android.exception.ServiceUnavailableException;
+import at.bitfire.dav4android.exception.UnauthorizedException;
 import at.bitfire.dav4android.exception.UnsupportedDavException;
 import at.bitfire.dav4android.property.GetContentType;
 import at.bitfire.dav4android.property.GetETag;
@@ -56,6 +56,8 @@ public class DavResource {
     protected final OkHttpClient httpClient;
     protected static final int MAX_REDIRECTS = 5;
 
+    protected final Logger log;
+
     public HttpUrl location;
     public final Set<String> capabilities = new HashSet<>();
     public final PropertyCollection properties = new PropertyCollection();
@@ -65,10 +67,12 @@ public class DavResource {
 
     /**
      * Creates a new DavResource which represents a WebDAV resource at the given location.
-     * @param httpClient    OkHttpClient to access this object
+     * @param log           #{@link Logger} which will be used for logging, or null for default
+     * @param httpClient    #{@link OkHttpClient} to access this object
      * @param location      location of the WebDAV resource
      */
-    public DavResource(OkHttpClient httpClient, HttpUrl location) {
+    public DavResource(Logger log, OkHttpClient httpClient, HttpUrl location) {
+        this.log = log != null ? log : Constants.log;
         this.httpClient = httpClient;
         this.location = location;
 
@@ -299,7 +303,7 @@ public class DavResource {
                     !"xml".equals(mediaType.subtype()))
                 throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
         } else
-            Constants.log.warn("Received multi-status response without Content-Type, assuming XML");
+            log.warn("Received multi-status response without Content-Type, assuming XML");
     }
 
     void processRedirection(Response response) throws HttpException {
@@ -310,7 +314,7 @@ public class DavResource {
             target = location.resolve(href);
 
         if (target != null) {
-            Constants.log.debug("Received redirection, new location=" + target);
+            log.debug("Received redirection, new location=" + target);
             location = target;
         } else
             throw new HttpException("Received redirection without new location");
@@ -402,7 +406,7 @@ public class DavResource {
                             try {
                                 status = StatusLine.parse(parser.nextText());
                             } catch(ProtocolException e) {
-                                Constants.log.warn("Invalid status line, treating as 500 Server Error");
+                                log.warn("Invalid status line, treating as 500 Server Error");
                                 status = new StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line");
                             }
                             break;
@@ -419,7 +423,7 @@ public class DavResource {
         }
 
         if (href == null) {
-            Constants.log.warn("Ignoring <response> without valid <href>");
+            log.warn("Ignoring <response> without valid <href>");
             return;
         }
 
@@ -428,7 +432,7 @@ public class DavResource {
         if (type != null && type.types.contains(ResourceType.COLLECTION))
             href = UrlUtils.withTrailingSlash(href);
 
-        Constants.log.debug("Received <response> for " + href + ", status: " + status + ", properties: " + properties);
+        log.debug("Received <response> for " + href + ", status: " + status + ", properties: " + properties);
 
         if (status != null)
             // treat an HTTP error of a single response (i.e. requested resource or a member) like an HTTP error of the requested resource
@@ -462,7 +466,7 @@ public class DavResource {
                 }
 
                 if (sameBasePath)
-                    members.add(target = new DavResource(httpClient, href));
+                    members.add(target = new DavResource(log, httpClient, href));
             }
         }
 
@@ -470,7 +474,7 @@ public class DavResource {
         if (target != null)
             target.properties.merge(properties, true);
         else
-            Constants.log.warn("Received <response> not for self and not for member resource");
+            log.warn("Received <response> not for self and not for member resource");
     }
 
     private PropertyCollection parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -493,7 +497,7 @@ public class DavResource {
                             try {
                                 status = StatusLine.parse(parser.nextText());
                             } catch(ProtocolException e) {
-                                Constants.log.warn("Invalid status line, treating as 500 Server Error");
+                                log.warn("Invalid status line, treating as 500 Server Error");
                                 status = new StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line");
                             }
                     }
@@ -522,7 +526,7 @@ public class DavResource {
                 if (property != null)
                     prop.put(name, property);
                 else
-                    Log.i(Constants.LOG_TAG, "Ignoring unknown/unparseable property " + name);
+                    log.debug("Ignoring unknown/unparseable property " + name);
             }
             eventType = parser.next();
         }
