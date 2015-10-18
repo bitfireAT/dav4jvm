@@ -14,6 +14,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -56,7 +57,7 @@ public class SupportedCalendarComponentSet implements Property {
                             case "comp":
                                 String compName = parser.getAttributeValue(null, "name");
                                 if (compName != null)
-                                    switch (compName.toUpperCase()) {
+                                    switch (compName.toUpperCase(Locale.US)) {
                                         case "VEVENT":
                                             components.supportsEvents = true;
                                             break;
