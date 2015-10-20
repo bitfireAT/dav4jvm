@@ -44,9 +44,10 @@ public class BasicDigestAuthenticatorTest extends TestCase {
         assertTrue(auth.contains("opaque=\"5ccc069c403ebaf9f0171e9517f40e41\""));
     }
 
-    public void testRealWorldExample() {
+    public void testRealWorldExamples() {
         BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "demo", "demo", "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=");
 
+        // example 1
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         authScheme.params.put("realm", "Group-Office");
         authScheme.params.put("qop", "auth");
@@ -68,6 +69,30 @@ public class BasicDigestAuthenticatorTest extends TestCase {
         assertTrue(auth.contains("qop=auth"));
         assertTrue(auth.contains("response=\"de3b3b194d85ddc62537208c9c3637dc\""));
         assertTrue(auth.contains("opaque=\"df58bdff8cf60599c939187d0b5c54de\""));
+
+        // example 2
+        authenticator = new BasicDigestAuthenticator(null, "test", "test");
+        authScheme = new HttpUtils.AuthScheme("digest");    // lower case
+        authScheme.params.put("nonce", "87c4c2aceed9abf30dd68c71");
+        authScheme.params.put("algorithm", "md5");          // note the (illegal) lower case!
+        authScheme.params.put("opaque", "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==");
+        authScheme.params.put("realm", "ieddy.ru");
+        original = new Request.Builder()
+                .method("OPTIONS", null)
+                .url("https://ieddy.ru/")
+                .build();
+        request = authenticator.authorizationRequest(original, authScheme);
+        auth = request.header("Authorization");
+        assertTrue(auth.contains("algorithm=\"MD5\""));     // some servers require it
+        assertTrue(auth.contains("username=\"test\""));
+        assertTrue(auth.contains("realm=\"ieddy.ru\""));
+        assertTrue(auth.contains("nonce=\"87c4c2aceed9abf30dd68c71\""));
+        assertTrue(auth.contains("uri=\"/\""));
+        assertFalse(auth.contains("cnonce="));
+        assertFalse(auth.contains("nc="));
+        assertFalse(auth.contains("qop="));
+        assertTrue(auth.contains("response=\"d42a39f25f80b0d6907286a960ff9c7d\""));
+        assertTrue(auth.contains("opaque=\"571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==\""));
     }
 
     public void testMD5Sess() {

@@ -69,9 +69,9 @@ public class BasicDigestAuthenticator implements Authenticator {
 
         HttpUtils.AuthScheme basicAuth = null, digestAuth = null;
         for (HttpUtils.AuthScheme scheme : HttpUtils.parseWwwAuthenticate(response.headers(HEADER_AUTHENTICATE).toArray(new String[0])))
-            if ("Basic".equals(scheme.name))
+            if ("Basic".equalsIgnoreCase(scheme.name))
                 basicAuth = scheme;
-            else if ("Digest".equals(scheme.name))
+            else if ("Digest".equalsIgnoreCase(scheme.name))
                 digestAuth = scheme;
 
         // we MUST prefer Digest auth [https://tools.ietf.org/html/rfc2617#section-4.6]
@@ -87,6 +87,7 @@ public class BasicDigestAuthenticator implements Authenticator {
             // Basic auth
             if (triedBefore)    // credentials didn't work last time, and they won't work now -> stop here
                 return null;
+
             return request.newBuilder()
                     .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
                     .build();
@@ -128,13 +129,15 @@ public class BasicDigestAuthenticator implements Authenticator {
         else
             return null;
 
+        if (algorithm != null)
+            params.add("algorithm=" + quotedString(algorithm.name));
+
         final String method = request.method();
         final String digestURI = request.httpUrl().encodedPath();
         params.add("uri=" + quotedString(digestURI));
 
         if (qop != null) {
             params.add("qop=" + qop.name);
-
             params.add("cnonce=" + quotedString(clientNonce));
 
             int nc = nonceCount.getAndIncrement();
@@ -164,6 +167,8 @@ public class BasicDigestAuthenticator implements Authenticator {
                 response = kd(h(a1), nonce + ":" + ncValue + ":" + clientNonce + ":" + qop.name + ":" + h(a2));
 
         } else {
+            //Constants.log.debug("Using legacy Digest auth");
+
             // legacy (backwards compatibility with RFC 2069)
             if (algorithm == Algorithm.MD5) {
                 String  a1 = username + ":" + realm + ":" + password,
@@ -208,7 +213,7 @@ public class BasicDigestAuthenticator implements Authenticator {
         Algorithm(String name) { this.name = name; }
 
         static Algorithm determine(String paramValue) {
-            if (paramValue == null || Algorithm.MD5.name.equals(paramValue))
+            if (paramValue == null || Algorithm.MD5.name.equalsIgnoreCase(paramValue))
                 return Algorithm.MD5;
             else if (Algorithm.MD5_SESSION.name.equals(paramValue))
                 return Algorithm.MD5_SESSION;
