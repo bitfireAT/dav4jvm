@@ -1,0 +1,17 @@
+at.bitfire.dav4android.property.AddressbookDescription$Factory
+at.bitfire.dav4android.property.AddressbookHomeSet$Factory
+at.bitfire.dav4android.property.AddressData$Factory
+at.bitfire.dav4android.property.CalendarColor$Factory
+at.bitfire.dav4android.property.CalendarData$Factory
+at.bitfire.dav4android.property.CalendarDescription$Factory
+at.bitfire.dav4android.property.CalendarHomeSet$Factory
+at.bitfire.dav4android.property.CalendarTimezone$Factory
+at.bitfire.dav4android.property.CurrentUserPrincipal$Factory
+at.bitfire.dav4android.property.CurrentUserPrivilegeSet$Factory
+at.bitfire.dav4android.property.DisplayName$Factory
+at.bitfire.dav4android.property.GetContentType$Factory
+at.bitfire.dav4android.property.GetCTag$Factory
+at.bitfire.dav4android.property.GetETag$Factory
+at.bitfire.dav4android.property.ResourceType$Factory
+at.bitfire.dav4android.property.SupportedAddressData$Factory
+at.bitfire.dav4android.property.SupportedCalendarComponentSet$Factory
