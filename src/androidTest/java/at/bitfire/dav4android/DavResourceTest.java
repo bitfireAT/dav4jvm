@@ -35,7 +35,7 @@ public class DavResourceTest extends TestCase {
 
     @Override
     public void setUp() throws IOException {
-        mockServer.start(2540);
+        mockServer.start();
     }
 
     @Override
@@ -469,7 +469,24 @@ public class DavResourceTest extends TestCase {
                         "</multistatus>"));
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
         assertTrue(((ResourceType) dav.properties.get(ResourceType.NAME)).types.contains(ResourceType.COLLECTION));
-        assertEquals("My DAV Collection", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
+        assertEquals("My DAV Collection", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
+
+        // multi-status response with <propstat> that doesn't contain <status> (=> assume 200 OK)
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .setBody("<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop>" +
+                        "        <displayname>Without Status</displayname>" +
+                        "      </prop>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"));
+        dav.propfind(0, DisplayName.NAME);
+        assertEquals("Without Status", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
     }
 
     public void testPropfindUpdateProperties() throws IOException, HttpException, DavException {

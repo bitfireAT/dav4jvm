@@ -505,7 +505,7 @@ public class DavResource {
             eventType = parser.next();
         }
 
-        if (status.code/100 != 2)
+        if (status != null && status.code/100 != 2)
             // not successful, null out property values so that they can be removed when merging in parseMultiStatus_Response
             prop.nullAllValues();
 
