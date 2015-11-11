@@ -108,7 +108,7 @@ public class DavCalendar extends DavResource {
             serializer.text(url.encodedPath());
             serializer.endTag(XmlUtils.NS_WEBDAV, "href");
         }
-        serializer.startTag(XmlUtils.NS_CALDAV, "calendar-multiget");
+        serializer.endTag(XmlUtils.NS_CALDAV, "calendar-multiget");
         serializer.endDocument();
 
         // redirects must not followed automatically (as it may rewrite REPORT requests to GET requests)
