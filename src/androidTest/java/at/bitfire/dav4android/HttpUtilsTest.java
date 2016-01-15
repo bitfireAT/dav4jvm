@@ -125,6 +125,16 @@ public class HttpUtilsTest extends TestCase {
         assertEquals(1, scheme.params.size());
         assertEquals("Newcastle", scheme.params.get("realm"));
         assertEquals(0, scheme.unnamedParams.size());
+
+        // Contacts and Calendar Server example; space in second token!
+        schemes = HttpUtils.parseWwwAuthenticate(new String[]{ "digest nonce=\"785592012006934833760823299624355448128925071071026584347\", realm=\"Test Realm\", algorithm=\"md5\"" });
+        assertEquals(1, schemes.size());
+        scheme = schemes.get(0);
+        assertEquals("digest", scheme.name);
+        assertEquals(3, scheme.params.size());
+        assertEquals("785592012006934833760823299624355448128925071071026584347", scheme.params.get("nonce"));
+        assertEquals("Test Realm", scheme.params.get("realm"));
+        assertEquals("md5", scheme.params.get("algorithm"));
     }
 
 }

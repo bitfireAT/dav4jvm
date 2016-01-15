@@ -81,6 +81,8 @@ public class BasicDigestAuthenticator implements Authenticator {
             if (triedBefore && !"true".equalsIgnoreCase(digestAuth.params.get("stale")))
                 // credentials didn't work last time, and they won't work now -> stop here
                 return null;
+
+            Constants.log.debug("Adding Digest authorization request for {}", request.httpUrl());
             return authorizationRequest(request, digestAuth);
 
         } else if (basicAuth != null) {
@@ -88,10 +90,12 @@ public class BasicDigestAuthenticator implements Authenticator {
             if (triedBefore)    // credentials didn't work last time, and they won't work now -> stop here
                 return null;
 
+            Constants.log.debug("Adding Basic authorization header for {}", request.httpUrl());
             return request.newBuilder()
                     .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
                     .build();
-        }
+        } else
+            Constants.log.error("No supported authentication scheme");
 
         // no supported auth scheme
         return null;
@@ -126,8 +130,6 @@ public class BasicDigestAuthenticator implements Authenticator {
             return null;
         if (opaque != null)
             params.add("opaque=" + quotedString(opaque));
-        else
-            return null;
 
         if (algorithm != null)
             params.add("algorithm=" + quotedString(algorithm.name));
@@ -149,7 +151,7 @@ public class BasicDigestAuthenticator implements Authenticator {
                 a1 = username + ":" + realm + ":" + password;
             else if (algorithm == Algorithm.MD5_SESSION)
                 a1 = h(username + ":" + realm + ":" + password) + ":" + nonce + ":" + clientNonce;
-            //Constants.log.trace("A1=" + a1);
+            Constants.log.trace("A1=" + a1);
 
             String a2 = null;
             if (qop == Protection.Auth)
@@ -161,13 +163,13 @@ public class BasicDigestAuthenticator implements Authenticator {
                 } catch(IOException e) {
                     Constants.log.warn("Couldn't get entity-body for hash calculation");
                 }
-            //Constants.log.trace("A2=" + a2);
+            Constants.log.trace("A2=" + a2);
 
             if (a1 != null && a2 != null)
                 response = kd(h(a1), nonce + ":" + ncValue + ":" + clientNonce + ":" + qop.name + ":" + h(a2));
 
         } else {
-            //Constants.log.debug("Using legacy Digest auth");
+            Constants.log.trace("Using legacy Digest auth");
 
             // legacy (backwards compatibility with RFC 2069)
             if (algorithm == Algorithm.MD5) {

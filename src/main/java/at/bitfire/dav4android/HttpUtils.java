@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 
 public class HttpUtils {
 
-    private static final Pattern authSchemeWithParam = Pattern.compile("^([^ ]+) +(.*)$");
+    private static final Pattern authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$");
 
 
     public static List<AuthScheme> parseWwwAuthenticate(String[] wwwAuths) {
@@ -100,9 +100,9 @@ public class HttpUtils {
             }
         }
 
-        /*Constants.log.trace("Server authentication schemes: ");
+        Constants.log.trace("Server authentication schemes: ");
         for (AuthScheme scheme : schemes)
-            Constants.log.trace("  - " + scheme);*/
+            Constants.log.trace("  - " + scheme);
 
         return schemes;
     }

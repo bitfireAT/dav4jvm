@@ -209,9 +209,6 @@ public class BasicDigestAuthenticatorTest extends TestCase {
         assertNull(authenticator.authorizationRequest(original, authScheme));
 
         authScheme.params.put("nonce", "56212407212c8");
-        assertNull(authenticator.authorizationRequest(original, authScheme));
-
-        authScheme.params.put("opaque", "df58bdff8cf60599c939187d0b5c54de");
         assertNotNull(authenticator.authorizationRequest(original, authScheme));
     }
 

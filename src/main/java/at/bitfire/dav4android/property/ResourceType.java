@@ -20,9 +20,10 @@ public class ResourceType implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_WEBDAV, "resourcetype");
 
     public static final Name
-            COLLECTION = new Name(XmlUtils.NS_WEBDAV, "collection"),
-            ADDRESSBOOK = new Name(XmlUtils.NS_CARDDAV, "addressbook"),
-            CALENDAR = new Name(XmlUtils.NS_CALDAV, "calendar");
+            COLLECTION = new Name(XmlUtils.NS_WEBDAV, "collection"),    // WebDAV
+            PRINCIPAL = new Name(XmlUtils.NS_WEBDAV, "principal"),      // WebDAV ACL
+            ADDRESSBOOK = new Name(XmlUtils.NS_CARDDAV, "addressbook"), // CardDAV
+            CALENDAR = new Name(XmlUtils.NS_CALDAV, "calendar");        // CalDAV
 
     public final Set<Property.Name> types = new HashSet<>();
 
@@ -49,6 +50,8 @@ public class ResourceType implements Property {
                         Name typeName = new Name(parser.getNamespace(), parser.getName());
                         if (COLLECTION.equals(typeName))
                             typeName = COLLECTION;
+                        else if (PRINCIPAL.equals(typeName))
+                            typeName = PRINCIPAL;
                         else if (ADDRESSBOOK.equals(typeName))
                             typeName = ADDRESSBOOK;
                         else if (CALENDAR.equals(typeName))
