@@ -102,8 +102,7 @@ public class DavResource {
                 .build()).execute();
         checkStatus(response);
 
-        String dav = response.header("DAV");
-        if (dav != null)
+        for (String dav : response.headers("DAV"))
             for (String capability : TextUtils.split(dav, ","))
                 capabilities.add(capability.trim());
     }
