@@ -10,7 +10,7 @@ package at.bitfire.dav4android.property;
 
 import android.util.Log;
 
-import com.squareup.okhttp.MediaType;
+import okhttp3.MediaType;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

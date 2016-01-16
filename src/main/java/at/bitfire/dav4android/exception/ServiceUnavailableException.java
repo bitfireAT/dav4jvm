@@ -8,8 +8,8 @@
 
 package at.bitfire.dav4android.exception;
 
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.internal.http.HttpDate;
+import okhttp3.Response;
+import okhttp3.internal.http.HttpDate;
 
 import java.net.HttpURLConnection;
 import java.util.Calendar;

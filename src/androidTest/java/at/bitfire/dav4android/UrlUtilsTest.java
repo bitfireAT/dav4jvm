@@ -1,6 +1,6 @@
 package at.bitfire.dav4android;
 
-import com.squareup.okhttp.HttpUrl;
+import okhttp3.HttpUrl;
 
 import junit.framework.TestCase;
 

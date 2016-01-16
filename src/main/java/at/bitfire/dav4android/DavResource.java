@@ -10,16 +10,6 @@ package at.bitfire.dav4android;
 
 import android.text.TextUtils;
 
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
-import com.squareup.okhttp.internal.http.StatusLine;
-
 import org.slf4j.Logger;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -48,6 +38,15 @@ import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
 import lombok.Cleanup;
 import lombok.NonNull;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okhttp3.internal.http.StatusLine;
 
 public class DavResource {
 
@@ -68,8 +67,9 @@ public class DavResource {
     /**
      * Creates a new DavResource which represents a WebDAV resource at the given location.
      * @param log           #{@link Logger} which will be used for logging, or null for default
-     * @param httpClient    #{@link OkHttpClient} to access this object
+     * @param httpClient    #{@link OkHttpClient} to access this object, must not follow redirects
      * @param location      location of the WebDAV resource
+     * @throws IllegalArgumentException when httpClient follows redirects
      */
     public DavResource(Logger log, OkHttpClient httpClient, HttpUrl location) {
         this.log = log != null ? log : Constants.log;
@@ -78,7 +78,8 @@ public class DavResource {
 
         // Don't follow redirects (only useful for GET/POST).
         // This means we have to handle 30x responses manually.
-        httpClient.setFollowRedirects(false);
+        if (httpClient.followRedirects())
+            throw new IllegalArgumentException();
     }
 
 
@@ -229,9 +230,6 @@ public class DavResource {
         serializer.endTag(XmlUtils.NS_WEBDAV, "prop");
         serializer.endTag(XmlUtils.NS_WEBDAV, "propfind");
         serializer.endDocument();
-
-        // redirects must not followed automatically (as it may rewrite PROPFIND requests to GET requests)
-        httpClient.setFollowRedirects(false);
 
         Response response = null;
         for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {

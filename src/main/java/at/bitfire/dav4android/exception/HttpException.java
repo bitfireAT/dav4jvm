@@ -8,13 +8,12 @@
 
 package at.bitfire.dav4android.exception;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-
 import java.io.IOException;
 import java.io.Serializable;
 
+import okhttp3.Headers;
+import okhttp3.Request;
+import okhttp3.Response;
 import okio.Buffer;
 
 public class HttpException extends Exception implements Serializable {
@@ -54,7 +53,7 @@ public class HttpException extends Exception implements Serializable {
         // format request
         Request request = response.request();
         StringBuilder formatted = new StringBuilder();
-        formatted.append(request.method() + " " + request.urlString() + "\n");
+        formatted.append(request.method() + " " + request.url().encodedPath() + "\n");
         Headers headers = request.headers();
         for (String name : headers.names())
             for (String value : headers.values(name))

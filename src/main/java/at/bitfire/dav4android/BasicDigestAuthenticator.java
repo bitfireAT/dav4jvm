@@ -10,20 +10,19 @@ package at.bitfire.dav4android;
 
 import android.text.TextUtils;
 
-import com.squareup.okhttp.Authenticator;
-import com.squareup.okhttp.Credentials;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
-
 import java.io.IOException;
-import java.net.Proxy;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.NonNull;
+import okhttp3.Authenticator;
+import okhttp3.Credentials;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.Route;
 import okio.Buffer;
 import okio.ByteString;
 
@@ -55,10 +54,10 @@ public class BasicDigestAuthenticator implements Authenticator {
 
 
     @Override
-    public Request authenticate(Proxy proxy, Response response) throws IOException {
+    public Request authenticate(Route route, Response response) throws IOException {
         Request request = response.request();
 
-        if (host != null && !request.httpUrl().host().equalsIgnoreCase(host)) {
+        if (host != null && !request.url().host().equalsIgnoreCase(host)) {
             Constants.log.warn("Not authenticating against " +  host + " for security reasons!");
             return null;
         }
@@ -82,7 +81,7 @@ public class BasicDigestAuthenticator implements Authenticator {
                 // credentials didn't work last time, and they won't work now -> stop here
                 return null;
 
-            Constants.log.debug("Adding Digest authorization request for {}", request.httpUrl());
+            Constants.log.debug("Adding Digest authorization request for {}", request.url());
             return authorizationRequest(request, digestAuth);
 
         } else if (basicAuth != null) {
@@ -90,7 +89,7 @@ public class BasicDigestAuthenticator implements Authenticator {
             if (triedBefore)    // credentials didn't work last time, and they won't work now -> stop here
                 return null;
 
-            Constants.log.debug("Adding Basic authorization header for {}", request.httpUrl());
+            Constants.log.debug("Adding Basic authorization header for {}", request.url());
             return request.newBuilder()
                     .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
                     .build();
@@ -100,12 +99,6 @@ public class BasicDigestAuthenticator implements Authenticator {
         // no supported auth scheme
         return null;
     }
-
-    @Override
-    public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-        return null;
-    }
-
 
     protected Request authorizationRequest(Request request, HttpUtils.AuthScheme digest) {
         String  realm = digest.params.get("realm"),
@@ -135,7 +128,7 @@ public class BasicDigestAuthenticator implements Authenticator {
             params.add("algorithm=" + quotedString(algorithm.name));
 
         final String method = request.method();
-        final String digestURI = request.httpUrl().encodedPath();
+        final String digestURI = request.url().encodedPath();
         params.add("uri=" + quotedString(digestURI));
 
         if (qop != null) {

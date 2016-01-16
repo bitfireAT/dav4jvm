@@ -8,12 +8,12 @@
 
 package at.bitfire.dav4android;
 
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import org.slf4j.Logger;
 import org.xmlpull.v1.XmlSerializer;
@@ -67,9 +67,6 @@ public class DavCalendar extends DavResource {
         serializer.endTag(XmlUtils.NS_CALDAV,   "calendar-query");
         serializer.endDocument();
 
-        // redirects must not followed automatically (as it may rewrite REPORT requests to GET requests)
-        httpClient.setFollowRedirects(false);
-
         Response response = httpClient.newCall(new Request.Builder()
                 .url(location)
                 .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
@@ -110,9 +107,6 @@ public class DavCalendar extends DavResource {
         }
         serializer.endTag(XmlUtils.NS_CALDAV, "calendar-multiget");
         serializer.endDocument();
-
-        // redirects must not followed automatically (as it may rewrite REPORT requests to GET requests)
-        httpClient.setFollowRedirects(false);
 
         Response response = httpClient.newCall(new Request.Builder()
                 .url(location)

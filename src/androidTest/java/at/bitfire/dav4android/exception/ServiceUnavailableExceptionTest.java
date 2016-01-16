@@ -8,10 +8,10 @@
 
 package at.bitfire.dav4android.exception;
 
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.internal.http.HttpDate;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.internal.http.HttpDate;
 
 import junit.framework.TestCase;
 

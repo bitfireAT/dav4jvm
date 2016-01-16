@@ -2,7 +2,7 @@ package at.bitfire.dav4android;
 
 import android.text.TextUtils;
 
-import com.squareup.okhttp.HttpUrl;
+import okhttp3.HttpUrl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
