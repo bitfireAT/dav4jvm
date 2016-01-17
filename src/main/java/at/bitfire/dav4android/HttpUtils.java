@@ -8,6 +8,8 @@
 
 package at.bitfire.dav4android;
 
+import android.text.TextUtils;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,11 +18,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
+import okhttp3.Response;
 
 public class HttpUtils {
 
     private static final Pattern authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$");
 
+    public static String[] listHeader(Response response, String name) {
+        String value = TextUtils.join(",", response.headers(name));
+        return TextUtils.split(value, " *, *");
+    }
 
     public static List<AuthScheme> parseWwwAuthenticate(String[] wwwAuths) {
         /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge

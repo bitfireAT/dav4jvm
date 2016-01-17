@@ -67,9 +67,8 @@ public class DavResource {
     /**
      * Creates a new DavResource which represents a WebDAV resource at the given location.
      * @param log           #{@link Logger} which will be used for logging, or null for default
-     * @param httpClient    #{@link OkHttpClient} to access this object, must not follow redirects
+     * @param httpClient    #{@link OkHttpClient} to access this object
      * @param location      location of the WebDAV resource
-     * @throws IllegalArgumentException when httpClient follows redirects
      */
     public DavResource(Logger log, OkHttpClient httpClient, HttpUrl location) {
         this.log = log != null ? log : Constants.log;
@@ -103,9 +102,8 @@ public class DavResource {
                 .build()).execute();
         checkStatus(response);
 
-        for (String dav : response.headers("DAV"))
-            for (String capability : TextUtils.split(dav, ","))
-                capabilities.add(capability.trim());
+        for (String capability : HttpUtils.listHeader(response, "DAV"))
+            capabilities.add(capability.trim());
     }
 
 
