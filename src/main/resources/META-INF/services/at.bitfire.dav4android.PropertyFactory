@@ -12,6 +12,7 @@ at.bitfire.dav4android.property.DisplayName$Factory
 at.bitfire.dav4android.property.GetContentType$Factory
 at.bitfire.dav4android.property.GetCTag$Factory
 at.bitfire.dav4android.property.GetETag$Factory
+at.bitfire.dav4android.property.GroupMembership$Factory
 at.bitfire.dav4android.property.ResourceType$Factory
 at.bitfire.dav4android.property.SupportedAddressData$Factory
 at.bitfire.dav4android.property.SupportedCalendarComponentSet$Factory
