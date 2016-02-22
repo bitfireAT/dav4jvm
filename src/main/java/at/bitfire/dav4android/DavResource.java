@@ -47,6 +47,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 import okhttp3.internal.http.StatusLine;
+import okio.BufferedSink;
 
 public class DavResource {
 
@@ -106,6 +107,22 @@ public class DavResource {
             capabilities.add(capability.trim());
     }
 
+    public void mkCol(String xmlBody) throws IOException, HttpException {
+        RequestBody rqBody = (xmlBody != null) ? RequestBody.create(MIME_XML, xmlBody) : null;
+
+        Response response = null;
+        for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
+            response = httpClient.newCall(new Request.Builder()
+                    .method("MKCOL", rqBody)
+                    .url(location)
+                    .build()).execute();
+            if (response.isRedirect())
+                processRedirection(response);
+            else
+                break;
+        }
+        checkStatus(response);
+    }
 
     /**
      * Sends a GET request to the resource. Note that this method expects the server to
