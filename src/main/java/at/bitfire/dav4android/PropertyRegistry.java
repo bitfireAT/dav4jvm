@@ -13,8 +13,9 @@ public class PropertyRegistry {
     static final PropertyRegistry DEFAULT = new PropertyRegistry();
 
     private PropertyRegistry() {
+        Constants.log.debug("Registering DAV property factories:");
         for (PropertyFactory factory : ServiceLoader.load(PropertyFactory.class)) {
-            Constants.log.debug("Registering DAV property factory for " + factory.getName());
+            Constants.log.debug("Registering property factory for " + factory.getName());
             register(factory);
         }
     }

@@ -217,6 +217,13 @@ public class DavResource {
             builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
         Response response = httpClient.newCall(builder.build()).execute();
         checkStatus(response);
+
+        if (response.code() == 207) {
+            /* If an error occurs deleting a member resource (a resource other than
+               the resource identified in the Request-URI), then the response can be
+               a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
+            throw new HttpException(response);
+        }
     }
 
     /**
