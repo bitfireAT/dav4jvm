@@ -16,6 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -55,7 +56,7 @@ public class GroupMembership implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Constants.log.error("Couldn't parse <group-membership>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <group-membership>", e);
                 return null;
             }
 

@@ -8,13 +8,11 @@
 
 package at.bitfire.dav4android.property;
 
-import android.text.TextUtils;
-import android.util.Log;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -60,7 +58,7 @@ public class GetETag implements Property {
             try {
                 return new GetETag(parser.nextText());
             } catch(XmlPullParserException|IOException e) {
-                Constants.log.error("Couldn't parse <getetag>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <getetag>", e);
                 return null;
             }
         }

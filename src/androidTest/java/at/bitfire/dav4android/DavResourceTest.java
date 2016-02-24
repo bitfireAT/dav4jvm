@@ -52,7 +52,7 @@ public class DavResourceTest extends TestCase {
 
     public void testOptions() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
@@ -71,7 +71,7 @@ public class DavResourceTest extends TestCase {
 
     public void testGet() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         /* POSITIVE TEST CASES */
 
@@ -124,7 +124,7 @@ public class DavResourceTest extends TestCase {
 
     public void testPut() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         /* POSITIVE TEST CASES */
 
@@ -171,7 +171,7 @@ public class DavResourceTest extends TestCase {
 
     public void testDelete() throws InterruptedException, IOException, HttpException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         /* POSITIVE TEST CASES */
 
@@ -209,7 +209,7 @@ public class DavResourceTest extends TestCase {
 
     public void testPropfindAndMultiStatus() throws IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         /*** NEGATIVE TESTS ***/
 
@@ -493,7 +493,7 @@ public class DavResourceTest extends TestCase {
 
     public void testPropfindUpdateProperties() throws IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
-        DavResource dav = new DavResource(null, httpClient, url);
+        DavResource dav = new DavResource(httpClient, url);
 
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(207)

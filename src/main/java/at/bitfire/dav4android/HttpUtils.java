@@ -107,9 +107,9 @@ public class HttpUtils {
             }
         }
 
-        Constants.log.trace("Server authentication schemes: ");
+        Constants.log.finer("Server authentication schemes: ");
         for (AuthScheme scheme : schemes)
-            Constants.log.trace("  - " + scheme);
+            Constants.log.finer("  - " + scheme);
 
         return schemes;
     }

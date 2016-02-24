@@ -8,9 +8,9 @@
 
 package at.bitfire.dav4android.exception;
 
-import okhttp3.Response;
-
 import java.net.HttpURLConnection;
+
+import okhttp3.Response;
 
 public class NotFoundException extends HttpException {
 

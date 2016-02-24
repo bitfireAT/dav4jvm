@@ -8,14 +8,13 @@
 
 package at.bitfire.dav4android.exception;
 
-import okhttp3.Response;
-import okhttp3.internal.http.HttpDate;
-
 import java.net.HttpURLConnection;
 import java.util.Calendar;
 import java.util.Date;
 
 import at.bitfire.dav4android.Constants;
+import okhttp3.Response;
+import okhttp3.internal.http.HttpDate;
 
 public class ServiceUnavailableException extends HttpException {
 
@@ -46,7 +45,7 @@ public class ServiceUnavailableException extends HttpException {
                     retryAfter = cal.getTime();
 
                 } catch (NumberFormatException e) {
-                    Constants.log.warn("Received Retry-After which was not a HTTP-date nor delta-seconds");
+                    Constants.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds");
                 }
         }
     }

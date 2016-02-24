@@ -2,11 +2,11 @@ package at.bitfire.dav4android;
 
 import android.text.TextUtils;
 
-import okhttp3.HttpUrl;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+
+import okhttp3.HttpUrl;
 
 public class UrlUtils {
 

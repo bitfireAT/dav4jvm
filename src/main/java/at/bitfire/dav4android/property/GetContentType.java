@@ -8,20 +8,18 @@
 
 package at.bitfire.dav4android.property;
 
-import android.util.Log;
-
-import okhttp3.MediaType;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
 import at.bitfire.dav4android.PropertyFactory;
 import at.bitfire.dav4android.XmlUtils;
 import lombok.ToString;
+import okhttp3.MediaType;
 
 @ToString
 public class GetContentType implements Property {
@@ -50,7 +48,7 @@ public class GetContentType implements Property {
                 int eventType = parser.getEventType();
                 getContentType.type = parser.nextText();
             } catch(XmlPullParserException |IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <getcontenttype>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <getcontenttype>", e);
                 return null;
             }
 

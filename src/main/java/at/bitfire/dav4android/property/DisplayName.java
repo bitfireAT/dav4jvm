@@ -8,18 +8,16 @@
 
 package at.bitfire.dav4android.property;
 
-import android.util.Log;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
 import at.bitfire.dav4android.PropertyFactory;
 import at.bitfire.dav4android.XmlUtils;
-import lombok.Getter;
 import lombok.ToString;
 
 @ToString
@@ -50,7 +48,7 @@ public class DisplayName implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <displayname>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <displayname>", e);
                 return null;
             }
 

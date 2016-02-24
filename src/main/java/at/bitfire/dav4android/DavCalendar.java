@@ -8,14 +8,6 @@
 
 package at.bitfire.dav4android;
 
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import org.slf4j.Logger;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -23,14 +15,20 @@ import java.io.StringWriter;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class DavCalendar extends DavResource {
 
     public static final MediaType
             MIME_ICALENDAR = MediaType.parse("text/calendar;charset=utf-8");
 
-    public DavCalendar(Logger log, OkHttpClient httpClient, HttpUrl location) {
-        super(log, httpClient, location);
+    public DavCalendar(OkHttpClient httpClient, HttpUrl location) {
+        super(httpClient, location);
     }
 
     public void calendarQuery(String component) throws IOException, HttpException, DavException {

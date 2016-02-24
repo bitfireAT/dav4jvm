@@ -10,13 +10,11 @@ package at.bitfire.dav4android;
 
 import android.text.TextUtils;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.NonNull;
 
@@ -127,10 +125,9 @@ public class PropertyCollection {
         else {
             List<String> s = new LinkedList<>();
             Map<Property.Name, Property> properties = getMap();
-            for (Property.Name name : properties.keySet()) {
+            for (Property.Name name : properties.keySet())
                 s.add(name + ": " + properties.get(name));
-            }
-            return "[" + TextUtils.join(",\n", s) + "]";
+            return "[" + TextUtils.join(", ", s) + "]";
         }
     }
 

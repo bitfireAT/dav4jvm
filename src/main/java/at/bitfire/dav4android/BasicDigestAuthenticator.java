@@ -58,13 +58,13 @@ public class BasicDigestAuthenticator implements Authenticator {
         Request request = response.request();
 
         if (host != null && !request.url().host().equalsIgnoreCase(host)) {
-            Constants.log.warn("Not authenticating against " +  host + " for security reasons!");
+            Constants.log.warning("Not authenticating against " +  host + " for security reasons!");
             return null;
         }
 
         // check whether this is the first authentication try with our credentials
         Response priorResponse = response.priorResponse();
-        boolean triedBefore = priorResponse != null ? priorResponse.request().header(HEADER_AUTHORIZATION) != null : false;
+        boolean triedBefore = priorResponse != null && priorResponse.request().header(HEADER_AUTHORIZATION) != null;
 
         HttpUtils.AuthScheme basicAuth = null, digestAuth = null;
         for (HttpUtils.AuthScheme scheme : HttpUtils.parseWwwAuthenticate(response.headers(HEADER_AUTHENTICATE).toArray(new String[0])))
@@ -81,7 +81,7 @@ public class BasicDigestAuthenticator implements Authenticator {
                 // credentials didn't work last time, and they won't work now -> stop here
                 return null;
 
-            Constants.log.debug("Adding Digest authorization request for {}", request.url());
+            Constants.log.fine("Adding Digest authorization request for " + request.url());
             return authorizationRequest(request, digestAuth);
 
         } else if (basicAuth != null) {
@@ -89,12 +89,12 @@ public class BasicDigestAuthenticator implements Authenticator {
             if (triedBefore)    // credentials didn't work last time, and they won't work now -> stop here
                 return null;
 
-            Constants.log.debug("Adding Basic authorization header for {}", request.url());
+            Constants.log.fine("Adding Basic authorization header for " + request.url());
             return request.newBuilder()
                     .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
                     .build();
         } else
-            Constants.log.error("No supported authentication scheme");
+            Constants.log.severe("No supported authentication scheme");
 
         // no supported auth scheme
         return null;
@@ -144,7 +144,7 @@ public class BasicDigestAuthenticator implements Authenticator {
                 a1 = username + ":" + realm + ":" + password;
             else if (algorithm == Algorithm.MD5_SESSION)
                 a1 = h(username + ":" + realm + ":" + password) + ":" + nonce + ":" + clientNonce;
-            Constants.log.trace("A1=" + a1);
+            Constants.log.finer("A1=" + a1);
 
             String a2 = null;
             if (qop == Protection.Auth)
@@ -154,15 +154,15 @@ public class BasicDigestAuthenticator implements Authenticator {
                     RequestBody body = request.body();
                     a2 = method + ":" + digestURI + ":" + (body != null ? h(body) : h(""));
                 } catch(IOException e) {
-                    Constants.log.warn("Couldn't get entity-body for hash calculation");
+                    Constants.log.warning("Couldn't get entity-body for hash calculation");
                 }
-            Constants.log.trace("A2=" + a2);
+            Constants.log.finer("A2=" + a2);
 
             if (a1 != null && a2 != null)
                 response = kd(h(a1), nonce + ":" + ncValue + ":" + clientNonce + ":" + qop.name + ":" + h(a2));
 
         } else {
-            Constants.log.trace("Using legacy Digest auth");
+            Constants.log.finer("Using legacy Digest auth");
 
             // legacy (backwards compatibility with RFC 2069)
             if (algorithm == Algorithm.MD5) {
@@ -213,7 +213,7 @@ public class BasicDigestAuthenticator implements Authenticator {
             else if (Algorithm.MD5_SESSION.name.equals(paramValue))
                 return Algorithm.MD5_SESSION;
             else
-                Constants.log.warn("Ignoring unknown hash algorithm: " + paramValue);
+                Constants.log.warning("Ignoring unknown hash algorithm: " + paramValue);
                 return null;
         }
     }

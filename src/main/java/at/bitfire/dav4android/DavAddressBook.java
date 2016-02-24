@@ -8,13 +8,6 @@
 
 package at.bitfire.dav4android;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import org.slf4j.Logger;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -23,6 +16,11 @@ import java.io.StringWriter;
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class DavAddressBook extends DavResource {
 
@@ -30,8 +28,8 @@ public class DavAddressBook extends DavResource {
             MIME_VCARD3_UTF8 = MediaType.parse("text/vcard;charset=utf-8"),
             MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0");
 
-    public DavAddressBook(Logger log, OkHttpClient httpClient, HttpUrl location) {
-        super(log, httpClient, location);
+    public DavAddressBook(OkHttpClient httpClient, HttpUrl location) {
+        super(httpClient, location);
     }
 
     public void addressbookQuery() throws IOException, HttpException, DavException {

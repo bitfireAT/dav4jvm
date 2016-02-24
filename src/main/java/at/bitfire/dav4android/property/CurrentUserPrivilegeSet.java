@@ -9,7 +9,6 @@
 package at.bitfire.dav4android.property;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -17,6 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -63,7 +63,7 @@ public class CurrentUserPrivilegeSet implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <current-user-privilege-set>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <current-user-privilege-set>", e);
                 return null;
             }
 

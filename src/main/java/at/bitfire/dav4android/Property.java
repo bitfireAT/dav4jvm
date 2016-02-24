@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android;
 
-import android.provider.UserDictionary;
 import android.text.TextUtils;
 
 import lombok.RequiredArgsConstructor;

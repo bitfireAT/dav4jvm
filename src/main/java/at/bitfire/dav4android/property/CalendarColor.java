@@ -1,11 +1,10 @@
 package at.bitfire.dav4android.property;
 
-import android.util.Log;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +41,7 @@ public class CalendarColor implements Property {
                     eventType = parser.next();
                 }
             } catch(XmlPullParserException|IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <calendar-color>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <calendar-color>", e);
                 return null;
             }
 
@@ -59,7 +58,7 @@ public class CalendarColor implements Property {
                     int color_alpha = m.group(2) != null ? (Integer.parseInt(m.group(2), 16) & 0xFF) : 0xFF;
                     color = (color_alpha << 24) | color_rgb;
                 } else
-                    Constants.log.warn("Couldn't parse color " + davColor + ", ignoring");
+                    Constants.log.warning("Couldn't parse color " + davColor + ", ignoring");
             }
             return color;
         }

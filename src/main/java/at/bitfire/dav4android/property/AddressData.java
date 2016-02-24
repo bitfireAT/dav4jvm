@@ -8,12 +8,11 @@
 
 package at.bitfire.dav4android.property;
 
-import android.util.Log;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 import at.bitfire.dav4android.Constants;
 import at.bitfire.dav4android.Property;
@@ -44,7 +43,7 @@ public class AddressData implements Property {
                 int eventType = parser.getEventType();
                 addressData.vCard = parser.nextText();
             } catch(XmlPullParserException |IOException e) {
-                Log.e(Constants.LOG_TAG, "Couldn't parse <address-data>", e);
+                Constants.log.log(Level.SEVERE, "Couldn't parse <address-data>", e);
                 return null;
             }
 
