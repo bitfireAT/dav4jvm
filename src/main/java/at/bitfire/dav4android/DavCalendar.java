@@ -12,6 +12,9 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
@@ -27,11 +30,14 @@ public class DavCalendar extends DavResource {
     public static final MediaType
             MIME_ICALENDAR = MediaType.parse("text/calendar;charset=utf-8");
 
+    protected static final SimpleDateFormat timeFormatUTC = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US);
+
+
     public DavCalendar(OkHttpClient httpClient, HttpUrl location) {
         super(httpClient, location);
     }
 
-    public void calendarQuery(String component) throws IOException, HttpException, DavException {
+    public void calendarQuery(String component, Date start, Date end) throws IOException, HttpException, DavException {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -53,16 +59,24 @@ public class DavCalendar extends DavResource {
             serializer.startTag(XmlUtils.NS_WEBDAV, "prop");
                 serializer.startTag(XmlUtils.NS_WEBDAV, "getetag");
                 serializer.endTag(XmlUtils.NS_WEBDAV, "getetag");
-            serializer.endTag(XmlUtils.NS_WEBDAV,   "prop");
+            serializer.endTag(XmlUtils.NS_WEBDAV, "prop");
             serializer.startTag(XmlUtils.NS_CALDAV, "filter");
                 serializer.startTag(XmlUtils.NS_CALDAV, "comp-filter");
                 serializer.attribute(null, "name", "VCALENDAR");
                     serializer.startTag(XmlUtils.NS_CALDAV, "comp-filter");
                     serializer.attribute(null, "name", component);
+                    if (start != null || end != null) {
+                        serializer.startTag(XmlUtils.NS_CALDAV, "time-range");
+                        if (start != null)
+                            serializer.attribute(null, "start", timeFormatUTC.format(start));
+                        if (end != null)
+                            serializer.attribute(null, "end", timeFormatUTC.format(end));
+                        serializer.endTag(XmlUtils.NS_CALDAV, "time-range");
+                    }
                     serializer.endTag(XmlUtils.NS_CALDAV, "comp-filter");
-                serializer.endTag(XmlUtils.NS_CALDAV,   "comp-filter");
-            serializer.endTag(XmlUtils.NS_CALDAV,   "filter");
-        serializer.endTag(XmlUtils.NS_CALDAV,   "calendar-query");
+                serializer.endTag(XmlUtils.NS_CALDAV, "comp-filter");
+            serializer.endTag(XmlUtils.NS_CALDAV, "filter");
+        serializer.endTag(XmlUtils.NS_CALDAV, "calendar-query");
         serializer.endDocument();
 
         Response response = httpClient.newCall(new Request.Builder()
