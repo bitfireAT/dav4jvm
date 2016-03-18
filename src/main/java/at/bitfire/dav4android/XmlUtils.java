@@ -5,9 +5,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-
 import lombok.SneakyThrows;
 
 public class XmlUtils {

@@ -109,6 +109,9 @@ public class DavResource {
 
         for (String capability : HttpUtils.listHeader(response, "DAV"))
             capabilities.add(capability.trim());
+
+        if (response.body() != null)
+            response.body().close();
     }
 
     public void mkCol(String xmlBody) throws IOException, HttpException {
@@ -126,13 +129,16 @@ public class DavResource {
                 break;
         }
         checkStatus(response);
+
+        if (response.body() != null)
+            response.body().close();
     }
 
     /**
      * Sends a GET request to the resource. Note that this method expects the server to
      * return an ETag (which is required for CalDAV and CardDAV, but not for WebDAV in general).
      * @param accept    content of Accept header (must not be null, but may be &#42;&#47;* )
-     * @return          response body
+     * @return          response body (has to be closed by caller)
      * @throws DavException    on WebDAV errors, or when the response doesn't contain an ETag
      */
     public ResponseBody get(@NonNull String accept) throws IOException, HttpException, DavException {
@@ -191,6 +197,7 @@ public class DavResource {
                 builder.header("If-None-Match", "*");
 
             response = httpClient.newCall(builder.build()).execute();
+
             if (response.isRedirect()) {
                 processRedirection(response);
                 redirected = true;
@@ -198,6 +205,9 @@ public class DavResource {
                 break;
         }
         checkStatus(response);
+
+        if (response.body() != null)
+            response.body().close();
 
         String eTag = response.header("ETag");
         if (TextUtils.isEmpty(eTag))
@@ -221,6 +231,9 @@ public class DavResource {
             builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
         Response response = httpClient.newCall(builder.build()).execute();
         checkStatus(response);
+
+        if (response.body() != null)
+            response.body().close();
 
         if (response.code() == 207) {
             /* If an error occurs deleting a member resource (a resource other than
@@ -528,7 +541,7 @@ public class DavResource {
             eventType = parser.next();
         }
 
-        if (status != null && status.code/100 != 2)
+        if (prop != null && status != null && status.code/100 != 2)
             // not successful, null out property values so that they can be removed when merging in parseMultiStatus_Response
             prop.nullAllValues();
 
