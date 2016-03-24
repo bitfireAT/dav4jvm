@@ -328,10 +328,10 @@ public class DavResource {
 
     protected void assertMultiStatus(Response response) throws DavException {
         if (response.code() != 207)
-            throw new InvalidDavResponseException("Expected 207 Multi-Status");
+            throw new InvalidDavResponseException("Expected 207 Multi-Status, got " + response.code() + " " + response.message());
 
         if (response.body() == null)
-            throw new InvalidDavResponseException("Received multi-status response without body");
+            throw new InvalidDavResponseException("Received 207 Multi-Status without body");
 
         MediaType mediaType = response.body().contentType();
         if (mediaType != null) {
@@ -339,7 +339,7 @@ public class DavResource {
                     !"xml".equals(mediaType.subtype()))
                 throw new InvalidDavResponseException("Received non-XML 207 Multi-Status");
         } else
-            log.warning("Received multi-status response without Content-Type, assuming XML");
+            log.warning("Received 207 Multi-Status without Content-Type, assuming XML");
     }
 
     void processRedirection(Response response) throws HttpException {
@@ -350,10 +350,10 @@ public class DavResource {
             target = location.resolve(href);
 
         if (target != null) {
-            log.fine("Received redirection, new location=" + target);
+            log.fine("Redirected, new location=" + target);
             location = target;
         } else
-            throw new HttpException("Received redirection without new location");
+            throw new HttpException("Redirected without new Location");
     }
 
 
