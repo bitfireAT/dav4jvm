@@ -60,7 +60,7 @@ public class DavAddressBook extends DavResource {
                 .header("Depth", "1")
                 .build()).execute();
 
-        checkStatus(response);
+        checkStatus(response, false);
         assertMultiStatus(response);
 
         members.clear();
@@ -106,7 +106,7 @@ public class DavAddressBook extends DavResource {
                 .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
                 .build()).execute();
 
-        checkStatus(response);
+        checkStatus(response, false);
         assertMultiStatus(response);
 
         members.clear();

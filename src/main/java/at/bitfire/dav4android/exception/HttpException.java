@@ -8,12 +8,15 @@
 
 package at.bitfire.dav4android.exception;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 
+import at.bitfire.dav4android.Constants;
 import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public class HttpException extends Exception implements Serializable {
@@ -53,11 +56,11 @@ public class HttpException extends Exception implements Serializable {
         // format request
         Request request = response.request();
         StringBuilder formatted = new StringBuilder();
-        formatted.append(request.method() + " " + request.url().encodedPath() + "\n");
+        formatted.append(request.method()).append(" ").append(request.url().encodedPath()).append("\n");
         Headers headers = request.headers();
         for (String name : headers.names())
             for (String value : headers.values(name))
-                formatted.append(name + ": " + value + "\n");
+                formatted.append(name).append(": ").append(value).append("\n");
         if (request.body() != null)
             try {
                 formatted.append("\n");
@@ -66,23 +69,28 @@ public class HttpException extends Exception implements Serializable {
                 while (!buffer.exhausted())
                     appendByte(formatted, buffer.readByte());
             } catch (IOException e) {
+                Constants.log.warning("Couldn't read request body");
             }
         this.request = formatted.toString();
 
         // format response
         formatted = new StringBuilder();
-        formatted.append(response.protocol() + " " + response.code() + " " + response.message() + "\n");
+        formatted.append(response.protocol()).append(" ").append(response.code()).append(" ").append(response.message()).append("\n");
         headers = response.headers();
         for (String name : headers.names())
             for (String value : headers.values(name))
-                formatted.append(name + ": " + value + "\n");
-        if (response.body() != null)
+                formatted.append(name).append(": ").append(value).append("\n");
+        if (response.body() != null) {
+            ResponseBody body = response.body();
             try {
                 formatted.append("\n");
-                for (byte b : response.body().bytes())
+                for (byte b : body.bytes())
                     appendByte(formatted, b);
-            } catch (IOException e) {
+            } catch(IOException e) {
+                Constants.log.warning("Couldn't read response body");
             }
+            body.close();
+        }
         this.response = formatted.toString();
     }
 

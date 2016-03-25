@@ -105,13 +105,10 @@ public class DavResource {
                 .method("OPTIONS", null)
                 .url(location)
                 .build()).execute();
-        checkStatus(response);
+        checkStatus(response, true);
 
         for (String capability : HttpUtils.listHeader(response, "DAV"))
             capabilities.add(capability.trim());
-
-        if (response.body() != null)
-            response.body().close();
     }
 
     public void mkCol(String xmlBody) throws IOException, HttpException {
@@ -128,10 +125,7 @@ public class DavResource {
             else
                 break;
         }
-        checkStatus(response);
-
-        if (response.body() != null)
-            response.body().close();
+        checkStatus(response, true);
     }
 
     /**
@@ -154,7 +148,7 @@ public class DavResource {
             else
                 break;
         }
-        checkStatus(response);
+        checkStatus(response, false);
 
         String eTag = response.header("ETag");
         if (TextUtils.isEmpty(eTag))
@@ -204,10 +198,7 @@ public class DavResource {
             } else
                 break;
         }
-        checkStatus(response);
-
-        if (response.body() != null)
-            response.body().close();
+        checkStatus(response, true);
 
         String eTag = response.header("ETag");
         if (TextUtils.isEmpty(eTag))
@@ -230,17 +221,15 @@ public class DavResource {
         if (ifMatchETag != null)
             builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
         Response response = httpClient.newCall(builder.build()).execute();
-        checkStatus(response);
-
-        if (response.body() != null)
-            response.body().close();
+        checkStatus(response, false);
 
         if (response.code() == 207) {
             /* If an error occurs deleting a member resource (a resource other than
                the resource identified in the Request-URI), then the response can be
                a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
             throw new HttpException(response);
-        }
+        } else
+            closeBody(response);
     }
 
     /**
@@ -283,7 +272,7 @@ public class DavResource {
                 break;
         }
 
-        checkStatus(response);
+        checkStatus(response, false);
         assertMultiStatus(response);
 
         if (depth > 0)
@@ -296,6 +285,17 @@ public class DavResource {
 
 
     // status handling
+
+    protected void checkStatus(Response response, boolean closeBody) throws HttpException {
+        checkStatus(response.code(), response.message(), response);
+
+        if (closeBody)
+            closeBody(response);
+    }
+
+    protected void checkStatus(StatusLine status) throws HttpException {
+        checkStatus(status.code, status.message, null);
+    }
 
     protected void checkStatus(int code, String message, Response response) throws HttpException {
         if (code/100 == 2)
@@ -316,14 +316,6 @@ public class DavResource {
             default:
                 throw response != null ? new HttpException(response) : new HttpException(code, message);
         }
-    }
-
-    protected void checkStatus(Response response) throws HttpException {
-        checkStatus(response.code(), response.message(), response);
-    }
-
-    protected void checkStatus(StatusLine status) throws HttpException {
-        checkStatus(status.code, status.message, null);
     }
 
     protected void assertMultiStatus(Response response) throws DavException {
@@ -349,11 +341,18 @@ public class DavResource {
         if (href != null)
             target = location.resolve(href);
 
+        closeBody(response);
+
         if (target != null) {
             log.fine("Redirected, new location=" + target);
             location = target;
         } else
             throw new HttpException("Redirected without new Location");
+    }
+
+    protected void closeBody(Response response) {
+        if (response != null && response.body() != null)
+            response.body().close();
     }
 
 

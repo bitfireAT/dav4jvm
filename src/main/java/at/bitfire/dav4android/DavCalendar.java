@@ -85,7 +85,7 @@ public class DavCalendar extends DavResource {
                 .header("Depth", "1")
                 .build()).execute();
 
-        checkStatus(response);
+        checkStatus(response, false);
         assertMultiStatus(response);
 
         members.clear();
@@ -125,7 +125,7 @@ public class DavCalendar extends DavResource {
                 .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
                 .build()).execute();
 
-        checkStatus(response);
+        checkStatus(response, false);
         assertMultiStatus(response);
 
         members.clear();
