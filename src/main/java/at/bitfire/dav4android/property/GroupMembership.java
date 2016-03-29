@@ -26,7 +26,7 @@ import at.bitfire.dav4android.XmlUtils;
 public class GroupMembership implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_WEBDAV, "group-membership");
 
-    public List<String> hrefs = new LinkedList<>();
+    public final List<String> hrefs = new LinkedList<>();
 
     @Override
     public String toString() {

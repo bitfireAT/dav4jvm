@@ -26,7 +26,7 @@ import at.bitfire.dav4android.XmlUtils;
 public class CalendarProxyWriteFor implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_CALENDARSERVER, "calendar-proxy-write-for");
 
-    public List<String> principals = new LinkedList<>();
+    public final List<String> principals = new LinkedList<>();
 
     @Override
     public String toString() {

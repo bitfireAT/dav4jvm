@@ -26,7 +26,7 @@ import at.bitfire.dav4android.XmlUtils;
 public class CalendarProxyReadFor implements Property {
     public static final Name NAME = new Name(XmlUtils.NS_CALENDARSERVER, "calendar-proxy-read-for");
 
-    public List<String> principals = new LinkedList<>();
+    public final List<String> principals = new LinkedList<>();
 
     @Override
     public String toString() {
