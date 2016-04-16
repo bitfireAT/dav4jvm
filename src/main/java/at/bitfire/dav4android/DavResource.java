@@ -561,7 +561,7 @@ public class DavResource {
                 if (property != null)
                     prop.put(name, property);
                 else
-                    log.fine("Ignoring unknown/unparseable property " + name);
+                    log.fine("Ignoring unknown property " + name);
             }
             eventType = parser.next();
         }
