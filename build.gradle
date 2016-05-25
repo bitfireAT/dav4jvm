@@ -22,9 +22,9 @@ android {
 }
 
 dependencies {
-    compile 'com.squareup.okhttp3:okhttp:3.2.0'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.2.0'
-    provided 'org.projectlombok:lombok:1.16.6'
+    compile 'com.squareup.okhttp3:okhttp:3.3.0'
+    compile 'com.squareup.okhttp3:logging-interceptor:3.3.0'
+    provided 'org.projectlombok:lombok:1.16.8'
 
-    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.3.0'
 }
