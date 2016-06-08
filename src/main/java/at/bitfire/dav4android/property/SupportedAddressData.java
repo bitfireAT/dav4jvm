@@ -19,6 +19,13 @@ public class SupportedAddressData implements Property {
 
     public final Set<MediaType> types = new HashSet<>();
 
+    public boolean hasVCard4() {
+        for (MediaType type : types)
+            if ("text/vcard; version=4.0".equalsIgnoreCase(type.toString()))    // the literal string has been constructed exactly this way below
+                return true;
+        return false;
+    }
+
 
     public static class Factory implements PropertyFactory {
         @Override
