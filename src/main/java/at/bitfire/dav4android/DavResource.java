@@ -152,10 +152,9 @@ public class DavResource {
 
         String eTag = response.header("ETag");
         if (TextUtils.isEmpty(eTag))
-            // CalDAV servers MUST return ETag on GET [https://tools.ietf.org/html/rfc4791#section-5.3.4]
-            // CardDAV servers MUST return ETag on GET [https://tools.ietf.org/html/rfc6352#section-6.3.2.3]
-            throw new DavException("Received GET response without ETag");
-        properties.put(GetETag.NAME, new GetETag(eTag));
+            properties.remove(GetETag.NAME);
+        else
+            properties.put(GetETag.NAME, new GetETag(eTag));
 
         ResponseBody body = response.body();
         if (body == null)

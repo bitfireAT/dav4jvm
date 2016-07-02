@@ -109,17 +109,13 @@ public class DavResourceTest extends TestCase {
         assertEquals("GET", rq.getMethod());
         assertEquals("/target", rq.getPath());
 
-        /* NEGATIVE TEST CASES */
-
         // 200 OK without ETag in response
+        dav.properties.put(GetETag.NAME, new GetETag("test"));
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(sampleText));
-        try {
-            body = dav.get("*/*");
-            fail();
-        } catch (DavException e) {
-        }
+        dav.get("*/*");
+        assertNull(dav.properties.get(GetETag.NAME));
     }
 
     public void testPut() throws InterruptedException, IOException, HttpException, DavException {
