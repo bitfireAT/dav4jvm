@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.NonNull;
 import okhttp3.Authenticator;
 import okhttp3.Credentials;
+import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -26,81 +27,96 @@ import okhttp3.Route;
 import okio.Buffer;
 import okio.ByteString;
 
-public class BasicDigestAuthenticator implements Authenticator {
+/**
+ * Handler to manage authentication against a given service (may be limited to one host).
+ * There's no domain-based cache, because the same user name and password will be used for
+ * all requests.
+ *
+ * Authentication methods/credentials found to be working will be cached for further requests
+ * (this is why the interceptor is needed).
+ *
+ * Usage: Set as authenticator <b>and</b> as network interceptor.
+ */
+public class BasicDigestAuthHandler implements Authenticator, Interceptor {
     protected static final String
             HEADER_AUTHENTICATE = "WWW-Authenticate",
             HEADER_AUTHORIZATION = "Authorization";
 
     final String host, username, password;
 
-    final String clientNonce;
-    AtomicInteger nonceCount = new AtomicInteger(1);
+    // cached authentication schemes
+    HttpUtils.AuthScheme basicAuth, digestAuth;
+
+    // cached digest parameters
+    static String clientNonce = h(UUID.randomUUID().toString());
+    static final AtomicInteger nonceCount = new AtomicInteger(1);
 
 
-    public BasicDigestAuthenticator(String host, String username, String password) {
+    public BasicDigestAuthHandler(String host, String username, String password) {
         this.host = host;
         this.username = username;
         this.password = password;
-
-        clientNonce = h(UUID.randomUUID().toString());
-    }
-
-    BasicDigestAuthenticator(String host, String username, String password, String clientNonce) {
-        this.host = null;
-        this.username = username;
-        this.password = password;
-        this.clientNonce = clientNonce;
     }
 
 
-    @Override
-    public Request authenticate(Route route, Response response) throws IOException {
-        Request request = response.request();
-
+    protected Request authenticateRequest(Request request, Response response) {
         if (host != null && !request.url().host().equalsIgnoreCase(host)) {
             Constants.log.warning("Not authenticating against " +  host + " for security reasons!");
             return null;
         }
 
-        // check whether this is the first authentication try with our credentials
-        Response priorResponse = response.priorResponse();
-        boolean triedBefore = priorResponse != null && priorResponse.request().header(HEADER_AUTHORIZATION) != null;
+        if (response == null) {
+            // we're not processing a 401 response
 
-        HttpUtils.AuthScheme basicAuth = null, digestAuth = null;
-        for (HttpUtils.AuthScheme scheme : HttpUtils.parseWwwAuthenticate(response.headers(HEADER_AUTHENTICATE).toArray(new String[0])))
-            if ("Basic".equalsIgnoreCase(scheme.name))
-                basicAuth = scheme;
-            else if ("Digest".equalsIgnoreCase(scheme.name))
-                digestAuth = scheme;
+            if (basicAuth == null && digestAuth == null && request.isHttps()) {
+                Constants.log.fine("Trying Basic auth preemptively");
+                basicAuth = new HttpUtils.AuthScheme("Basic");
+            }
+
+        } else {
+            // we're processing a 401 response
+
+            HttpUtils.AuthScheme newBasicAuth = null, newDigestAuth = null;
+            for (HttpUtils.AuthScheme scheme : HttpUtils.parseWwwAuthenticate(response.headers(HEADER_AUTHENTICATE).toArray(new String[0])))
+                if ("Basic".equalsIgnoreCase(scheme.name)) {
+                    if (basicAuth != null) {
+                        Constants.log.warning("Basic credentials didn't work last time -> aborting");
+                        basicAuth = null;
+                        return null;
+                    }
+                    newBasicAuth = scheme;
+
+                } else if ("Digest".equalsIgnoreCase(scheme.name)) {
+                    if (digestAuth != null && !"true".equalsIgnoreCase(scheme.params.get("stale"))) {
+                        Constants.log.warning("Digest credentials didn't work last time and server nonce has not expired -> aborting");
+                        digestAuth = null;
+                        return null;
+                    }
+                    newDigestAuth = scheme;
+                }
+
+            basicAuth = newBasicAuth;
+            digestAuth = newDigestAuth;
+        }
 
         // we MUST prefer Digest auth [https://tools.ietf.org/html/rfc2617#section-4.6]
         if (digestAuth != null) {
-            // Digest auth
-
-            if (triedBefore && !"true".equalsIgnoreCase(digestAuth.params.get("stale")))
-                // credentials didn't work last time, and they won't work now -> stop here
-                return null;
-
             Constants.log.fine("Adding Digest authorization request for " + request.url());
-            return authorizationRequest(request, digestAuth);
+            return digestRequest(request, digestAuth);
 
         } else if (basicAuth != null) {
-            // Basic auth
-            if (triedBefore)    // credentials didn't work last time, and they won't work now -> stop here
-                return null;
-
             Constants.log.fine("Adding Basic authorization header for " + request.url());
             return request.newBuilder()
                     .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
                     .build();
-        } else
-            Constants.log.severe("No supported authentication scheme");
+        } else if (response != null)
+            Constants.log.warning("No supported authentication scheme");
 
         // no supported auth scheme
         return null;
     }
 
-    protected Request authorizationRequest(Request request, HttpUtils.AuthScheme digest) {
+    protected Request digestRequest(Request request, HttpUtils.AuthScheme digest) {
         String  realm = digest.params.get("realm"),
                 opaque = digest.params.get("opaque"),
                 nonce = digest.params.get("nonce");
@@ -181,21 +197,21 @@ public class BasicDigestAuthenticator implements Authenticator {
             return null;
     }
 
-    protected String quotedString(String s) {
+    protected static String quotedString(String s) {
         return "\"" + s.replace("\"", "\\\"") + "\"";
     }
 
-    protected String h(String data) {
+    protected static String h(String data) {
         return ByteString.of(data.getBytes()).md5().hex();
     }
 
-    protected String h(@NonNull RequestBody body) throws IOException {
+    protected static String h(@NonNull RequestBody body) throws IOException {
         Buffer buffer = new Buffer();
         body.writeTo(buffer);
         return ByteString.of(buffer.readByteArray()).md5().hex();
     }
 
-    protected String kd(String secret, String data) {
+    protected static String kd(String secret, String data) {
         return h(secret + ":" + data);
     }
 
@@ -243,6 +259,24 @@ public class BasicDigestAuthenticator implements Authenticator {
             }
             return null;
         }
+    }
+
+
+    @Override
+    public Request authenticate(Route route, Response response) throws IOException {
+        return authenticateRequest(response.request(), response);
+    }
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request request = chain.request();
+        if (request.header(HEADER_AUTHORIZATION) == null) {
+            // try to apply cached authentication
+            Request authRequest = authenticateRequest(request, null);
+            if (authRequest != null)
+                request = authRequest;
+        }
+        return chain.proceed(request);
     }
 
 }

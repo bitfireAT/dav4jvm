@@ -14,11 +14,13 @@ import okhttp3.RequestBody;
 
 import junit.framework.TestCase;
 
-public class BasicDigestAuthenticatorTest extends TestCase {
+public class BasicDigestAuthHandlerTest extends TestCase {
 
     public void testRFCExample() {
         // use cnonce from example
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "Mufasa", "Circle Of Life", "0a4f113b");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "Circle Of Life");
+        authenticator.clientNonce = "0a4f113b";
+        authenticator.nonceCount.set(1);
 
         // construct WWW-Authenticate
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
@@ -31,7 +33,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .get()
                 .url("http://www.nowhere.org/dir/index.html")
                 .build();
-        Request request = authenticator.authorizationRequest(original, authScheme);
+        Request request = authenticator.digestRequest(original, authScheme);
         String auth = request.header("Authorization");
         assertTrue(auth.contains("username=\"Mufasa\""));
         assertTrue(auth.contains("realm=\"testrealm@host.com\""));
@@ -45,7 +47,9 @@ public class BasicDigestAuthenticatorTest extends TestCase {
     }
 
     public void testRealWorldExamples() {
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "demo", "demo", "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
+        authenticator.clientNonce = "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=";
+        authenticator.nonceCount.set(1);
 
         // example 1
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
@@ -58,7 +62,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .method("PROPFIND", null)
                 .url("https://demo.group-office.eu/caldav/")
                 .build();
-        Request request = authenticator.authorizationRequest(original, authScheme);
+        Request request = authenticator.digestRequest(original, authScheme);
         String auth = request.header("Authorization");
         assertTrue(auth.contains("username=\"demo\""));
         assertTrue(auth.contains("realm=\"Group-Office\""));
@@ -71,7 +75,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
         assertTrue(auth.contains("opaque=\"df58bdff8cf60599c939187d0b5c54de\""));
 
         // example 2
-        authenticator = new BasicDigestAuthenticator(null, "test", "test");
+        authenticator = new BasicDigestAuthHandler(null, "test", "test");
         authScheme = new HttpUtils.AuthScheme("digest");    // lower case
         authScheme.params.put("nonce", "87c4c2aceed9abf30dd68c71");
         authScheme.params.put("algorithm", "md5");          // note the (illegal) lower case!
@@ -81,7 +85,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .method("OPTIONS", null)
                 .url("https://ieddy.ru/")
                 .build();
-        request = authenticator.authorizationRequest(original, authScheme);
+        request = authenticator.digestRequest(original, authScheme);
         auth = request.header("Authorization");
         assertTrue(auth.contains("algorithm=\"MD5\""));     // some servers require it
         assertTrue(auth.contains("username=\"test\""));
@@ -89,14 +93,16 @@ public class BasicDigestAuthenticatorTest extends TestCase {
         assertTrue(auth.contains("nonce=\"87c4c2aceed9abf30dd68c71\""));
         assertTrue(auth.contains("uri=\"/\""));
         assertFalse(auth.contains("cnonce="));
-        assertFalse(auth.contains("nc="));
+        assertFalse(auth.contains("nc=00000001"));
         assertFalse(auth.contains("qop="));
         assertTrue(auth.contains("response=\"d42a39f25f80b0d6907286a960ff9c7d\""));
         assertTrue(auth.contains("opaque=\"571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==\""));
     }
 
     public void testMD5Sess() {
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "admin", "12345", "hxk1lu63b6c7vhk");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12345");
+        authenticator.clientNonce = "hxk1lu63b6c7vhk";
+        authenticator.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         authScheme.params.put("realm", "MD5-sess Example");
@@ -117,7 +123,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .method("POST", RequestBody.create(MediaType.parse("text/plain"), "PLAIN TEXT"))
                 .url("http://example.com/plain.txt")
                 .build();
-        Request request = authenticator.authorizationRequest(original, authScheme);
+        Request request = authenticator.digestRequest(original, authScheme);
         String auth = request.header("Authorization");
         assertTrue(auth.contains("username=\"admin\""));
         assertTrue(auth.contains("realm=\"MD5-sess Example\""));
@@ -131,7 +137,9 @@ public class BasicDigestAuthenticatorTest extends TestCase {
     }
 
     public void testMD5AuthInt() {
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "admin", "12435", "hxk1lu63b6c7vhk");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12435");
+        authenticator.clientNonce = "hxk1lu63b6c7vhk";
+        authenticator.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         authScheme.params.put("realm", "AuthInt Example");
@@ -152,7 +160,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .method("POST", RequestBody.create(MediaType.parse("text/plain"), "PLAIN TEXT"))
                 .url("http://example.com/plain.txt")
                 .build();
-        Request request = authenticator.authorizationRequest(original, authScheme);
+        Request request = authenticator.digestRequest(original, authScheme);
         String auth = request.header("Authorization");
         assertTrue(auth.contains("username=\"admin\""));
         assertTrue(auth.contains("realm=\"AuthInt Example\""));
@@ -166,7 +174,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
     }
 
     public void testLegacyDigest() {
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "Mufasa", "CircleOfLife");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife");
 
         // construct WWW-Authenticate
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
@@ -178,7 +186,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .get()
                 .url("http://www.nowhere.org/dir/index.html")
                 .build();
-        Request request = authenticator.authorizationRequest(original, authScheme);
+        Request request = authenticator.digestRequest(original, authScheme);
         String auth = request.header("Authorization");
         assertTrue(auth.contains("username=\"Mufasa\""));
         assertTrue(auth.contains("realm=\"testrealm@host.com\""));
@@ -192,7 +200,7 @@ public class BasicDigestAuthenticatorTest extends TestCase {
     }
 
     public void testIncompleteAuthenticationRequests() {
-        BasicDigestAuthenticator authenticator = new BasicDigestAuthenticator(null, "demo", "demo");
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
 
         Request original = new Request.Builder()
                 .get()
@@ -200,16 +208,16 @@ public class BasicDigestAuthenticatorTest extends TestCase {
                 .build();
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        assertNull(authenticator.authorizationRequest(original, authScheme));
+        assertNull(authenticator.digestRequest(original, authScheme));
 
         authScheme.params.put("realm", "Group-Office");
-        assertNull(authenticator.authorizationRequest(original, authScheme));
+        assertNull(authenticator.digestRequest(original, authScheme));
 
         authScheme.params.put("qop", "auth");
-        assertNull(authenticator.authorizationRequest(original, authScheme));
+        assertNull(authenticator.digestRequest(original, authScheme));
 
         authScheme.params.put("nonce", "56212407212c8");
-        assertNotNull(authenticator.authorizationRequest(original, authScheme));
+        assertNotNull(authenticator.digestRequest(original, authScheme));
     }
 
 }
