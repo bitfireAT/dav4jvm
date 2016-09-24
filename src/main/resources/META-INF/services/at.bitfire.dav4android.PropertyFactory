@@ -8,6 +8,7 @@ at.bitfire.dav4android.property.CalendarHomeSet$Factory
 at.bitfire.dav4android.property.CalendarProxyReadFor$Factory
 at.bitfire.dav4android.property.CalendarProxyWriteFor$Factory
 at.bitfire.dav4android.property.CalendarTimezone$Factory
+at.bitfire.dav4android.property.CalendarUserAddressSet$Factory
 at.bitfire.dav4android.property.CurrentUserPrincipal$Factory
 at.bitfire.dav4android.property.CurrentUserPrivilegeSet$Factory
 at.bitfire.dav4android.property.DisplayName$Factory
