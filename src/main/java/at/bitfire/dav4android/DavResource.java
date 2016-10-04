@@ -103,6 +103,7 @@ public class DavResource {
 
         Response response = httpClient.newCall(new Request.Builder()
                 .method("OPTIONS", null)
+                .header("Content-Length", "0")      // workaround for https://github.com/square/okhttp/issues/2892
                 .url(location)
                 .build()).execute();
         checkStatus(response, true);

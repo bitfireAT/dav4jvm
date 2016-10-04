@@ -11,6 +11,7 @@ package at.bitfire.dav4android;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -18,6 +19,7 @@ import java.util.Locale;
 
 import at.bitfire.dav4android.exception.DavException;
 import at.bitfire.dav4android.exception.HttpException;
+import lombok.Cleanup;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -89,7 +91,9 @@ public class DavCalendar extends DavResource {
         assertMultiStatus(response);
 
         members.clear();
-        processMultiStatus(response.body().charStream());
+
+        @Cleanup Reader reader = response.body().charStream();
+        processMultiStatus(reader);
     }
 
     public void multiget(HttpUrl[] urls) throws IOException, HttpException, DavException {
@@ -129,7 +133,9 @@ public class DavCalendar extends DavResource {
         assertMultiStatus(response);
 
         members.clear();
-        processMultiStatus(response.body().charStream());
+
+        @Cleanup Reader reader = response.body().charStream();
+        processMultiStatus(reader);
     }
 
 }
