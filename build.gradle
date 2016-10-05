@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.2'
+    buildToolsVersion '24.0.3'
 
     defaultConfig {
         minSdkVersion 9
@@ -22,8 +22,12 @@ android {
 }
 
 dependencies {
+    compile 'org.apache.commons:commons-lang3:3.4'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
-    compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
-    provided 'org.projectlombok:lombok:1.16.8'
+    provided 'org.projectlombok:lombok:1.16.10'
+
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.4.1'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.4.1'
 }

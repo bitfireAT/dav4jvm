@@ -8,18 +8,23 @@
 
 package at.bitfire.dav4android.exception;
 
+import org.junit.Test;
+
+import java.util.Calendar;
+import java.util.Date;
+
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.internal.http.HttpDate;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Calendar;
-import java.util.Date;
+public class ServiceUnavailableExceptionTest {
 
-public class ServiceUnavailableExceptionTest extends TestCase {
-
+    @Test
     public void testRetryAfter() {
         Response response = new Response.Builder()
                 .request(new Request.Builder()

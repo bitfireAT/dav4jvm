@@ -8,7 +8,7 @@
 
 package at.bitfire.dav4android;
 
-public class StringUtils {
+public class QuotedStringUtils {
 
     public static String asQuotedString(String raw) {
         if (raw == null)

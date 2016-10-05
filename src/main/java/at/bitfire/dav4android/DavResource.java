@@ -185,7 +185,7 @@ public class DavResource {
 
             if (ifMatchETag != null)
                 // only overwrite specific version
-                builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
+                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag));
             if (ifNoneMatch)
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*");
@@ -219,7 +219,7 @@ public class DavResource {
                 .delete()
                 .url(location);
         if (ifMatchETag != null)
-            builder.header("If-Match", StringUtils.asQuotedString(ifMatchETag));
+            builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag));
         Response response = httpClient.newCall(builder.build()).execute();
         checkStatus(response, false);
 

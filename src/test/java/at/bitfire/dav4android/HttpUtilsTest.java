@@ -8,12 +8,15 @@
 
 package at.bitfire.dav4android;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import java.util.List;
 
-public class HttpUtilsTest extends TestCase {
+import static org.junit.Assert.assertEquals;
 
+public class HttpUtilsTest {
+
+    @Test
     public void testParseWwwAuthenticate() {
         // two schemes: one without param (illegal!), second with two params
         List<HttpUtils.AuthScheme> schemes = HttpUtils.parseWwwAuthenticate(new String[]{ "  UnknownWithoutParam,   Unknown   WithParam1=\"a\",   Param2  " });
@@ -30,7 +33,7 @@ public class HttpUtilsTest extends TestCase {
         assertEquals("Param2", schemes.get(1).unnamedParams.get(0));
 
         // parameters with quoted strings with commas
-         schemes = HttpUtils.parseWwwAuthenticate(new String[]{ "X-MyScheme param1, param2=\"a,\\\"b\\\",c\", MyOtherScheme paramA" });
+        schemes = HttpUtils.parseWwwAuthenticate(new String[]{ "X-MyScheme param1, param2=\"a,\\\"b\\\",c\", MyOtherScheme paramA" });
         assertEquals(2, schemes.size());
         assertEquals("X-MyScheme", schemes.get(0).name);
         assertEquals(1, schemes.get(0).params.size());

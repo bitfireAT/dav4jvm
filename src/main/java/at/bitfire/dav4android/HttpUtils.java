@@ -8,7 +8,7 @@
 
 package at.bitfire.dav4android;
 
-import android.text.TextUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,8 +25,8 @@ public class HttpUtils {
     private static final Pattern authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$");
 
     public static String[] listHeader(Response response, String name) {
-        String value = TextUtils.join(",", response.headers(name));
-        return TextUtils.split(value, " *, *");
+        String value = StringUtils.join(response.headers(name), ",");
+        return StringUtils.splitByWholeSeparator(value, ",");
     }
 
     public static List<AuthScheme> parseWwwAuthenticate(String[] wwwAuths) {
