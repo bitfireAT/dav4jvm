@@ -1,6 +1,6 @@
 #!/bin/sh
 
-../gradlew -i check connectedCheck
+./gradlew -i check connectedCheck
 
 echo
 echo View lint report:

@@ -1,0 +1,19 @@
+image: registry.gitlab.com/bitfireat/davdroid:latest
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - chmod +x gradlew
+  - emulator64-arm -avd test -no-skin -no-audio -no-window & wait-for-emulator.sh
+
+cache:
+  paths:
+     - .gradle/wrapper
+     - .gradle/caches
+
+test:
+  script:
+    - ./gradlew -i check connectedCheck
+  artifacts:
+    paths:
+      - build/outputs/lint-results-debug.html
+      - build/reports/
