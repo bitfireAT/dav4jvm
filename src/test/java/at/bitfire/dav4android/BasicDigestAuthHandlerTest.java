@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 – 2015 Ricki Hirner (bitfire web engineering).
+ * Copyright © Ricki Hirner (bitfire web engineering).
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
@@ -8,14 +8,20 @@
 
 package at.bitfire.dav4android;
 
+import org.junit.Test;
+
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-public class BasicDigestAuthHandlerTest extends TestCase {
+public class BasicDigestAuthHandlerTest {
 
+    @Test
     public void testRFCExample() {
         // use cnonce from example
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "Circle Of Life");
@@ -46,6 +52,7 @@ public class BasicDigestAuthHandlerTest extends TestCase {
         assertTrue(auth.contains("opaque=\"5ccc069c403ebaf9f0171e9517f40e41\""));
     }
 
+    @Test
     public void testRealWorldExamples() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
         authenticator.clientNonce = "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=";
@@ -99,6 +106,7 @@ public class BasicDigestAuthHandlerTest extends TestCase {
         assertTrue(auth.contains("opaque=\"571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==\""));
     }
 
+    @Test
     public void testMD5Sess() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12345");
         authenticator.clientNonce = "hxk1lu63b6c7vhk";
@@ -136,6 +144,7 @@ public class BasicDigestAuthHandlerTest extends TestCase {
         assertTrue(auth.contains("opaque=\"5ccc069c403ebaf9f0171e9517f40e41\""));
     }
 
+    @Test
     public void testMD5AuthInt() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12435");
         authenticator.clientNonce = "hxk1lu63b6c7vhk";
@@ -173,6 +182,7 @@ public class BasicDigestAuthHandlerTest extends TestCase {
         assertTrue(auth.contains("opaque=\"87aaxcval4gba36\""));
     }
 
+    @Test
     public void testLegacyDigest() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife");
 
@@ -199,6 +209,7 @@ public class BasicDigestAuthHandlerTest extends TestCase {
         assertTrue(auth.contains("opaque=\"5ccc069c403ebaf9f0171e9517f40e41\""));
     }
 
+    @Test
     public void testIncompleteAuthenticationRequests() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
 

@@ -1,15 +1,8 @@
 package at.bitfire.dav4android;
 
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
-
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -23,8 +16,22 @@ import at.bitfire.dav4android.property.GetCTag;
 import at.bitfire.dav4android.property.GetContentType;
 import at.bitfire.dav4android.property.GetETag;
 import at.bitfire.dav4android.property.ResourceType;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
-public class DavResourceTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+public class DavResourceTest {
 
     private static final String
             sampleText = "SAMPLE RESPONSE";
@@ -35,13 +42,13 @@ public class DavResourceTest extends TestCase {
     private MockWebServer mockServer = new MockWebServer();
 
 
-    @Override
-    public void setUp() throws IOException {
+    @Before
+    public void startServer() throws IOException {
         mockServer.start();
     }
 
-    @Override
-    public void tearDown() throws IOException {
+    @After
+    public void stopServer() throws IOException {
         mockServer.shutdown();
     }
 
@@ -50,6 +57,7 @@ public class DavResourceTest extends TestCase {
     }
 
 
+    @Test
     public void testOptions() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -69,6 +77,7 @@ public class DavResourceTest extends TestCase {
         assertTrue(dav.capabilities.isEmpty());
     }
 
+    @Test
     public void testGet() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -118,6 +127,7 @@ public class DavResourceTest extends TestCase {
         assertNull(dav.properties.get(GetETag.NAME));
     }
 
+    @Test
     public void testPut() throws InterruptedException, IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -165,6 +175,7 @@ public class DavResourceTest extends TestCase {
         assertNull(rq.getHeader("If-None-Match"));
     }
 
+    @Test
     public void testDelete() throws InterruptedException, IOException, HttpException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -203,6 +214,7 @@ public class DavResourceTest extends TestCase {
         }
     }
 
+    @Test
     public void testPropfindAndMultiStatus() throws IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);
@@ -487,6 +499,7 @@ public class DavResourceTest extends TestCase {
         assertEquals("Without Status", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
     }
 
+    @Test
     public void testPropfindUpdateProperties() throws IOException, HttpException, DavException {
         HttpUrl url = sampleUrl();
         DavResource dav = new DavResource(httpClient, url);

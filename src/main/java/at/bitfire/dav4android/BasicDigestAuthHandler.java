@@ -8,7 +8,7 @@
 
 package at.bitfire.dav4android;
 
-import android.text.TextUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -191,7 +191,7 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
         if (response != null) {
             params.add("response=" + quotedString(response));
             return request.newBuilder()
-                    .header(HEADER_AUTHORIZATION, "Digest " + TextUtils.join(", ", params))
+                    .header(HEADER_AUTHORIZATION, "Digest " + StringUtils.join(params, ", "))
                     .build();
         } else
             return null;

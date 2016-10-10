@@ -40,7 +40,12 @@ android {
         disable 'AllowBackup'
         disable 'InvalidPackage'
     }
+
+    defaultConfig {
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 }
+
 
 dependencies {
     compile 'org.apache.commons:commons-lang3:3.4'
@@ -49,6 +54,9 @@ dependencies {
 
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.4.1'
 
-    testCompile 'junit:junit:4.12'
+    androidTestCompile 'junit:junit:4.12'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+
+        testCompile 'junit:junit:4.12'
     testCompile 'com.squareup.okhttp3:mockwebserver:3.4.1'
 }
