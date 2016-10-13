@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.NonNull;
 import okhttp3.Authenticator;
-import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -106,8 +105,16 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
 
         } else if (basicAuth != null) {
             Constants.log.fine("Adding Basic authorization header for " + request.url());
+
+            /* In RFC 2617 (obsolete), there was no encoding for credentials defined, although
+             one can interpret it as "use ISO-8859-1 encoding". This has been clarified by RFC 7617,
+             which creates a new charset parameter for WWW-Authenticate, which always must be UTF-8.
+             So, UTF-8 encoding for credentials is compatible with all RFC 7617 servers and many,
+             but not all pre-RFC 7617 servers. */
+
+            final String credentials = username + ":" + password;
             return request.newBuilder()
-                    .header(HEADER_AUTHORIZATION, Credentials.basic(username, password))
+                    .header(HEADER_AUTHORIZATION, "Basic " + ByteString.of(credentials.getBytes()).base64())
                     .build();
         } else if (response != null)
             Constants.log.warning("No supported authentication scheme");

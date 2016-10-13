@@ -11,9 +11,12 @@ package at.bitfire.dav4android;
 import org.junit.Test;
 
 import okhttp3.MediaType;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -22,11 +25,35 @@ import static org.junit.Assert.assertTrue;
 public class BasicDigestAuthHandlerTest {
 
     @Test
-    public void testRFCExample() {
+    public void testBasic() {
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "user", "password");
+        Request original = new Request.Builder()
+                        .url("http://example.com")
+                        .build();
+        Response response = new Response.Builder()
+                .request(original)
+                .protocol(Protocol.HTTP_1_1)
+                .code(401)
+                .header("WWW-Authenticate", "Basic realm=\"WallyWorld\"")
+                .build();
+        Request request = authenticator.authenticateRequest(original, response);
+        assertEquals("Basic dXNlcjpwYXNzd29yZA==", request.header("Authorization"));
+
+        // special characters: always use UTF-8 (and don't crash on RFC 7617 charset header)
+        authenticator = new BasicDigestAuthHandler(null, "username", "paßword");
+        response = response.newBuilder()
+                .header("WWW-Authenticate", "Basic realm=\"WallyWorld\",charset=UTF-8")
+                .build();
+        request = authenticator.authenticateRequest(original, response);
+        assertEquals("Basic dXNlcm5hbWU6cGHDn3dvcmQ=", request.header("Authorization"));
+    }
+
+    @Test
+    public void testDigestRFCExample() {
         // use cnonce from example
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "Circle Of Life");
-        authenticator.clientNonce = "0a4f113b";
-        authenticator.nonceCount.set(1);
+        BasicDigestAuthHandler.clientNonce = "0a4f113b";
+        BasicDigestAuthHandler.nonceCount.set(1);
 
         // construct WWW-Authenticate
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
@@ -53,10 +80,10 @@ public class BasicDigestAuthHandlerTest {
     }
 
     @Test
-    public void testRealWorldExamples() {
+    public void testDigestRealWorldExamples() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
-        authenticator.clientNonce = "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=";
-        authenticator.nonceCount.set(1);
+        BasicDigestAuthHandler.clientNonce = "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI=";
+        BasicDigestAuthHandler.nonceCount.set(1);
 
         // example 1
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
@@ -107,10 +134,10 @@ public class BasicDigestAuthHandlerTest {
     }
 
     @Test
-    public void testMD5Sess() {
+    public void testDigestMD5Sess() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12345");
-        authenticator.clientNonce = "hxk1lu63b6c7vhk";
-        authenticator.nonceCount.set(1);
+        BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk";
+        BasicDigestAuthHandler.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         authScheme.params.put("realm", "MD5-sess Example");
@@ -145,10 +172,10 @@ public class BasicDigestAuthHandlerTest {
     }
 
     @Test
-    public void testMD5AuthInt() {
+    public void testDigestMD5AuthInt() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "admin", "12435");
-        authenticator.clientNonce = "hxk1lu63b6c7vhk";
-        authenticator.nonceCount.set(1);
+        BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk";
+        BasicDigestAuthHandler.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         authScheme.params.put("realm", "AuthInt Example");
@@ -183,7 +210,7 @@ public class BasicDigestAuthHandlerTest {
     }
 
     @Test
-    public void testLegacyDigest() {
+    public void testDigestLegacy() {
         BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife");
 
         // construct WWW-Authenticate

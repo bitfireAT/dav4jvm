@@ -1,5 +1,6 @@
 
-![build status](https://gitlab.com/bitfireAT/dav4android/badges/master/build.svg)
+[![build status](https://gitlab.com/bitfireAT/dav4android/badges/master/build.svg)](https://gitlab.com/bitfireAT/dav4android/commits/master)
+
 
 # dav4android
 
