@@ -138,12 +138,16 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
         params.add("username=" + quotedString(username));
         if (realm != null)
             params.add("realm=" + quotedString(realm));
-        else
+        else {
+            Constants.log.warning("No realm provided, aborting Digest auth");
             return null;
+        }
         if (nonce != null)
             params.add("nonce=" + quotedString(nonce));
-        else
+        else {
+            Constants.log.warning("No nonce provided, aborting Digest auth");
             return null;
+        }
         if (opaque != null)
             params.add("opaque=" + quotedString(opaque));
 

@@ -27,7 +27,7 @@ public class HttpUtilsTest {
 
         assertEquals("Unknown", schemes.get(1).name);
         assertEquals(1, schemes.get(1).params.size());
-        assertEquals("a", schemes.get(1).params.get("WithParam1"));
+        assertEquals("a", schemes.get(1).params.get("withparam1"));
         assertEquals(1, schemes.get(1).params.size());
         assertEquals(1, schemes.get(1).unnamedParams.size());
         assertEquals("Param2", schemes.get(1).unnamedParams.get(0));

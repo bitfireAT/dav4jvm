@@ -119,7 +119,10 @@ public class HttpUtils {
         Pattern nameValue = Pattern.compile("^([^=]+)=(.*)$");
 
         public final String name;
+
+        /** Map (name -> value) authentication parameters. Names are always lower-case. */
         public final Map<String, String> params = new HashMap<>();
+
         public final List<String> unnamedParams = new LinkedList<>();
 
         public void addRawParam(String authParam) {
@@ -134,7 +137,7 @@ public class HttpUtils {
                             .substring(1, len-1)
                             .replace("\\\"", "\"");
                 }
-                params.put(name, value);
+                params.put(name.toLowerCase(), value);
             } else
                 unnamedParams.add(authParam);
         }
