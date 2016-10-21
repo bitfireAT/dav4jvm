@@ -102,7 +102,7 @@ public class HttpException extends Exception implements Serializable {
         else if (b >= 0x20 && b <= 0x7E)     // printable ASCII
             formatted.append((char)b);
         else
-            formatted.append("[" + Integer.toHexString(b) + "]");
+            formatted.append("[" + Integer.toHexString((int)b & 0xff) + "]");
     }
 
 }

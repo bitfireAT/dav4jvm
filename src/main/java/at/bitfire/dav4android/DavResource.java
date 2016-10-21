@@ -143,6 +143,7 @@ public class DavResource {
                     .get()
                     .url(location)
                     .header("Accept", accept)
+                    .header("Accept-Encoding", "identity")    // disable compression because it can change the ETag
                     .build()).execute();
             if (response.isRedirect())
                 processRedirection(response);
