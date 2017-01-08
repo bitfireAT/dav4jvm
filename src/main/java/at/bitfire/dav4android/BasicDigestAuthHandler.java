@@ -8,6 +8,9 @@
 
 package at.bitfire.dav4android;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -16,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.NonNull;
 import okhttp3.Authenticator;
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -27,7 +29,7 @@ import okio.Buffer;
 import okio.ByteString;
 
 /**
- * Handler to manage authentication against a given service (may be limited to one host).
+ * Handler to manage authentication against a given service (may be limited to one domain).
  * There's no domain-based cache, because the same user name and password will be used for
  * all requests.
  *
@@ -41,7 +43,10 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
             HEADER_AUTHENTICATE = "WWW-Authenticate",
             HEADER_AUTHORIZATION = "Authorization";
 
-    final String host, username, password;
+    /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
+    final String domain;
+
+    final String username, password;
 
     // cached authentication schemes
     HttpUtils.AuthScheme basicAuth, digestAuth;
@@ -51,17 +56,20 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
     static final AtomicInteger nonceCount = new AtomicInteger(1);
 
 
-    public BasicDigestAuthHandler(String host, String username, String password) {
-        this.host = host;
+    public BasicDigestAuthHandler(@Nullable String domain, @NonNull String username, @NonNull String password) {
+        this.domain = domain;
         this.username = username;
         this.password = password;
     }
 
 
-    protected Request authenticateRequest(Request request, Response response) {
-        if (host != null && !request.url().host().equalsIgnoreCase(host)) {
-            Constants.log.warning("Not authenticating against " +  host + " for security reasons!");
-            return null;
+    protected Request authenticateRequest(@NonNull Request request, @Nullable Response response) {
+        if (domain != null) {
+            final String host = request.url().host();
+            if (!domain.equalsIgnoreCase(UrlUtils.hostToDomain(host))) {
+                Constants.log.warning("Not authenticating against " + host + " because it doesn't belong to " + domain);
+                return null;
+            }
         }
 
         if (response == null) {

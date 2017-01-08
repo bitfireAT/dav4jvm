@@ -1,5 +1,10 @@
 package at.bitfire.dav4android;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -7,7 +12,7 @@ import okhttp3.HttpUrl;
 
 public class UrlUtils {
 
-    public static boolean equals(HttpUrl url1, HttpUrl url2) {
+    public static boolean equals(@NonNull HttpUrl url1, @NonNull HttpUrl url2) {
         // if okhttp thinks the two URLs are equal, they're in any case
         // (and it's a simple String comparison)
         if (url1.equals(url2))
@@ -23,7 +28,22 @@ public class UrlUtils {
         }
     }
 
-    public static HttpUrl omitTrailingSlash(HttpUrl url) {
+    public static String hostToDomain(@Nullable String host) {
+        if (host == null)
+            return null;
+
+        // remove optional dot at end
+        host = StringUtils.removeEnd(host, ".");
+
+        // split into labels
+        String labels[] = StringUtils.split(host, '.');
+        if (labels.length >= 2) {
+            return labels[labels.length - 2] + "." + labels[labels.length - 1];
+        } else
+            return host;
+    }
+
+    public static HttpUrl omitTrailingSlash(@NonNull HttpUrl url) {
         int idxLast = url.pathSize() - 1;
         boolean hasTrailingSlash = "".equals(url.pathSegments().get(idxLast));
 
@@ -33,7 +53,7 @@ public class UrlUtils {
             return url;
     }
 
-    public static HttpUrl withTrailingSlash(HttpUrl url) {
+    public static HttpUrl withTrailingSlash(@NonNull HttpUrl url) {
         int idxLast = url.pathSize() - 1;
         boolean hasTrailingSlash = "".equals(url.pathSegments().get(idxLast));
 

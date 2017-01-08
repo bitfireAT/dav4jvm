@@ -6,6 +6,7 @@ import okhttp3.HttpUrl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class UrlUtilsTest {
@@ -19,6 +20,22 @@ public class UrlUtilsTest {
 
         assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource"), HttpUrl.parse("http://host/resource/")));
         assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource"), HttpUrl.parse("http://host:81/resource")));
+    }
+
+    @Test
+    public void testHostToDomain() {
+        assertNull(UrlUtils.hostToDomain(null));
+        assertEquals("", UrlUtils.hostToDomain("."));
+        assertEquals("com", UrlUtils.hostToDomain("com"));
+        assertEquals("com", UrlUtils.hostToDomain("com."));
+        assertEquals("example.com", UrlUtils.hostToDomain("example.com"));
+        assertEquals("example.com", UrlUtils.hostToDomain("example.com."));
+        assertEquals("example.com", UrlUtils.hostToDomain(".example.com"));
+        assertEquals("example.com", UrlUtils.hostToDomain(".example.com."));
+        assertEquals("example.com", UrlUtils.hostToDomain("host.example.com"));
+        assertEquals("example.com", UrlUtils.hostToDomain("host.example.com."));
+        assertEquals("example.com", UrlUtils.hostToDomain("sub.host.example.com"));
+        assertEquals("example.com", UrlUtils.hostToDomain("sub.host.example.com."));
     }
 
     @Test
