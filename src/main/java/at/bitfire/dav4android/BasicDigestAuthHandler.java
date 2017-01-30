@@ -11,15 +11,20 @@ package at.bitfire.dav4android;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.apache.commons.lang3.CharSet;
+import org.apache.commons.lang3.CharSetUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.Authenticator;
+import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -120,9 +125,8 @@ public class BasicDigestAuthHandler implements Authenticator, Interceptor {
              So, UTF-8 encoding for credentials is compatible with all RFC 7617 servers and many,
              but not all pre-RFC 7617 servers. */
 
-            final String credentials = username + ":" + password;
             return request.newBuilder()
-                    .header(HEADER_AUTHORIZATION, "Basic " + ByteString.of(credentials.getBytes()).base64())
+                    .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charset.forName("UTF-8")))
                     .build();
         } else if (response != null)
             Constants.log.warning("No supported authentication scheme");
