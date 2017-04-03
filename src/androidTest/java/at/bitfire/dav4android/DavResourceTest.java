@@ -201,16 +201,25 @@ public class DavResourceTest {
         rq = mockServer.takeRequest();
         assertEquals("\"DeleteOnlyThisETag\"", rq.getHeader("If-Match"));
 
-        /* NEGATIVE TEST CASES */
-
         // 302 Moved Temporarily
         mockServer.enqueue(new MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP));
+                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+                .setHeader("Location", "/new-location")
+        );
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK));
+        dav.delete(null);
+
+        /* NEGATIVE TEST CASES */
+
+        // 207 multi-status (e.g. single resource couldn't be deleted when DELETEing a collection)
+        mockServer.enqueue(new MockResponse()
+                .setResponseCode(207));
         try {
             dav.delete(null);
             fail();
         } catch(HttpException e) {
-            // we don't follow redirects on DELETE
+            // treat 207 as an error
         }
     }
 
@@ -223,14 +232,14 @@ public class DavResourceTest {
 
         // test for non-multi-status responses:
         // * 500 Internal Server Error
-        mockServer.enqueue(new MockResponse().setResponseCode(500));
+        mockServer.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR));
         try {
             dav.propfind(0, ResourceType.NAME);
             fail("Expected HttpException");
         } catch(HttpException e) {
         }
         // * 200 OK (instead of 207 Multi-Status)
-        mockServer.enqueue(new MockResponse().setResponseCode(200));
+        mockServer.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK));
         try {
             dav.propfind(0, ResourceType.NAME);
             fail("Expected InvalidDavResponseException");

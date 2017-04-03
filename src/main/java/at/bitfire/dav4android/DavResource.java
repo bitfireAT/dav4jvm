@@ -192,7 +192,6 @@ public class DavResource {
                 builder.header("If-None-Match", "*");
 
             response = httpClient.newCall(builder.build()).execute();
-
             if (response.isRedirect()) {
                 processRedirection(response);
                 redirected = true;
@@ -216,14 +215,22 @@ public class DavResource {
      * @throws HttpException    on HTTP errors, including redirections
      */
     public void delete(String ifMatchETag) throws IOException, HttpException {
-        Request.Builder builder = new Request.Builder()
-                .delete()
-                .url(location);
-        if (ifMatchETag != null)
-            builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag));
-        Response response = httpClient.newCall(builder.build()).execute();
-        checkStatus(response, false);
+        Response response = null;
+        for (int attempt = 0; attempt < MAX_REDIRECTS; attempt++) {
+            Request.Builder builder = new Request.Builder()
+                    .delete()
+                    .url(location);
+            if (ifMatchETag != null)
+                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag));
 
+            response = httpClient.newCall(builder.build()).execute();
+            if (response.isRedirect()) {
+                processRedirection(response);
+            } else
+                break;
+        }
+
+        checkStatus(response, false);
         if (response.code() == 207) {
             /* If an error occurs deleting a member resource (a resource other than
                the resource identified in the Request-URI), then the response can be
