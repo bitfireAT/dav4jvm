@@ -33,7 +33,7 @@ public class BasicDigestAuthHandlerTest {
         Response response = new Response.Builder()
                 .request(original)
                 .protocol(Protocol.HTTP_1_1)
-                .code(401)
+                .code(401).message("Authentication required")
                 .header("WWW-Authenticate", "Basic realm=\"WallyWorld\"")
                 .build();
         Request request = authenticator.authenticateRequest(original, response);

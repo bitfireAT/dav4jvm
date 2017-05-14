@@ -32,7 +32,7 @@ public class ServiceUnavailableExceptionTest {
                         .get()
                         .build())
                 .protocol(Protocol.HTTP_1_1)
-                .code(503)
+                .code(503).message("Try later")
                 .build();
 
         ServiceUnavailableException e = new ServiceUnavailableException(response);
