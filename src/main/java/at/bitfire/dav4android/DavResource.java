@@ -8,8 +8,11 @@
 
 package at.bitfire.dav4android;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -19,7 +22,9 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -61,7 +66,9 @@ public class DavResource {
     public HttpUrl location;
     public final Set<String> capabilities = new HashSet<>();
     public final PropertyCollection properties = new PropertyCollection();
-    public final Set<DavResource> members = new HashSet<>();
+    public final Set<DavResource>
+            members = new HashSet<>(),
+            related = new HashSet<>();
 
     static private PropertyRegistry registry = PropertyRegistry.DEFAULT;
 
@@ -513,11 +520,14 @@ public class DavResource {
             }
         }
 
+        if (target == null) {
+            log.warning("Received <response> not for self and not for member resource");
+            related.add(target = new DavResource(httpClient, href, log));
+        }
+
         // set properties for target
         if (target != null)
             target.properties.merge(properties, true);
-        else
-            log.warning("Received <response> not for self and not for member resource");
     }
 
     private PropertyCollection parseMultiStatus_PropStat(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -576,4 +586,54 @@ public class DavResource {
 
         return prop;
     }
+
+
+    // helpers
+
+    /** Finds first property within all responses (including unasked responses) */
+    @Nullable
+    public Pair<DavResource, Property> findProperty(@NonNull Property.Name name) {
+        // check resource itself
+        Property property = properties.get(name);
+        if (property != null)
+            return new ImmutablePair<>(this, property);
+
+        // check members
+        for (DavResource member : members) {
+            Pair<DavResource, Property> result = member.findProperty(name);
+            if (result != null)
+                return result;
+        }
+
+        // check unrequested responses
+        for (DavResource resource : related) {
+            Pair<DavResource, Property> result = resource.findProperty(name);
+            if (result != null)
+                return result;
+        }
+
+        return null;
+    }
+
+    @NonNull
+    /** Finds properties within all responses (including unasked responses) */
+    public List<Pair<DavResource, Property>> findProperties(@NonNull Property.Name name) {
+        List<Pair<DavResource, Property>> result = new LinkedList<>();
+
+        // check resource itself
+        Property property = properties.get(name);
+        if (property != null)
+            result.add(new ImmutablePair<>(this, property));
+
+        // check members
+        for (DavResource member : members)
+            result.addAll(member.findProperties(name));
+
+        // check unrequested responses
+        for (DavResource rel : related)
+            result.addAll(rel.findProperties(name));
+
+        return Collections.unmodifiableList(result);
+    }
+
 }
