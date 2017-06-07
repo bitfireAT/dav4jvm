@@ -57,10 +57,10 @@ public class BasicDigestAuthHandlerTest {
 
         // construct WWW-Authenticate
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        authScheme.params.put("realm", "testrealm@host.com");
-        authScheme.params.put("qop", "auth");
-        authScheme.params.put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
-        authScheme.params.put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
+        authScheme.getParams().put("realm", "testrealm@host.com");
+        authScheme.getParams().put("qop", "auth");
+        authScheme.getParams().put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
+        authScheme.getParams().put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
 
         Request original = new Request.Builder()
                 .get()
@@ -87,10 +87,10 @@ public class BasicDigestAuthHandlerTest {
 
         // example 1
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        authScheme.params.put("realm", "Group-Office");
-        authScheme.params.put("qop", "auth");
-        authScheme.params.put("nonce", "56212407212c8");
-        authScheme.params.put("opaque", "df58bdff8cf60599c939187d0b5c54de");
+        authScheme.getParams().put("realm", "Group-Office");
+        authScheme.getParams().put("qop", "auth");
+        authScheme.getParams().put("nonce", "56212407212c8");
+        authScheme.getParams().put("opaque", "df58bdff8cf60599c939187d0b5c54de");
 
         Request original = new Request.Builder()
                 .method("PROPFIND", null)
@@ -111,10 +111,10 @@ public class BasicDigestAuthHandlerTest {
         // example 2
         authenticator = new BasicDigestAuthHandler(null, "test", "test");
         authScheme = new HttpUtils.AuthScheme("digest");    // lower case
-        authScheme.params.put("nonce", "87c4c2aceed9abf30dd68c71");
-        authScheme.params.put("algorithm", "md5");          // note the (illegal) lower case!
-        authScheme.params.put("opaque", "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==");
-        authScheme.params.put("realm", "ieddy.ru");
+        authScheme.getParams().put("nonce", "87c4c2aceed9abf30dd68c71");
+        authScheme.getParams().put("algorithm", "md5");          // note the (illegal) lower case!
+        authScheme.getParams().put("opaque", "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw==");
+        authScheme.getParams().put("realm", "ieddy.ru");
         original = new Request.Builder()
                 .method("OPTIONS", null)
                 .url("https://ieddy.ru/")
@@ -140,11 +140,11 @@ public class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        authScheme.params.put("realm", "MD5-sess Example");
-        authScheme.params.put("qop", "auth");
-        authScheme.params.put("algorithm", "MD5-sess");
-        authScheme.params.put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
-        authScheme.params.put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
+        authScheme.getParams().put("realm", "MD5-sess Example");
+        authScheme.getParams().put("qop", "auth");
+        authScheme.getParams().put("algorithm", "MD5-sess");
+        authScheme.getParams().put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
+        authScheme.getParams().put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
 
         /*  A1 = h("admin:MD5-sess Example:12345"):dcd98b7102dd2f0e8b11d0f600bfb0c093:hxk1lu63b6c7vhk =
                   4eaed818bc587129e73b39c8d3e8425a:dcd98b7102dd2f0e8b11d0f600bfb0c093:hxk1lu63b6c7vhk       a994ee9d33e2f077d3a6e13e882f6686
@@ -178,10 +178,10 @@ public class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1);
 
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        authScheme.params.put("realm", "AuthInt Example");
-        authScheme.params.put("qop", "auth-int");
-        authScheme.params.put("nonce", "367sj3265s5");
-        authScheme.params.put("opaque", "87aaxcval4gba36");
+        authScheme.getParams().put("realm", "AuthInt Example");
+        authScheme.getParams().put("qop", "auth-int");
+        authScheme.getParams().put("nonce", "367sj3265s5");
+        authScheme.getParams().put("opaque", "87aaxcval4gba36");
 
         /*  A1 = admin:AuthInt Example:12345                            380dc3fc1305127cd2aa81ab68ef3f34
 
@@ -215,9 +215,9 @@ public class BasicDigestAuthHandlerTest {
 
         // construct WWW-Authenticate
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
-        authScheme.params.put("realm", "testrealm@host.com");
-        authScheme.params.put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
-        authScheme.params.put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
+        authScheme.getParams().put("realm", "testrealm@host.com");
+        authScheme.getParams().put("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093");
+        authScheme.getParams().put("opaque", "5ccc069c403ebaf9f0171e9517f40e41");
 
         Request original = new Request.Builder()
                 .get()
@@ -248,13 +248,13 @@ public class BasicDigestAuthHandlerTest {
         HttpUtils.AuthScheme authScheme = new HttpUtils.AuthScheme("Digest");
         assertNull(authenticator.digestRequest(original, authScheme));
 
-        authScheme.params.put("realm", "Group-Office");
+        authScheme.getParams().put("realm", "Group-Office");
         assertNull(authenticator.digestRequest(original, authScheme));
 
-        authScheme.params.put("qop", "auth");
+        authScheme.getParams().put("qop", "auth");
         assertNull(authenticator.digestRequest(original, authScheme));
 
-        authScheme.params.put("nonce", "56212407212c8");
+        authScheme.getParams().put("nonce", "56212407212c8");
         assertNotNull(authenticator.digestRequest(original, authScheme));
     }
 

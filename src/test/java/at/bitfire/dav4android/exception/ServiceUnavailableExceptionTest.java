@@ -36,14 +36,14 @@ public class ServiceUnavailableExceptionTest {
                 .build();
 
         ServiceUnavailableException e = new ServiceUnavailableException(response);
-        assertNull(e.retryAfter);
+        assertNull(e.getRetryAfter());
 
         response = response.newBuilder()
                 .header("Retry-After", "120")
                 .build();
         e = new ServiceUnavailableException(response);
-        assertNotNull(e.retryAfter);
-        assertTrue(withinTimeRange(e.retryAfter, 120));
+        assertNotNull(e.getRetryAfter());
+        assertTrue(withinTimeRange(e.getRetryAfter(), 120));
 
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.MINUTE, 30);
@@ -51,8 +51,8 @@ public class ServiceUnavailableExceptionTest {
                 .header("Retry-After", HttpDate.format(cal.getTime()))
                 .build();
         e = new ServiceUnavailableException(response);
-        assertNotNull(e.retryAfter);
-        assertTrue(withinTimeRange(e.retryAfter, 30*60));
+        assertNotNull(e.getRetryAfter());
+        assertTrue(withinTimeRange(e.getRetryAfter(), 30*60));
     }
 
 

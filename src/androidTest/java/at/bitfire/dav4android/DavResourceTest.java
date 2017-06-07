@@ -66,15 +66,15 @@ public class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setHeader("DAV", "1,2,3, hyperactive-access"));
         dav.options();
-        assertTrue(dav.capabilities.contains("1"));
-        assertTrue(dav.capabilities.contains("2"));
-        assertTrue(dav.capabilities.contains("3"));
-        assertTrue(dav.capabilities.contains("hyperactive-access"));
+        assertTrue(dav.getCapabilities().contains("1"));
+        assertTrue(dav.getCapabilities().contains("2"));
+        assertTrue(dav.getCapabilities().contains("3"));
+        assertTrue(dav.getCapabilities().contains("hyperactive-access"));
 
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK));
         dav.options();
-        assertTrue(dav.capabilities.isEmpty());
+        assertTrue(dav.getCapabilities().isEmpty());
     }
 
     @Test
@@ -92,8 +92,8 @@ public class DavResourceTest {
                 .setBody(sampleText));
         ResponseBody body = dav.get("*/*");
         assertEquals(sampleText, body.string());
-        assertEquals("My Weak ETag", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
-        assertEquals("application/x-test-result", ((GetContentType) dav.properties.get(GetContentType.NAME)).type);
+        assertEquals("My Weak ETag", ((GetETag)dav.getProperties().get(GetETag.NAME)).getETag());
+        assertEquals("application/x-test-result", ((GetContentType) dav.getProperties().get(GetContentType.NAME)).getType());
 
         RecordedRequest rq = mockServer.takeRequest();
         assertEquals("GET", rq.getMethod());
@@ -111,7 +111,7 @@ public class DavResourceTest {
                 .setBody(sampleText));
         body = dav.get("*/*");
         assertEquals(sampleText, body.string());
-        assertEquals("StrongETag", ((GetETag) dav.properties.get(GetETag.NAME)).eTag);
+        assertEquals("StrongETag", ((GetETag) dav.getProperties().get(GetETag.NAME)).getETag());
 
         rq = mockServer.takeRequest();
         rq = mockServer.takeRequest();
@@ -119,12 +119,12 @@ public class DavResourceTest {
         assertEquals("/target", rq.getPath());
 
         // 200 OK without ETag in response
-        dav.properties.put(GetETag.NAME, new GetETag("test"));
+        dav.getProperties().set(GetETag.NAME, new GetETag("test"));
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(sampleText));
         dav.get("*/*");
-        assertNull(dav.properties.get(GetETag.NAME));
+        assertNull(dav.getProperties().get(GetETag.NAME));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_CREATED)
                 .setHeader("ETag", "W/\"Weak PUT ETag\""));
         assertFalse(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, false));
-        assertEquals("Weak PUT ETag", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
+        assertEquals("Weak PUT ETag", ((GetETag)dav.getProperties().get(GetETag.NAME)).getETag());
 
         RecordedRequest rq = mockServer.takeRequest();
         assertEquals("PUT", rq.getMethod());
@@ -154,8 +154,8 @@ public class DavResourceTest {
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT));
         assertTrue(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, true));
-        assertEquals(url.resolve("/target"), dav.location);
-        assertNull(dav.properties.get(GetETag.NAME));
+        assertEquals(url.resolve("/target"), dav.getLocation());
+        assertNull(dav.getProperties().get(GetETag.NAME));
 
         rq = mockServer.takeRequest();
         rq = mockServer.takeRequest();
@@ -328,7 +328,7 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(0, ResourceType.NAME);
-        assertNull(dav.properties.get(ResourceType.NAME));
+        assertNull(dav.getProperties().get(ResourceType.NAME));
 
 
         /*** POSITIVE TESTS ***/
@@ -339,8 +339,8 @@ public class DavResourceTest {
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
                 .setBody("<multistatus xmlns='DAV:'></multistatus>"));
         dav.propfind(0, ResourceType.NAME);
-        assertEquals(0, dav.properties.size());
-        assertEquals(0, dav.members.size());
+        assertEquals(0, dav.getProperties().size());
+        assertEquals(0, dav.getMembers().size());
 
         // multi-status response with <response>/<status> element indicating success
         mockServer.enqueue(new MockResponse()
@@ -353,8 +353,8 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(0, ResourceType.NAME);
-        assertEquals(0, dav.properties.size());
-        assertEquals(0, dav.members.size());
+        assertEquals(0, dav.getProperties().size());
+        assertEquals(0, dav.getMembers().size());
 
         // multi-status response with <response>/<propstat> element
         mockServer.enqueue(new MockResponse()
@@ -374,8 +374,8 @@ public class DavResourceTest {
                          "  </response>" +
                          "</multistatus>"));
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
-        assertEquals("My DAV Collection", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
-        assertEquals(0, dav.members.size());
+        assertEquals("My DAV Collection", ((DisplayName)dav.getProperties().get(DisplayName.NAME)).getDisplayName());
+        assertEquals(0, dav.getMembers().size());
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
         mockServer.enqueue(new MockResponse()
@@ -440,21 +440,21 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(1, ResourceType.NAME, DisplayName.NAME);
-        assertEquals(4, dav.members.size());
+        assertEquals(4, dav.getMembers().size());
         boolean ok[] = new boolean[4];
-        for (DavResource member : dav.members) {
-            if (url.resolve("/dav/subcollection/").equals(member.location)) {
-                assertTrue(((ResourceType) member.properties.get(ResourceType.NAME)).types.contains(ResourceType.COLLECTION));
-                assertEquals("A Subfolder", ((DisplayName) member.properties.get(DisplayName.NAME)).displayName);
+        for (DavResource member : dav.getMembers()) {
+            if (url.resolve("/dav/subcollection/").equals(member.getLocation())) {
+                assertTrue(((ResourceType) member.getProperties().get(ResourceType.NAME)).getTypes().contains(ResourceType.COLLECTION));
+                assertEquals("A Subfolder", ((DisplayName) member.getProperties().get(DisplayName.NAME)).getDisplayName());
                 ok[0] = true;
-            } else if (url.resolve("/dav/uid@host:file").equals(member.location)) {
-                assertEquals("Absolute path with @ and :", ((DisplayName)member.properties.get(DisplayName.NAME)).displayName);
+            } else if (url.resolve("/dav/uid@host:file").equals(member.getLocation())) {
+                assertEquals("Absolute path with @ and :", ((DisplayName)member.getProperties().get(DisplayName.NAME)).getDisplayName());
                 ok[1] = true;
-            } else if (url.resolve("/dav/relative-uid@host.file").equals(member.location)) {
-                assertEquals("Relative path with @", ((DisplayName)member.properties.get(DisplayName.NAME)).displayName);
+            } else if (url.resolve("/dav/relative-uid@host.file").equals(member.getLocation())) {
+                assertEquals("Relative path with @", ((DisplayName)member.getProperties().get(DisplayName.NAME)).getDisplayName());
                 ok[2] = true;
-            } else if (url.resolve("/dav/relative:colon.vcf").equals(member.location)) {
-                assertEquals("Relative path with colon", ((DisplayName)member.properties.get(DisplayName.NAME)).displayName);
+            } else if (url.resolve("/dav/relative:colon.vcf").equals(member.getLocation())) {
+                assertEquals("Relative path with colon", ((DisplayName)member.getProperties().get(DisplayName.NAME)).getDisplayName());
                 ok[3] = true;
             }
         }
@@ -487,8 +487,8 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
-        assertTrue(((ResourceType) dav.properties.get(ResourceType.NAME)).types.contains(ResourceType.COLLECTION));
-        assertEquals("My DAV Collection", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
+        assertTrue(((ResourceType) dav.getProperties().get(ResourceType.NAME)).getTypes().contains(ResourceType.COLLECTION));
+        assertEquals("My DAV Collection", ((DisplayName) dav.getProperties().get(DisplayName.NAME)).getDisplayName());
 
         // multi-status response with <propstat> that doesn't contain <status> (=> assume 200 OK)
         mockServer.enqueue(new MockResponse()
@@ -505,7 +505,7 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(0, DisplayName.NAME);
-        assertEquals("Without Status", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
+        assertEquals("Without Status", ((DisplayName) dav.getProperties().get(DisplayName.NAME)).getDisplayName());
     }
 
     @Test
@@ -530,9 +530,9 @@ public class DavResourceTest {
                          "  </response>" +
                          "</multistatus>"));
         dav.propfind(0, DisplayName.NAME, GetETag.NAME, GetCTag.NAME);
-        assertEquals("DisplayName 1", ((DisplayName) dav.properties.get(DisplayName.NAME)).displayName);
-        assertEquals("ETag 1", ((GetETag)dav.properties.get(GetETag.NAME)).eTag);
-        assertEquals("CTag 1", ((GetCTag) dav.properties.get(GetCTag.NAME)).cTag);
+        assertEquals("DisplayName 1", ((DisplayName) dav.getProperties().get(DisplayName.NAME)).getDisplayName());
+        assertEquals("ETag 1", ((GetETag)dav.getProperties().get(GetETag.NAME)).getETag());
+        assertEquals("CTag 1", ((GetCTag) dav.getProperties().get(GetCTag.NAME)).getCTag());
 
         mockServer.enqueue(new MockResponse()
                 .setResponseCode(207)
@@ -555,9 +555,9 @@ public class DavResourceTest {
                         "  </response>" +
                         "</multistatus>"));
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME);
-        assertEquals("DisplayName 2", ((DisplayName)dav.properties.get(DisplayName.NAME)).displayName);
-        assertNull(dav.properties.get(GetETag.NAME));
-        assertEquals("CTag 1", ((GetCTag)dav.properties.get(GetCTag.NAME)).cTag);
+        assertEquals("DisplayName 2", ((DisplayName)dav.getProperties().get(DisplayName.NAME)).getDisplayName());
+        assertNull(dav.getProperties().get(GetETag.NAME));
+        assertEquals("CTag 1", ((GetCTag)dav.getProperties().get(GetCTag.NAME)).getCTag());
     }
 
 }
