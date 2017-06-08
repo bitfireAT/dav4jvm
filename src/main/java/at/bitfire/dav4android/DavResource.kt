@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 – 2015 Ricki Hirner (bitfire web engineering).
+ * Copyright © Ricki Hirner (bitfire web engineering).
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Public License v3.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,6 @@ import at.bitfire.dav4android.property.GetETag
 import at.bitfire.dav4android.property.ResourceType
 import okhttp3.*
 import okhttp3.internal.http.StatusLine
-import org.apache.commons.lang3.tuple.ImmutablePair
-import org.apache.commons.lang3.tuple.Pair
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -582,7 +580,7 @@ open class DavResource @JvmOverloads constructor(
         // check resource itself
         val property = properties[name]
         if (property != null)
-            return ImmutablePair<DavResource, Property>(this, property)
+            return Pair<DavResource, Property>(this, property)
 
         // check members
         for (member in members)
@@ -602,7 +600,7 @@ open class DavResource @JvmOverloads constructor(
         // check resource itself
         val property = properties[name]
         if (property != null)
-            result.add(ImmutablePair<DavResource, Property>(this, property))
+            result.add(Pair<DavResource, Property>(this, property))
 
         // check members
         for (member in members)
