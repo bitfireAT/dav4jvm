@@ -11,6 +11,7 @@ package at.bitfire.dav4android;
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
+import java.io.IOException
 import java.util.logging.Level
 
 class XmlUtils {
@@ -39,6 +40,7 @@ class XmlUtils {
         fun newSerializer() = factory.newSerializer()!!
 
 
+        @Throws(IOException::class)
         fun readText(parser: XmlPullParser): String? {
             var text: String? = null
 
@@ -51,13 +53,14 @@ class XmlUtils {
                         text = parser.text
                     eventType = parser.next()
                 }
-            } catch(e: Exception) {
+            } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse text property", e);
             }
 
             return text
         }
 
+        @Throws(IOException::class)
         fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableList<String>) {
             try {
                 val depth = parser.depth
@@ -69,7 +72,7 @@ class XmlUtils {
                         list.add(parser.nextText())
                     eventType = parser.next()
                 }
-            } catch(e: Exception) {
+            } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse text property list", e)
             }
         }

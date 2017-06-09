@@ -135,13 +135,12 @@ class HttpUtils {
                 val name = m.group(1)
                 var value = m.group(2)
                 val len = value.length
-                if (value[0] == '"' && value[len - 1] == '"') {
+                if (value[0] == '"' && value[len - 1] == '"')
                     // quoted-string
                     value = value
                             .substring(1, len - 1)
                             .replace("\\\"", "\"")
-                }
-                params.put(name.toLowerCase(), value)
+                params[name.toLowerCase()] = value
             } else
                 unnamedParams.add(authParam)
         }

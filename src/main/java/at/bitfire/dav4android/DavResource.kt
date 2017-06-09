@@ -96,13 +96,13 @@ open class DavResource @JvmOverloads constructor(
         val rqBody = if (xmlBody != null) RequestBody.create(MIME_XML, xmlBody) else null
 
         var response: Response? = null
-        for (attempt in 0..MAX_REDIRECTS-1) {
+        for (attempt in 1..MAX_REDIRECTS) {
             response = httpClient.newCall(Request.Builder()
                     .method("MKCOL", rqBody)
                     .url(location)
                     .build()).execute()
             if (response.isRedirect)
-                processRedirection(response)
+                processRedirect(response)
             else
                 break
         }
@@ -121,7 +121,7 @@ open class DavResource @JvmOverloads constructor(
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun get(accept: String): ResponseBody {
         var response: Response? = null
-        for (attempt in 0..MAX_REDIRECTS-1) {
+        for (attempt in 1..MAX_REDIRECTS) {
             response = httpClient.newCall(Request.Builder()
                     .get()
                     .url(location)
@@ -129,7 +129,7 @@ open class DavResource @JvmOverloads constructor(
                     .header("Accept-Encoding", "identity")    // disable compression because it can change the ETag
                     .build()).execute()
             if (response.isRedirect)
-                processRedirection(response)
+                processRedirect(response)
             else
                 break
         }
@@ -143,9 +143,9 @@ open class DavResource @JvmOverloads constructor(
 
         val body = response.body() ?: throw HttpException("GET without response body")
 
-        val mimeType = body.contentType()
-        if (mimeType != null)
+        body.contentType()?.let { mimeType ->
             properties[GetContentType.NAME] = GetContentType(mimeType)
+        }
 
         return body
     }
@@ -163,7 +163,7 @@ open class DavResource @JvmOverloads constructor(
     fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean): Boolean {
         var redirected = false
         var response: Response? = null
-        for (attempt in 0..MAX_REDIRECTS-1) {
+        for (attempt in 1..MAX_REDIRECTS) {
             val builder = Request.Builder()
                     .put(body)
                     .url(location)
@@ -177,7 +177,7 @@ open class DavResource @JvmOverloads constructor(
 
             response = httpClient.newCall(builder.build()).execute()
             if (response.isRedirect) {
-                processRedirection(response)
+                processRedirect(response)
                 redirected = true
             } else
                 break
@@ -202,7 +202,7 @@ open class DavResource @JvmOverloads constructor(
     @Throws(IOException::class, HttpException::class)
     fun delete(ifMatchETag: String?) {
         var response: Response? = null
-        for (attempt in 0..MAX_REDIRECTS-1) {
+        for (attempt in 1..MAX_REDIRECTS) {
             val builder = Request.Builder()
                     .delete()
                     .url(location)
@@ -210,19 +210,19 @@ open class DavResource @JvmOverloads constructor(
                 builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag))
 
             response = httpClient.newCall(builder.build()).execute()
-            if (response.isRedirect) {
-                processRedirection(response)
-            } else
+            if (response.isRedirect)
+                processRedirect(response)
+            else
                 break
         }
 
         checkStatus(response!!, false)
-        if (response.code() == 207) {
+        if (response.code() == 207)
             /* If an error occurs deleting a member resource (a resource other than
                the resource identified in the Request-URI), then the response can be
                a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
             throw HttpException(response)
-        } else
+        else
             response.body()?.close()
     }
 
@@ -258,14 +258,14 @@ open class DavResource @JvmOverloads constructor(
         serializer.endDocument()
 
         var response: Response? = null
-        for (attempt in 0..MAX_REDIRECTS-1) {
+        for (attempt in 1..MAX_REDIRECTS) {
             response = httpClient.newCall(Request.Builder()
                     .url(location)
                     .method("PROPFIND", RequestBody.create(MIME_XML, writer.toString()))
                     .header("Depth", depth.toString())
                     .build()).execute()
             if (response.isRedirect)
-                processRedirection(response)
+                processRedirect(response)
             else
                 break
         }
@@ -273,9 +273,11 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response!!, false)
         assertMultiStatus(response)
 
-        if (depth > 0)
+        if (depth > 0) {
             // collection listing requested, drop old member information
             members.clear()
+            related.clear()
+        }
 
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
@@ -347,9 +349,10 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Sets the new [location] in case of a redirect. Closes the [response] body.
      * @throws HttpException in case of an HTTP error
      */
-    protected fun processRedirection(response: Response) {
+    protected fun processRedirect(response: Response) {
         try {
             response.header("Location")?.let {
                 val target = location.resolve(it)

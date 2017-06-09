@@ -21,6 +21,8 @@ interface Property {
                 super.equals(o)
         }
 
+        override fun hashCode() = namespace.hashCode() xor name.hashCode()
+
         override fun toString() = "$name($namespace)"
     }
 

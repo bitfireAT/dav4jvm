@@ -15,8 +15,8 @@ import at.bitfire.dav4android.XmlUtils
 import okhttp3.internal.http.HttpDate
 import org.xmlpull.v1.XmlPullParser
 
-class GetLastModified(
-        var lastModified: Long?
+data class GetLastModified(
+        var lastModified: Long
 ): Property {
 
     companion object {
@@ -24,27 +24,22 @@ class GetLastModified(
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getlastmodified")
     }
 
-    constructor(rawDate: String?)
-            : this(null as Long?)
-    {
-        if (rawDate != null) {
-            val date = HttpDate.parse(rawDate)
-            if (date != null)
-                lastModified = date.time
-            else
-                Constants.log.warning("Couldn't parse Last-Modified date")
-        } else
-            Constants.log.warning("Last-Modified without date")
-    }
-
 
     class Factory: PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlPullParser): GetLastModified? {
             // <!ELEMENT getlastmodified (#PCDATA) >
-            GetLastModified(XmlUtils.readText(parser))
+            XmlUtils.readText(parser)?.let { rawDate ->
+                val date = HttpDate.parse(rawDate)
+                if (date != null)
+                    return GetLastModified(date.time)
+                else
+                    Constants.log.warning("Couldn't parse Last-Modified date")
+            }
+            return null
+        }
 
     }
 

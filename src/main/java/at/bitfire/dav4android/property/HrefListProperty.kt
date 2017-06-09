@@ -19,7 +19,7 @@ abstract class HrefListProperty: Property {
 
     val hrefs = LinkedList<String>()
 
-    override fun toString() =  "hrefs=[" + TextUtils.join(", ", hrefs) + "]"
+    override fun toString() =  "href=[" + TextUtils.join(", ", hrefs) + "]"
 
 
     abstract class Factory: PropertyFactory {

@@ -13,7 +13,7 @@ import java.util.*
 
 object PropertyRegistry {
 
-    val factories = HashMap<String, HashMap<String, PropertyFactory>>()
+    val factories = mutableMapOf<String /*namespace*/, MutableMap<String /*name*/, PropertyFactory>>()
 
     init {
         Constants.log.info("Registering DAV property factories");
@@ -28,18 +28,15 @@ object PropertyRegistry {
         val name = factory.getName()
         var nsFactories = factories[name.namespace]
         if (nsFactories == null) {
-            nsFactories = HashMap<String, PropertyFactory>()
+            nsFactories = mutableMapOf<String, PropertyFactory>()
             factories[name.namespace] = nsFactories
         }
-        nsFactories[name.name] = factory;
+        nsFactories[name.name] = factory
     }
 
     fun create(name: Property.Name, parser: XmlPullParser): Property? {
-        val map = factories[name.namespace]
-        if (map != null) {
-            val factory = map[name.name]
-            if (factory != null)
-                return factory.create(parser)
+        factories[name.namespace]?.let { nsFactories ->
+            nsFactories[name.name]?.let { factory -> return factory.create(parser) }
         }
         return null
     }

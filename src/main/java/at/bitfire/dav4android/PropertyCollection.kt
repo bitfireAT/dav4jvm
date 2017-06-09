@@ -20,6 +20,7 @@ class PropertyCollection {
     operator fun get(name: Property.Name): Property? {
         if (!properties.isInitialized())
             return null
+
         val nsProperties = properties.value[name.namespace] ?: return null
         return nsProperties[name.name]
     }
@@ -27,6 +28,7 @@ class PropertyCollection {
     fun getMap(): Map<Property.Name, Property?> {
         if (!properties.isInitialized())
             return mapOf()
+
         val map = HashMap<Property.Name, Property?>()
         for ((namespace, nsProperties) in properties.value) {
             for ((name, property) in nsProperties)
@@ -46,11 +48,17 @@ class PropertyCollection {
     }
 
     fun remove(name: Property.Name) {
+        if (!properties.isInitialized())
+            return
+
         val nsProperties = properties.value[name.namespace]
         nsProperties?.remove(name.name)
     }
 
     fun size(): Int {
+        if (!properties.isInitialized())
+            return 0
+
         var size = 0
         for (nsProperties in properties.value.values)
             size += nsProperties.size
@@ -85,6 +93,9 @@ class PropertyCollection {
     }
 
     fun nullAllValues() {
+        if (!properties.isInitialized())
+            return
+
         for ((_, nsProperties) in properties.value) {
             for (name in nsProperties.keys)
                 nsProperties.put(name, null)
@@ -94,8 +105,7 @@ class PropertyCollection {
 
     override fun toString(): String {
         val s = LinkedList<String>()
-        val properties = getMap()
-        for ((name, value) in properties)
+        for ((name, value) in getMap())
             s.add("$name: $value")
         return "[" + TextUtils.join(", ", s) + "]"
     }

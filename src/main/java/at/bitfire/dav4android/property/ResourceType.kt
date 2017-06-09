@@ -14,6 +14,7 @@ import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
 class ResourceType: Property {
@@ -58,7 +59,7 @@ class ResourceType: Property {
                     }
                     eventType = parser.next()
                 }
-            } catch(e: Exception) {
+            } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e);
                 return null
             }

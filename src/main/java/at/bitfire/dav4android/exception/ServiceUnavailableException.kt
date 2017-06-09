@@ -18,9 +18,7 @@ class ServiceUnavailableException: HttpException {
 
     var retryAfter: Date? = null
 
-    constructor(message: String?): super(HttpURLConnection.HTTP_UNAVAILABLE, message) {
-        retryAfter = null
-    }
+    constructor(message: String?): super(HttpURLConnection.HTTP_UNAVAILABLE, message)
 
     constructor(response: Response): super(response) {
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )

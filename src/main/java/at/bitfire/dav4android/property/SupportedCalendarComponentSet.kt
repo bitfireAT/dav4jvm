@@ -62,7 +62,7 @@ data class SupportedCalendarComponentSet(
                     }
                     eventType = parser.next()
                 }
-            } catch(e: Exception) {
+            } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse <supported-calendar-component-set>", e)
                 return null
             }

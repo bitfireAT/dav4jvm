@@ -112,19 +112,19 @@ class DavCalendar @JvmOverloads constructor(
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.startTag(XmlUtils.NS_CALDAV, "calendar-multiget")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
-        serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.startTag(XmlUtils.NS_CALDAV, "calendar-data")
-        serializer.endTag(XmlUtils.NS_CALDAV, "calendar-data")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-        for (url in urls) {
-            serializer.startTag(XmlUtils.NS_WEBDAV, "href")
-            serializer.text(url.encodedPath())
-            serializer.endTag(XmlUtils.NS_WEBDAV, "href")
-        }
+            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
+                serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
+                serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
+                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
+                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
+                serializer.startTag(XmlUtils.NS_CALDAV, "calendar-data")
+                serializer.endTag(XmlUtils.NS_CALDAV, "calendar-data")
+            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
+            for (url in urls) {
+                serializer.startTag(XmlUtils.NS_WEBDAV, "href")
+                    serializer.text(url.encodedPath())
+                serializer.endTag(XmlUtils.NS_WEBDAV, "href")
+            }
         serializer.endTag(XmlUtils.NS_CALDAV, "calendar-multiget")
         serializer.endDocument()
 

@@ -50,12 +50,12 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
         serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-query")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.startTag(XmlUtils.NS_CARDDAV, "filter")
-        serializer.endTag(XmlUtils.NS_CARDDAV,   "filter")
+            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
+                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
+                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
+            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
+            serializer.startTag(XmlUtils.NS_CARDDAV, "filter")
+            serializer.endTag(XmlUtils.NS_CARDDAV,   "filter")
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-query")
         serializer.endDocument()
 
@@ -92,23 +92,23 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
         serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
-        serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-        serializer.startTag(XmlUtils.NS_CARDDAV, "address-data")
-        if (vCard4) {
-            serializer.attribute(null, "content-type", "text/vcard")
-            serializer.attribute(null, "version", "4.0")
-        }
-        serializer.endTag(XmlUtils.NS_CARDDAV, "address-data")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-        for (url in urls) {
-            serializer.startTag(XmlUtils.NS_WEBDAV, "href")
-            serializer.text(url.encodedPath())
-            serializer.endTag(XmlUtils.NS_WEBDAV, "href")
-        }
+            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
+                serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
+                serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
+                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
+                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
+                serializer.startTag(XmlUtils.NS_CARDDAV, "address-data")
+                if (vCard4) {
+                    serializer.attribute(null, "content-type", "text/vcard")
+                    serializer.attribute(null, "version", "4.0")
+                }
+                serializer.endTag(XmlUtils.NS_CARDDAV, "address-data")
+            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
+            for (url in urls) {
+                serializer.startTag(XmlUtils.NS_WEBDAV, "href")
+                    serializer.text(url.encodedPath())
+                serializer.endTag(XmlUtils.NS_WEBDAV, "href")
+            }
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
         serializer.endDocument()
 

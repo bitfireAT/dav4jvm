@@ -28,7 +28,6 @@ class GetETag: Property {
            weak       = "W/"
            opaque-tag = quoted-string
         */
-
         var tag: String? = rawETag
         tag?.let {
             // remove trailing "W/"
