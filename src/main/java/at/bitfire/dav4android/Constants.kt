@@ -10,11 +10,9 @@ package at.bitfire.dav4android
 
 import java.util.logging.Logger
 
-class Constants {
-    companion object {
+object Constants {
 
-        @JvmField
-        var log = Logger.getLogger("dav4android")!!
+    @JvmField
+    var log = Logger.getLogger("dav4android")!!
 
-    }
 }

@@ -11,7 +11,6 @@ package at.bitfire.dav4android
 import okhttp3.*
 import okio.Buffer
 import okio.ByteString
-import org.apache.commons.lang3.StringUtils
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
@@ -222,7 +221,7 @@ class BasicDigestAuthHandler(
         return if (response != null) {
             params.add("response=" + quotedString(response))
             request.newBuilder()
-                    .header(HEADER_AUTHORIZATION, "Digest " + StringUtils.join(params, ", "))
+                    .header(HEADER_AUTHORIZATION, "Digest " + params.joinToString(", "))
                     .build()
         } else
             null

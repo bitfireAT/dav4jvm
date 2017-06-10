@@ -42,12 +42,10 @@ open class DavResource @JvmOverloads constructor(
 
     val MAX_REDIRECTS = 5
 
-    val capabilities = HashSet<String>()
+    val capabilities = mutableSetOf<String>()
     val properties = PropertyCollection()
-    val members = HashSet<DavResource>()
-    val related = HashSet<DavResource>()
-
-    val registry = PropertyRegistry
+    val members = mutableSetOf<DavResource>()
+    val related = mutableSetOf<DavResource>()
 
 
     init {
@@ -389,7 +387,7 @@ open class DavResource @JvmOverloads constructor(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1) {
                     val name = Property.Name(parser.namespace, parser.name)
-                    val property = registry.create(name, parser)
+                    val property = PropertyRegistry.create(name, parser)
                     if (property != null)
                         prop[name] = property
                     else
