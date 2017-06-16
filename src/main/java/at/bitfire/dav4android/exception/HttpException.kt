@@ -11,6 +11,7 @@ package at.bitfire.dav4android.exception
 import at.bitfire.dav4android.Constants
 import okhttp3.Response
 import okio.Buffer
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
 
@@ -51,11 +52,12 @@ open class HttpException: Exception, Serializable {
                 formatted.append(name).append(": ").append(value).append("\n")
         request.body()?.let {
             try {
-                formatted.append("\n")
                 val buffer = Buffer()
                 it.writeTo(buffer)
+                val baos = ByteArrayOutputStream()
                 while (!buffer.exhausted())
-                    appendByte(formatted, buffer.readByte())
+                    appendByte(baos, buffer.readByte())
+                formatted.append("\n").append(baos.toString())
             } catch (e: IOException) {
                 Constants.log.warning("Couldn't read request body")
             }
@@ -69,11 +71,13 @@ open class HttpException: Exception, Serializable {
         for (name in headers.names())
             for (value in headers.values(name))
                 formatted.append(name).append(": ").append(value).append("\n")
+
         response.body()?.use {
             try {
-                formatted.append("\n")
+                val baos = ByteArrayOutputStream()
                 for (b in it.bytes())
-                    appendByte(formatted, b)
+                    appendByte(baos, b)
+                formatted.append("\n").append(baos.toString())
             } catch(e: IOException) {
                 Constants.log.warning("Couldn't read response body")
             }
@@ -81,15 +85,12 @@ open class HttpException: Exception, Serializable {
         this.response = formatted.toString()
     }
 
-    private fun appendByte(formatted: StringBuilder, b: Byte) {
+    private fun appendByte(stream: ByteArrayOutputStream, b: Byte) {
         when (b) {
-            '\r'.toByte() ->
-                formatted.append("[CR]")
-            '\n'.toByte() ->
-                formatted.append("[LF]\n")
-            in 0x20..0x7E ->     // printable ASCII
-                formatted.append(b)
-            else -> formatted.append("[${String.format("%02x", b)}]")
+            '\r'.toByte() -> stream.write("[CR]".toByteArray())
+            '\n'.toByte() -> stream.write("[LF]\n".toByteArray())
+            in 0x20..0x7E -> stream.write(b.toInt())        // printable ASCII
+            else ->          stream.write("[${String.format("%02x", b)}]".toByteArray())
         }
     }
 
