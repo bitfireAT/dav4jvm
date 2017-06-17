@@ -90,6 +90,7 @@ class DavCalendar @JvmOverloads constructor(
         assertMultiStatus(response)
 
         members.clear()
+        related.clear()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 
@@ -137,6 +138,7 @@ class DavCalendar @JvmOverloads constructor(
         assertMultiStatus(response)
 
         members.clear()
+        related.clear()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 

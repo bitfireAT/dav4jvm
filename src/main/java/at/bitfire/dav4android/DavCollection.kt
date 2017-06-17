@@ -16,5 +16,4 @@ open class DavCollection(
         httpClient: OkHttpClient,
         location: HttpUrl,
         log: Logger = Constants.log
-): DavResource(httpClient, location, log) {
-}
+): DavResource(httpClient, location, log)

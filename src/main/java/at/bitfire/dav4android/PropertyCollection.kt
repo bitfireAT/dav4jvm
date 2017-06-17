@@ -47,7 +47,7 @@ class PropertyCollection {
         nsProperties[name.name] = property
     }
 
-    fun remove(name: Property.Name) {
+    operator fun minusAssign(name: Property.Name) {
         if (!properties.isInitialized())
             return
 
@@ -85,7 +85,7 @@ class PropertyCollection {
             else {
                 // prop == null
                 if (removeNullValues)
-                    remove(name)
+                    this -= name
                 else if (get(name) == null)     // never overwrite non-null values
                     set(name, null)
             }

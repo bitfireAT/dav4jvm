@@ -85,7 +85,8 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
-     * Sends a MKCOL request to this resource.
+     * Sends a MKCOL request to this resource. Response body will be closed unless
+     * an exception is thrown.
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
@@ -135,7 +136,7 @@ open class DavResource @JvmOverloads constructor(
 
         val eTag = response.header("ETag")
         if (TextUtils.isEmpty(eTag))
-            properties.remove(GetETag.NAME)
+            properties -= GetETag.NAME
         else
             properties[GetETag.NAME] = GetETag(eTag)
 
@@ -184,7 +185,7 @@ open class DavResource @JvmOverloads constructor(
 
         val eTag = response.header("ETag")
         if (TextUtils.isEmpty(eTag))
-            properties.remove(GetETag.NAME)
+            properties -= GetETag.NAME
         else
             properties[GetETag.NAME] = GetETag(eTag)
 
@@ -277,6 +278,7 @@ open class DavResource @JvmOverloads constructor(
             related.clear()
         }
 
+        // process and close multi-status response body
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 
@@ -285,7 +287,9 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
-     * @param closeBody whether [response] shall be closed by this method
+     * @param closeBody whether [response] shall be closed by this method, unless an exception
+     *        is thrown. When an exception is thrown, the body is not closed to allow
+     *        reading for debugging.
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(response: Response, closeBody: Boolean) {
@@ -297,6 +301,7 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Checks the status from an HTTP [StatusLine] and throws an exception in case of an error.
+     * The response body is not being closed.
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(status: StatusLine) =
@@ -304,6 +309,7 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
+     * The response body is not being closed.
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(code: Int, message: String?, response: Response?) {

@@ -18,7 +18,7 @@ object PropertyRegistry {
     init {
         Constants.log.info("Registering DAV property factories");
         for (factory in ServiceLoader.load(PropertyFactory::class.java)) {
-            Constants.log.fine("Registering " + factory::class.java.name + " for " + factory.getName())
+            Constants.log.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
             register(factory)
         }
     }

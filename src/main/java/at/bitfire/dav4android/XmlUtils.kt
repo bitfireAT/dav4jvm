@@ -66,7 +66,7 @@ object XmlUtils {
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1 &&
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
                         Property.Name(parser.namespace, parser.name) == name)
                     list.add(parser.nextText())
                 eventType = parser.next()
