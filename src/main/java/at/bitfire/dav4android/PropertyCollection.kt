@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android
 
-import android.text.TextUtils
 import java.util.*
 import java.util.Collections.unmodifiableMap
 
@@ -107,7 +106,7 @@ class PropertyCollection {
         val s = LinkedList<String>()
         for ((name, value) in getMap())
             s.add("$name: $value")
-        return "[" + TextUtils.join(", ", s) + "]"
+        return "[${s.joinToString(", ")}]"
     }
 
 }

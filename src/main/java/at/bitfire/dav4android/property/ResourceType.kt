@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android.property
 
-import android.text.TextUtils
 import at.bitfire.dav4android.Constants
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
@@ -31,7 +30,7 @@ class ResourceType: Property {
 
     val types = mutableSetOf<Property.Name>()
 
-    override fun toString() =  "[" + TextUtils.join(", ", types) + "]"
+    override fun toString() = "[${types.joinToString { ", " }}]"
 
 
     class Factory: PropertyFactory {

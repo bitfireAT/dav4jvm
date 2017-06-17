@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android.property
 
-import android.text.TextUtils
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
@@ -19,7 +18,7 @@ abstract class HrefListProperty: Property {
 
     val hrefs = LinkedList<String>()
 
-    override fun toString() =  "href=[" + TextUtils.join(", ", hrefs) + "]"
+    override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
 
 
     abstract class Factory: PropertyFactory {

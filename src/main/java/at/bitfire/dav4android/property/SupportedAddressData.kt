@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android.property
 
-import android.text.TextUtils
 import at.bitfire.dav4android.Constants
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
@@ -27,7 +26,7 @@ class SupportedAddressData: Property {
     val types = mutableSetOf<MediaType>()
 
     fun hasVCard4() = types.any { "text/vcard; version=4.0".equals(it.toString(), true) }
-    override fun toString() =  "[" + TextUtils.join(", ", types) + "]"
+    override fun toString() = "[${types.joinToString(", ")}]"
 
 
     class Factory: PropertyFactory {

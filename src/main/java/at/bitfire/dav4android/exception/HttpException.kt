@@ -11,9 +11,7 @@ package at.bitfire.dav4android.exception
 import at.bitfire.dav4android.Constants
 import okhttp3.Response
 import okio.Buffer
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.io.Serializable
+import java.io.*
 
 open class HttpException: Exception, Serializable {
 
@@ -34,6 +32,9 @@ open class HttpException: Exception, Serializable {
         response = null
     }
 
+    /**
+     * Brings [response] into an readable format. Reads and closes the [response] body.
+     */
     constructor(response: Response): super("${response.code()} ${response.message()}") {
         status = response.code()
 
@@ -55,8 +56,7 @@ open class HttpException: Exception, Serializable {
                 val buffer = Buffer()
                 it.writeTo(buffer)
                 val baos = ByteArrayOutputStream()
-                while (!buffer.exhausted())
-                    appendByte(baos, buffer.readByte())
+                formatByteStream(buffer.inputStream(), baos)
                 formatted.append("\n").append(baos.toString())
             } catch (e: IOException) {
                 Constants.log.warning("Couldn't read request body")
@@ -75,8 +75,7 @@ open class HttpException: Exception, Serializable {
         response.body()?.use {
             try {
                 val baos = ByteArrayOutputStream()
-                for (b in it.bytes())
-                    appendByte(baos, b)
+                formatByteStream(it.byteStream(), baos)
                 formatted.append("\n").append(baos.toString())
             } catch(e: IOException) {
                 Constants.log.warning("Couldn't read response body")
@@ -85,12 +84,17 @@ open class HttpException: Exception, Serializable {
         this.response = formatted.toString()
     }
 
-    private fun appendByte(stream: ByteArrayOutputStream, b: Byte) {
-        when (b) {
-            '\r'.toByte() -> stream.write("[CR]".toByteArray())
-            '\n'.toByte() -> stream.write("[LF]\n".toByteArray())
-            in 0x20..0x7E -> stream.write(b.toInt())        // printable ASCII
-            else ->          stream.write("[${String.format("%02x", b)}]".toByteArray())
+    private fun formatByteStream(input: InputStream, output: ByteArrayOutputStream) {
+        OutputStreamWriter(output).use { writer ->
+            while (input.available() != 0) {
+                val b = input.read()
+                when (b) {
+                    '\r'.toInt()  -> writer.append("[CR]")
+                    '\n'.toInt()  -> writer.append("[LF]\n")
+                    in 0x20..0x7E -> writer.write(b)        // printable ASCII
+                    else          -> writer.append("[${String.format("%02x", b)}]")
+                }
+            }
         }
     }
 

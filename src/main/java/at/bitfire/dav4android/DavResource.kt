@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4android
 
-import android.text.TextUtils
 import at.bitfire.dav4android.exception.*
 import at.bitfire.dav4android.property.GetContentType
 import at.bitfire.dav4android.property.GetETag
@@ -135,7 +134,7 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response!!, false)
 
         val eTag = response.header("ETag")
-        if (TextUtils.isEmpty(eTag))
+        if (eTag.isNullOrEmpty())
             properties -= GetETag.NAME
         else
             properties[GetETag.NAME] = GetETag(eTag)
@@ -184,7 +183,7 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response!!, true)
 
         val eTag = response.header("ETag")
-        if (TextUtils.isEmpty(eTag))
+        if (eTag.isNullOrEmpty())
             properties -= GetETag.NAME
         else
             properties[GetETag.NAME] = GetETag(eTag)
