@@ -30,7 +30,7 @@ class ResourceType: Property {
 
     val types = mutableSetOf<Property.Name>()
 
-    override fun toString() = "[${types.joinToString { ", " }}]"
+    override fun toString() = "[${types.joinToString(", ")}]"
 
 
     class Factory: PropertyFactory {
