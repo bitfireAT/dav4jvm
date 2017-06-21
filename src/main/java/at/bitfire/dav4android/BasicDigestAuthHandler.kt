@@ -279,7 +279,7 @@ class BasicDigestAuthHandler(
     }
 
 
-    override fun authenticate(route: Route, response: Response) =
+    override fun authenticate(route: Route?, response: Response) =
             authenticateRequest(response.request(), response)
 
     override fun intercept(chain: Interceptor.Chain): Response {

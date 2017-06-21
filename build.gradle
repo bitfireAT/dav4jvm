@@ -14,7 +14,6 @@ buildscript {
 
 repositories {
     jcenter()
-    mavenCentral()
 }
 
 apply plugin: 'com.android.library'
@@ -48,6 +47,7 @@ android {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
     compile 'com.android.support:support-annotations:26.+'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
 

@@ -258,4 +258,20 @@ public class BasicDigestAuthHandlerTest {
         assertNotNull(authenticator.digestRequest(original, authScheme));
     }
 
+    @Test
+    public void testAuthenticateNull() {
+        BasicDigestAuthHandler authenticator = new BasicDigestAuthHandler(null, "demo", "demo");
+        // must not crash (route may be null)
+        Request request = new Request.Builder()
+                .get()
+                .url("http://example.com")
+                .build();
+        Response response = new Response.Builder()
+                .request(request)
+                .protocol(Protocol.HTTP_2)
+                .code(200).message("OK")
+                .build();
+        authenticator.authenticate(null, response);
+    }
+
 }
