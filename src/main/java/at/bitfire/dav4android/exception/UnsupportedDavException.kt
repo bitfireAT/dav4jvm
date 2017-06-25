@@ -8,4 +8,4 @@
 
 package at.bitfire.dav4android.exception
 
-class UnsupportedDavException(message: String?) : DavException(message)
+class UnsupportedDavException(message: String) : DavException(message)
