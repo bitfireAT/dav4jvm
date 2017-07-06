@@ -1,9 +1,8 @@
 image: registry.gitlab.com/bitfireat/davdroid:latest
 
 before_script:
-  - export GRADLE_USER_HOME=`pwd`/.gradle
-  - chmod +x gradlew
-  - emulator64-arm -avd test -no-audio -no-window & wait-for-emulator.sh
+  - export GRADLE_USER_HOME=`pwd`/.gradle; chmod +x gradlew
+  - emulator64-x86 -avd test -no-audio -no-window & wait-for-emulator.sh
 
 cache:
   paths:
