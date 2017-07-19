@@ -48,12 +48,14 @@ android {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
+    //noinspection GradleDynamicVersion
     compile 'com.android.support:support-annotations:26.+'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
 
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.8.1'
 
     androidTestCompile 'junit:junit:4.12'
+    //noinspection GradleDynamicVersion
     androidTestCompile 'com.android.support.test:runner:+'
 
     testCompile 'junit:junit:4.12'
