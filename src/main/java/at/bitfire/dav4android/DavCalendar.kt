@@ -101,7 +101,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws DavException on DAV error
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun multiget(urls: Array<HttpUrl>) {
+    fun multiget(urls: List<HttpUrl>) {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>

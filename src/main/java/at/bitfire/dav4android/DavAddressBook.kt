@@ -80,7 +80,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws DavException on DAV error
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun multiget(urls: Array<HttpUrl>, vCard4: Boolean) {
+    fun multiget(urls: List<HttpUrl>, vCard4: Boolean) {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
