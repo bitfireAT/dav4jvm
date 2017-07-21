@@ -47,11 +47,12 @@ open class HttpException: Exception, Serializable {
         val request = response.request()
         var formatted = StringBuilder()
         formatted.append(request.method()).append(" ").append(request.url().encodedPath()).append("\n")
-        var headers = request.headers()
-        for (name in headers.names())
-            for (value in headers.values(name))
+        for ((name,values) in request.headers().toMultimap())
+            for (value in values)
                 formatted.append(name).append(": ").append(value).append("\n")
         request.body()?.let {
+            formatted.append("Content-Type: ").append(it.contentType()).append("\n")
+            formatted.append("Content-Length: ").append(it.contentLength()).append("\n")
             try {
                 val buffer = Buffer()
                 it.writeTo(buffer)
@@ -67,12 +68,13 @@ open class HttpException: Exception, Serializable {
         // format response
         formatted = StringBuilder()
         formatted.append(response.protocol()).append(" ").append(response.code()).append(" ").append(response.message()).append("\n")
-        headers = response.headers()
-        for (name in headers.names())
-            for (value in headers.values(name))
+        for ((name,values) in response.headers().toMultimap())
+            for (value in values)
                 formatted.append(name).append(": ").append(value).append("\n")
 
         response.body()?.use {
+            formatted.append("Content-Type: ").append(it.contentType()).append("\n")
+            formatted.append("Content-Length: ").append(it.contentLength()).append("\n")
             try {
                 val baos = ByteArrayOutputStream()
                 formatByteStream(it.byteStream(), baos)
