@@ -26,6 +26,7 @@ class ResourceType: Property {
         @JvmField val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal")      // WebDAV ACL
         @JvmField val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
         @JvmField val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar")        // CalDAV
+        @JvmField val WEBCAL = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
     }
 
     val types = mutableSetOf<Property.Name>()
@@ -53,6 +54,7 @@ class ResourceType: Property {
                             PRINCIPAL -> typeName = PRINCIPAL
                             ADDRESSBOOK -> typeName = ADDRESSBOOK
                             CALENDAR -> typeName = CALENDAR
+                            WEBCAL -> typeName = WEBCAL
                         }
                         type.types.add(typeName)
                     }

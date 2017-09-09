@@ -18,5 +18,6 @@ at.bitfire.dav4android.property.GetETag$Factory
 at.bitfire.dav4android.property.GetLastModified$Factory
 at.bitfire.dav4android.property.GroupMembership$Factory
 at.bitfire.dav4android.property.ResourceType$Factory
+at.bitfire.dav4android.property.Source$Factory
 at.bitfire.dav4android.property.SupportedAddressData$Factory
 at.bitfire.dav4android.property.SupportedCalendarComponentSet$Factory
