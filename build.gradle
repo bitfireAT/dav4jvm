@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.1.4-2'
+    ext.kotlin_version = '1.1.4-3'
 
     repositories {
         jcenter()
@@ -28,7 +28,7 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 25
+        targetSdkVersion 26
     }
     buildTypes {
         release {
@@ -39,7 +39,6 @@ android {
 
     lintOptions {
         disable 'AllowBackup'
-        disable 'InvalidPackage'
     }
 
     defaultConfig {
@@ -51,13 +50,13 @@ android {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    compile 'com.squareup.okhttp3:okhttp:3.8.1'
+    compile 'com.squareup.okhttp3:okhttp:3.9.0'
 
-    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.8.1'
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.9.0'
     androidTestCompile 'junit:junit:4.12'
     //noinspection GradleDynamicVersion
     androidTestCompile 'com.android.support.test:runner:+'
 
     testCompile 'junit:junit:4.12'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.8.1'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.0'
 }
