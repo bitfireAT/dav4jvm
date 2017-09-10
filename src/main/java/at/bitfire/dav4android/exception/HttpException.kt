@@ -15,6 +15,9 @@ import java.io.*
 
 open class HttpException: Exception, Serializable {
 
+    // don't dump more than 10 kB
+    private val MAX_DUMP_SIZE = 20*1024
+
     val status: Int
     val request: String?
     val response: String?
@@ -73,8 +76,7 @@ open class HttpException: Exception, Serializable {
                 formatted.append(name).append(": ").append(value).append("\n")
 
         response.body()?.use {
-            formatted.append("Content-Type: ").append(it.contentType()).append("\n")
-            formatted.append("Content-Length: ").append(it.contentLength()).append("\n")
+            formatted.append("[body length: ").append(it.contentLength()).append(" bytes]").append("\n")
             try {
                 val baos = ByteArrayOutputStream()
                 formatByteStream(it.byteStream(), baos)
@@ -88,14 +90,21 @@ open class HttpException: Exception, Serializable {
 
     private fun formatByteStream(input: InputStream, output: ByteArrayOutputStream) {
         OutputStreamWriter(output).use { writer ->
-            while (input.available() != 0) {
-                val b = input.read()
-                when (b) {
-                    '\r'.toInt()  -> writer.append("[CR]")
-                    '\n'.toInt()  -> writer.append("[LF]\n")
-                    in 0x20..0x7E -> writer.write(b)        // printable ASCII
-                    else          -> writer.append("[${String.format("%02x", b)}]")
+            var b = input.read()
+            var written = 0
+            while (b != -1) {
+                if (written++ >= MAX_DUMP_SIZE) {
+                    writer.append("[…]")
+                    break
                 }
+                when (b) {
+                    '\t'.toInt() -> writer.append('↦')
+                    '\r'.toInt() -> writer.append('↵')
+                    '\n'.toInt() -> writer.append('\n')
+                    in 0x20..0x7E -> writer.write(b)        // printable ASCII
+                    else -> writer.append("[${String.format("%02x", b)}]")
+                }
+                b = input.read()
             }
         }
     }
