@@ -15,7 +15,7 @@ import java.io.*
 
 open class HttpException: Exception, Serializable {
 
-    // don't dump more than 10 kB
+    // don't dump more than 20 kB
     private val MAX_DUMP_SIZE = 20*1024
 
     val status: Int

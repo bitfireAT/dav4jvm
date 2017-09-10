@@ -41,8 +41,8 @@ public class HttpExceptionTest {
         HttpException e = new HttpException(response);
         assertTrue(e.getMessage().contains("500"));
         assertTrue(e.getMessage().contains(responseMessage));
-        assertTrue(e.getRequest().contains("REQUEST[LF]\nBODY[05]"));
-        assertTrue(e.getResponse().contains("[99]SERVER[CR][LF]\nRESPONSE"));
+        assertTrue(e.getRequest().contains("REQUEST\nBODY[05]"));
+        assertTrue(e.getResponse().contains("[99]SERVER↵\nRESPONSE"));
     }
 
 }
