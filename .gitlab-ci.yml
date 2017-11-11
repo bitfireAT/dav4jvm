@@ -2,7 +2,6 @@ image: registry.gitlab.com/bitfireat/davdroid:latest
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle; chmod +x gradlew
-  - (cd /sdk/emulator; ./emulator @test -no-audio -no-window & wait-for-emulator.sh)
 
 cache:
   paths:
@@ -10,8 +9,19 @@ cache:
 
 test:
   script:
-    - ./gradlew -i check connectedCheck
+    - (cd /sdk/emulator; ./emulator @test -no-audio -no-window & wait-for-emulator.sh)
+    - ./gradlew check connectedCheck
   artifacts:
     paths:
       - build/outputs/lint-results-debug.html
       - build/reports/
+
+pages:
+  script:
+    - ./gradlew dokka
+    - mkdir public && mv build/dokka public
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

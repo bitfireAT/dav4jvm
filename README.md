@@ -5,11 +5,13 @@
 # dav4android
 
 dav4android is an Android WebDAV/CalDAV/CardDAV library which has
-primarily been developed for [DAVdroid](https://davdroid.bitfire.at).
+primarily been developed for [DAVdroid](https://www.davdroid.com).
 
 It's not intended as a general WebDAV framework for all kinds of
 applications, but you may find it useful to fork and adapt it
 to your needs.
+
+Generated KDoc: https://bitfireAT.gitlab.io/dav4android/dokka/dav4android/
 
 
 ## License 
