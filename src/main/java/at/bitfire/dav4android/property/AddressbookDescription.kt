@@ -8,11 +8,10 @@
 
 package at.bitfire.dav4android.property
 
-import org.xmlpull.v1.XmlPullParser;
-
-import at.bitfire.dav4android.Property;
-import at.bitfire.dav4android.PropertyFactory;
-import at.bitfire.dav4android.XmlUtils;
+import at.bitfire.dav4android.Property
+import at.bitfire.dav4android.PropertyFactory
+import at.bitfire.dav4android.XmlUtils
+import org.xmlpull.v1.XmlPullParser
 
 data class AddressbookDescription(
         var description: String? = null

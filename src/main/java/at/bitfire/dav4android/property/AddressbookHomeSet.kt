@@ -9,7 +9,6 @@
 package at.bitfire.dav4android.property
 
 import at.bitfire.dav4android.Property
-import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
@@ -21,7 +20,7 @@ class AddressbookHomeSet: HrefListProperty() {
     }
 
 
-    class Factory(): HrefListProperty.Factory() {
+    class Factory : HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

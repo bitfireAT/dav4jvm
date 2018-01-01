@@ -6,6 +6,6 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.dav4android.exception;
+package at.bitfire.dav4android.exception
 
 open class DavException @JvmOverloads constructor(message: String, ex: Throwable? = null): Exception(message, ex)

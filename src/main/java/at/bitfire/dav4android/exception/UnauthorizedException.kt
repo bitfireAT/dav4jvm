@@ -8,7 +8,7 @@
 
 package at.bitfire.dav4android.exception
 
-import okhttp3.Response;
+import okhttp3.Response
 import java.net.HttpURLConnection
 
 class UnauthorizedException: HttpException {

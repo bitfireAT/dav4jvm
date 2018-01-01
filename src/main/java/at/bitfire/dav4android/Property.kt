@@ -8,6 +8,12 @@
 
 package at.bitfire.dav4android
 
+/**
+ * A WebDAV property.
+ *
+ * Every [Property] must define a static field called NAME of type Property.Name,
+ * which will be accessed by reflection.
+ */
 interface Property {
 
     class Name(
@@ -23,7 +29,7 @@ interface Property {
 
         override fun hashCode() = namespace.hashCode() xor name.hashCode()
 
-        override fun toString() = "$name($namespace)"
+        override fun toString() = "$namespace$name"
     }
 
 }

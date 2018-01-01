@@ -495,7 +495,7 @@ open class DavResource @JvmOverloads constructor(
             }
 
             // if we know this resource is a collection, make sure href has a trailing slash (for clarity and resolving relative paths)
-            val type = properties[ResourceType.NAME] as ResourceType?
+            val type = properties[ResourceType::class.java]
             if (type != null && type.types.contains(ResourceType.COLLECTION))
                 href = UrlUtils.withTrailingSlash(href)
 
@@ -524,7 +524,7 @@ open class DavResource @JvmOverloads constructor(
                               hrefSegments      = [ "davCollection", "aMember" ]
                 */
                 if (hrefSegments.size > nBasePathSegments) {
-                    val sameBasePath = (0..nBasePathSegments-1).none { locationSegments[it] != hrefSegments[it] }
+                    val sameBasePath = (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
                     if (sameBasePath) {
                         target = DavResource(httpClient, href, log)
                         members.add(target)
@@ -582,39 +582,39 @@ open class DavResource @JvmOverloads constructor(
     // helpers
 
     /** Finds first property within all responses (including unasked responses) */
-    fun findProperty(name: Property.Name): Pair<DavResource, Property>? {
+    fun<T: Property> findProperty(clazz: Class<T>): Pair<DavResource, T>? {
         // check resource itself
-        val property = properties[name]
+        val property = properties[clazz]
         if (property != null)
-            return Pair<DavResource, Property>(this, property)
+            return Pair(this, property)
 
         // check members
         for (member in members)
-            member.findProperty(name)?.let { return it }
+            member.findProperty(clazz)?.let { return it }
 
         // check unrequested responses
         for (resource in related)
-            resource.findProperty(name)?.let { return it }
+            resource.findProperty(clazz)?.let { return it }
 
         return null
     }
 
     /** Finds properties within all responses (including unasked responses) */
-    fun findProperties(name: Property.Name): List<Pair<DavResource, Property>> {
-        val result = LinkedList<Pair<DavResource, Property>>()
+    fun<T: Property> findProperties(clazz: Class<T>): List<Pair<DavResource, T>> {
+        val result = LinkedList<Pair<DavResource, T>>()
 
         // check resource itself
-        val property = properties[name]
+        val property = properties[clazz]
         if (property != null)
-            result.add(Pair<DavResource, Property>(this, property))
+            result.add(Pair(this, property))
 
         // check members
         for (member in members)
-            result.addAll(member.findProperties(name))
+            result.addAll(member.findProperties(clazz))
 
         // check unrequested responses
         for (rel in related)
-            result.addAll(rel.findProperties(name))
+            result.addAll(rel.findProperties(clazz))
 
         return Collections.unmodifiableList(result)
     }

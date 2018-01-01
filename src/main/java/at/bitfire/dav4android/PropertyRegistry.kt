@@ -6,7 +6,7 @@
  * http://www.gnu.org/licenses/gpl.html
  */
 
-package at.bitfire.dav4android;
+package at.bitfire.dav4android
 
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -18,7 +18,7 @@ object PropertyRegistry {
     val factories = mutableMapOf<String /*namespace*/, MutableMap<String /*name*/, PropertyFactory>>()
 
     init {
-        Constants.log.info("Registering DAV property factories");
+        Constants.log.info("Registering DAV property factories")
         for (factory in ServiceLoader.load(PropertyFactory::class.java)) {
             Constants.log.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
             register(factory)

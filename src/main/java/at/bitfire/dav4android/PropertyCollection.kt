@@ -13,56 +13,56 @@ import java.util.Collections.unmodifiableMap
 
 class PropertyCollection {
 
-    val properties = lazy { mutableMapOf<String, MutableMap<String, Property?>>() }
+    val properties = lazy { mutableMapOf<Property.Name, Property?>() }
 
 
-    operator fun get(name: Property.Name): Property? {
+    /**
+     * Returns a WebDAV property, or null if this property is not known.
+     * In most cases, using the alternative [get] with [Class] parameter is better because it provides type safety.
+     */
+    operator fun get(name: Property.Name): Property? =
+            if (!properties.isInitialized())
+                null
+            else
+                properties.value[name]
+
+    /**
+     * Returns a WebDAV property, or null if this property is not known.
+     */
+    operator fun<T: Property> get(clazz: Class<T>): T? {
         if (!properties.isInitialized())
             return null
 
-        val nsProperties = properties.value[name.namespace] ?: return null
-        return nsProperties[name.name]
-    }
-
-    fun getMap(): Map<Property.Name, Property?> {
-        if (!properties.isInitialized())
-            return mapOf()
-
-        val map = HashMap<Property.Name, Property?>()
-        for ((namespace, nsProperties) in properties.value) {
-            for ((name, property) in nsProperties)
-                map[Property.Name(namespace, name)] = property
+        try {
+            val name = clazz.getDeclaredField("NAME").get(null) as Property.Name
+            return properties.value[name] as? T
+        } catch (e: NoSuchFieldException) {
+            Constants.log.severe("$clazz does not have a static NAME field")
+            return null
         }
-        return unmodifiableMap(map)
     }
+
+    fun getMap(): Map<Property.Name, Property?> =
+            if (!properties.isInitialized())
+                mapOf()
+            else
+                unmodifiableMap(properties.value)
 
     operator fun set(name: Property.Name, property: Property?) {
-        var nsProperties = properties.value[name.namespace]
-        if (nsProperties == null) {
-            nsProperties = mutableMapOf<String, Property?>()
-            properties.value[name.namespace] = nsProperties
-        }
-
-        nsProperties[name.name] = property
+        properties.value[name] = property
     }
 
     operator fun minusAssign(name: Property.Name) {
         if (!properties.isInitialized())
             return
-
-        val nsProperties = properties.value[name.namespace]
-        nsProperties?.remove(name.name)
+        properties.value.remove(name)
     }
 
-    fun size(): Int {
-        if (!properties.isInitialized())
-            return 0
-
-        var size = 0
-        for (nsProperties in properties.value.values)
-            size += nsProperties.size
-        return size
-    }
+    fun size() =
+            if (!properties.isInitialized())
+                0
+            else
+                properties.value.size
 
 
     /**
@@ -95,17 +95,16 @@ class PropertyCollection {
         if (!properties.isInitialized())
             return
 
-        for ((_, nsProperties) in properties.value) {
-            for (name in nsProperties.keys)
-                nsProperties.put(name, null)
-        }
+        val props = properties.value
+        for (name in props.keys)
+            props[name] = null
     }
 
 
     override fun toString(): String {
         val s = LinkedList<String>()
         for ((name, value) in getMap())
-            s.add("$name: $value")
+            s.add("$name = $value")
         return "[${s.joinToString(", ")}]"
     }
 
