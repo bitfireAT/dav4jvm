@@ -12,7 +12,6 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.IOException
-import java.util.logging.Level
 
 object XmlUtils {
 
@@ -39,40 +38,45 @@ object XmlUtils {
     fun newSerializer() = factory.newSerializer()!!
 
 
-    @Throws(IOException::class)
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun processTag(parser: XmlPullParser, namespace: String, name: String, lambda: () -> Unit) {
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
+                    parser.namespace == namespace && parser.name == name) {
+                lambda()
+            }
+            eventType = parser.next()
+        }
+    }
+
+    @Throws(IOException::class, XmlPullParserException::class)
     fun readText(parser: XmlPullParser): String? {
         var text: String? = null
 
-        try {
-            val depth = parser.depth
+        val depth = parser.depth
 
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.TEXT && parser.depth == depth)
-                    text = parser.text
-                eventType = parser.next()
-            }
-        } catch(e: XmlPullParserException) {
-            Constants.log.log(Level.SEVERE, "Couldn't parse text property", e);
+        var eventType = parser.eventType
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.TEXT && parser.depth == depth)
+                text = parser.text
+            eventType = parser.next()
         }
 
         return text
     }
 
-    @Throws(IOException::class)
-    fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableList<String>) {
-        try {
-            val depth = parser.depth
+    @Throws(IOException::class, XmlPullParserException::class)
+    fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
+        val depth = parser.depth
 
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
-                        Property.Name(parser.namespace, parser.name) == name)
-                    list.add(parser.nextText())
-                eventType = parser.next()
-            }
-        } catch(e: XmlPullParserException) {
-            Constants.log.log(Level.SEVERE, "Couldn't parse text property list", e)
+        var eventType = parser.eventType
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
+                    Property.Name(parser.namespace, parser.name) == name)
+                list.add(parser.nextText())
+            eventType = parser.next()
         }
     }
 

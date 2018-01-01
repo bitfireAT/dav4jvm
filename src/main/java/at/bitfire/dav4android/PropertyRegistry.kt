@@ -9,7 +9,9 @@
 package at.bitfire.dav4android;
 
 import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
 import java.util.*
+import java.util.logging.Level
 
 object PropertyRegistry {
 
@@ -24,7 +26,7 @@ object PropertyRegistry {
     }
 
 
-    fun register(factory: PropertyFactory) {
+    private fun register(factory: PropertyFactory) {
         val name = factory.getName()
         var nsFactories = factories[name.namespace]
         if (nsFactories == null) {
@@ -35,8 +37,12 @@ object PropertyRegistry {
     }
 
     fun create(name: Property.Name, parser: XmlPullParser): Property? {
-        factories[name.namespace]?.let { nsFactories ->
-            nsFactories[name.name]?.let { factory -> return factory.create(parser) }
+        try {
+            factories[name.namespace]?.let { nsFactories ->
+                nsFactories[name.name]?.let { factory -> return factory.create(parser) }
+            }
+        } catch (e: XmlPullParserException) {
+            Constants.log.log(Level.WARNING, "Couldn't parse $name", e)
         }
         return null
     }

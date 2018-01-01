@@ -8,13 +8,10 @@
 
 package at.bitfire.dav4android.property
 
-import at.bitfire.dav4android.Constants
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.util.logging.Level
 
 class ResourceType: Property {
 
@@ -41,28 +38,22 @@ class ResourceType: Property {
         override fun create(parser: XmlPullParser): ResourceType? {
             val type = ResourceType()
 
-            try {
-                val depth = parser.depth
-
-                var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                        // use static objects to allow types.contains()
-                        var typeName = Property.Name(parser.namespace, parser.name)
-                        when (typeName) {
-                            COLLECTION -> typeName = COLLECTION
-                            PRINCIPAL -> typeName = PRINCIPAL
-                            ADDRESSBOOK -> typeName = ADDRESSBOOK
-                            CALENDAR -> typeName = CALENDAR
-                            SUBSCRIBED -> typeName = SUBSCRIBED
-                        }
-                        type.types.add(typeName)
+            val depth = parser.depth
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    // use static objects to allow types.contains()
+                    var typeName = Property.Name(parser.namespace, parser.name)
+                    when (typeName) {
+                        COLLECTION -> typeName = COLLECTION
+                        PRINCIPAL -> typeName = PRINCIPAL
+                        ADDRESSBOOK -> typeName = ADDRESSBOOK
+                        CALENDAR -> typeName = CALENDAR
+                        SUBSCRIBED -> typeName = SUBSCRIBED
                     }
-                    eventType = parser.next()
+                    type.types.add(typeName)
                 }
-            } catch(e: XmlPullParserException) {
-                Constants.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e);
-                return null
+                eventType = parser.next()
             }
 
             return type

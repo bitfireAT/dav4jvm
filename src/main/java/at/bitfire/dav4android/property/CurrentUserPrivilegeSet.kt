@@ -8,13 +8,10 @@
 
 package at.bitfire.dav4android.property
 
-import at.bitfire.dav4android.Constants
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.util.logging.Level
 
 data class CurrentUserPrivilegeSet(
         // only those privileges which are required for DAVdroid are implemented
@@ -33,15 +30,15 @@ data class CurrentUserPrivilegeSet(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet? {
+            // <!ELEMENT current-user-privilege-set (privilege*)>
+            // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet(false, false)
 
-            fun parsePrivilege() {
+            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "privilege", {
                 val depth = parser.depth
-                // <!ELEMENT privilege ANY>
-
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1 && parser.namespace == XmlUtils.NS_WEBDAV)
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
                         when (parser.name) {
                             "read" ->
                                 privs.mayRead = true
@@ -51,26 +48,10 @@ data class CurrentUserPrivilegeSet(
                                 privs.mayRead = true
                                 privs.mayWriteContent = true
                             }
-                    }
+                        }
                     eventType = parser.next()
                 }
-            }
-
-            try {
-                // <!ELEMENT current-user-privilege-set (privilege*)>
-                val depth = parser.depth
-
-                var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1 &&
-                            parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "privilege")
-                        parsePrivilege()
-                    eventType = parser.next()
-                }
-            } catch(e: XmlPullParserException) {
-                Constants.log.log(Level.SEVERE, "Couldn't parse <current-user-privilege-set>", e)
-                return null
-            }
+            })
 
             return privs
         }

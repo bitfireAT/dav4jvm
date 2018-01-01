@@ -14,6 +14,7 @@ import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.XmlUtils
 import okhttp3.MediaType
 import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
 class SupportedAddressData: Property {
@@ -37,21 +38,14 @@ class SupportedAddressData: Property {
             val supported = SupportedAddressData()
 
             try {
-                val depth = parser.depth
-
-                var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
-                            parser.namespace == XmlUtils.NS_CARDDAV && parser.name == "address-data-type")
-                        parser.getAttributeValue(null, "content-type")?.let { contentType ->
-                            @Suppress("NAME_SHADOWING")
-                            var contentType = contentType
-                            parser.getAttributeValue(null, "version")?.let { version -> contentType += "; version=$version" }
-                            MediaType.parse(contentType)?.let { supported.types.add(it) }
-                        }
-                    eventType = parser.next()
-                }
-            } catch(e: Exception) {
+                XmlUtils.processTag(parser, XmlUtils.NS_CARDDAV, "address-data-type", {
+                    parser.getAttributeValue(null, "content-type")?.let { contentType ->
+                        var type = contentType
+                        parser.getAttributeValue(null, "version")?.let { version -> type += "; version=$version" }
+                        MediaType.parse(type)?.let { supported.types.add(it) }
+                    }
+                })
+            } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null
             }

@@ -20,7 +20,7 @@ class GroupMembership: HrefListProperty() {
     }
 
 
-    class Factory(): HrefListProperty.Factory() {
+    class Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

@@ -14,7 +14,9 @@ import at.bitfire.dav4android.QuotedStringUtils
 import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class GetETag: Property {
+class GetETag(
+        rawETag: String?
+): Property {
 
     companion object {
         @JvmField
@@ -23,7 +25,7 @@ class GetETag: Property {
 
     var eTag: String?
 
-    constructor(rawETag: String?) {
+    init {
         /* entity-tag = [ weak ] opaque-tag
            weak       = "W/"
            opaque-tag = quoted-string

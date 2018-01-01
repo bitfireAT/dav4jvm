@@ -8,17 +8,10 @@
 
 package at.bitfire.dav4android.property
 
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.util.Locale;
-import java.util.logging.Level;
-
-import at.bitfire.dav4android.Constants;
-import at.bitfire.dav4android.Property;
-import at.bitfire.dav4android.PropertyFactory;
-import at.bitfire.dav4android.XmlUtils;
+import at.bitfire.dav4android.Property
+import at.bitfire.dav4android.PropertyFactory
+import at.bitfire.dav4android.XmlUtils
+import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
         var supportsEvents: Boolean,
@@ -36,35 +29,29 @@ data class SupportedCalendarComponentSet(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): SupportedCalendarComponentSet? {
+            /* <!ELEMENT supported-calendar-component-set (comp+)>
+               <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
+               <!ATTLIST comp name CDATA #REQUIRED>
+            */
             val components = SupportedCalendarComponentSet(false, false)
 
-            try {
-                /* <!ELEMENT supported-calendar-component-set (comp+)>
-                   <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
-                   <!ATTLIST comp name CDATA #REQUIRED>
-                */
-                val depth = parser.depth
-
-                var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth + 1 && parser.namespace == XmlUtils.NS_CALDAV) {
-                        when (parser.name) {
-                            "allcomp" -> {
-                                components.supportsEvents = true
-                                components.supportsTasks = true
-                            }
-                            "comp" ->
-                                when (parser.getAttributeValue(null, "name")?.toUpperCase()) {
-                                    "VEVENT" -> components.supportsEvents = true
-                                    "VTODO" -> components.supportsTasks = true
-                                }
+            val depth = parser.depth
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth + 1 && parser.namespace == XmlUtils.NS_CALDAV) {
+                    when (parser.name) {
+                        "allcomp" -> {
+                            components.supportsEvents = true
+                            components.supportsTasks = true
                         }
+                        "comp" ->
+                            when (parser.getAttributeValue(null, "name")?.toUpperCase()) {
+                                "VEVENT" -> components.supportsEvents = true
+                                "VTODO" -> components.supportsTasks = true
+                            }
                     }
-                    eventType = parser.next()
                 }
-            } catch(e: XmlPullParserException) {
-                Constants.log.log(Level.SEVERE, "Couldn't parse <supported-calendar-component-set>", e)
-                return null
+                eventType = parser.next()
             }
 
             return components
