@@ -15,7 +15,7 @@ import java.util.logging.Level
 
 object PropertyRegistry {
 
-    val factories = mutableMapOf<String /*namespace*/, MutableMap<String /*name*/, PropertyFactory>>()
+    private val factories = mutableMapOf<Property.Name, PropertyFactory>()
 
     init {
         Constants.log.info("Registering DAV property factories")
@@ -27,24 +27,15 @@ object PropertyRegistry {
 
 
     private fun register(factory: PropertyFactory) {
-        val name = factory.getName()
-        var nsFactories = factories[name.namespace]
-        if (nsFactories == null) {
-            nsFactories = mutableMapOf<String, PropertyFactory>()
-            factories[name.namespace] = nsFactories
-        }
-        nsFactories[name.name] = factory
+        factories[factory.getName()] = factory
     }
 
-    fun create(name: Property.Name, parser: XmlPullParser): Property? {
-        try {
-            factories[name.namespace]?.let { nsFactories ->
-                nsFactories[name.name]?.let { factory -> return factory.create(parser) }
+    fun create(name: Property.Name, parser: XmlPullParser) =
+            try {
+                factories[name]?.create(parser)
+            } catch (e: XmlPullParserException) {
+                Constants.log.log(Level.WARNING, "Couldn't parse $name", e)
+                null
             }
-        } catch (e: XmlPullParserException) {
-            Constants.log.log(Level.WARNING, "Couldn't parse $name", e)
-        }
-        return null
-    }
 
 }

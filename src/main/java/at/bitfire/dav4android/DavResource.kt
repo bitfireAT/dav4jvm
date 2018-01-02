@@ -390,7 +390,7 @@ open class DavResource @JvmOverloads constructor(
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     val name = Property.Name(parser.namespace, parser.name)
                     val property = PropertyRegistry.create(name, parser)
                     if (property != null)

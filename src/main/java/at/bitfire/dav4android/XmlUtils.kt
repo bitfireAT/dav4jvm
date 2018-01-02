@@ -39,14 +39,13 @@ object XmlUtils {
 
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun processTag(parser: XmlPullParser, namespace: String, name: String, lambda: () -> Unit) {
+    fun processTag(parser: XmlPullParser, namespace: String, name: String, processor: () -> Unit) {
         val depth = parser.depth
         var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
-                    parser.namespace == namespace && parser.name == name) {
-                lambda()
-            }
+                    parser.namespace == namespace && parser.name == name)
+                processor()
             eventType = parser.next()
         }
     }
@@ -56,7 +55,6 @@ object XmlUtils {
         var text: String? = null
 
         val depth = parser.depth
-
         var eventType = parser.eventType
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
             if (eventType == XmlPullParser.TEXT && parser.depth == depth)
@@ -70,9 +68,8 @@ object XmlUtils {
     @Throws(IOException::class, XmlPullParserException::class)
     fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
         val depth = parser.depth
-
         var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
                     Property.Name(parser.namespace, parser.name) == name)
                 list.add(parser.nextText())
