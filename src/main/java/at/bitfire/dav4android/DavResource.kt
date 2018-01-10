@@ -12,6 +12,7 @@ import at.bitfire.dav4android.exception.*
 import at.bitfire.dav4android.property.GetContentType
 import at.bitfire.dav4android.property.GetETag
 import at.bitfire.dav4android.property.ResourceType
+import at.bitfire.dav4android.property.SyncToken
 import okhttp3.*
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -27,9 +28,9 @@ import java.util.logging.Logger
 
 /**
  * Represents a WebDAV resource at the given location.
- * @param httpClient    #{@link OkHttpClient} to access this object
+ * @param httpClient    [OkHttpClient] to access this object
  * @param location      location of the WebDAV resource
- * @param log           #{@link Logger} which will be used for logging, or null for default
+ * @param log           [Logger] which will be used for logging, or null for default
  */
 open class DavResource @JvmOverloads constructor(
         val httpClient: OkHttpClient,
@@ -37,15 +38,26 @@ open class DavResource @JvmOverloads constructor(
         val log: Logger = Constants.log
 ) {
 
-    val MIME_XML = MediaType.parse("application/xml; charset=utf-8")
+    companion object {
+        val MAX_REDIRECTS = 5
+        val MIME_XML = MediaType.parse("application/xml; charset=utf-8")
+    }
 
-    val MAX_REDIRECTS = 5
-
+    /** HTTP capabilities reported by an OPTIONS response */
     val capabilities = mutableSetOf<String>()
-    val properties = PropertyCollection()
-    val members = mutableSetOf<DavResource>()
-    val related = mutableSetOf<DavResource>()
 
+    /** WebDAV properties of this resource */
+    val properties = PropertyCollection()
+
+    /** whether a 507 Insufficient Storage was found in the response */
+    var furtherResults = false
+
+    /** members of this resource */
+    val members = mutableSetOf<DavResource>()
+    /** members of this resource with status 404 Not Found */
+    val removedMembers = mutableSetOf<DavResource>()
+    /** resources which have been found in the answer, although they aren't members of this resource */
+    val related = mutableSetOf<DavResource>()
 
     init {
         // Don't follow redirects (only useful for GET/POST).
@@ -75,7 +87,7 @@ open class DavResource @JvmOverloads constructor(
 
         val response = httpClient.newCall(Request.Builder()
                 .method("OPTIONS", null)
-                .header("Content-Length", "0")      // workaround for https://github.com/square/okhttp/issues/2892
+                .header("Content-Length", "0")
                 .url(location)
                 .build()).execute()
         checkStatus(response, true)
@@ -501,15 +513,29 @@ open class DavResource @JvmOverloads constructor(
 
             log.log(Level.FINE, "Received <response> for $href", if (status != null) status else properties)
 
-            if (status != null)
-                // treat an HTTP error of a single response (i.e. requested resource or a member) like an HTTP error of the requested resource
-                checkStatus(status!!)
+            var removed = false
+            var insufficientStorage = false
+            status?.let {
+                /* Treat an HTTP error of a single response (i.e. requested resource or a member)
+                   like an HTTP error of the requested resource.
+
+                Exceptions for RFC 6578 support:
+                  - 507 Insufficient Storage on the requested resource means there are further results
+                  - members with status 404 Not Found go into removedMembers instead of members
+                */
+                when (it.code) {
+                    404  -> removed = true
+                    507  -> insufficientStorage = true
+                    else -> checkStatus(it)
+                }
+            }
 
             // Which resource does this <response> represent?
             var target: DavResource? = null
-            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location))) {
-                // it's about ourselves
+            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location)) && !removed) {
+                // it's about ourselves (and not 404)
                 target = this
+
             } else if (location.scheme() == href.scheme() && location.host() == href.host() && location.port() == href.port()) {
                 val locationSegments = location.pathSegments()
                 val hrefSegments = href.pathSegments()
@@ -526,8 +552,12 @@ open class DavResource @JvmOverloads constructor(
                 if (hrefSegments.size > nBasePathSegments) {
                     val sameBasePath = (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
                     if (sameBasePath) {
+                        // it's about a member
                         target = DavResource(httpClient, href, log)
-                        members.add(target)
+                        if (!removed)
+                            members += target
+                        else
+                            removedMembers += target
                     }
                 }
             }
@@ -539,6 +569,7 @@ open class DavResource @JvmOverloads constructor(
             }
 
             // set properties for target
+            target.furtherResults = insufficientStorage
             target.properties.merge(properties, true)
         }
 
@@ -548,9 +579,15 @@ open class DavResource @JvmOverloads constructor(
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1 &&
-                        parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "response")
-                    parseMultiStatus_Response()
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
+                    when (parser.name) {
+                        "response" ->
+                            parseMultiStatus_Response()
+                        "sync-token" ->
+                            XmlUtils.readText(parser)?.let { token ->
+                                properties[SyncToken.NAME] = SyncToken(token)
+                            }
+                    }
                 eventType = parser.next()
             }
         }

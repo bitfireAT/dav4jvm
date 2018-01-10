@@ -20,6 +20,7 @@ interface Property {
             val namespace: String,
             val name: String
     ) {
+
         override fun equals(o: Any?): Boolean {
             return if (o is Name)
                 namespace == o.namespace && name == o.name
