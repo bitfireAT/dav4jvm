@@ -39,7 +39,7 @@ open class DavResource @JvmOverloads constructor(
 ) {
 
     companion object {
-        val MAX_REDIRECTS = 5
+        const val MAX_REDIRECTS = 5
         val MIME_XML = MediaType.parse("application/xml; charset=utf-8")
     }
 
@@ -283,11 +283,9 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response!!, false)
         assertMultiStatus(response)
 
-        if (depth > 0) {
+        if (depth > 0)
             // collection listing requested, drop old member information
-            members.clear()
-            related.clear()
-        }
+            resetMembers()
 
         // process and close multi-status response body
         response.body()?.charStream()?.use { processMultiStatus(it) }
@@ -654,6 +652,12 @@ open class DavResource @JvmOverloads constructor(
             result.addAll(rel.findProperties(clazz))
 
         return Collections.unmodifiableList(result)
+    }
+
+    protected fun resetMembers() {
+        members.clear()
+        removedMembers.clear()
+        related.clear()
     }
 
 }

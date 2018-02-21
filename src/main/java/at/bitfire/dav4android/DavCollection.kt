@@ -22,7 +22,7 @@ open class DavCollection(
         log: Logger = Constants.log
 ): DavResource(httpClient, location, log) {
 
-    /**
+        /**
      * Sends a REPORT sync-collection request. If a sync-token is returned, it will be made
      * available in [properties].
      *
@@ -79,8 +79,7 @@ open class DavCollection(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        members.clear()
-        related.clear()
+        resetMembers()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 

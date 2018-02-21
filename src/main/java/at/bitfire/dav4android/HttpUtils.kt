@@ -120,10 +120,10 @@ object HttpUtils {
     class AuthScheme(
             val name: String
     ) {
-        val nameValue = Pattern.compile("^([^=]+)=(.*)$")!!
+        private val nameValue = Pattern.compile("^([^=]+)=(.*)$")!!
 
         /** Map (name -> value) authentication parameters. Names are always lower-case. */
-        val params = HashMap<String, String>()
+        val params = mutableMapOf<String, String>()
         val unnamedParams = LinkedList<String>()
 
         fun addRawParam(authParam: String) {
@@ -133,7 +133,7 @@ object HttpUtils {
                 var value = m.group(2)
                 val len = value.length
                 if (value[0] == '"' && value[len - 1] == '"')
-                // quoted-string
+                    // quoted-string
                     value = value
                             .substring(1, len - 1)
                             .replace("\\\"", "\"")

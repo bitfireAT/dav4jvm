@@ -68,8 +68,7 @@ class DavAddressBook @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        members.clear()
-        related.clear()
+        resetMembers()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 
@@ -122,8 +121,7 @@ class DavAddressBook @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        members.clear()
-        related.clear()
+        resetMembers()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 

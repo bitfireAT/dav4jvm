@@ -14,6 +14,20 @@ to your needs.
 Generated KDoc: https://bitfireAT.gitlab.io/dav4android/dokka/dav4android/
 
 
+## Contact
+
+```
+bitfire web engineering – Stockmann, Hirner GesnbR
+Florastraße 27
+2540 Bad Vöslau, AUSTRIA
+```
+
+Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
+
+For questions, suggestions etc. please use the DAVdroid forum:
+https://www.davdroid.com/forums/
+
+
 ## License 
 
 Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).

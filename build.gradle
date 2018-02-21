@@ -1,13 +1,11 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.10'
+    ext.kotlin_version = '1.2.21'
     ext.dokka_version = '0.9.15'
 
     repositories {
         jcenter()
-        maven {
-            url "https://maven.google.com"
-        }
+        google()
     }
 
     dependencies {
@@ -19,9 +17,7 @@ buildscript {
 
 repositories {
     jcenter()
-    maven {
-        url "https://maven.google.com"
-    }
+    google()
 }
 
 apply plugin: 'com.android.library'
@@ -59,7 +55,6 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
 
     androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.9.1'
-    androidTestCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support.test:runner:1.0.1'
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"

@@ -25,7 +25,8 @@ class DavCalendar @JvmOverloads constructor(
 
     companion object {
         @JvmField
-        val MIME_ICALENDAR = MediaType.parse("text/calendar;charset=utf-8")
+        val MIME_ICALENDAR = MediaType.parse("text/calendar")
+        val MIME_ICALENDAR_UTF8 = MediaType.parse("text/calendar;charset=utf-8")
     }
 
     private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
@@ -89,8 +90,7 @@ class DavCalendar @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        members.clear()
-        related.clear()
+        resetMembers()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 
@@ -137,8 +137,7 @@ class DavCalendar @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        members.clear()
-        related.clear()
+        resetMembers()
         response.body()?.charStream()?.use { processMultiStatus(it) }
     }
 
