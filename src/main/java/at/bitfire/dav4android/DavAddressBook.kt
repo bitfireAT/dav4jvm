@@ -22,10 +22,7 @@ class DavAddressBook @JvmOverloads constructor(
 ): DavCollection(httpClient, location, log) {
 
     companion object {
-        @JvmField
         val MIME_VCARD3_UTF8 = MediaType.parse("text/vcard;charset=utf-8")
-
-        @JvmField
         val MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0")
     }
 
@@ -36,7 +33,6 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
     fun addressbookQuery() {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
@@ -78,7 +74,6 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
     fun multiget(urls: List<HttpUrl>, vCard4: Boolean) {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |

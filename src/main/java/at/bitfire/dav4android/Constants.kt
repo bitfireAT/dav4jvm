@@ -12,7 +12,6 @@ import java.util.logging.Logger
 
 object Constants {
 
-    @JvmField
     var log = Logger.getLogger("dav4android")!!
 
 }

@@ -16,9 +16,9 @@ import org.xmlpull.v1.XmlPullParser
 class SupportedReportSet: Property {
 
     companion object {
-        @JvmField val NAME = Property.Name(XmlUtils.NS_WEBDAV, "supported-report-set")
+        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "supported-report-set")
 
-        @JvmField val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
+        val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
     }
 
     val reports = mutableSetOf<String>()

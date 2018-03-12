@@ -40,8 +40,8 @@ class BasicDigestAuthHandler(
         private val HEADER_AUTHORIZATION = "Authorization"
 
         // cached digest parameters
-        @JvmField var clientNonce = h(UUID.randomUUID().toString())
-        @JvmField var nonceCount = AtomicInteger(1)
+        var clientNonce = h(UUID.randomUUID().toString())
+        var nonceCount = AtomicInteger(1)
 
         fun quotedString(s: String) = "\"" + s.replace("\"", "\\\"") + "\""
         fun h(data: String) = ByteString.of(ByteBuffer.wrap(data.toByteArray())).md5().hex()!!

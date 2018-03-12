@@ -8,6 +8,8 @@
 
 package at.bitfire.dav4android
 
+import at.bitfire.dav4android.exception.DavException
+import at.bitfire.dav4android.exception.HttpException
 import at.bitfire.dav4android.property.SyncToken
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -16,13 +18,13 @@ import okhttp3.RequestBody
 import java.io.StringWriter
 import java.util.logging.Logger
 
-open class DavCollection(
+open class DavCollection @JvmOverloads constructor(
         httpClient: OkHttpClient,
         location: HttpUrl,
         log: Logger = Constants.log
 ): DavResource(httpClient, location, log) {
 
-        /**
+    /**
      * Sends a REPORT sync-collection request. If a sync-token is returned, it will be made
      * available in [properties].
      *
@@ -30,6 +32,10 @@ open class DavCollection(
      * @param infiniteDepth sync-level to be sent with the request: false = "1", true = "infinite"
      * @param limit         maximum number of results (may cause truncation)
      * @param properties    WebDAV properties to be requested
+     * @throws java.io.IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on DAV error
+
      */
     fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name) {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>

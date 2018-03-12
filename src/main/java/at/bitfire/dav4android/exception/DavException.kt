@@ -8,4 +8,7 @@
 
 package at.bitfire.dav4android.exception
 
-open class DavException @JvmOverloads constructor(message: String, ex: Throwable? = null): Exception(message, ex)
+open class DavException @JvmOverloads constructor(
+        message: String,
+        ex: Throwable? = null
+): Exception(message, ex)

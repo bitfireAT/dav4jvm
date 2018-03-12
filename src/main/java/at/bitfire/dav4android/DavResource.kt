@@ -429,11 +429,11 @@ open class DavResource @JvmOverloads constructor(
                             "prop" ->
                                 prop = parseMultiStatus_Prop()
                             "status" ->
-                                try {
-                                    status = StatusLine.parse(parser.nextText())
+                                status = try {
+                                    StatusLine.parse(parser.nextText())
                                 } catch(e: ProtocolException) {
                                     log.warning("Invalid status line, treating as 500 Server Error")
-                                    status = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
+                                    StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 }
                         }
                 eventType = parser.next()
@@ -485,11 +485,11 @@ open class DavResource @JvmOverloads constructor(
                                 href = location.resolve(sHref)
                             }
                             "status" ->
-                                try {
-                                    status = StatusLine.parse(parser.nextText())
+                                status = try {
+                                    StatusLine.parse(parser.nextText())
                                 } catch(e: ProtocolException) {
                                     log.warning("Invalid status line, treating as 500 Server Error")
-                                    status = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
+                                    StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 }
                             "propstat" ->
                                 parseMultiStatus_PropStat()?.let { properties.merge(it, false) }

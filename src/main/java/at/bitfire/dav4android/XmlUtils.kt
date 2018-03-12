@@ -15,11 +15,11 @@ import java.io.IOException
 
 object XmlUtils {
 
-    @JvmField val NS_WEBDAV = "DAV:"
-    @JvmField val NS_CALDAV = "urn:ietf:params:xml:ns:caldav"
-    @JvmField val NS_CARDDAV = "urn:ietf:params:xml:ns:carddav"
-    @JvmField val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
-    @JvmField val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
+    const val NS_WEBDAV = "DAV:"
+    const val NS_CALDAV = "urn:ietf:params:xml:ns:caldav"
+    const val NS_CARDDAV = "urn:ietf:params:xml:ns:carddav"
+    const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
+    const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
 
     private val factory: XmlPullParserFactory
     init {
@@ -31,10 +31,7 @@ object XmlUtils {
         }
     }
 
-    @JvmStatic
     fun newPullParser() = factory.newPullParser()!!
-
-    @JvmStatic
     fun newSerializer() = factory.newSerializer()!!
 
 

@@ -24,7 +24,6 @@ class DavCalendar @JvmOverloads constructor(
 ): DavCollection(httpClient, location, log) {
 
     companion object {
-        @JvmField
         val MIME_ICALENDAR = MediaType.parse("text/calendar")
         val MIME_ICALENDAR_UTF8 = MediaType.parse("text/calendar;charset=utf-8")
     }
@@ -38,7 +37,6 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
     fun calendarQuery(component: String, start: Date?, end: Date?) {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
@@ -100,7 +98,6 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
     fun multiget(urls: List<HttpUrl>) {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |

@@ -14,7 +14,6 @@ import java.net.URISyntaxException
 
 object UrlUtils {
 
-    @JvmStatic
     fun equals(url1: HttpUrl, url2: HttpUrl): Boolean {
         // if okhttp thinks the two URLs are equal, they're in any case
         // (and it's a simple String comparison)
@@ -32,7 +31,6 @@ object UrlUtils {
         }
     }
 
-    @JvmStatic
     fun hostToDomain(host: String?): String? {
         if (host == null)
             return null
@@ -49,7 +47,6 @@ object UrlUtils {
             host
     }
 
-    @JvmStatic
     fun omitTrailingSlash(url: HttpUrl): HttpUrl {
         val idxLast = url.pathSize () - 1
         val hasTrailingSlash = url.pathSegments()[idxLast] == ""
@@ -60,7 +57,6 @@ object UrlUtils {
             url
     }
 
-    @JvmStatic
     fun withTrailingSlash(url: HttpUrl): HttpUrl {
         val idxLast = url.pathSize() - 1
         val hasTrailingSlash = url.pathSegments()[idxLast] == ""

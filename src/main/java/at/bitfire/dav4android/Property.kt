@@ -11,7 +11,7 @@ package at.bitfire.dav4android
 /**
  * A WebDAV property.
  *
- * Every [Property] must define a static field called NAME of type Property.Name,
+ * Every [Property] must define a static field (use @JvmStatic) called NAME of type [Property.Name],
  * which will be accessed by reflection.
  */
 interface Property {
@@ -21,11 +21,11 @@ interface Property {
             val name: String
     ) {
 
-        override fun equals(o: Any?): Boolean {
-            return if (o is Name)
-                namespace == o.namespace && name == o.name
+        override fun equals(other: Any?): Boolean {
+            return if (other is Name)
+                namespace == other.namespace && name == other.name
             else
-                super.equals(o)
+                super.equals(other)
         }
 
         override fun hashCode() = namespace.hashCode() xor name.hashCode()

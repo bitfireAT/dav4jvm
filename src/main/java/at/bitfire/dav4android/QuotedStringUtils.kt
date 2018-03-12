@@ -10,19 +10,10 @@ package at.bitfire.dav4android
 
 object QuotedStringUtils {
 
-    @JvmStatic
-    fun asQuotedString(raw: String?): String? {
-        return if (raw == null)
-            null
-        else
+    fun asQuotedString(raw: String) =
             "\"" + raw.replace("\\" ,"\\\\").replace("\"", "\\\"") + "\""
-    }
 
-    @JvmStatic
-    fun decodeQuotedString(quoted: String?): String? {
-        if (quoted == null)
-            return null
-
+    fun decodeQuotedString(quoted: String): String {
         /*  quoted-string  = ( <"> *(qdtext | quoted-pair ) <"> )
             qdtext         = <any TEXT except <">>
             quoted-pair    = "\" CHAR

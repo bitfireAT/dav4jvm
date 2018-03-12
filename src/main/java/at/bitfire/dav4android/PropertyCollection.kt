@@ -33,12 +33,12 @@ class PropertyCollection {
         if (!properties.isInitialized())
             return null
 
-        try {
+        return try {
             val name = clazz.getDeclaredField("NAME").get(null) as Property.Name
-            return properties.value[name] as? T
+            properties.value[name] as? T
         } catch (e: NoSuchFieldException) {
             Constants.log.severe("$clazz does not have a static NAME field")
-            return null
+            null
         }
     }
 
@@ -66,15 +66,14 @@ class PropertyCollection {
 
 
     /**
-     * Merges another #{@link PropertyCollection} into #{@link #properties}.
+     * Merges another [PropertyCollection] into [properties].
      * Existing properties will be overwritten.
+     *
      * @param another           property collection to take the properties from
      * @param removeNullValues  Indicates how "another" properties with null values should be treated.
-     *                          <ul>
-     *                          <li>#{@code true}:  If the "another" property value is #{@code null}, the property will be removed in #{@link #properties}.</li>
-     *                          <li>#{@code false}: If the "another" property value is #{@code null}, the property in #{@link #properties} will be set to null, too,
-                                    but only if it doesn't exist yet. This means values in #{@link #properties} will never be overwritten by #{@code null}.</li>
-     *                          </ul>
+     *   - true: If the "another" property value is null, the property will be removed in [properties].
+     *   - false: If the "another" property value is null, the property in [properties] will be set to null, too,
+     *   but only if it doesn't exist yet. This means values in [properties] will never be overwritten by null.
      */
     fun merge(another: PropertyCollection, removeNullValues: Boolean) {
         val properties = another.getMap()

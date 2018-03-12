@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.21'
+    ext.kotlin_version = '1.2.30'
     ext.dokka_version = '0.9.15'
 
     repositories {
@@ -52,12 +52,12 @@ android {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    compile 'com.squareup.okhttp3:okhttp:3.9.1'
+    compile 'com.squareup.okhttp3:okhttp:3.10.0'
 
-    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.9.1'
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.10.0'
     androidTestCompile 'com.android.support.test:runner:1.0.1'
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testCompile 'junit:junit:4.12'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.9.1'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.10.0'
 }

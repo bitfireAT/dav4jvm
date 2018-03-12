@@ -15,8 +15,10 @@ import java.io.*
 
 open class HttpException: Exception, Serializable {
 
-    // don't dump more than 20 kB
-    private val MAX_DUMP_SIZE = 20*1024
+    companion object {
+        // don't dump more than 20 kB
+        private const val MAX_DUMP_SIZE = 20*1024
+    }
 
     val status: Int
     val request: String?

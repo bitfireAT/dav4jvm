@@ -19,11 +19,11 @@ class ResourceType: Property {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "resourcetype")
 
-        @JvmField val COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "collection")    // WebDAV
-        @JvmField val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal")      // WebDAV ACL
-        @JvmField val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
-        @JvmField val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar")        // CalDAV
-        @JvmField val SUBSCRIBED = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
+        val COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "collection")    // WebDAV
+        val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal")      // WebDAV ACL
+        val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
+        val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar")        // CalDAV
+        val SUBSCRIBED = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
     }
 
     val types = mutableSetOf<Property.Name>()

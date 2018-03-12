@@ -17,13 +17,11 @@ object HttpUtils {
 
     private val authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$")
 
-    @JvmStatic
     fun listHeader(response: Response, name: String): Array<String> {
         val value = response.headers(name).joinToString(",")
         return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
     }
 
-    @JvmStatic
     fun parseWwwAuthenticate(wwwAuths: List<String>): List<AuthScheme> {
         /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge
 

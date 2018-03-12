@@ -20,7 +20,10 @@ interface PropertyFactory {
      */
     fun getName(): Property.Name
 
-    @Throws(IOException::class, XmlPullParserException::class)
+    /**
+     * Parses XML of a property and returns its data class.
+     * @throws XmlPullParserException in case of parsing errors
+     */
     fun create(parser: XmlPullParser): Property?
 
 }

@@ -37,7 +37,7 @@ class GetETag(
             // entity tag is weak (doesn't matter for us)
                 tag = it.substring(2)
 
-            tag = QuotedStringUtils.decodeQuotedString(tag)
+            tag?.let { tag = QuotedStringUtils.decodeQuotedString(it) }
         }
 
         eTag = tag
