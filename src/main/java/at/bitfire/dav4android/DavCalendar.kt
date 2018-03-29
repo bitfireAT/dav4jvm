@@ -26,9 +26,12 @@ class DavCalendar @JvmOverloads constructor(
     companion object {
         val MIME_ICALENDAR = MediaType.parse("text/calendar")
         val MIME_ICALENDAR_UTF8 = MediaType.parse("text/calendar;charset=utf-8")
-    }
 
-    private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
+        private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
+        init {
+            timeFormatUTC.timeZone = TimeZone.getTimeZone("UTC")
+        }
+    }
 
 
     /**
