@@ -1,6 +1,6 @@
 
 buildscript {
-    ext.kotlin_version = '1.2.31'
+    ext.kotlin_version = '1.2.40'
     ext.dokka_version = '0.9.16'
 
     repositories {
@@ -24,6 +24,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'org.jetbrains.dokka-android'
 
+ext {
+    okhttp_version = "3.10.0"
+}
+
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
@@ -31,6 +35,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 27
+
+        buildConfigField "String", "version_okhttp", "\"$okhttp_version\""
     }
     buildTypes {
         release {
@@ -48,16 +54,15 @@ android {
     }
 }
 
-
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    compile 'com.squareup.okhttp3:okhttp:3.10.0'
+    compile "com.squareup.okhttp3:okhttp:$okhttp_version"
 
-    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    androidTestCompile "com.squareup.okhttp3:mockwebserver:$okhttp_version"
     androidTestCompile 'com.android.support.test:runner:1.0.1'
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testCompile 'junit:junit:4.12'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    testCompile "com.squareup.okhttp3:mockwebserver:$okhttp_version"
 }
