@@ -24,7 +24,7 @@ data class CalendarColor(
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_APPLE_ICAL, "calendar-color")
 
-        val PATTERN = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?")!!
+        private val PATTERN = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?")!!
 
         /**
          * Converts a WebDAV color from one of these formats:

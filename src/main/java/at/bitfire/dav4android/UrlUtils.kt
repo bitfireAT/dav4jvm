@@ -22,12 +22,12 @@ object UrlUtils {
 
         val uri1 = url1.uri()
         val uri2 = url2.uri()
-        try {
+        return try {
             val decoded1 = URI(uri1.scheme, uri1.schemeSpecificPart, uri1.fragment)
             val decoded2 = URI (uri2.scheme, uri2.schemeSpecificPart, uri2.fragment)
-            return decoded1 == decoded2
+            decoded1 == decoded2
         } catch (e: URISyntaxException) {
-            return false
+            false
         }
     }
 

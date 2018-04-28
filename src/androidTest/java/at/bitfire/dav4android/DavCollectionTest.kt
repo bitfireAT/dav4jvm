@@ -81,11 +81,11 @@ class DavCollectionTest {
         val members = collection.members.iterator()
         val member1 = members.next()
         assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.location)
-        assertEquals("00001-abcd1", member1.properties.get(GetETag::class.java)!!.eTag)
+        assertEquals("00001-abcd1", member1.properties[GetETag::class.java]!!.eTag)
 
         val member2 = members.next()
         assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.location)
-        assertEquals("00002-abcd1", member2.properties.get(GetETag::class.java)!!.eTag)
+        assertEquals("00002-abcd1", member2.properties[GetETag::class.java]!!.eTag)
 
         assertEquals(1, collection.removedMembers.size)
         val removedMember = collection.removedMembers.first()

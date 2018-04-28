@@ -36,8 +36,8 @@ class BasicDigestAuthHandler(
 ): Authenticator, Interceptor {
 
     companion object {
-        private val HEADER_AUTHENTICATE = "WWW-Authenticate"
-        private val HEADER_AUTHORIZATION = "Authorization"
+        private const val HEADER_AUTHENTICATE = "WWW-Authenticate"
+        private const val HEADER_AUTHORIZATION = "Authorization"
 
         // cached digest parameters
         var clientNonce = h(UUID.randomUUID().toString())

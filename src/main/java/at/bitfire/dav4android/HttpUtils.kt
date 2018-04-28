@@ -9,9 +9,8 @@
 package at.bitfire.dav4android
 
 import okhttp3.Response
-import java.util.LinkedList
+import java.util.*
 import java.util.regex.Pattern
-import kotlin.collections.HashMap
 
 object HttpUtils {
 
@@ -142,7 +141,7 @@ object HttpUtils {
 
         override fun toString(): String {
             val s = StringBuilder()
-            s.append(name + "(")
+            s.append("$name(")
             for ((name, value) in params)
                 s.append("$name=[$value],")
             s.append(")")

@@ -18,7 +18,7 @@ class SupportedReportSet: Property {
     companion object {
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "supported-report-set")
 
-        val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
+        const val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
     }
 
     val reports = mutableSetOf<String>()

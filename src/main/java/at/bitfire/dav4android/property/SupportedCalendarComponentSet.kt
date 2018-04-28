@@ -37,8 +37,8 @@ data class SupportedCalendarComponentSet(
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.getDepth() == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.getDepth() == depth + 1 && parser.namespace == XmlUtils.NS_CALDAV) {
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_CALDAV) {
                     when (parser.name) {
                         "allcomp" -> {
                             components.supportsEvents = true
