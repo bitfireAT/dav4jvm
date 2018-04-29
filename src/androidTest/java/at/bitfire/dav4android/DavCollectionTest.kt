@@ -8,14 +8,14 @@
 
 package at.bitfire.dav4android
 
+import at.bitfire.dav4android.exception.HttpException
 import at.bitfire.dav4android.property.GetETag
 import at.bitfire.dav4android.property.SyncToken
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
@@ -34,9 +34,93 @@ class DavCollectionTest {
     @After
     fun stopServer() = mockServer.shutdown()
 
-
+    /**
+     * Test sample response for an initial sync-collection report from RFC 6578 3.8.
+     */
     @Test
-    fun testSyncCollectionReport() {
+    fun testInitialSyncCollectionReport() {
+        val url = sampleUrl()
+        val collection = DavCollection(httpClient, url)
+
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(207)
+                .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
+                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "   <D:multistatus xmlns:D=\"DAV:\">\n" +
+                        "     <D:response>\n" +
+                        "       <D:href\n" +
+                        "   >${sampleUrl()}test.doc</D:href>\n" +
+                        "       <D:propstat>\n" +
+                        "         <D:prop>\n" +
+                        "           <D:getetag>\"00001-abcd1\"</D:getetag>\n" +
+                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\">\n" +
+                        "             <R:BoxType>Box type A</R:BoxType>\n" +
+                        "           </R:bigbox>\n" +
+                        "         </D:prop>\n" +
+                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                        "       </D:propstat>\n" +
+                        "     </D:response>\n" +
+                        "     <D:response>\n" +
+                        "       <D:href\n" +
+                        "   >${sampleUrl()}vcard.vcf</D:href>\n" +
+                        "       <D:propstat>\n" +
+                        "         <D:prop>\n" +
+                        "           <D:getetag>\"00002-abcd1\"</D:getetag>\n" +
+                        "         </D:prop>\n" +
+                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                        "       </D:propstat>\n" +
+                        "       <D:propstat>\n" +
+                        "         <D:prop>\n" +
+                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
+                        "         </D:prop>\n" +
+                        "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
+                        "       </D:propstat>\n" +
+                        "     </D:response>\n" +
+                        "     <D:response>\n" +
+                        "       <D:href\n" +
+                        "   >${sampleUrl()}calendar.ics</D:href>\n" +
+                        "       <D:propstat>\n" +
+                        "         <D:prop>\n" +
+                        "           <D:getetag>\"00003-abcd1\"</D:getetag>\n" +
+                        "         </D:prop>\n" +
+                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                        "       </D:propstat>\n" +
+                        "       <D:propstat>\n" +
+                        "         <D:prop>\n" +
+                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
+                        "         </D:prop>\n" +
+                        "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
+                        "       </D:propstat>\n" +
+                        "     </D:response>\n" +
+                        "     <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>\n" +
+                        "   </D:multistatus>")
+        )
+        collection.reportChanges(null, false, null, GetETag.NAME)
+
+        assertEquals(3, collection.members.size)
+        val members = collection.members.iterator()
+        val member1 = members.next()
+        assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.location)
+        assertEquals("00001-abcd1", member1.properties[GetETag::class.java]!!.eTag)
+
+        val member2 = members.next()
+        assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.location)
+        assertEquals("00002-abcd1", member2.properties[GetETag::class.java]!!.eTag)
+
+        val member3 = members.next()
+        assertEquals(sampleUrl().newBuilder().addPathSegment("calendar.ics").build(), member3.location)
+        assertEquals("00003-abcd1", member3.properties[GetETag::class.java]!!.eTag)
+
+        assertEquals(0, collection.removedMembers.size)
+        assertFalse(collection.furtherResults)
+        assertEquals("http://example.com/ns/sync/1234", collection.properties[SyncToken::class.java]!!.token)
+    }
+
+    /**
+     * Test sample response for an initial sync-collection report with truncation from RFC 6578 3.10.
+     */
+    @Test
+    fun testInitialSyncCollectionReportWithTruncation() {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
@@ -93,6 +177,33 @@ class DavCollectionTest {
 
         assertTrue(collection.furtherResults)
         assertEquals("http://example.com/ns/sync/1233", collection.properties[SyncToken::class.java]!!.token)
+    }
+
+    /**
+     * Test sample response for a sync-collection report with unsupported limit from RFC 6578 3.12.
+     */
+    @Test
+    fun testSyncCollectionReportWithUnsupportedLimit() {
+        val url = sampleUrl()
+        val collection = DavCollection(httpClient, url)
+
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(507)
+                .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
+                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "   <D:error xmlns:D=\"DAV:\">\n" +
+                        "     <D:number-of-matches-within-limits/>\n" +
+                        "   </D:error>")
+        )
+
+        try {
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME)
+        } catch (e: HttpException) {
+            assertEquals(507, e.status)
+            return
+        }
+
+        fail()
     }
 
 }
