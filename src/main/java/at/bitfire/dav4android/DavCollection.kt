@@ -10,6 +10,7 @@ package at.bitfire.dav4android
 
 import at.bitfire.dav4android.exception.DavException
 import at.bitfire.dav4android.exception.HttpException
+import at.bitfire.dav4android.exception.InvalidDavResponseException
 import at.bitfire.dav4android.property.SyncToken
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -37,7 +38,7 @@ open class DavCollection @JvmOverloads constructor(
      * @throws DavException on DAV error
 
      */
-    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name) {
+    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name): DavResponse {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -85,8 +86,11 @@ open class DavCollection @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        resetMembers()
-        response.body()?.charStream()?.use { processMultiStatus(it) }
+        response.body()?.charStream()?.use {
+            return processMultiStatus(it)
+        }
+
+        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT sync-collection")
     }
 
 }

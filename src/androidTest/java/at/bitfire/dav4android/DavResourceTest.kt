@@ -11,7 +11,10 @@ package at.bitfire.dav4android
 import at.bitfire.dav4android.exception.HttpException
 import at.bitfire.dav4android.exception.InvalidDavResponseException
 import at.bitfire.dav4android.exception.PreconditionFailedException
-import at.bitfire.dav4android.property.*
+import at.bitfire.dav4android.property.DisplayName
+import at.bitfire.dav4android.property.GetContentType
+import at.bitfire.dav4android.property.GetETag
+import at.bitfire.dav4android.property.ResourceType
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -53,17 +56,16 @@ class DavResourceTest {
 
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
-                .setHeader("DAV", "1,2,3, hyperactive-access"))
-        dav.options()
-        assertTrue(dav.capabilities.contains("1"))
-        assertTrue(dav.capabilities.contains("2"))
-        assertTrue(dav.capabilities.contains("3"))
-        assertTrue(dav.capabilities.contains("hyperactive-access"))
+                .setHeader("DAV", "  1,  2 ,3,hyperactive-access"))
+        val response = dav.options()
+        assertTrue(response.capabilities.contains("1"))
+        assertTrue(response.capabilities.contains("2"))
+        assertTrue(response.capabilities.contains("3"))
+        assertTrue(response.capabilities.contains("hyperactive-access"))
 
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK))
-        dav.options()
-        assertTrue(dav.capabilities.isEmpty())
+        assertTrue(dav.options().capabilities.isEmpty())
     }
 
     @Test
@@ -79,10 +81,10 @@ class DavResourceTest {
                 .setHeader("ETag", "W/\"My Weak ETag\"")
                 .setHeader("Content-Type", "application/x-test-result")
                 .setBody(sampleText))
-        var body = dav.get("*/*")
-        assertEquals(sampleText, body.string())
-        assertEquals("My Weak ETag", dav.properties[GetETag::class.java]?.eTag)
-        assertEquals("application/x-test-result", dav.properties[GetContentType::class.java]?.type)
+        val (responseOK, bodyOK) = dav.get("*/*")
+        assertEquals(sampleText, bodyOK.string())
+        assertEquals("My Weak ETag", responseOK[GetETag::class.java]?.eTag)
+        assertEquals("application/x-test-result", responseOK[GetContentType::class.java]?.type)
 
         var rq = mockServer.takeRequest()
         assertEquals("GET", rq.method)
@@ -98,9 +100,9 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setHeader("ETag", "\"StrongETag\"")
                 .setBody(sampleText))
-        body = dav.get("*/*")
-        assertEquals(sampleText, body.string())
-        assertEquals("StrongETag", dav.properties[GetETag::class.java]?.eTag)
+        val (response302, body302) = dav.get("*/*")
+        assertEquals(sampleText, body302.string())
+        assertEquals("StrongETag", response302[GetETag::class.java]?.eTag)
 
         mockServer.takeRequest()
         rq = mockServer.takeRequest()
@@ -108,12 +110,11 @@ class DavResourceTest {
         assertEquals("/target", rq.path)
 
         // 200 OK without ETag in response
-        dav.properties[GetETag.NAME] = GetETag("test")
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(sampleText))
-        dav.get("*/*")
-        assertNull(dav.properties[GetETag::class.java])
+        val (responseWithoutETag, _) = dav.get("*/*")
+        assertNull(responseWithoutETag[GetETag::class.java])
     }
 
     @Test
@@ -127,8 +128,9 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_CREATED)
                 .setHeader("ETag", "W/\"Weak PUT ETag\""))
-        assertFalse(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, false))
-        assertEquals("Weak PUT ETag", dav.properties[GetETag::class.java]?.eTag)
+        val (response201, redirect201) = dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, false)
+        assertFalse(redirect201)
+        assertEquals("Weak PUT ETag", response201[GetETag::class.java]?.eTag)
 
         var rq = mockServer.takeRequest()
         assertEquals("PUT", rq.method)
@@ -142,9 +144,10 @@ class DavResourceTest {
                 .setHeader("Location", "/target"))
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
-        assertTrue(dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, true))
+        val (response301_204, redirect301_204) = dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, true)
+        assertTrue(redirect301_204)
         assertEquals(url.resolve("/target"), dav.location)
-        assertNull(dav.properties[GetETag::class.java])
+        assertNull(response301_204[GetETag::class.java])
 
         mockServer.takeRequest()
         rq = mockServer.takeRequest()
@@ -154,10 +157,12 @@ class DavResourceTest {
         // precondition: If-Match, 412 Precondition Failed
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_PRECON_FAILED))
-        try {
-            dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), "ExistingETag", false)
+        val (_, _) = try {
+            val pair = dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), "ExistingETag", false)
             fail()
+            pair
         } catch(e: PreconditionFailedException) {
+            Pair(null, null)
         }
         rq = mockServer.takeRequest()
         assertEquals("\"ExistingETag\"", rq.getHeader("If-Match"))
@@ -316,8 +321,8 @@ class DavResourceTest {
                         "    </propstat>" +
                         "  </response>" +
                         "</multistatus>"))
-        dav.propfind(0, ResourceType.NAME)
-        assertNull(dav.properties[ResourceType::class.java])
+        val invalidStatus = dav.propfind(0, ResourceType.NAME)
+        assertNull(invalidStatus[ResourceType::class.java])
 
 
         /*** POSITIVE TESTS ***/
@@ -327,9 +332,9 @@ class DavResourceTest {
                 .setResponseCode(207)
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
                 .setBody("<multistatus xmlns='DAV:'></multistatus>"))
-        dav.propfind(0, ResourceType.NAME)
-        assertEquals(0, dav.properties.size())
-        assertEquals(0, dav.members.size)
+        val emptyResponse = dav.propfind(0, ResourceType.NAME)
+        assertEquals(0, emptyResponse.properties.size)
+        assertEquals(0, emptyResponse.members.size)
 
         // multi-status response with <response>/<status> element indicating success
         mockServer.enqueue(MockResponse()
@@ -341,9 +346,9 @@ class DavResourceTest {
                         "    <status>HTTP/1.1 200 OK</status>" +
                         "  </response>" +
                         "</multistatus>"))
-        dav.propfind(0, ResourceType.NAME)
-        assertEquals(0, dav.properties.size())
-        assertEquals(0, dav.members.size)
+        val responseStatus = dav.propfind(0, ResourceType.NAME)
+        assertEquals(0, responseStatus.properties.size)
+        assertEquals(0, responseStatus.members.size)
 
         // multi-status response with <response>/<propstat> element
         mockServer.enqueue(MockResponse()
@@ -362,9 +367,9 @@ class DavResourceTest {
                          "    </propstat>" +
                          "  </response>" +
                          "</multistatus>"))
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME)
-        assertEquals("My DAV Collection", dav.properties[DisplayName::class.java]?.displayName)
-        assertEquals(0, dav.members.size)
+        val responsePropstat = dav.propfind(0, ResourceType.NAME, DisplayName.NAME)
+        assertEquals("My DAV Collection", responsePropstat[DisplayName::class.java]?.displayName)
+        assertEquals(0, responsePropstat.members.size)
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
         mockServer.enqueue(MockResponse()
@@ -428,26 +433,26 @@ class DavResourceTest {
                         "    </propstat>" +
                         "  </response>" +
                         "</multistatus>"))
-        dav.propfind(1, ResourceType.NAME, DisplayName.NAME)
-        assertEquals(4, dav.members.size)
+        val responseMembers = dav.propfind(1, ResourceType.NAME, DisplayName.NAME)
+        assertEquals(4, responseMembers.members.size)
         val ok = BooleanArray(4)
-        for (member in dav.members)
-            when (member.location) {
+        for (member in responseMembers.members)
+            when (member.url) {
                 url.resolve("/dav/subcollection/") -> {
-                    assertTrue(member.properties[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
-                    assertEquals("A Subfolder", member.properties[DisplayName::class.java]?.displayName)
+                    assertTrue(member[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
+                    assertEquals("A Subfolder", member[DisplayName::class.java]?.displayName)
                     ok[0] = true
                 }
                 url.resolve("/dav/uid@host:file") -> {
-                    assertEquals("Absolute path with @ and :", member.properties[DisplayName::class.java]?.displayName)
+                    assertEquals("Absolute path with @ and :", member[DisplayName::class.java]?.displayName)
                     ok[1] = true
                 }
                 url.resolve("/dav/relative-uid@host.file") -> {
-                    assertEquals("Relative path with @", member.properties[DisplayName::class.java]?.displayName)
+                    assertEquals("Relative path with @", member[DisplayName::class.java]?.displayName)
                     ok[2] = true
                 }
                 url.resolve("/dav/relative:colon.vcf") -> {
-                    assertEquals("Relative path with colon", member.properties[DisplayName::class.java]?.displayName)
+                    assertEquals("Relative path with colon", member[DisplayName::class.java]?.displayName)
                     ok[3] = true
                 }
             }
@@ -478,9 +483,9 @@ class DavResourceTest {
                         "    </propstat>" +
                         "  </response>" +
                         "</multistatus>"))
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME)
-        assertTrue(dav.properties[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
-        assertEquals("My DAV Collection", dav.properties[DisplayName::class.java]?.displayName)
+        val some404Prop = dav.propfind(0, ResourceType.NAME, DisplayName.NAME)
+        assertTrue(some404Prop[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
+        assertEquals("My DAV Collection", some404Prop[DisplayName::class.java]?.displayName)
 
         // multi-status response with <propstat> that doesn't contain <status> (=> assume 200 OK)
         mockServer.enqueue(MockResponse()
@@ -496,60 +501,8 @@ class DavResourceTest {
                         "    </propstat>" +
                         "  </response>" +
                         "</multistatus>"))
-        dav.propfind(0, DisplayName.NAME)
-        assertEquals("Without Status", dav.properties[DisplayName::class.java]?.displayName)
-    }
-
-    @Test
-    fun testPropfindUpdateProperties() {
-        val url = sampleUrl()
-        val dav = DavResource(httpClient, url)
-
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(207)
-                .setHeader("Content-Type", "application/xml; charset=utf-8")
-                .setBody("<multistatus xmlns='DAV:'>" +
-                         "  <response>" +
-                         "    <href>/dav</href>" +
-                         "    <propstat>" +
-                         "      <prop>" +
-                         "        <displayname>DisplayName 1</displayname>" +
-                         "        <getetag>ETag 1</getetag>" +
-                         "        <getctag xmlns=\"http://calendarserver.org/ns/\">CTag 1</getctag>" +
-                         "      </prop>" +
-                         "      <status>HTTP/1.1 200 OK</status>" +
-                         "    </propstat>" +
-                         "  </response>" +
-                         "</multistatus>"))
-        dav.propfind(0, DisplayName.NAME, GetETag.NAME, GetCTag.NAME)
-        assertEquals("DisplayName 1", dav.properties[DisplayName::class.java]?.displayName)
-        assertEquals("ETag 1", dav.properties[GetETag::class.java]?.eTag)
-        assertEquals("CTag 1", dav.properties[GetCTag::class.java]?.cTag)
-
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(207)
-                .setHeader("Content-Type", "application/xml; charset=utf-8")
-                .setBody("<multistatus xmlns='DAV:'>" +
-                        "  <response>" +
-                        "    <href>/dav</href>" +
-                        "    <propstat>" +
-                        "      <prop>" +
-                        "        <displayname>DisplayName 2</displayname>" +
-                        "      </prop>" +
-                        "      <status>HTTP/1.1 200 OK</status>" +
-                        "    </propstat>" +
-                        "    <propstat>" +
-                        "      <prop>" +
-                        "        <getetag/>" +
-                        "      </prop>" +
-                        "      <status>HTTP/1.1 404 Not Found</status>" +
-                        "    </propstat>" +
-                        "  </response>" +
-                        "</multistatus>"))
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME)
-        assertEquals("DisplayName 2", dav.properties[DisplayName::class.java]?.displayName)
-        assertNull(dav.properties[GetETag::class.java])
-        assertEquals("CTag 1", dav.properties[GetCTag::class.java]?.cTag)
+        val propstatWithoutStatus = dav.propfind(0, DisplayName.NAME)
+        assertEquals("Without Status", propstatWithoutStatus[DisplayName::class.java]?.displayName)
     }
 
 }

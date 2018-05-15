@@ -10,6 +10,7 @@ package at.bitfire.dav4android
 
 import at.bitfire.dav4android.exception.DavException
 import at.bitfire.dav4android.exception.HttpException
+import at.bitfire.dav4android.exception.InvalidDavResponseException
 import okhttp3.*
 import java.io.IOException
 import java.io.StringWriter
@@ -40,7 +41,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    fun calendarQuery(component: String, start: Date?, end: Date?) {
+    fun calendarQuery(component: String, start: Date?, end: Date?): DavResponse {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -91,8 +92,11 @@ class DavCalendar @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        resetMembers()
-        response.body()?.charStream()?.use { processMultiStatus(it) }
+        response.body()?.charStream()?.use {
+            return processMultiStatus(it)
+        }
+
+        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT calendar-query")
     }
 
     /**
@@ -101,7 +105,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on DAV error
      */
-    fun multiget(urls: List<HttpUrl>) {
+    fun multiget(urls: List<HttpUrl>): DavResponse {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -137,8 +141,11 @@ class DavCalendar @JvmOverloads constructor(
         checkStatus(response, false)
         assertMultiStatus(response)
 
-        resetMembers()
-        response.body()?.charStream()?.use { processMultiStatus(it) }
+        response.body()?.charStream()?.use {
+            return processMultiStatus(it)
+        }
+
+        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT calendar-multiget")
     }
 
 }

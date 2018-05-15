@@ -22,7 +22,6 @@ import java.io.Reader
 import java.io.StringWriter
 import java.net.HttpURLConnection
 import java.net.ProtocolException
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -30,11 +29,11 @@ import java.util.logging.Logger
  * Represents a WebDAV resource at the given location.
  * @param httpClient    [OkHttpClient] to access this object
  * @param location      location of the WebDAV resource
- * @param log           [Logger] which will be used for logging, or null for default
+ * @param log           [Logger] which will be used for logging
  */
 open class DavResource @JvmOverloads constructor(
         val httpClient: OkHttpClient,
-        var location: HttpUrl,
+        location: HttpUrl,
         val log: Logger = Constants.log
 ) {
 
@@ -43,28 +42,19 @@ open class DavResource @JvmOverloads constructor(
         val MIME_XML = MediaType.parse("application/xml; charset=utf-8")
     }
 
-    /** HTTP capabilities reported by an OPTIONS response */
-    val capabilities = mutableSetOf<String>()
-
-    /** WebDAV properties of this resource */
-    val properties = PropertyCollection()
-
-    /** whether a 507 Insufficient Storage was found in the previous response */
-    var furtherResults = false
-
-    /** members of this resource */
-    val members = mutableSetOf<DavResource>()
-    /** members of this resource with status 404 Not Found */
-    val removedMembers = mutableSetOf<DavResource>()
-    /** resources which have been found in the answer, although they aren't members of this resource */
-    val related = mutableSetOf<DavResource>()
+    var location: HttpUrl
+        private set             // allow internal modification only (for redirects)
 
     init {
         // Don't follow redirects (only useful for GET/POST).
         // This means we have to handle 30x responses manually.
         if (httpClient.followRedirects())
             throw IllegalArgumentException("httpClient must not follow redirects automatically")
+
+        this.location = location
     }
+
+    override fun toString() = location.toString()
 
 
     fun fileName(): String {
@@ -72,40 +62,39 @@ open class DavResource @JvmOverloads constructor(
         return pathSegments[pathSegments.size - 1]
     }
 
-    override fun toString() = location.toString()
-
 
     /**
-     * Sends an OPTIONS request to this resource, requesting [capabilities].
+     * Sends an OPTIONS request to this resource, requesting [DavResponse.capabilities].
+     *
+     * @return response object with capabilities set as received in HTTP response
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on DAV error
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
-    fun options() {
-        resetResponse()
-        capabilities.clear()
-
+    @Throws(IOException::class, HttpException::class)
+    fun options(): DavResponse {
         val response = httpClient.newCall(Request.Builder()
                 .method("OPTIONS", null)
                 .header("Content-Length", "0")
                 .url(location)
                 .build()).execute()
         checkStatus(response, true)
+        response.body()?.close()
 
-        HttpUtils.listHeader(response, "DAV").mapTo(capabilities) { it.trim() }
+        return DavResponse.Builder(location)
+                .capabilities(HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet())
+                .build()
     }
 
     /**
      * Sends a MKCOL request to this resource. Response body will be closed unless
      * an exception is thrown.
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
     fun mkCol(xmlBody: String?) {
-        resetResponse()
-
         val rqBody = if (xmlBody != null) RequestBody.create(MIME_XML, xmlBody) else null
 
         var response: Response? = null
@@ -119,22 +108,24 @@ open class DavResource @JvmOverloads constructor(
             else
                 break
         }
+
         checkStatus(response!!, true)
+        response.body()?.close()
     }
 
     /**
      * Sends a GET request to the resource. Note that this method expects the server to
      * return an ETag (which is required for CalDAV and CardDAV, but not for WebDAV in general).
-     * @param accept    content of Accept header (must not be null, but may be &#42;&#47;* )
-     * @return          response body (has to be closed by caller)
+     *
+     * @param accept content of Accept header (must not be null, but may be &#42;&#47;* )
+     *
+     * @return response object and body (latter has to be closed by caller)
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error, or when the response doesn't contain an ETag
      */
-    @Throws(IOException::class, HttpException::class, DavException::class)
-    fun get(accept: String): ResponseBody {
-        resetResponse()
-
+    @Throws(IOException::class, HttpException::class)
+    fun get(accept: String): Pair<DavResponse, ResponseBody> {
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
             response = httpClient.newCall(Request.Builder()
@@ -148,36 +139,40 @@ open class DavResource @JvmOverloads constructor(
             else
                 break
         }
+
         checkStatus(response!!, false)
 
-        val eTag = response.header("ETag")
-        if (eTag.isNullOrEmpty())
-            properties -= GetETag.NAME
-        else
-            properties[GetETag.NAME] = GetETag(eTag)
-
-        val body = response.body() ?: throw HttpException("GET without response body")
-
-        body.contentType()?.let { mimeType ->
-            properties[GetContentType.NAME] = GetContentType(mimeType)
+        val properties = mutableListOf<Property>()
+        response.header("ETag")?.let { eTag ->
+            properties += GetETag(eTag)
         }
 
-        return body
+        val body = response.body() ?: throw HttpException("Received GET response without body")
+        body.contentType()?.let { mimeType ->
+            properties += GetContentType(mimeType)
+        }
+
+        val dav = DavResponse.Builder(location)
+                .properties(properties)
+                .build()
+        return Pair(dav, body)
     }
 
     /**
      * Sends a PUT request to the resource.
-     * @param body              new resource body to upload
-     * @param ifMatchETag       value of "If-Match" header to set, or null to omit
-     * @param ifNoneMatch       indicates whether "If-None-Match: *" ("don't overwrite anything existing") header shall be sent
-     * @return                  true if the request was redirected successfully, i.e. #{@link #location} and maybe resource name may have changed
+     *
+     * @param body          new resource body to upload
+     * @param ifMatchETag   value of "If-Match" header to set, or null to omit
+     * @param ifNoneMatch   indicates whether "If-None-Match: *" ("don't overwrite anything existing") header shall be sent
+     *
+     * @return response object and Boolean which is true if the request was redirected, i.e. [location] and
+     * maybe resource name may have changed
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean): Boolean {
-        resetResponse()
-
+    fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean): Pair<DavResponse, Boolean> {
         var redirected = false
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
@@ -199,27 +194,34 @@ open class DavResource @JvmOverloads constructor(
             } else
                 break
         }
+
         checkStatus(response!!, true)
+        response.body()?.close()
 
-        val eTag = response.header("ETag")
-        if (eTag.isNullOrEmpty())
-            properties -= GetETag.NAME
-        else
-            properties[GetETag.NAME] = GetETag(eTag)
+        val properties = mutableListOf<Property>()
+        response.header("ETag")?.let { eTag ->
+            properties += GetETag(eTag)
+        }
 
-        return redirected
+        val dav = DavResponse.Builder(location)
+                .properties(properties)
+                .build()
+        return Pair(
+                dav,
+                redirected
+        )
     }
 
     /**
      * Sends a DELETE request to the resource.
+     *
      * @param ifMatchETag value of "If-Match" header to set, or null to omit
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP errors, including redirects
      */
     @Throws(IOException::class, HttpException::class)
     fun delete(ifMatchETag: String?) {
-        resetResponse()
-
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
             val builder = Request.Builder()
@@ -247,18 +249,18 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Sends a PROPFIND request to the resource. Expects and processes a 207 multi-status response.
-     * #{@link #properties} are updated according to the multi-status response.
-     * #{@link #members} is re-built according to the multi-status response (i.e. previous member entries won't be retained).
+     *
      * @param depth      "Depth" header to send, e.g. 0 or 1
      * @param reqProp    properties to request
+     *
+     * @return response object with properties, members etc. set according to received HTTP response
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun propfind(depth: Int, vararg reqProp: Property.Name) {
-        resetResponse()
-
+    fun propfind(depth: Int, vararg reqProp: Property.Name): DavResponse {
         // build XML request body
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
@@ -294,12 +296,12 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response!!, false)
         assertMultiStatus(response)
 
-        if (depth > 0)
-            // collection listing requested, drop old member information
-            resetMembers()
-
         // process and close multi-status response body
-        response.body()?.charStream()?.use { processMultiStatus(it) }
+        response.body()?.charStream()?.use {
+            return processMultiStatus(it)
+        }
+
+        throw DavException("Received PROPFIND response without body")
     }
 
 
@@ -400,14 +402,14 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    protected fun processMultiStatus(reader: Reader) {
+    protected fun processMultiStatus(reader: Reader): DavResponse {
         val parser = XmlUtils.newPullParser()
 
         // some parsing sub-functions
-        fun parseMultiStatus_Prop(): PropertyCollection? {
+        fun parseMultiStatus_Prop(): List<Property> {
             // <!ELEMENT prop ANY >
             val depth = parser.depth
-            val prop = PropertyCollection()
+            val prop = mutableListOf<Property>()
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
@@ -415,22 +417,22 @@ open class DavResource @JvmOverloads constructor(
                     val name = Property.Name(parser.namespace, parser.name)
                     val property = PropertyRegistry.create(name, parser)
                     if (property != null)
-                        prop[name] = property
+                        prop += property
                     else
                         log.fine("Ignoring unknown property $name")
                 }
                 eventType = parser.next()
             }
 
-            return prop
+            return prop.toList()
         }
 
-        fun parseMultiStatus_PropStat(): PropertyCollection? {
+        fun parseMultiStatus_PropStat(): List<Property> {
             // <!ELEMENT propstat (prop, status, error?, responsedescription?) >
             val depth = parser.depth
 
             var status: StatusLine? = null
-            var prop: PropertyCollection? = null
+            val prop = mutableListOf<Property>()
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
@@ -438,33 +440,33 @@ open class DavResource @JvmOverloads constructor(
                     if (parser.namespace == XmlUtils.NS_WEBDAV)
                         when (parser.name) {
                             "prop" ->
-                                prop = parseMultiStatus_Prop()
+                                prop.addAll(parseMultiStatus_Prop())
                             "status" ->
                                 status = try {
                                     StatusLine.parse(parser.nextText())
                                 } catch(e: ProtocolException) {
-                                    log.warning("Invalid status line, treating as 500 Server Error")
-                                    StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
+                                    // invalid status line, treat as HTTP 500
+                                    StatusLine(Protocol.HTTP_1_1, 500, "Couldn't parse server status")
                                 }
                         }
                 eventType = parser.next()
             }
 
-            if (prop != null && status != null && status.code/100 != 2)
-                // not successful, null out property values so that they can be removed when merging in parseMultiStatus_Response
-                prop.nullAllValues()
+            if (status != null && status.code/100 != 2)
+                // not successful, ignore these properties
+                prop.clear()
 
             return prop
         }
 
-        fun parseMultiStatus_Response() {
+        fun parseMultiStatus_Response(root: DavResponse.Builder) {
             /* <!ELEMENT response (href, ((href*, status)|(propstat+)),
                                            error?, responsedescription? , location?) > */
             val depth = parser.depth
 
             var href: HttpUrl? = null
             var status: StatusLine? = null
-            val properties = PropertyCollection()
+            val properties = mutableListOf<Property>()
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
@@ -503,9 +505,9 @@ open class DavResource @JvmOverloads constructor(
                                     StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 }
                             "propstat" ->
-                                parseMultiStatus_PropStat()?.let { properties.merge(it, false) }
+                                properties.addAll(parseMultiStatus_PropStat())
                             "location" ->
-                                throw UnsupportedDavException("Redirected child resources are not supported yet")
+                                throw DavException("Redirected child resources are not supported yet")
                         }
                 eventType = parser.next()
             }
@@ -516,11 +518,11 @@ open class DavResource @JvmOverloads constructor(
             }
 
             // if we know this resource is a collection, make sure href has a trailing slash (for clarity and resolving relative paths)
-            val type = properties[ResourceType::class.java]
+            val type = properties.filterIsInstance(ResourceType::class.java).firstOrNull()
             if (type != null && type.types.contains(ResourceType.COLLECTION))
                 href = UrlUtils.withTrailingSlash(href)
 
-            log.log(Level.FINE, "Received <response> for $href", if (status != null) status else properties)
+            log.log(Level.FINE, "Received properties for $href", if (status != null) status else properties)
 
             var removed = false
             var insufficientStorage = false
@@ -540,10 +542,10 @@ open class DavResource @JvmOverloads constructor(
             }
 
             // Which resource does this <response> represent?
-            var target: DavResource? = null
-            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location)) && !removed) {
+            var target: DavResponse.Builder? = null
+            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location))) {
                 // it's about ourselves (and not 404)
-                target = this
+                target = root
 
             } else if (location.scheme() == href.scheme() && location.host() == href.host() && location.port() == href.port()) {
                 val locationSegments = location.pathSegments()
@@ -562,119 +564,69 @@ open class DavResource @JvmOverloads constructor(
                     val sameBasePath = (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
                     if (sameBasePath) {
                         // it's about a member
-                        target = DavResource(httpClient, href, log)
+                        target = DavResponse.Builder(href)
                         if (!removed)
-                            members += target
+                            root.addMember(target)
                         else
-                            removedMembers += target
+                            root.addRemovedMember(target)
                     }
                 }
             }
 
             if (target == null) {
                 log.warning("Received <response> not for self and not for member resource: $href")
-                target = DavResource(httpClient, href, log)
-                related.add(target)
+                target = DavResponse.Builder(href)
+                root.addRelated(target)
             }
 
             // set properties for target
             if (insufficientStorage)
-                target.furtherResults = true
-            target.properties.merge(properties, true)
+                target.furtherResults(true)
+            target.properties(properties)
         }
 
-        fun parseMultiStatus() {
+        fun parseMultiStatus(): DavResponse {
             // <!ELEMENT multistatus (response*, responsedescription?)  >
-            val depth = parser.depth
+            val builder = DavResponse.Builder(location)
 
+            val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
                     when (parser.name) {
                         "response" ->
-                            parseMultiStatus_Response()
+                            parseMultiStatus_Response(builder)
                         "sync-token" ->
                             XmlUtils.readText(parser)?.let { token ->
-                                properties[SyncToken.NAME] = SyncToken(token)
+                                builder.syncToken(SyncToken(token))
                             }
                     }
                 eventType = parser.next()
             }
+
+            return builder.build()
         }
 
-        resetResponse()
         try {
             parser.setInput(reader)
 
-            var multiStatus = false
-
+            var response: DavResponse? = null
             var eventType = parser.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                     if (parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "multistatus") {
-                        parseMultiStatus()
-                        multiStatus = true
+                        response = parseMultiStatus()
+                        // ignore further <multistatus> elements
+                        break
                     }
                 eventType = parser.next()
             }
 
-            if (!multiStatus)
-                throw InvalidDavResponseException("Multi-Status response didn't contain <DAV:multistatus> root element")
+            return response ?: throw InvalidDavResponseException("Multi-Status response didn't contain <DAV:multistatus> root element")
 
         } catch (e: XmlPullParserException) {
             throw InvalidDavResponseException("Couldn't parse Multi-Status XML", e)
         }
-    }
-
-
-    // helpers
-
-    /** Finds first property within all responses (including unasked responses) */
-    fun<T: Property> findProperty(clazz: Class<T>): Pair<DavResource, T>? {
-        // check resource itself
-        val property = properties[clazz]
-        if (property != null)
-            return Pair(this, property)
-
-        // check members
-        for (member in members)
-            member.findProperty(clazz)?.let { return it }
-
-        // check unrequested responses
-        for (resource in related)
-            resource.findProperty(clazz)?.let { return it }
-
-        return null
-    }
-
-    /** Finds properties within all responses (including unasked responses) */
-    fun<T: Property> findProperties(clazz: Class<T>): List<Pair<DavResource, T>> {
-        val result = LinkedList<Pair<DavResource, T>>()
-
-        // check resource itself
-        val property = properties[clazz]
-        if (property != null)
-            result.add(Pair(this, property))
-
-        // check members
-        for (member in members)
-            result.addAll(member.findProperties(clazz))
-
-        // check unrequested responses
-        for (rel in related)
-            result.addAll(rel.findProperties(clazz))
-
-        return Collections.unmodifiableList(result)
-    }
-
-    protected fun resetMembers() {
-        members.clear()
-        removedMembers.clear()
-        related.clear()
-    }
-
-    protected fun resetResponse() {
-        furtherResults = false
     }
 
 }
