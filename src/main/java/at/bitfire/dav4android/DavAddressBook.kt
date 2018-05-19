@@ -10,7 +10,6 @@ package at.bitfire.dav4android
 
 import at.bitfire.dav4android.exception.DavException
 import at.bitfire.dav4android.exception.HttpException
-import at.bitfire.dav4android.exception.InvalidDavResponseException
 import okhttp3.*
 import java.io.IOException
 import java.io.StringWriter
@@ -62,14 +61,10 @@ class DavAddressBook @JvmOverloads constructor(
                 .header("Depth", "1")
                 .build()).execute()
 
-        checkStatus(response, false)
+        checkStatus(response)
         assertMultiStatus(response)
 
-        response.body()?.charStream()?.use {
-            return processMultiStatus(it)
-        }
-
-        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT addressbook-queryys")
+        return processMultiStatus(response.body()?.charStream()!!)
     }
 
     /**
@@ -117,14 +112,10 @@ class DavAddressBook @JvmOverloads constructor(
                 .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
                 .build()).execute()
 
-        checkStatus(response, false)
+        checkStatus(response)
         assertMultiStatus(response)
 
-        response.body()?.charStream()?.use {
-            return processMultiStatus(it)
-        }
-
-        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT addressbook-multiget")
+        return processMultiStatus(response.body()?.charStream()!!)
     }
 
 }

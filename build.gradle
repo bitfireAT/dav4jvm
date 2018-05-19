@@ -33,7 +33,8 @@ android {
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        minSdkVersion 14
+        //noinspection MinSdkTooLow
+        minSdkVersion 9        // Android 2.3
         targetSdkVersion 27
 
         buildConfigField "String", "version_okhttp", "\"$okhttp_version\""
@@ -58,6 +59,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
+    implementation "commons-io:commons-io:2.6"
 
     androidTestImplementation "com.squareup.okhttp3:mockwebserver:$okhttp_version"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

@@ -10,7 +10,6 @@ package at.bitfire.dav4android
 
 import at.bitfire.dav4android.exception.DavException
 import at.bitfire.dav4android.exception.HttpException
-import at.bitfire.dav4android.exception.InvalidDavResponseException
 import okhttp3.*
 import java.io.IOException
 import java.io.StringWriter
@@ -89,14 +88,10 @@ class DavCalendar @JvmOverloads constructor(
                 .header("Depth", "1")
                 .build()).execute()
 
-        checkStatus(response, false)
+        checkStatus(response)
         assertMultiStatus(response)
 
-        response.body()?.charStream()?.use {
-            return processMultiStatus(it)
-        }
-
-        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT calendar-query")
+        return processMultiStatus(response.body()?.charStream()!!)
     }
 
     /**
@@ -138,14 +133,10 @@ class DavCalendar @JvmOverloads constructor(
                 .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
                 .build()).execute()
 
-        checkStatus(response, false)
+        checkStatus(response)
         assertMultiStatus(response)
 
-        response.body()?.charStream()?.use {
-            return processMultiStatus(it)
-        }
-
-        throw InvalidDavResponseException("Didn't receive 207 Multi-status response on REPORT calendar-multiget")
+        return processMultiStatus(response.body()?.charStream()!!)
     }
 
 }

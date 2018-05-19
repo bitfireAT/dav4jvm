@@ -94,25 +94,25 @@ class DavCollectionTest {
                         "     <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>\n" +
                         "   </D:multistatus>")
         )
-        val changes = collection.reportChanges(null, false, null, GetETag.NAME)
+        collection.reportChanges(null, false, null, GetETag.NAME).use { changes ->
+            assertEquals(3, changes.members.size)
+            val members = changes.members.iterator()
+            val member1 = members.next()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.url)
+            assertEquals("00001-abcd1", member1[GetETag::class.java]!!.eTag)
 
-        assertEquals(3, changes.members.size)
-        val members = changes.members.iterator()
-        val member1 = members.next()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.url)
-        assertEquals("00001-abcd1", member1[GetETag::class.java]!!.eTag)
+            val member2 = members.next()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.url)
+            assertEquals("00002-abcd1", member2[GetETag::class.java]!!.eTag)
 
-        val member2 = members.next()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.url)
-        assertEquals("00002-abcd1", member2[GetETag::class.java]!!.eTag)
+            val member3 = members.next()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("calendar.ics").build(), member3.url)
+            assertEquals("00003-abcd1", member3[GetETag::class.java]!!.eTag)
 
-        val member3 = members.next()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("calendar.ics").build(), member3.url)
-        assertEquals("00003-abcd1", member3[GetETag::class.java]!!.eTag)
-
-        assertEquals(0, changes.removedMembers.size)
-        assertFalse(changes.furtherResults)
-        assertEquals("http://example.com/ns/sync/1234", changes.syncToken!!.token)
+            assertEquals(0, changes.removedMembers.size)
+            assertFalse(changes.furtherResults)
+            assertEquals("http://example.com/ns/sync/1234", changes.syncToken!!.token)
+        }
     }
 
     /**
@@ -158,24 +158,24 @@ class DavCollectionTest {
                         "     <D:sync-token>http://example.com/ns/sync/1233</D:sync-token>\n" +
                         "   </D:multistatus>")
         )
-        val changes = collection.reportChanges(null, false, null, GetETag.NAME)
+        collection.reportChanges(null, false, null, GetETag.NAME).use { changes ->
+            assertEquals(2, changes.members.size)
+            val members = changes.members.iterator()
+            val member1 = members.next()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.url)
+            assertEquals("00001-abcd1", member1[GetETag::class.java]!!.eTag)
 
-        assertEquals(2, changes.members.size)
-        val members = changes.members.iterator()
-        val member1 = members.next()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("test.doc").build(), member1.url)
-        assertEquals("00001-abcd1", member1[GetETag::class.java]!!.eTag)
+            val member2 = members.next()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.url)
+            assertEquals("00002-abcd1", member2[GetETag::class.java]!!.eTag)
 
-        val member2 = members.next()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("vcard.vcf").build(), member2.url)
-        assertEquals("00002-abcd1", member2[GetETag::class.java]!!.eTag)
+            assertEquals(1, changes.removedMembers.size)
+            val removedMember = changes.removedMembers.first()
+            assertEquals(sampleUrl().newBuilder().addPathSegment("removed.txt").build(), removedMember.url)
 
-        assertEquals(1, changes.removedMembers.size)
-        val removedMember = changes.removedMembers.first()
-        assertEquals(sampleUrl().newBuilder().addPathSegment("removed.txt").build(), removedMember.url)
-
-        assertTrue(changes.furtherResults)
-        assertEquals("http://example.com/ns/sync/1233", changes.syncToken!!.token)
+            assertTrue(changes.furtherResults)
+            assertEquals("http://example.com/ns/sync/1233", changes.syncToken!!.token)
+        }
     }
 
     /**
@@ -196,13 +196,11 @@ class DavCollectionTest {
         )
 
         try {
-            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME)
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME).close()
+            fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(507, e.status)
-            return
         }
-
-        fail()
     }
 
 }

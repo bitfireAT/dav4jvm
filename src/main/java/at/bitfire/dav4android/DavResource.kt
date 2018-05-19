@@ -26,7 +26,9 @@ import java.util.logging.Level
 import java.util.logging.Logger
 
 /**
- * Represents a WebDAV resource at the given location.
+ * Represents a WebDAV resource at the given location and allows WebDAV
+ * requests to be performed on this resource.
+ *
  * @param httpClient    [OkHttpClient] to access this object
  * @param location      location of the WebDAV resource
  * @param log           [Logger] which will be used for logging
@@ -57,6 +59,12 @@ open class DavResource @JvmOverloads constructor(
     override fun toString() = location.toString()
 
 
+    /**
+     * The resource name (the last segment of the URL path).
+     *
+     * @return resource name or `` (empty string) if the URL ends with a slash
+     *         (i.e. the resource is a collection).
+     */
     fun fileName(): String {
         val pathSegments = location.pathSegments()
         return pathSegments[pathSegments.size - 1]
@@ -65,8 +73,10 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Sends an OPTIONS request to this resource, requesting [DavResponse.capabilities].
+     * Doesn't follow redirects.
      *
-     * @return response object with capabilities set as received in HTTP response
+     * @return response object with capabilities set as received in HTTP response (must
+     *         be closed by caller)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -78,23 +88,24 @@ open class DavResource @JvmOverloads constructor(
                 .header("Content-Length", "0")
                 .url(location)
                 .build()).execute()
-        checkStatus(response, true)
-        response.body()?.close()
+        checkStatus(response)
 
         return DavResponse.Builder(location)
                 .capabilities(HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet())
+                .responseBody(response.body())
                 .build()
     }
 
     /**
-     * Sends a MKCOL request to this resource. Response body will be closed unless
-     * an exception is thrown.
+     * Sends a MKCOL request to this resource. Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @return response object (must be closed by caller)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun mkCol(xmlBody: String?) {
+    fun mkCol(xmlBody: String?): DavResponse {
         val rqBody = if (xmlBody != null) RequestBody.create(MIME_XML, xmlBody) else null
 
         var response: Response? = null
@@ -108,24 +119,30 @@ open class DavResource @JvmOverloads constructor(
             else
                 break
         }
+        checkStatus(response!!)
 
-        checkStatus(response!!, true)
-        response.body()?.close()
+        return DavResponse.Builder(location)
+                .responseBody(response.body())
+                .build()
     }
 
     /**
-     * Sends a GET request to the resource. Note that this method expects the server to
-     * return an ETag (which is required for CalDAV and CardDAV, but not for WebDAV in general).
+     * Sends a GET request to the resource. Sends `Accept-Encoding: identity` to disable
+     * compression, because compression might change the ETag.
      *
-     * @param accept content of Accept header (must not be null, but may be &#42;&#47;* )
+     * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @return response object and body (latter has to be closed by caller)
+     * When the server returns ETag and/or Content-Type, they're stored as response properties.
+     *
+     * @param accept value of Accept header (must not be null, but may be *&#47;*)
+     *
+     * @return response object (must be closed by caller)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun get(accept: String): Pair<DavResponse, ResponseBody> {
+    fun get(accept: String): DavResponse {
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
             response = httpClient.newCall(Request.Builder()
@@ -139,41 +156,40 @@ open class DavResource @JvmOverloads constructor(
             else
                 break
         }
-
-        checkStatus(response!!, false)
+        checkStatus(response!!)
 
         val properties = mutableListOf<Property>()
         response.header("ETag")?.let { eTag ->
             properties += GetETag(eTag)
         }
 
-        val body = response.body() ?: throw HttpException("Received GET response without body")
+        val body = response.body() ?: throw HttpException("Received GET response without body", response)
         body.contentType()?.let { mimeType ->
             properties += GetContentType(mimeType)
         }
 
-        val dav = DavResponse.Builder(location)
+        return DavResponse.Builder(location)
+                .responseBody(body)
                 .properties(properties)
                 .build()
-        return Pair(dav, body)
     }
 
     /**
-     * Sends a PUT request to the resource.
+     * Sends a PUT request to the resource. Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * When the server returns an ETag, it is stored in response properties.
      *
      * @param body          new resource body to upload
-     * @param ifMatchETag   value of "If-Match" header to set, or null to omit
-     * @param ifNoneMatch   indicates whether "If-None-Match: *" ("don't overwrite anything existing") header shall be sent
+     * @param ifMatchETag   value of `If-Match` header to set, or null to omit
+     * @param ifNoneMatch   indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
      *
-     * @return response object and Boolean which is true if the request was redirected, i.e. [location] and
-     * maybe resource name may have changed
+     * @return response object (must be closed by caller)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean): Pair<DavResponse, Boolean> {
-        var redirected = false
+    fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean): DavResponse {
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
             val builder = Request.Builder()
@@ -188,40 +204,40 @@ open class DavResource @JvmOverloads constructor(
                 builder.header("If-None-Match", "*")
 
             response = httpClient.newCall(builder.build()).execute()
-            if (response.isRedirect) {
+            if (response.isRedirect)
                 processRedirect(response)
-                redirected = true
-            } else
+            else
                 break
         }
-
-        checkStatus(response!!, true)
-        response.body()?.close()
+        checkStatus(response!!)
 
         val properties = mutableListOf<Property>()
         response.header("ETag")?.let { eTag ->
             properties += GetETag(eTag)
         }
 
-        val dav = DavResponse.Builder(location)
+        return DavResponse.Builder(location)
                 .properties(properties)
+                .responseBody(response.body())
                 .build()
-        return Pair(
-                dav,
-                redirected
-        )
     }
 
     /**
-     * Sends a DELETE request to the resource.
+     * Sends a DELETE request to the resource. Warning: Sending this request to a collection will
+     * delete the collection with all its contents!
      *
-     * @param ifMatchETag value of "If-Match" header to set, or null to omit
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param ifMatchETag value of `If-Match` header to set, or null to omit
+     *
+     * @return response object (must be closed by caller)
      *
      * @throws IOException on I/O error
-     * @throws HttpException on HTTP errors, including redirects
+     * @throws HttpException on HTTP errors, or when 207 Multi-Status is returned
+     *         (because then there was probably a problem with a member resource)
      */
     @Throws(IOException::class, HttpException::class)
-    fun delete(ifMatchETag: String?) {
+    fun delete(ifMatchETag: String?): DavResponse {
         var response: Response? = null
         for (attempt in 1..MAX_REDIRECTS) {
             val builder = Request.Builder()
@@ -237,27 +253,31 @@ open class DavResource @JvmOverloads constructor(
                 break
         }
 
-        checkStatus(response!!, false)
+        checkStatus(response!!)
         if (response.code() == 207)
             /* If an error occurs deleting a member resource (a resource other than
                the resource identified in the Request-URI), then the response can be
                a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
             throw HttpException(response)
-        else
-            response.body()?.close()
+
+        return DavResponse.Builder(location)
+                .responseBody(response.body())
+                .build()
     }
 
     /**
-     * Sends a PROPFIND request to the resource. Expects and processes a 207 multi-status response.
+     * Sends a PROPFIND request to the resource. Expects and processes a 207 Multi-Status response.
      *
-     * @param depth      "Depth" header to send, e.g. 0 or 1
-     * @param reqProp    properties to request
+     * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @return response object with properties, members etc. set according to received HTTP response
+     * @param depth    "Depth" header to send (-1 for `infinity`)
+     * @param reqProp  properties to request
+     *
+     * @return response object (must be closed by caller)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response)
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun propfind(depth: Int, vararg reqProp: Property.Name): DavResponse {
@@ -285,7 +305,7 @@ open class DavResource @JvmOverloads constructor(
             response = httpClient.newCall(Request.Builder()
                     .url(location)
                     .method("PROPFIND", RequestBody.create(MIME_XML, writer.toString()))
-                    .header("Depth", depth.toString())
+                    .header("Depth", if (depth >= 0) depth.toString() else "infinity")
                     .build()).execute()
             if (response.isRedirect)
                 processRedirect(response)
@@ -293,15 +313,10 @@ open class DavResource @JvmOverloads constructor(
                 break
         }
 
-        checkStatus(response!!, false)
+        checkStatus(response!!)
         assertMultiStatus(response)
 
-        // process and close multi-status response body
-        response.body()?.charStream()?.use {
-            return processMultiStatus(it)
-        }
-
-        throw DavException("Received PROPFIND response without body")
+        return processMultiStatus(response.body()?.charStream()!!)
     }
 
 
@@ -309,21 +324,15 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
-     * @param closeBody whether [response] shall be closed by this method, unless an exception
-     *        is thrown. When an exception is thrown, the body is not closed to allow
-     *        reading for debugging.
+     *
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: Response, closeBody: Boolean) {
+    protected fun checkStatus(response: Response) =
         checkStatus(response.code(), response.message(), response)
-
-        if (closeBody)
-            response.body()?.close()
-    }
 
     /**
      * Checks the status from an HTTP [StatusLine] and throws an exception in case of an error.
-     * The response body is not being closed.
+     *
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(status: StatusLine) =
@@ -331,7 +340,7 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
-     * The response body is not being closed.
+     *
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(code: Int, message: String?, response: Response?) {
@@ -356,27 +365,27 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
-     * Asserts a 207 multi-status response.
-     * @throws DavException if the response is not a multi-status response with body
+     * Asserts a 207 Multi-Status response.
+     *
+     * @throws DavException if the response is not a Multi-Status response
      */
     protected fun assertMultiStatus(response: Response) {
         if (response.code() != 207)
-            throw InvalidDavResponseException("Expected 207 Multi-Status, got ${response.code()} ${response.message()}")
+            throw DavException("Expected 207 Multi-Status, got ${response.code()} ${response.message()}")
 
         if (response.body() == null)
-            throw InvalidDavResponseException("Received 207 Multi-Status without body")
+            throw DavException("Received 207 Multi-Status without body")
 
-        val mediaType = response.body()?.contentType()
-        if (mediaType != null) {
-            if (((mediaType.type() != "application" && mediaType.type() != "text")) || mediaType.subtype() != "xml")
-                throw InvalidDavResponseException("Received non-XML 207 Multi-Status")
-        } else
-            log.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+        response.body()?.contentType()?.let {
+            if (((it.type() != "application" && it.type() != "text")) || it.subtype() != "xml")
+                throw DavException("Received non-XML 207 Multi-Status")
+        } ?: log.warning("Received 207 Multi-Status without Content-Type, assuming XML")
     }
 
     /**
      * Sets the new [location] in case of a redirect. Closes the [response] body.
-     * @throws HttpException in case of an HTTP error
+     *
+     * @throws HttpException when the redirect doesn't have a destination
      */
     protected fun processRedirect(response: Response) {
         try {
@@ -394,10 +403,13 @@ open class DavResource @JvmOverloads constructor(
     }
 
 
-    // multi-status handling
+    // Multi-Status handling
 
     /**
-     * Process a 207 multi-status response.
+     * Processes a 207 Multi-Status response.
+     *
+     * @return response object with properties, members etc.
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
@@ -406,7 +418,7 @@ open class DavResource @JvmOverloads constructor(
         val parser = XmlUtils.newPullParser()
 
         // some parsing sub-functions
-        fun parseMultiStatus_Prop(): List<Property> {
+        fun parseMultiStatusProp(): List<Property> {
             // <!ELEMENT prop ANY >
             val depth = parser.depth
             val prop = mutableListOf<Property>()
@@ -427,7 +439,7 @@ open class DavResource @JvmOverloads constructor(
             return prop.toList()
         }
 
-        fun parseMultiStatus_PropStat(): List<Property> {
+        fun parseMultiStatusPropStat(): List<Property> {
             // <!ELEMENT propstat (prop, status, error?, responsedescription?) >
             val depth = parser.depth
 
@@ -440,13 +452,13 @@ open class DavResource @JvmOverloads constructor(
                     if (parser.namespace == XmlUtils.NS_WEBDAV)
                         when (parser.name) {
                             "prop" ->
-                                prop.addAll(parseMultiStatus_Prop())
+                                prop.addAll(parseMultiStatusProp())
                             "status" ->
                                 status = try {
                                     StatusLine.parse(parser.nextText())
                                 } catch(e: ProtocolException) {
-                                    // invalid status line, treat as HTTP 500
-                                    StatusLine(Protocol.HTTP_1_1, 500, "Couldn't parse server status")
+                                    log.warning("Invalid status line, treating as 500 Server Error")
+                                    StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 }
                         }
                 eventType = parser.next()
@@ -459,7 +471,7 @@ open class DavResource @JvmOverloads constructor(
             return prop
         }
 
-        fun parseMultiStatus_Response(root: DavResponse.Builder) {
+        fun parseMultiStatusResponse(root: DavResponse.Builder) {
             /* <!ELEMENT response (href, ((href*, status)|(propstat+)),
                                            error?, responsedescription? , location?) > */
             val depth = parser.depth
@@ -505,7 +517,7 @@ open class DavResource @JvmOverloads constructor(
                                     StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 }
                             "propstat" ->
-                                properties.addAll(parseMultiStatus_PropStat())
+                                properties.addAll(parseMultiStatusPropStat())
                             "location" ->
                                 throw DavException("Redirected child resources are not supported yet")
                         }
@@ -531,8 +543,8 @@ open class DavResource @JvmOverloads constructor(
                    like an HTTP error of the requested resource.
 
                 Exceptions for RFC 6578 support:
-                  - 507 Insufficient Storage on the requested resource means there are further results
-                  - members with status 404 Not Found go into removedMembers instead of members
+                  - members with 404 Not Found go into removedMembers instead of members
+                  - 507 Insufficient Storage on the requested resource can mean there are further results
                 */
                 when (it.code) {
                     404  -> removed = true
@@ -543,9 +555,12 @@ open class DavResource @JvmOverloads constructor(
 
             // Which resource does this <response> represent?
             var target: DavResponse.Builder? = null
-            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location))) {
+            if (UrlUtils.equals(UrlUtils.omitTrailingSlash(href), UrlUtils.omitTrailingSlash(location)) && !removed) {
                 // it's about ourselves (and not 404)
                 target = root
+
+                if (insufficientStorage)
+                    target.furtherResults(true)
 
             } else if (location.scheme() == href.scheme() && location.host() == href.host() && location.port() == href.port()) {
                 val locationSegments = location.pathSegments()
@@ -573,16 +588,14 @@ open class DavResource @JvmOverloads constructor(
                 }
             }
 
-            if (target == null) {
+            if (target == null && !removed) {
                 log.warning("Received <response> not for self and not for member resource: $href")
                 target = DavResponse.Builder(href)
                 root.addRelated(target)
             }
 
-            // set properties for target
-            if (insufficientStorage)
-                target.furtherResults(true)
-            target.properties(properties)
+            // set properties
+            target?.properties(properties)
         }
 
         fun parseMultiStatus(): DavResponse {
@@ -595,10 +608,10 @@ open class DavResource @JvmOverloads constructor(
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
                     when (parser.name) {
                         "response" ->
-                            parseMultiStatus_Response(builder)
+                            parseMultiStatusResponse(builder)
                         "sync-token" ->
-                            XmlUtils.readText(parser)?.let { token ->
-                                builder.syncToken(SyncToken(token))
+                            XmlUtils.readText(parser)?.let {
+                                builder.syncToken(SyncToken(it))
                             }
                     }
                 eventType = parser.next()
@@ -622,10 +635,10 @@ open class DavResource @JvmOverloads constructor(
                 eventType = parser.next()
             }
 
-            return response ?: throw InvalidDavResponseException("Multi-Status response didn't contain <DAV:multistatus> root element")
+            return response ?: throw DavException("Multi-Status response didn't contain <DAV:multistatus> root element")
 
         } catch (e: XmlPullParserException) {
-            throw InvalidDavResponseException("Couldn't parse Multi-Status XML", e)
+            throw DavException("Couldn't parse Multi-Status XML", e)
         }
     }
 

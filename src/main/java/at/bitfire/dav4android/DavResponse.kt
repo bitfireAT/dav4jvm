@@ -2,6 +2,9 @@ package at.bitfire.dav4android
 
 import at.bitfire.dav4android.property.SyncToken
 import okhttp3.HttpUrl
+import okhttp3.Response
+import okhttp3.ResponseBody
+import java.io.Closeable
 
 /**
  * Immutable container for a WebDAV multistatus response. Note that property elements
@@ -11,6 +14,9 @@ class DavResponse private constructor(
 
         /** resource this response is about */
         val url: HttpUrl,
+
+        /** corresponding HTTP response object */
+        val body: ResponseBody?,
 
         /** HTTP capabilities reported by an OPTIONS response */
         val capabilities: Set<String>,
@@ -33,7 +39,15 @@ class DavResponse private constructor(
         /** whether further results are available (requested collection had HTTP status 507) */
         val furtherResults: Boolean
 
-) {
+): Closeable {
+
+    /**
+     * After closing this response, the [body] will not be usable anymore, but other properties
+     * can be used normally.
+     */
+    override fun close() {
+        body?.close()
+    }
 
     /**
      * Convenience method to get a certain property from the current response. Does't take
@@ -43,10 +57,47 @@ class DavResponse private constructor(
         return properties.filterIsInstance(clazz).firstOrNull()
     }
 
+    /**
+     * Recursively searches for a property, i.e. in this object and in
+     * [members] and [related] and returns the first occurrence with its source.
+     */
+    fun<T: Property> searchProperty(clazz: Class<T>): Pair<DavResponse, T>? {
+        get(clazz)?.let { return Pair(this, it) }
+        members.forEach { response ->
+            response[clazz]?.let { return Pair(response, it) }
+        }
+        related.forEach { response ->
+            response[clazz]?.let { return Pair(response, it) }
+        }
+        return null
+    }
+
+    /**
+     * Recursively (i.e. in this object, and in [members] and [related]) searches for a
+     * property, and returns all occurrences together with their sources.
+     */
+    fun<T: Property> searchProperties(clazz: Class<T>): Map<DavResponse, T> {
+        val map = mutableMapOf<DavResponse, T>()
+        get(clazz)?.let { map[this] = it }
+        members.forEach { response ->
+            response[clazz]?.let { map[response] = it }
+        }
+        related.forEach { response ->
+            response[clazz]?.let { map[response] = it }
+        }
+        return map
+    }
+
 
     class Builder(
             val url: HttpUrl
     ) {
+
+        private var responseBody: ResponseBody? = null
+        fun responseBody(newValue: ResponseBody?): Builder {
+            responseBody = newValue
+            return this
+        }
 
         private var capabilities: Set<String> = setOf()
         fun capabilities(newValue: Set<String>): Builder {
@@ -92,6 +143,7 @@ class DavResponse private constructor(
 
         fun build(): DavResponse = DavResponse(
                 url,
+                responseBody,
                 capabilities,
                 properties,
                 members.map { it.build() },

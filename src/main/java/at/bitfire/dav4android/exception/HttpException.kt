@@ -11,6 +11,7 @@ package at.bitfire.dav4android.exception
 import at.bitfire.dav4android.Constants
 import okhttp3.Response
 import okio.Buffer
+import org.apache.commons.io.IOUtils
 import java.io.*
 
 open class HttpException: Exception, Serializable {
@@ -35,6 +36,10 @@ open class HttpException: Exception, Serializable {
 
         request = null
         response = null
+    }
+
+    constructor(message: String, response: Response): this(message) {
+        // TODO
     }
 
     /**
