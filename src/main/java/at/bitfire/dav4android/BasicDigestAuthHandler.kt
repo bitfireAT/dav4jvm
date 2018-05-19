@@ -1,9 +1,7 @@
 /*
- * Copyright © Ricki Hirner (bitfire web engineering).
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 package at.bitfire.dav4android
@@ -25,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Authentication methods/credentials found to be working will be cached for further requests
  * (this is why the interceptor is needed).
  *
- * Usage: Set as authenticator <b>and</b> as network interceptor.
+ * Usage: Set as authenticator **and** as network interceptor.
  */
 class BasicDigestAuthHandler(
         /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */

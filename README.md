@@ -5,33 +5,24 @@
 # dav4android
 
 dav4android is an Android WebDAV/CalDAV/CardDAV library which has
-primarily been developed for [DAVdroid](https://www.davdroid.com).
+initially been developed for [DAVdroid](https://www.davdroid.com).
 
-It's not intended as a general WebDAV framework for all kinds of
-applications, but you may find it useful to fork and adapt it
-to your needs.
+Original repository: https://gitlab.com/bitfireAT/dav4android/
 
 Generated KDoc: https://bitfireAT.gitlab.io/dav4android/dokka/dav4android/
 
 
-## Contact
+## Contact / License
 
-```
-bitfire web engineering – Stockmann, Hirner GesnbR
-Florastraße 27
-2540 Bad Vöslau, AUSTRIA
-```
-
-Email: [play@bitfire.at](mailto:play@bitfire.at) (do not use this)
+dav4android is licensed under [Mozilla Public License, v. 2.0](LICENSE).
 
 For questions, suggestions etc. please use the DAVdroid forum:
 https://www.davdroid.com/forums/
 
+Email: [play@bitfire.at](mailto:play@bitfire.at)
 
-## License 
 
-Copyright (C) bitfire web engineering (Ricki Hirner, Bernhard Stockmann).
+## Contributors
 
-This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome
-to redistribute it under the conditions of the [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html).
+  * Ricki Hirner (initial contributor)
 
