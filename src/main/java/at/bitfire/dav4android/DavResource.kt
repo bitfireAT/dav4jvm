@@ -161,7 +161,7 @@ open class DavResource @JvmOverloads constructor(
             properties += GetETag(eTag)
         }
 
-        val body = response.body() ?: throw HttpException("Received GET response without body", response)
+        val body = response.body() ?: throw DavException("Received GET response without body", httpResponse = response)
         body.contentType()?.let { mimeType ->
             properties += GetContentType(mimeType)
         }
@@ -393,7 +393,7 @@ open class DavResource @JvmOverloads constructor(
                     log.fine("Redirected, new location = $target")
                     location = target
                 } else
-                    throw HttpException("Redirected without new Location")
+                    throw DavException("Redirected without new Location")
             }
         } finally {
             response.body()?.close()

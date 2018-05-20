@@ -24,12 +24,12 @@ class DavCollectionTest {
     private val mockServer = MockWebServer()
     private fun sampleUrl() = mockServer.url("/dav/")
 
-
     @Before
     fun startServer() = mockServer.start()
 
     @After
     fun stopServer() = mockServer.shutdown()
+
 
     /**
      * Test sample response for an initial sync-collection report from RFC 6578 3.8.
@@ -197,7 +197,7 @@ class DavCollectionTest {
             collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME).close()
             fail("Expected HttpException")
         } catch (e: HttpException) {
-            assertEquals(507, e.status)
+            assertEquals(507, e.code)
         }
     }
 

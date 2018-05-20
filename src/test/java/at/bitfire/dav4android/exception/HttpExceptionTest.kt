@@ -17,22 +17,22 @@ class HttpExceptionTest {
     @Test
     fun testHttpFormatting() {
         val request = Request.Builder()
-                .post(RequestBody.create(null, "REQUEST\nBODY" + 5.toChar()))
+                .post(RequestBody.create(MediaType.parse("text/something"), "REQUEST\nBODY"))
                 .url("http://example.com")
                 .build()
 
         val response = Response.Builder()
                 .request(request)
-                .protocol(Protocol.HTTP_2)
+                .protocol(Protocol.HTTP_1_1)
                 .code(500)
                 .message(responseMessage)
-                .body(ResponseBody.create(null, 0x99.toChar() + "SERVER\r\nRESPONSE"))
+                .body(ResponseBody.create(MediaType.parse("text/something-other"), "SERVER\r\nRESPONSE"))
                 .build()
         val e = HttpException(response)
         assertTrue(e.message!!.contains("500"))
         assertTrue(e.message!!.contains(responseMessage))
-        assertTrue(e.request!!.contains("REQUEST\nBODY[05]"))
-        assertTrue(e.response!!.contains("[99]SERVER↵\nRESPONSE"))
+        assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
+        assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
     }
 
 }
