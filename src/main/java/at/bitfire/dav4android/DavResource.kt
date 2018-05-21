@@ -15,6 +15,7 @@ import okhttp3.*
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
 import java.io.StringWriter
@@ -287,7 +288,6 @@ open class DavResource @JvmOverloads constructor(
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.startTag(XmlUtils.NS_WEBDAV, "propfind")
         serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
         for (prop in reqProp) {
@@ -635,6 +635,8 @@ open class DavResource @JvmOverloads constructor(
 
             return response ?: throw DavException("Multi-Status response didn't contain <DAV:multistatus> root element")
 
+        } catch (e: EOFException) {
+            throw DavException("Incomplete Multi-Status XML", e)
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse Multi-Status XML", e)
         }

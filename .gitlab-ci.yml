@@ -9,8 +9,9 @@ cache:
 
 test:
   script:
-    - (cd /sdk/emulator; ./emulator @test -no-audio -no-window & wait-for-emulator.sh)
-    - ./gradlew check connectedCheck
+    #- (cd /sdk/emulator; ./emulator @test -no-audio -no-window & wait-for-emulator.sh)
+    #- ./gradlew check connectedCheck
+    - ./gradlew check
   artifacts:
     paths:
       - build/outputs/lint-results-debug.html

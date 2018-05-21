@@ -4,10 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package at.bitfire.dav4android
+package at.bitfire.dav4android.exception
 
-import at.bitfire.dav4android.exception.DavException
-import at.bitfire.dav4android.exception.HttpException
+import at.bitfire.dav4android.DavResource
+import at.bitfire.dav4android.Property
+import at.bitfire.dav4android.XmlUtils
 import at.bitfire.dav4android.property.ResourceType
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
