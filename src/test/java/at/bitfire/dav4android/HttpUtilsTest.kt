@@ -6,10 +6,21 @@
 
 package at.bitfire.dav4android
 
+import okhttp3.HttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class HttpUtilsTest {
+
+    @Test
+    fun testFilename() {
+        val sampleUrl = HttpUrl.parse("https://example.com")!!
+        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/")!!))
+        assertEquals("hier1", HttpUtils.fileName(sampleUrl.resolve("/hier1")!!))
+        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/hier1/")!!))
+        assertEquals("hier2", HttpUtils.fileName(sampleUrl.resolve("/hier2")!!))
+        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/hier2/")!!))
+    }
 
     @Test
     fun testParseWwwAuthenticate() {

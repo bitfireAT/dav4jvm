@@ -56,6 +56,11 @@ class DavResponse private constructor(
     }
 
     /**
+     * Gets the file name of this resource. See [HttpUtils.fileName] for details.
+     */
+    fun fileName() = HttpUtils.fileName(url)
+
+    /**
      * Convenience method to get a certain property from the current response. Does't take
      * members or related resources into consideration.
      */

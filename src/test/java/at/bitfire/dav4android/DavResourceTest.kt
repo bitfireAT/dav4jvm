@@ -48,15 +48,6 @@ class DavResourceTest {
 
 
     @Test
-    fun testFilename() {
-        assertEquals("", DavResource(httpClient, sampleUrl().resolve("/")!!).fileName())
-        assertEquals("hier1", DavResource(httpClient, sampleUrl().resolve("/hier1")!!).fileName())
-        assertEquals("", DavResource(httpClient, sampleUrl().resolve("/hier1/")!!).fileName())
-        assertEquals("hier2", DavResource(httpClient, sampleUrl().resolve("/hier1/hier2")!!).fileName())
-        assertEquals("", DavResource(httpClient, sampleUrl().resolve("/hier1/hier2/")!!).fileName())
-    }
-
-    @Test
     fun testOptions() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)

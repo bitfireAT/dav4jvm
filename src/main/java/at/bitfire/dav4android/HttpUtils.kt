@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4android
 
+import okhttp3.HttpUrl
 import okhttp3.Response
 import java.util.*
 import java.util.regex.Pattern
@@ -13,6 +14,17 @@ import java.util.regex.Pattern
 object HttpUtils {
 
     private val authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$")
+
+    /**
+     * Gets the resource name (the last segment of the path) from an URL.
+     *
+     * @return resource name or `` (empty string) if the URL ends with a slash
+     *         (i.e. the resource is a collection).
+     */
+    fun fileName(url: HttpUrl): String {
+        val pathSegments = url.pathSegments()
+        return pathSegments[pathSegments.size - 1]
+    }
 
     fun listHeader(response: Response, name: String): Array<String> {
         val value = response.headers(name).joinToString(",")

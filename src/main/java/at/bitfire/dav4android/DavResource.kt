@@ -59,15 +59,9 @@ open class DavResource @JvmOverloads constructor(
 
 
     /**
-     * The resource name (the last segment of the URL path).
-     *
-     * @return resource name or `` (empty string) if the URL ends with a slash
-     *         (i.e. the resource is a collection).
+     * Gets the file name of this resource. See [HttpUtils.fileName] for details.
      */
-    fun fileName(): String {
-        val pathSegments = location.pathSegments()
-        return pathSegments[pathSegments.size - 1]
-    }
+    fun fileName() = HttpUtils.fileName(location)
 
 
     /**
