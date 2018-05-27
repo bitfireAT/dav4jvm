@@ -17,6 +17,10 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 class DavExceptionTest {
 
@@ -80,6 +84,28 @@ class DavExceptionTest {
             assertEquals(e.code, 403)
             assertTrue(e.errors.isEmpty())
             assertNull(e.responseBody)
+        }
+    }
+
+    fun testSerialization() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(500)
+                .setBody("12345"))
+        try {
+            dav.propfind(0, ResourceType.NAME).close()
+            fail("Expected DavException")
+        } catch (e: DavException) {
+            val baos = ByteArrayOutputStream()
+            val oos = ObjectOutputStream(baos)
+            oos.writeObject(e)
+
+            val ois = ObjectInputStream(ByteArrayInputStream(baos.toByteArray()))
+            val e2 = ois.readObject() as HttpException
+            assertEquals(500, e2.code)
+            assertTrue(e2.responseBody!!.contains("12345"))
         }
     }
 

@@ -6,6 +6,8 @@
 
 package at.bitfire.dav4android
 
+import java.io.Serializable
+
 /**
  * A WebDAV property.
  *
@@ -17,7 +19,7 @@ interface Property {
     class Name(
             val namespace: String,
             val name: String
-    ) {
+    ): Serializable {
 
         override fun equals(other: Any?): Boolean {
             return if (other is Name)

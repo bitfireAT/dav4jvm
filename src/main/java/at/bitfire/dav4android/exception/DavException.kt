@@ -10,7 +10,6 @@ import at.bitfire.dav4android.Constants
 import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.XmlUtils
 import okhttp3.MediaType
-import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
 import org.xmlpull.v1.XmlPullParser
@@ -46,16 +45,16 @@ open class DavException @JvmOverloads constructor(
 
     }
 
-    var request: Request? = null
-        private set
+    var request: String? = null
+
+    /**
+     * Body excerpt of [request] (up to [MAX_EXCERPT_SIZE] characters). Only available
+     * if the HTTP request body was textual content and could be read again.
+     */
     var requestBody: String? = null
         private set
 
-    /**
-     * Associated HTTP [Response]. Do not access [Response.body] because it will be closed.
-     * Use [responseBody] instead.
-     */
-    val response: Response?
+    val response: String?
 
     /**
      * Body excerpt of [response] (up to [MAX_EXCERPT_SIZE] characters). Only available
@@ -73,12 +72,12 @@ open class DavException @JvmOverloads constructor(
 
     init {
         if (httpResponse != null) {
-            response = httpResponse
+            response = httpResponse.toString()
 
             try {
-                request = httpResponse.request()
+                request = httpResponse.request().toString()
 
-                request?.body()?.let { body ->
+                httpResponse.request().body()?.let { body ->
                     body.contentType()?.let {
                         if (isPlainText(it)) {
                             val buffer = Buffer()
