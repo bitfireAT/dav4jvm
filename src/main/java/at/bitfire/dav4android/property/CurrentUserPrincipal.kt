@@ -30,9 +30,9 @@ data class CurrentUserPrincipal(
         override fun create(parser: XmlPullParser): CurrentUserPrincipal {
             // <!ELEMENT current-user-principal (unauthenticated | href)>
             var href: String? = null
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "href", {
+            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "href") {
                 href = XmlUtils.readText(parser)
-            })
+            }
             return CurrentUserPrincipal(href)
         }
 

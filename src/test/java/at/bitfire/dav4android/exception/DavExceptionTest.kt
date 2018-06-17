@@ -47,7 +47,7 @@ class DavExceptionTest {
         val dav = DavResource(httpClient, url)
 
         val builder = StringBuilder()
-        builder.append(CharArray(DavException.MAX_EXCERPT_SIZE-1, { '*' }))
+        builder.append(CharArray(DavException.MAX_EXCERPT_SIZE-1) { '*' })
         builder.append("\u03C0")    // Pi
         val body = builder.toString()
 

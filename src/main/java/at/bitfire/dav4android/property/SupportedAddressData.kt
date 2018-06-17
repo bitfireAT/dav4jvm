@@ -36,13 +36,13 @@ class SupportedAddressData: Property {
             val supported = SupportedAddressData()
 
             try {
-                XmlUtils.processTag(parser, XmlUtils.NS_CARDDAV, "address-data-type", {
+                XmlUtils.processTag(parser, XmlUtils.NS_CARDDAV, "address-data-type") {
                     parser.getAttributeValue(null, "content-type")?.let { contentType ->
                         var type = contentType
                         parser.getAttributeValue(null, "version")?.let { version -> type += "; version=$version" }
                         MediaType.parse(type)?.let { supported.types.add(it) }
                     }
-                })
+                }
             } catch(e: XmlPullParserException) {
                 Constants.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null

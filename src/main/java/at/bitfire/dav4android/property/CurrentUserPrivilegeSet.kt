@@ -32,7 +32,7 @@ data class CurrentUserPrivilegeSet(
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet(false, false)
 
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "privilege", {
+            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "privilege") {
                 val depth = parser.depth
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
@@ -49,7 +49,7 @@ data class CurrentUserPrivilegeSet(
                         }
                     eventType = parser.next()
                 }
-            })
+            }
 
             return privs
         }

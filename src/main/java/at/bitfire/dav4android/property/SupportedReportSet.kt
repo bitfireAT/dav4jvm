@@ -36,7 +36,7 @@ class SupportedReportSet: Property {
             */
 
             val supported = SupportedReportSet()
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "supported-report", {
+            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "supported-report") {
                 XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "report") {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
@@ -44,7 +44,7 @@ class SupportedReportSet: Property {
                     else if (parser.eventType == XmlPullParser.START_TAG)
                         supported.reports += "${parser.namespace}${parser.name}"
                 }
-            })
+            }
             return supported
         }
 
