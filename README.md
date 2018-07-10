@@ -19,6 +19,9 @@ dav4android is licensed under [Mozilla Public License, v. 2.0](LICENSE).
 For questions, suggestions etc. please use the DAVdroid forum:
 https://www.davdroid.com/forums/
 
+If you want to contribute, please work in your own repository and then
+notify us on your changes so that we can backport them.
+
 Email: [play@bitfire.at](mailto:play@bitfire.at)
 
 

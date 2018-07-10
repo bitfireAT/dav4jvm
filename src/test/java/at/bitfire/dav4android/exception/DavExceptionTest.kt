@@ -56,7 +56,7 @@ class DavExceptionTest {
                 .setHeader("Content-Type", "text/html")
                 .setBody(body))
         try {
-            dav.propfind(0, ResourceType.NAME).close()
+            dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(e.code, 404)
@@ -78,7 +78,7 @@ class DavExceptionTest {
                 .setHeader("Content-Type", "application/octet-stream")
                 .setBody("12345"))
         try {
-            dav.propfind(0, ResourceType.NAME).close()
+            dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(e.code, 403)
@@ -95,7 +95,7 @@ class DavExceptionTest {
                 .setResponseCode(500)
                 .setBody("12345"))
         try {
-            dav.propfind(0, ResourceType.NAME).close()
+            dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected DavException")
         } catch (e: DavException) {
             val baos = ByteArrayOutputStream()
@@ -128,11 +128,11 @@ class DavExceptionTest {
                 .setHeader("Content-Type", "application/xml; charset=\"utf-8\"")
                 .setBody(body))
         try {
-            dav.propfind(0, ResourceType.NAME).close()
+            dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(e.code, 423)
-            assertTrue(e.errors.contains(Property.Name(XmlUtils.NS_WEBDAV, "lock-token-submitted")))
+            assertTrue(e.errors.any { it.name == Property.Name(XmlUtils.NS_WEBDAV, "lock-token-submitted") })
             assertEquals(body, e.responseBody)
         }
     }

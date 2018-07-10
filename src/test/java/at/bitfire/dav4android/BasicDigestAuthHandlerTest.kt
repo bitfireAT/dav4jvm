@@ -7,6 +7,7 @@
 package at.bitfire.dav4android
 
 import okhttp3.*
+import okhttp3.Response
 import okhttp3.Response.Builder
 import org.junit.Assert.*
 import org.junit.Test

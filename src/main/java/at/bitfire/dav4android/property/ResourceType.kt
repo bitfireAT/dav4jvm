@@ -53,6 +53,7 @@ class ResourceType: Property {
                 }
                 eventType = parser.next()
             }
+            assert(parser.depth == depth)
 
             return type
         }

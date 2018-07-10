@@ -10,6 +10,7 @@ import at.bitfire.dav4android.Property
 import at.bitfire.dav4android.PropertyFactory
 import at.bitfire.dav4android.QuotedStringUtils
 import at.bitfire.dav4android.XmlUtils
+import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
 class GetETag(
@@ -19,6 +20,9 @@ class GetETag(
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getetag")
+
+        fun fromResponse(response: Response) =
+                response.header("ETag")?.let { GetETag(it) }
     }
 
     var eTag: String?

@@ -24,14 +24,19 @@ class DavAddressBook @JvmOverloads constructor(
         val MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0")
     }
 
-
     /**
      * Sends an addressbook-query REPORT request to the resource.
+     *
+     * @param callback called for every WebDAV response XML element in the result
+     *
+     * @return list of properties which have been received in the Multi-Status response, but
+     * are not part of response XML elements
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on DAV error
+     * @throws DavException on WebDAV error
      */
-    fun addressbookQuery(): DavResponse {
+    fun addressbookQuery(callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -53,25 +58,32 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-query")
         serializer.endDocument()
 
-        val response = httpClient.newCall(Request.Builder()
-                .url(location)
-                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
-                .header("Depth", "1")
-                .build()).execute()
-
-        checkStatus(response)
-        assertMultiStatus(response)
-
-        return processMultiStatus(response.body()?.charStream()!!)
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                    .url(location)
+                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .header("Depth", "1")
+                    .build()).execute()
+        }.use { response ->
+            return processMultiStatus(response, callback)
+        }
     }
 
     /**
      * Sends an addressbook-multiget REPORT request to the resource.
+     *
+     * @param urls     list of vCard URLs to be requested
+     * @param vCard4   whether vCards should be requested as vCard4 4.0 (true: 4.0, false: 3.0)
+     * @param callback called for every WebDAV response XML element in the result
+     *
+     * @return list of properties which have been received in the Multi-Status response, but
+     * are not part of response XML elements
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on DAV error
+     * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, vCard4: Boolean): DavResponse {
+    fun multiget(urls: List<HttpUrl>, vCard4: Boolean, callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -104,16 +116,15 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
         serializer.endDocument()
 
-        val response = httpClient.newCall(Request.Builder()
-                .url(location)
-                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
-                .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
-                .build()).execute()
-
-        checkStatus(response)
-        assertMultiStatus(response)
-
-        return processMultiStatus(response.body()?.charStream()!!)
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                    .url(location)
+                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
+                    .build()).execute()
+        }.use {
+            return processMultiStatus(it, callback)
+        }
     }
 
 }

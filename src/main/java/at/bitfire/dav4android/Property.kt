@@ -6,12 +6,15 @@
 
 package at.bitfire.dav4android
 
+import at.bitfire.dav4android.Constants.log
+import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
+import java.util.*
 
 /**
- * A WebDAV property.
+ * Represents a WebDAV property.
  *
- * Every [Property] must define a static field (use @JvmStatic) called NAME of type [Property.Name],
+ * Every [Property] must define a static field (use `@JvmStatic`) called `NAME` of type [Property.Name],
  * which will be accessed by reflection.
  */
 interface Property {
@@ -31,6 +34,34 @@ interface Property {
         override fun hashCode() = namespace.hashCode() xor name.hashCode()
 
         override fun toString() = "$namespace$name"
+    }
+
+    companion object {
+
+        fun parse(parser: XmlPullParser): List<Property> {
+            // <!ELEMENT prop ANY >
+            val depth = parser.depth
+            val properties = LinkedList<Property>()
+
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    val depthBeforeParsing = parser.depth
+                    val name = Property.Name(parser.namespace, parser.name)
+                    val property = PropertyRegistry.create(name, parser)
+                    assert(parser.depth == depthBeforeParsing)
+
+                    if (property != null) {
+                        properties.add(property)
+                    } else
+                        log.fine("Ignoring unknown property $name")
+                }
+                eventType = parser.next()
+            }
+
+            return properties
+        }
+
     }
 
 }

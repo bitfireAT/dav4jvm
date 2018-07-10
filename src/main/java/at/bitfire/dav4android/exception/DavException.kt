@@ -7,7 +7,7 @@
 package at.bitfire.dav4android.exception
 
 import at.bitfire.dav4android.Constants
-import at.bitfire.dav4android.Property
+import at.bitfire.dav4android.Error
 import at.bitfire.dav4android.XmlUtils
 import okhttp3.MediaType
 import okhttp3.Response
@@ -66,7 +66,7 @@ open class DavException @JvmOverloads constructor(
     /**
      * Precondition/postcondition XML elements which have been found in the XML response.
      */
-    var errors: Set<Property.Name> = setOf()
+    var errors: List<Error> = listOf()
         private set
 
 
@@ -117,7 +117,7 @@ open class DavException @JvmOverloads constructor(
                                     while (eventType != XmlPullParser.END_DOCUMENT) {
                                         if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                                             if (parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "error")
-                                                errors = parseXmlErrors(parser)
+                                                errors = Error.parseError(parser)
                                         eventType = parser.next()
                                     }
                                 } catch (e: XmlPullParserException) {
@@ -135,21 +135,6 @@ open class DavException @JvmOverloads constructor(
             }
         } else
             response = null
-    }
-
-
-    private fun parseXmlErrors(parser: XmlPullParser): Set<Property.Name> {
-        val names = mutableSetOf<Property.Name>()
-
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                names += Property.Name(parser.namespace, parser.name)
-            eventType = parser.next()
-        }
-
-        return names
     }
 
 }

@@ -34,11 +34,20 @@ class DavCalendar @JvmOverloads constructor(
 
     /**
      * Sends a calendar-query REPORT to the resource.
+     *
+     * @param component requested component name (like VEVENT or VTODO)
+     * @param start     time-range filter: start date (optional)
+     * @param end       time-range filter: end date (optional)
+     * @param callback  called for every WebDAV response XML element in the result
+     *
+     * @return list of properties which have been received in the Multi-Status response, but
+     * are not part of response XML elements
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on DAV error
+     * @throws DavException on WebDAV error
      */
-    fun calendarQuery(component: String, start: Date?, end: Date?): DavResponse {
+    fun calendarQuery(component: String, start: Date?, end: Date?, callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -80,25 +89,31 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endTag(XmlUtils.NS_CALDAV, "calendar-query")
         serializer.endDocument()
 
-        val response = httpClient.newCall(Request.Builder()
-                .url(location)
-                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
-                .header("Depth", "1")
-                .build()).execute()
-
-        checkStatus(response)
-        assertMultiStatus(response)
-
-        return processMultiStatus(response.body()?.charStream()!!)
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                    .url(location)
+                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .header("Depth", "1")
+                    .build()).execute()
+        }.use {
+            return processMultiStatus(it, callback)
+        }
     }
 
     /**
      * Sends a calendar-multiget REPORT to the resource.
+     *
+     * @param urls     list of iCalendar URLs to be requested
+     * @param callback called for every WebDAV response XML element in the result
+     *
+     * @return list of properties which have been received in the Multi-Status response, but
+     * are not part of response XML elements
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on DAV error
+     * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>): DavResponse {
+    fun multiget(urls: List<HttpUrl>, callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -126,15 +141,14 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endTag(XmlUtils.NS_CALDAV, "calendar-multiget")
         serializer.endDocument()
 
-        val response = httpClient.newCall(Request.Builder()
-                .url(location)
-                .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
-                .build()).execute()
-
-        checkStatus(response)
-        assertMultiStatus(response)
-
-        return processMultiStatus(response.body()?.charStream()!!)
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                    .url(location)
+                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .build()).execute()
+        }.use {
+            return processMultiStatus(it, callback)
+        }
     }
 
 }

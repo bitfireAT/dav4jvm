@@ -7,6 +7,7 @@
 package at.bitfire.dav4android
 
 import okhttp3.*
+import okhttp3.Response
 import okio.Buffer
 import okio.ByteString
 import java.io.IOException
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Authentication methods/credentials found to be working will be cached for further requests
  * (this is why the interceptor is needed).
  *
- * Usage: Set as authenticator **and** as network interceptor.
+ * Usage: Set as authenticator *and* as network interceptor.
  */
 class BasicDigestAuthHandler(
         /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
@@ -54,8 +55,8 @@ class BasicDigestAuthHandler(
     }
 
     // cached authentication schemes
-    var basicAuth: HttpUtils.AuthScheme? = null
-    var digestAuth: HttpUtils.AuthScheme? = null
+    private var basicAuth: HttpUtils.AuthScheme? = null
+    private var digestAuth: HttpUtils.AuthScheme? = null
 
 
     fun authenticateRequest(request: Request, response: Response?): Request? {
