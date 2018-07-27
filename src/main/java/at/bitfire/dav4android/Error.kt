@@ -9,6 +9,7 @@
 package at.bitfire.dav4android
 
 import org.xmlpull.v1.XmlPullParser
+import java.io.Serializable
 
 /**
  * Represents an XML precondition/postcondition error. Every error has a name, which is the XML element
@@ -18,7 +19,7 @@ import org.xmlpull.v1.XmlPullParser
  */
 class Error(
         val name: Property.Name
-) {
+): Serializable {
 
     companion object {
 
