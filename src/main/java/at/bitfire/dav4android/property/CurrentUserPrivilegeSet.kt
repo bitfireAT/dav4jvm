@@ -12,9 +12,13 @@ import at.bitfire.dav4android.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class CurrentUserPrivilegeSet(
-        // only those privileges which are required for DAVdroid are implemented
-        var mayRead: Boolean,
-        var mayWriteContent: Boolean
+        // not all privileges from RFC 3744 are implemented by now
+        // feel free to add more if you need them for your project
+        var mayRead: Boolean = false,
+        var mayWriteProperties: Boolean = false,
+        var mayWriteContent: Boolean = false,
+        var mayBind: Boolean = false,
+        var mayUnbind: Boolean = false
 ): Property {
 
     companion object {
@@ -30,7 +34,7 @@ data class CurrentUserPrivilegeSet(
         override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet? {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
-            val privs = CurrentUserPrivilegeSet(false, false)
+            val privs = CurrentUserPrivilegeSet()
 
             XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "privilege") {
                 val depth = parser.depth
@@ -40,10 +44,25 @@ data class CurrentUserPrivilegeSet(
                         when (parser.name) {
                             "read" ->
                                 privs.mayRead = true
-                            "write", "write-content" ->
+                            "write" -> {
+                                privs.mayBind = true
+                                privs.mayUnbind = true
+                                privs.mayWriteProperties = true
                                 privs.mayWriteContent = true
+                            }
+                            "write-properties" ->
+                                privs.mayWriteProperties = true
+                            "write-content" ->
+                                privs.mayWriteContent = true
+                            "bind" ->
+                                privs.mayBind = true
+                            "unbind" ->
+                                privs.mayUnbind = true
                             "all" -> {
                                 privs.mayRead = true
+                                privs.mayBind = true
+                                privs.mayUnbind = true
+                                privs.mayWriteProperties = true
                                 privs.mayWriteContent = true
                             }
                         }
