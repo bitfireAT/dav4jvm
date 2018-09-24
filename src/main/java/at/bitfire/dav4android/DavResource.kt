@@ -86,6 +86,32 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Sends a MOVE request to this resource. Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @throws IOException on I/O error
+     * @throws DavException on WebDAV error
+     */
+    @Throws(IOException::class, HttpException::class, DavException::class)
+    fun move(destination:String, forceOverride:Boolean, callback: (response: Response) -> Unit) {
+        val requestBuilder = Request.Builder()
+                .method("MOVE", null)
+                .header("Content-Length", "0")
+                .header("Destination", destination);
+
+        if(forceOverride) requestBuilder.header("Overwrite", "F")
+
+        followRedirects {
+            requestBuilder.url(location)
+            httpClient.newCall(requestBuilder
+                    .build())
+                    .execute()
+        }.use{ response ->
+            checkStatus(response)
+            callback(response)
+        }
+    }
+
+    /**
      * Sends a MKCOL request to this resource. Follows up to [MAX_REDIRECTS] redirects.
      *
      * @throws IOException on I/O error
