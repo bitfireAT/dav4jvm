@@ -89,6 +89,7 @@ open class DavResource @JvmOverloads constructor(
      * Sends a MOVE request to this resource. Follows up to [MAX_REDIRECTS] redirects.
      *
      * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
