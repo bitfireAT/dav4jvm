@@ -106,8 +106,15 @@ open class DavResource @JvmOverloads constructor(
             httpClient.newCall(requestBuilder
                     .build())
                     .execute()
-        }.use{ response ->
+        }.use { response ->
             checkStatus(response)
+
+            if (response.code() == 207)
+            /* Multiple resources were to be affected by the MOVE, but errors on some
+                of them prevented the operation from taking place.
+                [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
+                throw HttpException(response)
+
             callback(response)
         }
     }
