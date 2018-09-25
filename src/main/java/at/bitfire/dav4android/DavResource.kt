@@ -87,19 +87,23 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Sends a MOVE request to this resource. Follows up to [MAX_REDIRECTS] redirects.
+     * Updates [location] on success.
+     *
+     * @param destination where the resource shall be moved to
+     * @param forceOverride whether resources are overwritten when they already exist in destination
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun move(destination:String, forceOverride:Boolean, callback: (response: Response) -> Unit) {
+    fun move(destination: HttpUrl, forceOverride: Boolean, callback: (response: Response) -> Unit) {
         val requestBuilder = Request.Builder()
                 .method("MOVE", null)
                 .header("Content-Length", "0")
-                .header("Destination", destination);
+                .header("Destination", destination.toString())
 
-        if(forceOverride) requestBuilder.header("Overwrite", "F")
+        if (forceOverride) requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)
@@ -108,12 +112,16 @@ open class DavResource @JvmOverloads constructor(
                     .execute()
         }.use { response ->
             checkStatus(response)
-
             if (response.code() == 207)
-            /* Multiple resources were to be affected by the MOVE, but errors on some
+                /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
                 throw HttpException(response)
+
+            // update location
+            location.resolve(response.header("Location") ?: destination.toString())?.let {
+                location = it
+            }
 
             callback(response)
         }

@@ -78,8 +78,7 @@ class DavResourceTest {
     @Test
     fun testMove() {
         val url = sampleUrl()
-        val dav = DavResource(httpClient, url)
-        val destination = "$url/test";
+        val destination = url.resolve("test")!!
 
         /* POSITIVE TEST CASES */
 
@@ -87,31 +86,37 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_CREATED))
         var called = false
-        dav.move(destination, false) {
-            called = true
+        DavResource(httpClient, url).let { dav ->
+            dav.move(destination, false) {
+                called = true
+            }
+            assertTrue(called)
+            assertEquals(destination, dav.location)
         }
-        assertTrue(called)
 
         var rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
         assertEquals(url.encodedPath(), rq.path)
-        assertEquals(destination, rq.getHeader("Destination"))
+        assertEquals(destination.toString(), rq.getHeader("Destination"))
         assertNull(rq.getHeader("Overwrite"))
 
-        // no preconditions, 204 No content, URL already mapped
+        // no preconditions, 204 No content, URL already mapped, overwrite
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
         called = false
-        dav.move(destination, false) {
-            called = true
+        DavResource(httpClient, url).let { dav ->
+            dav.move(destination, true) {
+                called = true
+            }
+            assertTrue(called)
+            assertEquals(destination, dav.location)
         }
-        assertTrue(called)
 
         rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
         assertEquals(url.encodedPath(), rq.path)
-        assertEquals(destination, rq.getHeader("Destination"))
-        assertNull(rq.getHeader("Overwrite"))
+        assertEquals(destination.toString(), rq.getHeader("Destination"))
+        assertEquals("F", rq.getHeader("Overwrite"))
 
         /* NEGATIVE TEST CASES */
 
@@ -122,8 +127,10 @@ class DavResourceTest {
                 .setResponseCode(207))
         try {
             called = false
-            dav.move(destination, false) { called = true }
-            fail("Expected HttpException")
+            DavResource(httpClient, url).let { dav ->
+                dav.move(destination, false) { called = true }
+                fail("Expected HttpException")
+            }
         } catch(e: HttpException) {
             assertFalse(called)
         }
