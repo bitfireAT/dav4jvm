@@ -76,6 +76,60 @@ class DavResourceTest {
     }
 
     @Test
+    fun testMove() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+        val destination = "$url/test";
+
+        /* POSITIVE TEST CASES */
+
+        // no preconditions, 201 Created, new URL mapping at the destination
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_CREATED))
+        var called = false
+        dav.move(destination, false) {
+            called = true
+        }
+        assertTrue(called)
+
+        var rq = mockServer.takeRequest()
+        assertEquals("MOVE", rq.method)
+        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(destination, rq.getHeader("Destination"))
+        assertNull(rq.getHeader("Overwrite"))
+
+        // no preconditions, 204 No content, URL already mapped
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        called = false
+        dav.move(destination, false) {
+            called = true
+        }
+        assertTrue(called)
+
+        rq = mockServer.takeRequest()
+        assertEquals("MOVE", rq.method)
+        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(destination, rq.getHeader("Destination"))
+        assertNull(rq.getHeader("Overwrite"))
+
+        /* NEGATIVE TEST CASES */
+
+        // 207 multi-status (e.g. errors on some of resources affected by
+        // the MOVE prevented the operation from taking place)
+
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(207))
+        try {
+            called = false
+            dav.move(destination, false) { called = true }
+            fail("Expected HttpException")
+        } catch(e: HttpException) {
+            assertFalse(called)
+        }
+    }
+
+    @Test
     fun testGet() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
