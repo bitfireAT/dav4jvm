@@ -137,6 +137,68 @@ class DavResourceTest {
     }
 
     @Test
+    fun testCopy() {
+        val url = sampleUrl()
+        val destination = url.resolve("test")!!
+
+        /* POSITIVE TEST CASES */
+
+        // no preconditions, 201 Created, resulted in the creation of a new resource
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_CREATED))
+        var called = false
+        DavResource(httpClient, url).let { dav ->
+            dav.copy(destination, false) {
+                called = true
+            }
+            assertTrue(called)
+            assertEquals(destination, dav.location)
+        }
+
+        var rq = mockServer.takeRequest()
+        assertEquals("COPY", rq.method)
+        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(destination.toString(), rq.getHeader("Destination"))
+        assertNull(rq.getHeader("Overwrite"))
+
+        // no preconditions, 204 No content, resource successfully copied to a preexisting
+        // destination resource
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        called = false
+        DavResource(httpClient, url).let { dav ->
+            dav.copy(destination, true) {
+                called = true
+            }
+            assertTrue(called)
+            assertEquals(destination, dav.location)
+        }
+
+        rq = mockServer.takeRequest()
+        assertEquals("COPY", rq.method)
+        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(destination.toString(), rq.getHeader("Destination"))
+        assertEquals("F", rq.getHeader("Overwrite"))
+
+        /* NEGATIVE TEST CASES */
+
+        // 207 multi-status (e.g. errors on some of resources affected by
+        // the COPY prevented the operation from taking place)
+
+        mockServer.enqueue(MockResponse()
+                .setResponseCode(207))
+        try {
+            called = false
+            DavResource(httpClient, url).let { dav ->
+                dav.copy(destination, false) { called = true }
+                fail("Expected HttpException")
+            }
+        } catch(e: HttpException) {
+            assertFalse(called)
+        }
+    }
+
+    @Test
     fun testGet() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
