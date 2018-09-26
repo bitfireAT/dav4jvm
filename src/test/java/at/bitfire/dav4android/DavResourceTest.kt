@@ -152,7 +152,6 @@ class DavResourceTest {
                 called = true
             }
             assertTrue(called)
-            assertEquals(destination, dav.location)
         }
 
         var rq = mockServer.takeRequest()
@@ -171,7 +170,6 @@ class DavResourceTest {
                 called = true
             }
             assertTrue(called)
-            assertEquals(destination, dav.location)
         }
 
         rq = mockServer.takeRequest()
