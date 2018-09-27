@@ -28,4 +28,5 @@ Email: [play@bitfire.at](mailto:play@bitfire.at)
 ## Contributors
 
   * Ricki Hirner (initial contributor)
+  * David González Verdugo (dgonzalez@owncloud.com)
 
