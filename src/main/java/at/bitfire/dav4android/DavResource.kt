@@ -128,6 +128,43 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Sends a COPY request for this resource. Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param destination where the resource shall be copied to
+     * @param forceOverride whether resources are overwritten when they already exist in destination
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error
+     */
+    @Throws(IOException::class, HttpException::class, DavException::class)
+    fun copy(destination:HttpUrl, forceOverride:Boolean, callback: (response: Response) -> Unit) {
+        val requestBuilder = Request.Builder()
+                .method("COPY", null)
+                .header("Content-Length", "0")
+                .header("Destination", destination.toString())
+
+        if(forceOverride) requestBuilder.header("Overwrite", "F")
+
+        followRedirects {
+            requestBuilder.url(location)
+            httpClient.newCall(requestBuilder
+                    .build())
+                    .execute()
+        }.use{ response ->
+            checkStatus(response)
+
+            if (response.code() == 207)
+            /* Multiple resources were to be affected by the COPY, but errors on some
+            of them prevented the operation from taking place.
+            [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
+                throw HttpException(response)
+
+            callback(response)
+        }
+    }
+
+    /**
      * Sends a MKCOL request to this resource. Follows up to [MAX_REDIRECTS] redirects.
      *
      * @throws IOException on I/O error
