@@ -35,7 +35,6 @@ class BasicDigestAuthHandler(
 ): Authenticator, Interceptor {
 
     companion object {
-        private const val HEADER_AUTHENTICATE = "WWW-Authenticate"
         private const val HEADER_AUTHORIZATION = "Authorization"
 
         // cached digest parameters
@@ -55,8 +54,8 @@ class BasicDigestAuthHandler(
     }
 
     // cached authentication schemes
-    private var basicAuth: HttpUtils.AuthScheme? = null
-    private var digestAuth: HttpUtils.AuthScheme? = null
+    private var basicAuth: Challenge? = null
+    private var digestAuth: Challenge? = null
 
 
     fun authenticateRequest(request: Request, response: Response?): Request? {
@@ -73,31 +72,31 @@ class BasicDigestAuthHandler(
 
             if (basicAuth == null && digestAuth == null && request.isHttps) {
                 Constants.log.fine("Trying Basic auth preemptively")
-                basicAuth = HttpUtils.AuthScheme("Basic")
+                basicAuth = Challenge("Basic", "")
             }
 
         } else {
             // we're processing a 401 response
 
-            var newBasicAuth: HttpUtils.AuthScheme? = null
-            var newDigestAuth: HttpUtils.AuthScheme? = null
-            for (scheme in HttpUtils.parseWwwAuthenticate(response.headers(HEADER_AUTHENTICATE)))
+            var newBasicAuth: Challenge? = null
+            var newDigestAuth: Challenge? = null
+            for (challenge in response.challenges())
                 when {
-                    "Basic".equals(scheme.name, true) -> {
+                    "Basic".equals(challenge.scheme(), true) -> {
                         basicAuth?.let {
                             Constants.log.warning("Basic credentials didn't work last time -> aborting")
                             basicAuth = null
                             return null
                         }
-                        newBasicAuth = scheme
+                        newBasicAuth = challenge
                     }
-                    "Digest".equals(scheme.name, true) -> {
-                        if (digestAuth != null && !"true".equals(scheme.params["stale"], true)) {
+                    "Digest".equals(challenge.scheme(), true) -> {
+                        if (digestAuth != null && !"true".equals(challenge.authParams()["stale"], true)) {
                             Constants.log.warning("Digest credentials didn't work last time and server nonce has not expired -> aborting")
                             digestAuth = null
                             return null
                         }
-                        newDigestAuth = scheme
+                        newDigestAuth = challenge
                     }
                 }
 
@@ -132,16 +131,16 @@ class BasicDigestAuthHandler(
         return null
     }
 
-    fun digestRequest(request: Request, digest: HttpUtils.AuthScheme?): Request? {
+    fun digestRequest(request: Request, digest: Challenge?): Request? {
         if (digest == null)
             return null
 
-        val realm = digest.params["realm"]
-        val opaque = digest.params["opaque"]
-        val nonce = digest.params["nonce"]
+        val realm = digest.authParams()["realm"]
+        val opaque = digest.authParams()["opaque"]
+        val nonce = digest.authParams()["nonce"]
 
-        val algorithm = Algorithm.determine(digest.params["algorithm"])
-        val qop = Protection.selectFrom(digest.params["qop"])
+        val algorithm = Algorithm.determine(digest.authParams()["algorithm"])
+        val qop = Protection.selectFrom(digest.authParams()["qop"])
 
         // build response parameters
         var response: String? = null

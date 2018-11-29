@@ -31,6 +31,7 @@ object HttpUtils {
         return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
     }
 
+    @Deprecated("Use okhttp Challenge API")
     fun parseWwwAuthenticate(wwwAuths: List<String>): List<AuthScheme> {
         /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge
 
@@ -124,6 +125,7 @@ object HttpUtils {
     }
 
 
+    @Deprecated("Use okhttp Challenge API")
     class AuthScheme(
             val name: String
     ) {
