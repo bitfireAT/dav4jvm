@@ -51,7 +51,7 @@ android {
     }
 
     defaultConfig {
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 }
 
@@ -61,7 +61,7 @@ dependencies {
     api "com.squareup.okhttp3:okhttp:$okhttp_version"
 
     androidTestImplementation "com.squareup.okhttp3:mockwebserver:$okhttp_version"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
 
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
     testImplementation 'junit:junit:4.12'
