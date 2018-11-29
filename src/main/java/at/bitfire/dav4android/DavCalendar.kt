@@ -101,7 +101,8 @@ class DavCalendar @JvmOverloads constructor(
     }
 
     /**
-     * Sends a calendar-multiget REPORT to the resource.
+     * Sends a calendar-multiget REPORT to the resource. Received responses are sent
+     * to the callback, whether they are successful (2xx) or not.
      *
      * @param urls     list of iCalendar URLs to be requested
      * @param callback called for every WebDAV response XML element in the result
