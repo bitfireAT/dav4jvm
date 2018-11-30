@@ -98,9 +98,9 @@ open class DavException @JvmOverloads constructor(
                 if (httpResponse.body()?.source() != null) {
                     // response body has a source
 
-                    httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong())?.use { body ->
-                        body.contentType()?.let {
-                            if (isPlainText(it))
+                    httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
+                        body.contentType()?.let { mimeType ->
+                            if (isPlainText(mimeType))
                                 responseBody = body.string()
                         }
                     }

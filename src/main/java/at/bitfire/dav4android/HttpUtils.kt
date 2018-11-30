@@ -31,6 +31,7 @@ object HttpUtils {
         return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
     }
 
+    @Suppress("DEPRECATION")
     @Deprecated("Use okhttp Challenge API")
     fun parseWwwAuthenticate(wwwAuths: List<String>): List<AuthScheme> {
         /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge

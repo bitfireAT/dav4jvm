@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./gradlew -i check connectedCheck
+./gradlew -i check
 
 echo
 echo View lint report:
@@ -14,7 +14,3 @@ realpath build/reports/tests/debug/index.html
 echo -n file://
 realpath build/reports/tests/release/index.html
 
-echo
-echo "View connected unit test reports (debug):"
-echo -n file://
-realpath build/reports/androidTests/connected/index.html

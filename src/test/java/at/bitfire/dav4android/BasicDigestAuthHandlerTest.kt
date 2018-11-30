@@ -46,11 +46,12 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1)
 
         // construct WWW-Authenticate
-        val authScheme = HttpUtils.AuthScheme("Digest")
-        authScheme.params["realm"] = "testrealm@host.com"
-        authScheme.params["qop"] = "auth"
-        authScheme.params["nonce"] = "dcd98b7102dd2f0e8b11d0f600bfb0c093"
-        authScheme.params["opaque"] = "5ccc069c403ebaf9f0171e9517f40e41"
+        val authScheme = Challenge("Digest", mapOf(
+                Pair("realm", "testrealm@host.com"),
+                Pair("qop", "auth"),
+                Pair("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093"),
+                Pair("opaque", "5ccc069c403ebaf9f0171e9517f40e41")
+        ))
 
         val original = Request.Builder()
                 .get()
@@ -76,11 +77,12 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1)
 
         // example 1
-        var authScheme = HttpUtils.AuthScheme("Digest")
-        authScheme.params["realm"] = "Group-Office"
-        authScheme.params["qop"] = "auth"
-        authScheme.params["nonce"] = "56212407212c8"
-        authScheme.params["opaque"] = "df58bdff8cf60599c939187d0b5c54de"
+        var authScheme = Challenge("Digest", mapOf(
+                Pair("realm", "Group-Office"),
+                Pair("qop", "auth"),
+                Pair("nonce", "56212407212c8"),
+                Pair("opaque", "df58bdff8cf60599c939187d0b5c54de")
+        ))
 
         var original = Request.Builder()
                 .method("PROPFIND", null)
@@ -100,11 +102,12 @@ class BasicDigestAuthHandlerTest {
 
         // example 2
         authenticator = BasicDigestAuthHandler(null, "test", "test")
-        authScheme = HttpUtils.AuthScheme("digest")    // lower case
-        authScheme.params["nonce"] = "87c4c2aceed9abf30dd68c71"
-        authScheme.params["algorithm"] = "md5"          // note the (illegal) lower case!
-        authScheme.params["opaque"] = "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw=="
-        authScheme.params["realm"] = "ieddy.ru"
+        authScheme = Challenge("digest", mapOf(    // lower case
+                Pair("nonce", "87c4c2aceed9abf30dd68c71"),
+                Pair("algorithm", "md5"),
+                Pair("opaque", "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw=="),
+                Pair("realm", "ieddy.ru")
+        ))
         original = Request.Builder()
                 .method("OPTIONS", null)
                 .url("https://ieddy.ru/")
@@ -129,12 +132,13 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
-        val authScheme = HttpUtils.AuthScheme("Digest")
-        authScheme.params["realm"] = "MD5-sess Example"
-        authScheme.params["qop"] = "auth"
-        authScheme.params["algorithm"] = "MD5-sess"
-        authScheme.params["nonce"] = "dcd98b7102dd2f0e8b11d0f600bfb0c093"
-        authScheme.params["opaque"] = "5ccc069c403ebaf9f0171e9517f40e41"
+        val authScheme = Challenge("Digest", mapOf(
+                Pair("realm", "MD5-sess Example"),
+                Pair("qop", "auth"),
+                Pair("algorithm", "MD5-sess"),
+                Pair("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093"),
+                Pair("opaque", "5ccc069c403ebaf9f0171e9517f40e41")
+        ))
 
         /*  A1 = h("admin:MD5-sess Example:12345"):dcd98b7102dd2f0e8b11d0f600bfb0c093:hxk1lu63b6c7vhk =
                   4eaed818bc587129e73b39c8d3e8425a:dcd98b7102dd2f0e8b11d0f600bfb0c093:hxk1lu63b6c7vhk       a994ee9d33e2f077d3a6e13e882f6686
@@ -167,11 +171,12 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
-        val authScheme = HttpUtils.AuthScheme("Digest")
-        authScheme.params["realm"] = "AuthInt Example"
-        authScheme.params["qop"] = "auth-int"
-        authScheme.params["nonce"] = "367sj3265s5"
-        authScheme.params["opaque"] = "87aaxcval4gba36"
+        val authScheme = Challenge("Digest", mapOf(
+                Pair("realm", "AuthInt Example"),
+                Pair("qop", "auth-int"),
+                Pair("nonce", "367sj3265s5"),
+                Pair("opaque", "87aaxcval4gba36")
+        ))
 
         /*  A1 = admin:AuthInt Example:12345                            380dc3fc1305127cd2aa81ab68ef3f34
 
@@ -204,10 +209,11 @@ class BasicDigestAuthHandlerTest {
         val authenticator = BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife")
 
         // construct WWW-Authenticate
-        val authScheme = HttpUtils.AuthScheme("Digest")
-        authScheme.params["realm"] = "testrealm@host.com"
-        authScheme.params["nonce"] = "dcd98b7102dd2f0e8b11d0f600bfb0c093"
-        authScheme.params["opaque"] = "5ccc069c403ebaf9f0171e9517f40e41"
+        val authScheme = Challenge("Digest", mapOf(
+                Pair("realm", "testrealm@host.com"),
+                Pair("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093"),
+                Pair("opaque", "5ccc069c403ebaf9f0171e9517f40e41")
+        ))
 
         val original = Request.Builder()
                 .get()
@@ -235,17 +241,22 @@ class BasicDigestAuthHandlerTest {
                 .url("http://www.nowhere.org/dir/index.html")
                 .build()
 
-        val authScheme = HttpUtils.AuthScheme("Digest")
-        assertNull(authenticator.digestRequest(original, authScheme))
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf())))
 
-        authScheme.params["realm"] = "Group-Office"
-        assertNull(authenticator.digestRequest(original, authScheme))
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
+                Pair("realm", "Group-Office")
+        ))))
 
-        authScheme.params["qop"] = "auth"
-        assertNull(authenticator.digestRequest(original, authScheme))
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
+                Pair("realm", "Group-Office"),
+                Pair("qop", "auth")
+        ))))
 
-        authScheme.params["nonce"] = "56212407212c8"
-        assertNotNull(authenticator.digestRequest(original, authScheme))
+        assertNotNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
+                Pair("realm", "Group-Office"),
+                Pair("qop", "auth"),
+                Pair("nonce", "56212407212c8")
+        ))))
     }
 
     @Test

@@ -10,6 +10,7 @@ import okhttp3.HttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+@Suppress("DEPRECATION")
 class HttpUtilsTest {
 
     @Test
