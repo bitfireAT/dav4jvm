@@ -37,6 +37,17 @@ class Error(
             return names.map { Error(it) }
         }
 
+
+        // some pre-defined errors
+
+        val NEED_PRIVILEGES = Error(Property.Name(XmlUtils.NS_WEBDAV, "need-privileges"))
+        val VALID_SYNC_TOKEN = Error(Property.Name(XmlUtils.NS_WEBDAV, "valid-sync-token"))
+
     }
+
+    override fun equals(other: Any?) =
+            (other is Error) && other.name == name
+
+    override fun hashCode() = name.hashCode()
 
 }

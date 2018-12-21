@@ -350,6 +350,8 @@ open class DavResource @JvmOverloads constructor(
         throw when (code) {
             HttpURLConnection.HTTP_UNAUTHORIZED ->
                 if (response != null) UnauthorizedException(response) else UnauthorizedException(message)
+            HttpURLConnection.HTTP_FORBIDDEN ->
+                if (response != null) ForbiddenException(response) else ForbiddenException(message)
             HttpURLConnection.HTTP_NOT_FOUND ->
                 if (response != null) NotFoundException(response) else NotFoundException(message)
             HttpURLConnection.HTTP_CONFLICT ->
