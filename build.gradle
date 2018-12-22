@@ -33,8 +33,7 @@ android {
     buildToolsVersion '28.0.3'
 
     defaultConfig {
-        //noinspection MinSdkTooLow
-        minSdkVersion 9        // Android 2.3
+        minSdkVersion 14
         targetSdkVersion 28
 
         buildConfigField "String", "version_okhttp", "\"$okhttp_version\""
