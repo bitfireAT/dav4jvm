@@ -12,6 +12,6 @@ object Constants {
 
     var log = Logger.getLogger("dav4android")!!
 
-    const val okHttpVersion = BuildConfig.version_okhttp
+    const val okhttpVersion = BuildConfig.okhttpVersion
 
 }
