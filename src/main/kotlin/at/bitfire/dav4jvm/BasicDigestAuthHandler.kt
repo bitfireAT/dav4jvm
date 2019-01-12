@@ -12,7 +12,6 @@ import okio.Buffer
 import okio.ByteString
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -120,7 +119,7 @@ class BasicDigestAuthHandler(
                  So, UTF-8 encoding for credentials is compatible with all RFC 7617 servers and many,
                  but not all pre-RFC 7617 servers. */
                 return request.newBuilder()
-                        .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charset.forName("UTF-8")))
+                        .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charsets.UTF_8))
                         .build()
             }
 
