@@ -18,6 +18,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
+    api("com.squareup.okio:okio:2.+")
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.ogce:xpp3:${Libs.xpp3Version}")       // XmlPullParser
 

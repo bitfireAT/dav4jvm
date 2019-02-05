@@ -14,6 +14,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
+import okio.ByteString.Companion.toByteString
 
 /**
  * Handler to manage authentication against a given service (may be limited to one domain).
@@ -41,12 +42,12 @@ class BasicDigestAuthHandler(
         var nonceCount = AtomicInteger(1)
 
         fun quotedString(s: String) = "\"" + s.replace("\"", "\\\"") + "\""
-        fun h(data: String) = ByteString.of(ByteBuffer.wrap(data.toByteArray())).md5().hex()!!
+        fun h(data: String) = data.toByteArray().toByteString().md5().hex()
 
         fun h(body: RequestBody): String {
             val buffer = Buffer()
             body.writeTo(buffer)
-            return ByteString.of(ByteBuffer.wrap(buffer.readByteArray())).md5().hex()
+            return buffer.readByteArray().toByteString().md5().hex()
         }
 
         fun kd(secret: String, data: String) = h("$secret:$data")
