@@ -13,7 +13,8 @@ import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
         var supportsEvents: Boolean,
-        var supportsTasks: Boolean
+        var supportsTasks: Boolean,
+        var supportsJournal: Boolean
 ): Property {
 
     companion object {
@@ -31,7 +32,7 @@ data class SupportedCalendarComponentSet(
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
             */
-            val components = SupportedCalendarComponentSet(false, false)
+            val components = SupportedCalendarComponentSet(false, false, false)
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -41,11 +42,13 @@ data class SupportedCalendarComponentSet(
                         "allcomp" -> {
                             components.supportsEvents = true
                             components.supportsTasks = true
+                            components.supportsJournal = true
                         }
                         "comp" ->
                             when (parser.getAttributeValue(null, "name")?.toUpperCase()) {
                                 "VEVENT" -> components.supportsEvents = true
                                 "VTODO" -> components.supportsTasks = true
+                                "VJOURNAL" -> components.supportsJournal = true
                             }
                     }
                 }
