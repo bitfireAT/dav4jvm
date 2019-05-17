@@ -11,7 +11,7 @@ object Libs {
 }
 
 plugins {
-    kotlin("jvm") version "1.3.30"
+    kotlin("jvm") version "1.3.31"
 
     id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
     id("org.jetbrains.dokka") version "0.9.17"
