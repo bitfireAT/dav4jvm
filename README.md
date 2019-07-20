@@ -1,10 +1,12 @@
 
 # dav4jvm
 
-dav4jvm is a WebDAV/CalDAV/CardDAV library for JVM (Java/Kotlin). It was
-developed for [DAVx⁵](https://www.davx5.com) initially.
+dav4jvm is a WebDAV/CalDAV/CardDAV library for JVM (Java/Kotlin). It has
+been developed for [DAVx⁵](https://www.davx5.com) initially.
 
 Repository: https://gitlab.com/bitfireAT/dav4jvm/
+
+Discussion: https://forums.bitfire.at/category/18/libraries
 
 Generated KDoc: https://bitfireAT.gitlab.io/dav4jvm/dokka/dav4jvm/
 
@@ -13,7 +15,7 @@ Generated KDoc: https://bitfireAT.gitlab.io/dav4jvm/dokka/dav4jvm/
 
 dav4jvm is licensed under [Mozilla Public License, v. 2.0](LICENSE).
 
-For questions, suggestions etc. use this forum (tag the post with "dav4jvm"):
+For questions, suggestions etc. use this forum:
 https://forums.bitfire.at/category/18/libraries
 
 If you want to contribute, please work in your own repository and then
