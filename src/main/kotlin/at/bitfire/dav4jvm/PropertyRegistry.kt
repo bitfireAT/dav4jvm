@@ -17,15 +17,31 @@ object PropertyRegistry {
 
     init {
         Constants.log.info("Registering DAV property factories")
-        for (factory in ServiceLoader.load(PropertyFactory::class.java)) {
-            Constants.log.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
-            register(factory)
-        }
+        register(ServiceLoader.load(PropertyFactory::class.java))
     }
 
 
-    private fun register(factory: PropertyFactory) {
+    /**
+     * Registers a property factory, so that objects for all WebDAV properties which are handled
+     * by this factory can be created.
+     *
+     * @param factory property factory to be registered
+     */
+    fun register(factory: PropertyFactory) {
+        Constants.log.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
         factories[factory.getName()] = factory
+    }
+
+    /**
+     * Registers some property factories, so that objects for all WebDAV properties which are handled
+     * by these factories can be created.
+
+     * @param factories property factories to be registered
+     */
+    fun register(factories: Iterable<PropertyFactory>) {
+        factories.forEach {
+            register(it)
+        }
     }
 
     fun create(name: Property.Name, parser: XmlPullParser) =
