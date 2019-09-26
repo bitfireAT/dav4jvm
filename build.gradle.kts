@@ -10,7 +10,7 @@ object Libs {
     const val xpp3Version = "1.1.6"
 }
 
-group="com.gitlab.BitlabAT"
+group="com.gitlab.bitfireAT"
 
 plugins {
     kotlin("jvm") version "1.3.50"
