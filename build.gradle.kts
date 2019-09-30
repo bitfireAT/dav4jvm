@@ -12,6 +12,10 @@ object Libs {
 
 group="com.gitlab.bitfireAT"
 
+repositories {
+    jcenter()
+}
+
 plugins {
     kotlin("jvm") version "1.3.50"
 
@@ -20,17 +24,14 @@ plugins {
     maven
 }
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     implementation(kotlin("stdlib"))
 
-    api("com.squareup.okio:okio:2.+")       // use Kotlin-friendly okhttp 2.x
+    // use Kotlin-friendly okhttp 2.x
+    implementation("com.squareup.okio:okio:2.+")
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
 
-    implementation("org.ogce:xpp3:${Libs.xpp3Version}")
+    api("org.ogce:xpp3:${Libs.xpp3Version}")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
 }
