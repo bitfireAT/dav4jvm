@@ -30,6 +30,7 @@ tasks {
         configuration {
             sourceLink {
                 url = "https://gitlab.com/bitfireAT/dav4jvm/tree/master/"
+                lineSuffix = "#L"
             }
         }
     }
