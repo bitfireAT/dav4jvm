@@ -1,3 +1,4 @@
+import org.jetbrains.dokka.gradle.DokkaTask
 
 object Libs {
     // okhttp HTTP library
@@ -20,8 +21,18 @@ plugins {
     kotlin("jvm") version "1.3.50"
 
     id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
-    id("org.jetbrains.dokka") version "0.9.18"
+    id("org.jetbrains.dokka") version "0.10.0"
     maven
+}
+
+tasks {
+    val dokka by getting(DokkaTask::class) {
+        configuration {
+            sourceLink {
+                url = "https://gitlab.com/bitfireAT/dav4jvm/tree/master/"
+            }
+        }
+    }
 }
 
 dependencies {
