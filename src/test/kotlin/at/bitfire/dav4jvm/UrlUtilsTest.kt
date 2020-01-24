@@ -18,6 +18,7 @@ class UrlUtilsTest {
         assertTrue(UrlUtils.equals(HttpUrl.parse("http://host:80/resource")!!, HttpUrl.parse("http://host/resource")!!))
         assertTrue(UrlUtils.equals(HttpUrl.parse("https://HOST:443/resource")!!, HttpUrl.parse("https://host/resource")!!))
         assertTrue(UrlUtils.equals(HttpUrl.parse("https://host:443/my@dav/")!!, HttpUrl.parse("https://host/my%40dav/")!!))
+        assertTrue(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host/resource#frag1")!!))
 
         assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host/resource/")!!))
         assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host:81/resource")!!))

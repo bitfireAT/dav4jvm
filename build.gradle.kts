@@ -5,7 +5,7 @@ object Libs {
     // We'll use 3.12 for now, but this branch won't receive feature updates anymore. Security
     // updates are limited to Dec 2020, so we'll have to update to 3.13 until then. On Android,
     // using 3.13 will raise the required SDK level to Android 5.
-    const val okhttpVersion = "3.12.6"
+    const val okhttpVersion = "3.12.8"
 
     // XmlPullParser library
     const val xpp3Version = "1.1.6"
@@ -18,7 +18,7 @@ repositories {
 }
 
 plugins {
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
 
     id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
     id("org.jetbrains.dokka") version "0.10.0"
