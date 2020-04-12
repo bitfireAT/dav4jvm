@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.property.SyncToken
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -83,7 +83,7 @@ open class DavCollection @JvmOverloads constructor(
         followRedirects {
             httpClient.newCall(Request.Builder()
                     .url(location)
-                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "0")
                     .build()).execute()
         }.use {

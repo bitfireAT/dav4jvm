@@ -40,8 +40,8 @@ open class DavException @JvmOverloads constructor(
         const val MAX_EXCERPT_SIZE = 10*1024   // don't dump more than 20 kB
 
         fun isPlainText(type: MediaType) =
-                type.type() == "text" ||
-                (type.type() == "application" && type.subtype() in arrayOf("html", "xml"))
+                type.type == "text" ||
+                (type.type == "application" && type.subtype in arrayOf("html", "xml"))
 
     }
 
@@ -75,9 +75,9 @@ open class DavException @JvmOverloads constructor(
             response = httpResponse.toString()
 
             try {
-                request = httpResponse.request().toString()
+                request = httpResponse.request.toString()
 
-                httpResponse.request().body()?.let { body ->
+                httpResponse.request.body?.let { body ->
                     body.contentType()?.let {
                         if (isPlainText(it)) {
                             val buffer = Buffer()
@@ -95,7 +95,7 @@ open class DavException @JvmOverloads constructor(
 
             try {
                 // save response body excerpt
-                if (httpResponse.body()?.source() != null) {
+                if (httpResponse.body?.source() != null) {
                     // response body has a source
 
                     httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
@@ -105,9 +105,9 @@ open class DavException @JvmOverloads constructor(
                         }
                     }
 
-                    httpResponse.body()?.use { body ->
+                    httpResponse.body?.use { body ->
                         body.contentType()?.let {
-                            if (it.type() in arrayOf("application", "text") && it.subtype() == "xml") {
+                            if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
                                 // look for precondition/postcondition XML elements
                                 try {
                                     val parser = XmlUtils.newPullParser()
@@ -131,7 +131,7 @@ open class DavException @JvmOverloads constructor(
                 Constants.log.log(Level.WARNING, "Couldn't read HTTP response", e)
                 responseBody = "Couldn't read HTTP response: ${e.message}"
             } finally {
-                httpResponse.body()?.close()
+                httpResponse.body?.close()
             }
         } else
             response = null

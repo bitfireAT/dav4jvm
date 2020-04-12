@@ -6,11 +6,7 @@
 
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.Constants
-import at.bitfire.dav4jvm.Property
-import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
-import okhttp3.internal.http.HttpDate
+import at.bitfire.dav4jvm.*
 import org.xmlpull.v1.XmlPullParser
 
 data class GetLastModified(
@@ -30,7 +26,7 @@ data class GetLastModified(
         override fun create(parser: XmlPullParser): GetLastModified? {
             // <!ELEMENT getlastmodified (#PCDATA) >
             XmlUtils.readText(parser)?.let { rawDate ->
-                val date = HttpDate.parse(rawDate)
+                val date = HttpUtils.parseDate(rawDate)
                 if (date != null)
                     return GetLastModified(date.time)
                 else

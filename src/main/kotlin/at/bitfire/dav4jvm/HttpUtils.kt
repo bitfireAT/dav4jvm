@@ -8,12 +8,16 @@ package at.bitfire.dav4jvm
 
 import okhttp3.HttpUrl
 import okhttp3.Response
+import org.apache.commons.lang3.time.DateUtils
+import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.util.*
-import java.util.regex.Pattern
+
 
 object HttpUtils {
 
-    private val authSchemeWithParam = Pattern.compile("^([^ \"]+) +(.*)$")
+    const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+    val httpDateFormat = SimpleDateFormat(httpDateFormatStr)
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
@@ -22,7 +26,7 @@ object HttpUtils {
      *         (i.e. the resource is a collection).
      */
     fun fileName(url: HttpUrl): String {
-        val pathSegments = url.pathSegments()
+        val pathSegments = url.pathSegments
         return pathSegments[pathSegments.size - 1]
     }
 
@@ -31,136 +35,47 @@ object HttpUtils {
         return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
     }
 
-    @Suppress("DEPRECATION")
-    @Deprecated("Use okhttp Challenge API")
-    fun parseWwwAuthenticate(wwwAuths: List<String>): List<AuthScheme> {
-        /* WWW-Authenticate  = "WWW-Authenticate" ":" 1#challenge
 
-           challenge      = auth-scheme 1*SP 1#auth-param
-           auth-scheme    = token
-           auth-param     = token "=" ( token | quoted-string )
+    /**
+     * Formats a date for use in HTTP headers using [httpDateFormat].
+     *
+     * @param date date to be formatted
+     * @return date in HTTP-date format
+     */
+    fun formatDate(date: Date): String = httpDateFormat.format(date)
 
-           We call the auth-param tokens: <name>=<value>
-
-           token          = 1*<any CHAR except CTLs or separators>
-           separators     = "(" | ")" | "<" | ">" | "@"
-                          | "," | ";" | ":" | "\" | <">
-                          | "/" | "[" | "]" | "?" | "="
-                          | "{" | "}" | SP | HT
-
-           quoted-string  = ( <"> *(qdtext | quoted-pair ) <"> )
-           qdtext         = <any TEXT except <">>
-           quoted-pair    = "\" CHAR
-        */
-
-        val schemes = LinkedList<AuthScheme>()
-        for (wwwAuth in wwwAuths) {
-            // Step 1: tokenize by ',', but take into account that auth-param values may contain quoted-pair values with ',' in it (these ',' have to be ignored)
-            // Auth-scheme and auth-param names are tokens and thus must not contain the '"' separator.
-            val tokens = LinkedList<String>()
-            var token = StringBuilder()
-
-            var inQuotes = false
-            val len = wwwAuth.length
-            var i = 0
-            while (i < len) {
-                var c = wwwAuth[i]
-
-                var literal = false
-                if (c == '"')
-                    inQuotes = !inQuotes
-                else if (inQuotes && c == '\\' && i + 1 < len) {
-                    token.append(c)
-
-                    c = wwwAuth[++i]
-                    literal = true
-                }
-
-                if (c == ',' && !inQuotes && !literal) {
-                    tokens.add(token.toString())
-                    token = StringBuilder()
-                } else
-                    token.append(c)
-
-                i++
-            }
-            if (token.isNotEmpty())
-                tokens.add(token.toString())
-
-            /* Step 2: determine token type after trimming:
-                    "<authSchemes> <auth-param>"        new auth scheme + 1 param
-                    "<auth-param>"                      add param to previous auth scheme
-                    Take into account that the second type may contain quoted spaces.
-                    The auth scheme name must not contain separators (including quotes).
-                 */
-            var scheme: AuthScheme? = null
-            for (s in tokens) {
-                @Suppress("NAME_SHADOWING")
-                val s: String = s.trim()
-
-                val matcher = authSchemeWithParam.matcher(s)
-                when {
-                    matcher.matches() -> {
-                        // auth-scheme with auth-param
-                        scheme = AuthScheme(matcher.group(1))
-                        schemes.add(scheme)
-                        scheme.addRawParam(matcher.group(2))
-                    }
-                    scheme != null ->
-                        // if there was an auth-scheme before, this must be an auth-param
-                        scheme.addRawParam(s)
-                    else -> {
-                        // there was not auth-scheme before, so this must be an auth-scheme
-                        scheme = AuthScheme(s)
-                        schemes.add(scheme)
-                    }
-                }
-            }
-        }
-
-        Constants.log.finer("Server authentication schemes: ")
-        for (scheme in schemes)
-            Constants.log.finer("  - $scheme")
-
-        return schemes
-    }
-
-
-    @Deprecated("Use okhttp Challenge API")
-    class AuthScheme(
-            val name: String
-    ) {
-        private val nameValue = Pattern.compile("^([^=]+)=(.*)$")!!
-
-        /** Map (name -> value) authentication parameters. Names are always lower-case. */
-        val params = mutableMapOf<String, String>()
-        val unnamedParams = LinkedList<String>()
-
-        fun addRawParam(authParam: String) {
-            val m = nameValue.matcher(authParam)
-            if (m.matches()) {
-                val name = m.group(1)
-                var value = m.group(2)
-                val len = value.length
-                if (value[0] == '"' && value[len - 1] == '"')
-                    // quoted-string
-                    value = value
-                            .substring(1, len - 1)
-                            .replace("\\\"", "\"")
-                params[name.toLowerCase()] = value
-            } else
-                unnamedParams.add(authParam)
-        }
-
-        override fun toString(): String {
-            val s = StringBuilder()
-            s.append("$name(")
-            for ((name, value) in params)
-                s.append("$name=[$value],")
-            s.append(")")
-            return s.toString()
-        }
-
+    /**
+     * Parses a HTTP-date.
+     *
+     * @param dateStr date with format specified by RFC 7231 section 7.1.1.1
+     * or in one of the obsolete formats (copied from okhttp internal date-parsing class)
+     *
+     * @return date, or null if date could not be parsed
+     */
+    fun parseDate(dateStr: String) = try {
+        DateUtils.parseDate(dateStr,
+                httpDateFormatStr,
+                "EEE, dd MMM yyyy HH:mm:ss zzz", // RFC 822, updated by RFC 1123 with any TZ
+                "EEEE, dd-MMM-yy HH:mm:ss zzz", // RFC 850, obsoleted by RFC 1036 with any TZ.
+                "EEE MMM d HH:mm:ss yyyy", // ANSI C's asctime() format
+                // Alternative formats.
+                "EEE, dd-MMM-yyyy HH:mm:ss z",
+                "EEE, dd-MMM-yyyy HH-mm-ss z",
+                "EEE, dd MMM yy HH:mm:ss z",
+                "EEE dd-MMM-yyyy HH:mm:ss z",
+                "EEE dd MMM yyyy HH:mm:ss z",
+                "EEE dd-MMM-yyyy HH-mm-ss z",
+                "EEE dd-MMM-yy HH:mm:ss z",
+                "EEE dd MMM yy HH:mm:ss z",
+                "EEE,dd-MMM-yy HH:mm:ss z",
+                "EEE,dd-MMM-yyyy HH:mm:ss z",
+                "EEE, dd-MM-yyyy HH:mm:ss z",
+                /* RI bug 6641315 claims a cookie of this format was once served by www.yahoo.com */
+                "EEE MMM d yyyy HH:mm:ss z"
+        )
+    } catch (e: ParseException) {
+        Constants.log.warning("Couldn't parse date: $dateStr, ignoring")
+        null
     }
 
 }

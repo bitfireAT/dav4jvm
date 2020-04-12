@@ -6,7 +6,12 @@
 
 package at.bitfire.dav4jvm.exception
 
-import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -17,7 +22,7 @@ class HttpExceptionTest {
     @Test
     fun testHttpFormatting() {
         val request = Request.Builder()
-                .post(RequestBody.create(MediaType.parse("text/something"), "REQUEST\nBODY"))
+                .post("REQUEST\nBODY".toRequestBody("text/something".toMediaType()))
                 .url("http://example.com")
                 .build()
 
@@ -26,7 +31,7 @@ class HttpExceptionTest {
                 .protocol(Protocol.HTTP_1_1)
                 .code(500)
                 .message(responseMessage)
-                .body(ResponseBody.create(MediaType.parse("text/something-other"), "SERVER\r\nRESPONSE"))
+                .body("SERVER\r\nRESPONSE".toResponseBody("text/something-other".toMediaType()))
                 .build()
         val e = HttpException(response)
         assertTrue(e.message!!.contains("500"))

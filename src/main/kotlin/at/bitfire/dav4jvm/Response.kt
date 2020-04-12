@@ -11,6 +11,7 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.Constants.log
 import at.bitfire.dav4jvm.property.ResourceType
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -145,7 +146,7 @@ data class Response(
                             "error" ->
                                 error = Error.parseError(parser)
                             "location" ->
-                                newLocation = HttpUrl.parse(parser.nextText())
+                                newLocation = parser.nextText().toHttpUrlOrNull()
                         }
                 eventType = parser.next()
             }
@@ -173,9 +174,9 @@ data class Response(
                 UrlUtils.equals(UrlUtils.omitTrailingSlash(href!!), UrlUtils.omitTrailingSlash(location)) ->
                     HrefRelation.SELF
                 else -> {
-                    if (location.scheme() == href!!.scheme() && location.host() == href!!.host() && location.port() == href!!.port()) {
-                        val locationSegments = location.pathSegments()
-                        val hrefSegments = href!!.pathSegments()
+                    if (location.scheme == href!!.scheme && location.host == href!!.host && location.port == href!!.port) {
+                        val locationSegments = location.pathSegments
+                        val hrefSegments = href!!.pathSegments
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size

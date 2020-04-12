@@ -8,7 +8,6 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.Constants.log
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser

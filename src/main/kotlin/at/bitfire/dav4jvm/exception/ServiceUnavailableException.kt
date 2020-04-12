@@ -7,8 +7,8 @@
 package at.bitfire.dav4jvm.exception
 
 import at.bitfire.dav4jvm.Constants
+import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Response
-import okhttp3.internal.http.HttpDate
 import java.net.HttpURLConnection
 import java.util.*
 
@@ -23,7 +23,7 @@ class ServiceUnavailableException: HttpException {
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
         response.header("Retry-After")?.let {
-            retryAfter = HttpDate.parse(it) ?:
+            retryAfter = HttpUtils.parseDate(it) ?:
                     // not a HTTP-date, must be delta-seconds
                     try {
                         val seconds = Integer.parseInt(it)

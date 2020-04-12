@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -14,17 +14,17 @@ class UrlUtilsTest {
 
     @Test
     fun testEquals() {
-        assertTrue(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host/resource")!!))
-        assertTrue(UrlUtils.equals(HttpUrl.parse("http://host:80/resource")!!, HttpUrl.parse("http://host/resource")!!))
-        assertTrue(UrlUtils.equals(HttpUrl.parse("https://HOST:443/resource")!!, HttpUrl.parse("https://host/resource")!!))
-        assertTrue(UrlUtils.equals(HttpUrl.parse("https://host:443/my@dav/")!!, HttpUrl.parse("https://host/my%40dav/")!!))
-        assertTrue(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host/resource#frag1")!!))
+        assertTrue(UrlUtils.equals("http://host/resource".toHttpUrlOrNull()!!, "http://host/resource".toHttpUrlOrNull()!!))
+        assertTrue(UrlUtils.equals("http://host:80/resource".toHttpUrlOrNull()!!, "http://host/resource".toHttpUrlOrNull()!!))
+        assertTrue(UrlUtils.equals("https://HOST:443/resource".toHttpUrlOrNull()!!, "https://host/resource".toHttpUrlOrNull()!!))
+        assertTrue(UrlUtils.equals("https://host:443/my@dav/".toHttpUrlOrNull()!!, "https://host/my%40dav/".toHttpUrlOrNull()!!))
+        assertTrue(UrlUtils.equals("http://host/resource".toHttpUrlOrNull()!!, "http://host/resource#frag1".toHttpUrlOrNull()!!))
 
         // should work, but currently doesn't (see MR #5)
         // assertTrue(UrlUtils.equals(HttpUrl.parse("https://host/%5bresource%5d/")!!, HttpUrl.parse("https://host/[resource]/")!!))
 
-        assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host/resource/")!!))
-        assertFalse(UrlUtils.equals(HttpUrl.parse("http://host/resource")!!, HttpUrl.parse("http://host:81/resource")!!))
+        assertFalse(UrlUtils.equals("http://host/resource".toHttpUrlOrNull()!!, "http://host/resource/".toHttpUrlOrNull()!!))
+        assertFalse(UrlUtils.equals("http://host/resource".toHttpUrlOrNull()!!, "http://host:81/resource".toHttpUrlOrNull()!!))
     }
 
     @Test
@@ -45,14 +45,14 @@ class UrlUtilsTest {
 
     @Test
     fun testOmitTrailingSlash() {
-        assertEquals(HttpUrl.parse("http://host/resource")!!, UrlUtils.omitTrailingSlash(HttpUrl.parse("http://host/resource")!!))
-        assertEquals(HttpUrl.parse("http://host/resource")!!, UrlUtils.omitTrailingSlash(HttpUrl.parse("http://host/resource/")!!))
+        assertEquals("http://host/resource".toHttpUrlOrNull()!!, UrlUtils.omitTrailingSlash("http://host/resource".toHttpUrlOrNull()!!))
+        assertEquals("http://host/resource".toHttpUrlOrNull()!!, UrlUtils.omitTrailingSlash("http://host/resource/".toHttpUrlOrNull()!!))
     }
 
     @Test
     fun testWithTrailingSlash() {
-        assertEquals(HttpUrl.parse("http://host/resource/")!!, UrlUtils.withTrailingSlash(HttpUrl.parse("http://host/resource")!!))
-        assertEquals(HttpUrl.parse("http://host/resource/")!!, UrlUtils.withTrailingSlash(HttpUrl.parse("http://host/resource/")!!))
+        assertEquals("http://host/resource/".toHttpUrlOrNull()!!, UrlUtils.withTrailingSlash("http://host/resource".toHttpUrlOrNull()!!))
+        assertEquals("http://host/resource/".toHttpUrlOrNull()!!, UrlUtils.withTrailingSlash("http://host/resource/".toHttpUrlOrNull()!!))
     }
 
 }

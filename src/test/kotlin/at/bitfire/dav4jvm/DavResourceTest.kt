@@ -13,9 +13,9 @@ import at.bitfire.dav4jvm.property.DisplayName
 import at.bitfire.dav4jvm.property.GetContentType
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ResourceType
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -96,7 +96,7 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
         assertNull(rq.getHeader("Overwrite"))
 
@@ -114,7 +114,7 @@ class DavResourceTest {
 
         rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
         assertEquals("F", rq.getHeader("Overwrite"))
 
@@ -156,7 +156,7 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("COPY", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
         assertNull(rq.getHeader("Overwrite"))
 
@@ -174,7 +174,7 @@ class DavResourceTest {
 
         rq = mockServer.takeRequest()
         assertEquals("COPY", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
         assertEquals("F", rq.getHeader("Overwrite"))
 
@@ -212,16 +212,16 @@ class DavResourceTest {
         var called = false
         dav.get("*/*") { response ->
             called = true
-            assertEquals(sampleText, response.body()!!.string())
+            assertEquals(sampleText, response.body!!.string())
 
             assertEquals("My Weak ETag", GetETag.fromResponse(response)?.eTag)
-            assertEquals("application/x-test-result", GetContentType(response.body()!!.contentType()!!).type)
+            assertEquals("application/x-test-result", GetContentType(response.body!!.contentType()!!).type)
         }
         assertTrue(called)
 
         var rq = mockServer.takeRequest()
         assertEquals("GET", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertEquals("*/*", rq.getHeader("Accept"))
 
         // 302 Moved Temporarily + 200 OK
@@ -236,7 +236,7 @@ class DavResourceTest {
         called = false
         dav.get("*/*") { response ->
             called = true
-            assertEquals(sampleText, response.body()!!.string())
+            assertEquals(sampleText, response.body!!.string())
             assertEquals("StrongETag", GetETag(response.header("ETag")).eTag)
         }
         assertTrue(called)
@@ -270,16 +270,16 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_CREATED)
                 .setHeader("ETag", "W/\"Weak PUT ETag\""))
         var called = false
-        dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, false) { response ->
+        dav.put(sampleText.toRequestBody("text/plain".toMediaType()), null, false) { response ->
             called = true
             assertEquals("Weak PUT ETag", GetETag.fromResponse(response)!!.eTag)
-            assertEquals(response.request().url(), dav.location)
+            assertEquals(response.request.url, dav.location)
         }
         assertTrue(called)
 
         var rq = mockServer.takeRequest()
         assertEquals("PUT", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertNull(rq.getHeader("If-Match"))
         assertNull(rq.getHeader("If-None-Match"))
 
@@ -290,9 +290,9 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
         called = false
-        dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), null, true) { response ->
+        dav.put(sampleText.toRequestBody("text/plain".toMediaType()), null, true) { response ->
             called = true
-            assertEquals(url.resolve("/target"), response.request().url())
+            assertEquals(url.resolve("/target"), response.request.url)
             assertNull("Weak PUT ETag", GetETag.fromResponse(response)?.eTag)
         }
         assertTrue(called)
@@ -307,7 +307,7 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_PRECON_FAILED))
         called = false
         try {
-            dav.put(RequestBody.create(MediaType.parse("text/plain"), sampleText), "ExistingETag", false) {
+            dav.put(sampleText.toRequestBody("text/plain".toMediaType()), "ExistingETag", false) {
                 called = true
             }
             fail("Expected PreconditionFailedException")
@@ -336,7 +336,7 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("DELETE", rq.method)
-        assertEquals(url.encodedPath(), rq.path)
+        assertEquals(url.encodedPath, rq.path)
         assertNull(rq.getHeader("If-Match"))
 
         // precondition: If-Match, 200 OK

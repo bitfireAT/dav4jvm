@@ -9,12 +9,10 @@ package at.bitfire.dav4jvm
 import okhttp3.*
 import okhttp3.Response
 import okio.Buffer
-import okio.ByteString
+import okio.ByteString.Companion.toByteString
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import okio.ByteString.Companion.toByteString
 
 /**
  * Handler to manage authentication against a given service (may be limited to one domain).
@@ -60,7 +58,7 @@ class BasicDigestAuthHandler(
 
     fun authenticateRequest(request: Request, response: Response?): Request? {
         domain?.let {
-            val host = request.url().host()
+            val host = request.url.host
             if (!domain.equals(UrlUtils.hostToDomain(host), true)) {
                 Constants.log.warning("Not authenticating against $host because it doesn't belong to $domain")
                 return null
@@ -82,7 +80,7 @@ class BasicDigestAuthHandler(
             var newDigestAuth: Challenge? = null
             for (challenge in response.challenges())
                 when {
-                    "Basic".equals(challenge.scheme(), true) -> {
+                    "Basic".equals(challenge.scheme, true) -> {
                         basicAuth?.let {
                             Constants.log.warning("Basic credentials didn't work last time -> aborting")
                             basicAuth = null
@@ -90,8 +88,8 @@ class BasicDigestAuthHandler(
                         }
                         newBasicAuth = challenge
                     }
-                    "Digest".equals(challenge.scheme(), true) -> {
-                        if (digestAuth != null && !"true".equals(challenge.authParams()["stale"], true)) {
+                    "Digest".equals(challenge.scheme, true) -> {
+                        if (digestAuth != null && !"true".equals(challenge.authParams["stale"], true)) {
                             Constants.log.warning("Digest credentials didn't work last time and server nonce has not expired -> aborting")
                             digestAuth = null
                             return null
@@ -107,12 +105,12 @@ class BasicDigestAuthHandler(
         // we MUST prefer Digest auth [https://tools.ietf.org/html/rfc2617#section-4.6]
         when {
             digestAuth != null -> {
-                Constants.log.fine("Adding Digest authorization request for ${request.url()}")
+                Constants.log.fine("Adding Digest authorization request for ${request.url}")
                 return digestRequest(request, digestAuth)
             }
 
             basicAuth != null -> {
-                Constants.log.fine("Adding Basic authorization header for ${request.url()}")
+                Constants.log.fine("Adding Basic authorization header for ${request.url}")
 
                 /* In RFC 2617 (obsolete), there was no encoding for credentials defined, although
                  one can interpret it as "use ISO-8859-1 encoding". This has been clarified by RFC 7617,
@@ -135,12 +133,12 @@ class BasicDigestAuthHandler(
         if (digest == null)
             return null
 
-        val realm = digest.authParams()["realm"]
-        val opaque = digest.authParams()["opaque"]
-        val nonce = digest.authParams()["nonce"]
+        val realm = digest.authParams["realm"]
+        val opaque = digest.authParams["opaque"]
+        val nonce = digest.authParams["nonce"]
 
-        val algorithm = Algorithm.determine(digest.authParams()["algorithm"])
-        val qop = Protection.selectFrom(digest.authParams()["qop"])
+        val algorithm = Algorithm.determine(digest.authParams["algorithm"])
+        val qop = Protection.selectFrom(digest.authParams["qop"])
 
         // build response parameters
         var response: String? = null
@@ -165,8 +163,8 @@ class BasicDigestAuthHandler(
         if (algorithm != null)
             params.add("algorithm=${quotedString(algorithm.algorithm)}")
 
-        val method = request.method()
-        val digestURI = request.url().encodedPath()
+        val method = request.method
+        val digestURI = request.url.encodedPath
         params.add("uri=${quotedString(digestURI)}")
 
         if (qop != null) {
@@ -192,7 +190,7 @@ class BasicDigestAuthHandler(
                     "$method:$digestURI"
                 Protection.AuthInt -> {
                     try {
-                        val body = request.body()
+                        val body = request.body
                         "$method:$digestURI:" + (if (body != null) h(body) else h(""))
                     } catch(e: IOException) {
                         Constants.log.warning("Couldn't get entity-body for hash calculation")
@@ -235,10 +233,10 @@ class BasicDigestAuthHandler(
         companion object {
             fun determine(paramValue: String?): Algorithm? {
                 return when {
-                    paramValue == null || Algorithm.MD5.algorithm.equals(paramValue, true) ->
-                        Algorithm.MD5
-                    Algorithm.MD5_SESSION.algorithm.equals(paramValue, true) ->
-                        Algorithm.MD5_SESSION
+                    paramValue == null || MD5.algorithm.equals(paramValue, true) ->
+                        MD5
+                    MD5_SESSION.algorithm.equals(paramValue, true) ->
+                        MD5_SESSION
                     else -> {
                         Constants.log.warning("Ignoring unknown hash algorithm: $paramValue")
                         null
@@ -278,7 +276,7 @@ class BasicDigestAuthHandler(
 
 
     override fun authenticate(route: Route?, response: Response) =
-            authenticateRequest(response.request(), response)
+            authenticateRequest(response.request, response)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()

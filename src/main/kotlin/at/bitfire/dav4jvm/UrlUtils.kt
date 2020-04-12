@@ -36,8 +36,8 @@ object UrlUtils {
             return true
 
         // drop #fragment parts and convert to URI
-        val uri1 = url1.newBuilder().fragment(null).build().uri()
-        val uri2 = url2.newBuilder().fragment(null).build().uri()
+        val uri1 = url1.newBuilder().fragment(null).build().toUri()
+        val uri2 = url2.newBuilder().fragment(null).build().toUri()
 
         return try {
             val decoded1 = URI(uri1.scheme, uri1.schemeSpecificPart, uri1.fragment)
@@ -80,8 +80,8 @@ object UrlUtils {
      * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
      */
     fun omitTrailingSlash(url: HttpUrl): HttpUrl {
-        val idxLast = url.pathSize () - 1
-        val hasTrailingSlash = url.pathSegments()[idxLast] == ""
+        val idxLast = url.pathSize - 1
+        val hasTrailingSlash = url.pathSegments[idxLast] == ""
 
         return if (hasTrailingSlash)
             url.newBuilder().removePathSegment(idxLast).build()
@@ -97,8 +97,8 @@ object UrlUtils {
      * @return URL with trailing slash, e.g. `http://host/test1/`
      */
     fun withTrailingSlash(url: HttpUrl): HttpUrl {
-        val idxLast = url.pathSize() - 1
-        val hasTrailingSlash = url.pathSegments()[idxLast] == ""
+        val idxLast = url.pathSize - 1
+        val hasTrailingSlash = url.pathSegments[idxLast] == ""
 
         return if (hasTrailingSlash)
             url

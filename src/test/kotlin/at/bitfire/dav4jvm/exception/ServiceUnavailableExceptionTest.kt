@@ -6,13 +6,14 @@
 
 package at.bitfire.dav4jvm.exception
 
+import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.internal.http.HttpDate
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.*
+import kotlin.math.abs
 
 class ServiceUnavailableExceptionTest {
 
@@ -40,7 +41,7 @@ class ServiceUnavailableExceptionTest {
         val cal = Calendar.getInstance()
         cal.add(Calendar.MINUTE, 30)
         response = response.newBuilder()
-                .header("Retry-After", HttpDate.format(cal.time))
+                .header("Retry-After", HttpUtils.formatDate(cal.time))
                 .build()
         e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
@@ -52,7 +53,7 @@ class ServiceUnavailableExceptionTest {
         val msCheck = d.time
         val msShouldBe = Date().time + seconds*1000
         // assume max. 5 seconds difference for test running
-        return Math.abs(msCheck - msShouldBe) < 5000
+        return abs(msCheck - msShouldBe) < 5000
     }
 
 }

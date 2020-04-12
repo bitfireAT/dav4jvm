@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import BuildConfig
 import java.util.logging.Logger
 
 object Constants {

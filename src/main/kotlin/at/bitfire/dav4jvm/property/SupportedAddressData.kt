@@ -11,6 +11,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
@@ -40,7 +41,7 @@ class SupportedAddressData: Property {
                     parser.getAttributeValue(null, "content-type")?.let { contentType ->
                         var type = contentType
                         parser.getAttributeValue(null, "version")?.let { version -> type += "; version=$version" }
-                        MediaType.parse(type)?.let { supported.types.add(it) }
+                        type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }
             } catch(e: XmlPullParserException) {

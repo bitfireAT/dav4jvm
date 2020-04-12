@@ -8,7 +8,11 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
-import okhttp3.*
+import okhttp3.HttpUrl
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.StringWriter
 import java.util.logging.Logger
@@ -20,8 +24,8 @@ class DavAddressBook @JvmOverloads constructor(
 ): DavCollection(httpClient, location, log) {
 
     companion object {
-        val MIME_VCARD3_UTF8 = MediaType.parse("text/vcard;charset=utf-8")
-        val MIME_VCARD4 = MediaType.parse("text/vcard;version=4.0")
+        val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
+        val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
     }
 
     /**
@@ -61,7 +65,7 @@ class DavAddressBook @JvmOverloads constructor(
         followRedirects {
             httpClient.newCall(Request.Builder()
                     .url(location)
-                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "1")
                     .build()).execute()
         }.use { response ->
@@ -110,7 +114,7 @@ class DavAddressBook @JvmOverloads constructor(
             serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
             for (url in urls) {
                 serializer.startTag(XmlUtils.NS_WEBDAV, "href")
-                    serializer.text(url.encodedPath())
+                    serializer.text(url.encodedPath)
                 serializer.endTag(XmlUtils.NS_WEBDAV, "href")
             }
         serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
@@ -119,7 +123,7 @@ class DavAddressBook @JvmOverloads constructor(
         followRedirects {
             httpClient.newCall(Request.Builder()
                     .url(location)
-                    .method("REPORT", RequestBody.create(MIME_XML, writer.toString()))
+                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
                     .build()).execute()
         }.use {
