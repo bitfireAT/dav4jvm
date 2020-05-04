@@ -36,7 +36,7 @@ import java.util.logging.Logger
 open class DavResource @JvmOverloads constructor(
         val httpClient: OkHttpClient,
         location: HttpUrl,
-        val log: Logger = Constants.log
+        val log: Logger = Dav4jvm.log
 ) {
 
     companion object {
@@ -146,7 +146,7 @@ open class DavResource @JvmOverloads constructor(
                 .header("Content-Length", "0")
                 .header("Destination", destination.toString())
 
-        if(forceOverride) requestBuilder.header("Overwrite", "F")
+        if (forceOverride) requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)
@@ -157,9 +157,9 @@ open class DavResource @JvmOverloads constructor(
             checkStatus(response)
 
             if (response.code == 207)
-            /* Multiple resources were to be affected by the COPY, but errors on some
-            of them prevented the operation from taking place.
-            [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
+                /* Multiple resources were to be affected by the COPY, but errors on some
+                of them prevented the operation from taking place.
+                [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
                 throw HttpException(response)
 
             callback(response)

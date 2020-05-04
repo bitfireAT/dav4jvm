@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.Constants
+import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
@@ -54,7 +54,7 @@ data class CalendarColor(
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {
-                    Constants.log.log(Level.WARNING, "Couldn't parse color, ignoring", e)
+                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse color, ignoring", e)
                 }
             }
             return null

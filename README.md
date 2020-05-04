@@ -29,6 +29,11 @@ dav4jvm needs a working XmlPullParser (XPP). On Android, the system already come
 XPP and you don't need to include one; on other systems, you may need to
 import for instance `org.ogce:xpp3` to get dav4jvm to work.
 
+## Custom properties
+
+If you use custom WebDAV properties, register the corresponding factories with `PropertyRegistery.register()`
+before calling other dav4jvm methods.
+
 
 ## Contact / License
 

@@ -74,7 +74,7 @@ object HttpUtils {
                 "EEE MMM d yyyy HH:mm:ss z"
         )
     } catch (e: ParseException) {
-        Constants.log.warning("Couldn't parse date: $dateStr, ignoring")
+        Dav4jvm.log.warning("Couldn't parse date: $dateStr, ignoring")
         null
     }
 

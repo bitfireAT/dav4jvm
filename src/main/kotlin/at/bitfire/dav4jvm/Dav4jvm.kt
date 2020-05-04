@@ -6,13 +6,10 @@
 
 package at.bitfire.dav4jvm
 
-import BuildConfig
 import java.util.logging.Logger
 
-object Constants {
+object Dav4jvm {
 
     var log = Logger.getLogger("dav4jvm")!!
-
-    const val okhttpVersion = BuildConfig.okhttpVersion
 
 }

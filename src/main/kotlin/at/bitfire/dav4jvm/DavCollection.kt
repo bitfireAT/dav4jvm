@@ -22,7 +22,7 @@ import java.util.logging.Logger
 open class DavCollection @JvmOverloads constructor(
         httpClient: OkHttpClient,
         location: HttpUrl,
-        log: Logger = Constants.log
+        log: Logger = Dav4jvm.log
 ): DavResource(httpClient, location, log) {
 
     /**

@@ -22,7 +22,7 @@ import java.util.logging.Logger
 class DavCalendar @JvmOverloads constructor(
         httpClient: OkHttpClient,
         location: HttpUrl,
-        log: Logger = Constants.log
+        log: Logger = Dav4jvm.log
 ): DavCollection(httpClient, location, log) {
 
     companion object {

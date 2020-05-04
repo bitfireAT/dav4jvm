@@ -30,7 +30,7 @@ data class GetLastModified(
                 if (date != null)
                     return GetLastModified(date.time)
                 else
-                    Constants.log.warning("Couldn't parse Last-Modified date")
+                    Dav4jvm.log.warning("Couldn't parse Last-Modified date")
             }
             return null
         }

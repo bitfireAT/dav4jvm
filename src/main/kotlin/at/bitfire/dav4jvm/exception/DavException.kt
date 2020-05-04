@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm.exception
 
-import at.bitfire.dav4jvm.Constants
+import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.MediaType
@@ -89,7 +89,7 @@ open class DavException @JvmOverloads constructor(
                     }
                 }
             } catch (e: Exception) {
-                Constants.log.log(Level.WARNING, "Couldn't read HTTP request", e)
+                Dav4jvm.log.log(Level.WARNING, "Couldn't read HTTP request", e)
                 requestBody = "Couldn't read HTTP request: ${e.message}"
             }
 
@@ -121,14 +121,14 @@ open class DavException @JvmOverloads constructor(
                                         eventType = parser.next()
                                     }
                                 } catch (e: XmlPullParserException) {
-                                    Constants.log.log(Level.WARNING, "Couldn't parse XML response", e)
+                                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse XML response", e)
                                 }
                             }
                         }
                     }
                 }
             } catch (e: IOException) {
-                Constants.log.log(Level.WARNING, "Couldn't read HTTP response", e)
+                Dav4jvm.log.log(Level.WARNING, "Couldn't read HTTP response", e)
                 responseBody = "Couldn't read HTTP response: ${e.message}"
             } finally {
                 httpResponse.body?.close()

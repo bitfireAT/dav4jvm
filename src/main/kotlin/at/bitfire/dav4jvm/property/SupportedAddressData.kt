@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.Constants
+import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
@@ -45,7 +45,7 @@ class SupportedAddressData: Property {
                     }
                 }
             } catch(e: XmlPullParserException) {
-                Constants.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
+                Dav4jvm.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null
             }
 

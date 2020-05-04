@@ -8,7 +8,7 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.Constants.log
+import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.property.ResourceType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull

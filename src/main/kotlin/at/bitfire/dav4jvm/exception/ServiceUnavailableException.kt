@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm.exception
 
-import at.bitfire.dav4jvm.Constants
+import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Response
 import java.net.HttpURLConnection
@@ -33,7 +33,7 @@ class ServiceUnavailableException: HttpException {
                         cal.time
 
                     } catch (ignored: NumberFormatException) {
-                        Constants.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds")
+                        Dav4jvm.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds")
                         null
                     }
         }

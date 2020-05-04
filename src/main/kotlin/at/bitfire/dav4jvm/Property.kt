@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.Constants.log
+import at.bitfire.dav4jvm.Dav4jvm.log
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 import java.util.*
