@@ -8,6 +8,10 @@
 
 If you need support for older Android versions, stay with 1.x.
 
+## Version 2.1
+
+- don't rely on ServiceLoader anymore
+
 
 # Version 1.x
 
