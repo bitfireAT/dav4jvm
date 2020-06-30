@@ -9,6 +9,7 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import okhttp3.MediaType
 import okhttp3.Response
 import okio.Buffer
@@ -116,7 +117,7 @@ open class DavException @JvmOverloads constructor(
                                     var eventType = parser.eventType
                                     while (eventType != XmlPullParser.END_DOCUMENT) {
                                         if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                                            if (parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "error")
+                                            if (parser.propertyName() == Error.NAME)
                                                 errors = Error.parseError(parser)
                                         eventType = parser.next()
                                     }

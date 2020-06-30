@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.CalendarData
@@ -17,7 +18,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -34,9 +34,19 @@ class DavCalendar @JvmOverloads constructor(
         val MIME_ICALENDAR = "text/calendar".toMediaType()
         val MIME_ICALENDAR_UTF8 = "text/calendar;charset=utf-8".toMediaType()
 
+        val CALENDAR_QUERY = Property.Name(XmlUtils.NS_CALDAV, "calendar-query")
+        val CALENDAR_MULTIGET = Property.Name(XmlUtils.NS_CALDAV, "calendar-multiget")
+
+        val FILTER = Property.Name(XmlUtils.NS_CALDAV, "filter")
+        val COMP_FILTER = Property.Name(XmlUtils.NS_CALDAV, "comp-filter")
+        const val COMP_FILTER_NAME = "name"
+        val TIME_RANGE = Property.Name(XmlUtils.NS_CALDAV, "time-range")
+        const val TIME_RANGE_START = "start"
+        const val TIME_RANGE_END = "end"
+
         private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
         init {
-            timeFormatUTC.timeZone = TimeZone.getTimeZone("UTC")
+            timeFormatUTC.timeZone = TimeZone.getTimeZone("Etc/UTC")
         }
     }
 
@@ -74,28 +84,27 @@ class DavCalendar @JvmOverloads constructor(
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
-        serializer.startTag(XmlUtils.NS_CALDAV, "calendar-query")
-            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-            serializer.startTag(XmlUtils.NS_CALDAV, "filter")
-                serializer.startTag(XmlUtils.NS_CALDAV, "comp-filter")
-                serializer.attribute(null, "name", "VCALENDAR")
-                    serializer.startTag(XmlUtils.NS_CALDAV, "comp-filter")
-                    serializer.attribute(null, "name", component)
-                    if (start != null || end != null) {
-                        serializer.startTag(XmlUtils.NS_CALDAV, "time-range")
-                        if (start != null)
-                            serializer.attribute(null, "start", timeFormatUTC.format(start))
-                        if (end != null)
-                            serializer.attribute(null, "end", timeFormatUTC.format(end))
-                        serializer.endTag(XmlUtils.NS_CALDAV, "time-range")
+        serializer.insertTag(CALENDAR_QUERY) {
+            insertTag(PROP) {
+                insertTag(GetETag.NAME)
+            }
+            insertTag(FILTER) {
+                insertTag(COMP_FILTER) {
+                    attribute(null, COMP_FILTER_NAME, "VCALENDAR")
+                    insertTag(COMP_FILTER) {
+                        attribute(null, COMP_FILTER_NAME, component)
+                        if (start != null || end != null) {
+                            insertTag(TIME_RANGE) {
+                                if (start != null)
+                                    attribute(null, TIME_RANGE_START, timeFormatUTC.format(start))
+                                if (end != null)
+                                    attribute(null, TIME_RANGE_END, timeFormatUTC.format(end))
+                            }
+                        }
                     }
-                    serializer.endTag(XmlUtils.NS_CALDAV, "comp-filter")
-                serializer.endTag(XmlUtils.NS_CALDAV, "comp-filter")
-            serializer.endTag(XmlUtils.NS_CALDAV, "filter")
-        serializer.endTag(XmlUtils.NS_CALDAV, "calendar-query")
+                }
+            }
+        }
         serializer.endDocument()
 
         followRedirects {
@@ -124,11 +133,6 @@ class DavCalendar @JvmOverloads constructor(
      * @throws DavException on WebDAV error
      */
     fun multiget(urls: List<HttpUrl>, callback: DavResponseCallback): List<Property> {
-        fun XmlSerializer.emptyTag(propertyName: Property.Name) {
-            startTag(propertyName.namespace, propertyName.name)
-            endTag(propertyName.namespace, propertyName.name)
-        }
-
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -139,19 +143,18 @@ class DavCalendar @JvmOverloads constructor(
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
-        serializer.startTag(XmlUtils.NS_CALDAV, "calendar-multiget")
-            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-                serializer.emptyTag(GetContentType.NAME)     // to determine the character set
-                serializer.emptyTag(GetETag.NAME)
-                serializer.emptyTag(ScheduleTag.NAME)
-                serializer.emptyTag(CalendarData.NAME)
-            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-            for (url in urls) {
-                serializer.startTag(XmlUtils.NS_WEBDAV, "href")
-                    serializer.text(url.encodedPath)
-                serializer.endTag(XmlUtils.NS_WEBDAV, "href")
+        serializer.insertTag(CALENDAR_MULTIGET) {
+            insertTag(PROP) {
+                insertTag(GetContentType.NAME)     // to determine the character set
+                insertTag(GetETag.NAME)
+                insertTag(ScheduleTag.NAME)
+                insertTag(CalendarData.NAME)
             }
-        serializer.endTag(XmlUtils.NS_CALDAV, "calendar-multiget")
+            for (url in urls)
+                insertTag(HREF) {
+                    serializer.text(url.encodedPath)
+                }
+        }
         serializer.endDocument()
 
         followRedirects {

@@ -9,6 +9,7 @@ package at.bitfire.dav4jvm
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
+import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 
 object XmlUtils {
@@ -34,12 +35,11 @@ object XmlUtils {
 
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun processTag(parser: XmlPullParser, namespace: String, name: String, processor: () -> Unit) {
+    fun processTag(parser: XmlPullParser, name: Property.Name, processor: () -> Unit) {
         val depth = parser.depth
         var eventType = parser.eventType
         while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
-                    parser.namespace == namespace && parser.name == name)
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
                 processor()
             eventType = parser.next()
         }
@@ -70,6 +70,21 @@ object XmlUtils {
                 list.add(parser.nextText())
             eventType = parser.next()
         }
+    }
+
+
+    fun XmlSerializer.insertTag(name: Property.Name, contentGenerator: XmlSerializer.() -> Unit = {}) {
+        startTag(name.namespace, name.name)
+        contentGenerator(this)
+        endTag(name.namespace, name.name)
+    }
+
+    fun XmlPullParser.propertyName(): Property.Name {
+        val propNs = namespace
+        val propName = name
+        if (propNs == null || propName == null)
+            throw IllegalStateException("Current event must be START_TAG or END_TAG")
+        return Property.Name(propNs, propName)
     }
 
 }

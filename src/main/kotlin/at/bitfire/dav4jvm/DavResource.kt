@@ -6,6 +6,8 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.exception.*
 import at.bitfire.dav4jvm.property.SyncToken
 import okhttp3.*
@@ -20,6 +22,7 @@ import java.io.Reader
 import java.io.StringWriter
 import java.net.HttpURLConnection
 import java.util.logging.Logger
+import at.bitfire.dav4jvm.Response as DavResponse
 
 /**
  * Represents a WebDAV resource at the given location and allows WebDAV
@@ -41,7 +44,12 @@ open class DavResource @JvmOverloads constructor(
 
     companion object {
         const val MAX_REDIRECTS = 5
+
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
+
+        val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
+        val PROP = Property.Name(XmlUtils.NS_WEBDAV, "prop")
+        val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
     }
 
     /**
@@ -314,14 +322,12 @@ open class DavResource @JvmOverloads constructor(
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
-        serializer.startTag(XmlUtils.NS_WEBDAV, "propfind")
-        serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-        for (prop in reqProp) {
-            serializer.startTag(prop.namespace, prop.name)
-            serializer.endTag(prop.namespace, prop.name)
+        serializer.insertTag(PROPFIND) {
+            insertTag(PROP) {
+                for (prop in reqProp)
+                    insertTag(prop)
+            }
         }
-        serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "propfind")
         serializer.endDocument()
 
         followRedirects {
@@ -386,7 +392,7 @@ open class DavResource @JvmOverloads constructor(
         for (attempt in 1..MAX_REDIRECTS) {
             response = sendRequest()
             if (response.isRedirect)
-            // handle 3xx Redirection
+                // handle 3xx Redirection
                 response.use {
                     val target = it.header("Location")?.let { location.resolve(it) }
                     if (target != null) {
@@ -468,11 +474,11 @@ open class DavResource @JvmOverloads constructor(
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
-                    when (parser.name) {
-                        "response" ->
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                    when (parser.propertyName()) {
+                        DavResponse.RESPONSE ->
                             at.bitfire.dav4jvm.Response.parse(parser, location, callback)
-                        "sync-token" ->
+                        SyncToken.NAME ->
                             XmlUtils.readText(parser)?.let {
                                 responseProperties += SyncToken(it)
                             }
@@ -489,7 +495,7 @@ open class DavResource @JvmOverloads constructor(
             var eventType = parser.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                    if (parser.namespace == XmlUtils.NS_WEBDAV && parser.name == "multistatus")
+                    if (parser.propertyName() == DavResponse.MULTISTATUS)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements
                 eventType = parser.next()

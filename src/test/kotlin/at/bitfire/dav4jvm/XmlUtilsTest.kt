@@ -21,7 +21,7 @@ class XmlUtilsTest {
         // now on START_DOCUMENT [0]
 
         var processed = false
-        XmlUtils.processTag(parser, "", "test") {
+        XmlUtils.processTag(parser, Property.Name("", "test")) {
             processed = true
         }
         assertTrue(processed)
@@ -34,7 +34,7 @@ class XmlUtilsTest {
         parser.next()       // now on START_TAG <root>
 
         var processed = false
-        XmlUtils.processTag(parser, "", "test") {
+        XmlUtils.processTag(parser, Property.Name("", "test")) {
             processed = true
         }
         assertTrue(processed)

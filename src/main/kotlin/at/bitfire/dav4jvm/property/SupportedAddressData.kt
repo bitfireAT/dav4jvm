@@ -19,8 +19,14 @@ import java.util.logging.Level
 class SupportedAddressData: Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "supported-address-data")
+
+        val ADDRESS_DATA_TYPE = Property.Name(XmlUtils.NS_CARDDAV, "address-data-type")
+        const val CONTENT_TYPE = "content-type"
+        const val VERSION = "version"
+
     }
 
     val types = mutableSetOf<MediaType>()
@@ -37,10 +43,10 @@ class SupportedAddressData: Property {
             val supported = SupportedAddressData()
 
             try {
-                XmlUtils.processTag(parser, XmlUtils.NS_CARDDAV, "address-data-type") {
-                    parser.getAttributeValue(null, "content-type")?.let { contentType ->
+                XmlUtils.processTag(parser, ADDRESS_DATA_TYPE) {
+                    parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
                         var type = contentType
-                        parser.getAttributeValue(null, "version")?.let { version -> type += "; version=$version" }
+                        parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
                         type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }

@@ -18,6 +18,10 @@ data class AddressData(
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "address-data")
+
+        // attributes
+        const val CONTENT_TYPE = "content-type"
+        const val VERSION = "version"
     }
 
 

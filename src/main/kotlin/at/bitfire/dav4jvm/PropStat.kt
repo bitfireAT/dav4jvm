@@ -8,6 +8,8 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.Response.Companion.STATUS
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -25,9 +27,10 @@ data class PropStat(
         val error: List<Error>? = null
 ) {
 
-    fun isSuccess() = status.code/100 == 2
-
     companion object {
+
+        @JvmField
+        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "propstat")
 
         private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
         private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
@@ -41,18 +44,17 @@ data class PropStat(
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                    if (parser.namespace == XmlUtils.NS_WEBDAV)
-                        when (parser.name) {
-                            "prop" ->
-                                prop.addAll(Property.parse(parser))
-                            "status" ->
-                                status = try {
-                                    StatusLine.parse(parser.nextText())
-                                } catch (e: ProtocolException) {
-                                    // invalid status line, treat as 500 Internal Server Error
-                                    INVALID_STATUS
-                                }
-                        }
+                    when (parser.propertyName()) {
+                        DavResource.PROP ->
+                            prop.addAll(Property.parse(parser))
+                        STATUS ->
+                            status = try {
+                                StatusLine.parse(parser.nextText())
+                            } catch (e: ProtocolException) {
+                                // invalid status line, treat as 500 Internal Server Error
+                                INVALID_STATUS
+                            }
+                    }
                 eventType = parser.next()
             }
 
@@ -60,5 +62,8 @@ data class PropStat(
         }
 
     }
+
+
+    fun isSuccess() = status.code/100 == 2
 
 }

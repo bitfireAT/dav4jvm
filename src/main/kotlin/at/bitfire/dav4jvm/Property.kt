@@ -19,21 +19,13 @@ import java.util.*
  */
 interface Property {
 
-    class Name(
+    data class Name(
             val namespace: String,
             val name: String
     ): Serializable {
 
-        override fun equals(other: Any?): Boolean {
-            return if (other is Name)
-                namespace == other.namespace && name == other.name
-            else
-                super.equals(other)
-        }
+        override fun toString() = "$namespace:$name"
 
-        override fun hashCode() = namespace.hashCode() xor name.hashCode()
-
-        override fun toString() = "$namespace$name"
     }
 
     companion object {

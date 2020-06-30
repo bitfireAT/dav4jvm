@@ -23,6 +23,8 @@ class Error(
 
     companion object {
 
+        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "error")
+
         fun parseError(parser: XmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
 

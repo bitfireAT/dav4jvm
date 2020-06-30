@@ -14,10 +14,15 @@ import org.xmlpull.v1.XmlPullParser
 class SupportedReportSet: Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "supported-report-set")
 
+        val SUPPORTED_REPORT = Property.Name(XmlUtils.NS_WEBDAV, "supported-report")
+        val REPORT = Property.Name(XmlUtils.NS_WEBDAV, "report")
+
         const val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
+
     }
 
     val reports = mutableSetOf<String>()
@@ -36,8 +41,8 @@ class SupportedReportSet: Property {
             */
 
             val supported = SupportedReportSet()
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "supported-report") {
-                XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "report") {
+            XmlUtils.processTag(parser, SUPPORTED_REPORT) {
+                XmlUtils.processTag(parser, REPORT) {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
                         supported.reports += parser.text

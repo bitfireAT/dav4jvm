@@ -6,8 +6,12 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.property.AddressData
+import at.bitfire.dav4jvm.property.GetContentType
+import at.bitfire.dav4jvm.property.GetETag
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -26,6 +30,10 @@ class DavAddressBook @JvmOverloads constructor(
     companion object {
         val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
         val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
+
+        val ADDRESSBOOK_QUERY = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-query")
+        val ADDRESSBOOK_MULTIGET = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-multiget")
+        val FILTER = Property.Name(XmlUtils.NS_CARDDAV, "filter")
     }
 
     /**
@@ -52,14 +60,12 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
-        serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-query")
-            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-            serializer.startTag(XmlUtils.NS_CARDDAV, "filter")
-            serializer.endTag(XmlUtils.NS_CARDDAV,   "filter")
-        serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-query")
+        serializer.insertTag(ADDRESSBOOK_QUERY) {
+            insertTag(PROP) {
+                insertTag(GetETag.NAME)
+            }
+            insertTag(FILTER)
+        }
         serializer.endDocument()
 
         followRedirects {
@@ -99,25 +105,22 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
-        serializer.startTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
-            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.startTag(XmlUtils.NS_CARDDAV, "address-data")
-                if (vCard4) {
-                    serializer.attribute(null, "content-type", "text/vcard")
-                    serializer.attribute(null, "version", "4.0")
+        serializer.insertTag(ADDRESSBOOK_MULTIGET) {
+            insertTag(PROP) {
+                insertTag(GetContentType.NAME)
+                insertTag(GetETag.NAME)
+                insertTag(AddressData.NAME) {
+                    if (vCard4) {
+                        attribute(null, AddressData.CONTENT_TYPE, "text/vcard")
+                        attribute(null, AddressData.VERSION, "4.0")
+                    }
                 }
-                serializer.endTag(XmlUtils.NS_CARDDAV, "address-data")
-            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-            for (url in urls) {
-                serializer.startTag(XmlUtils.NS_WEBDAV, "href")
-                    serializer.text(url.encodedPath)
-                serializer.endTag(XmlUtils.NS_WEBDAV, "href")
             }
-        serializer.endTag(XmlUtils.NS_CARDDAV, "addressbook-multiget")
+            for (url in urls)
+                insertTag(HREF) {
+                    text(url.encodedPath)
+                }
+        }
         serializer.endDocument()
 
         followRedirects {

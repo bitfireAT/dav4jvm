@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.SyncToken
@@ -24,6 +25,13 @@ open class DavCollection @JvmOverloads constructor(
         location: HttpUrl,
         log: Logger = Dav4jvm.log
 ): DavResource(httpClient, location, log) {
+
+    companion object {
+        val SYNC_COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "sync-collection")
+        val SYNC_LEVEL = Property.Name(XmlUtils.NS_WEBDAV, "sync-level")
+        val LIMIT = Property.Name(XmlUtils.NS_WEBDAV, "limit")
+        val NRESULTS = Property.Name(XmlUtils.NS_WEBDAV, "nresults")
+    }
 
     /**
      * Sends a REPORT sync-collection request.
@@ -57,27 +65,25 @@ open class DavCollection @JvmOverloads constructor(
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.startTag(XmlUtils.NS_WEBDAV, "sync-collection")
-            serializer.startTag(SyncToken.NAME.namespace, SyncToken.NAME.name)
-                syncToken?.let { serializer.text(it) }
-            serializer.endTag(SyncToken.NAME.namespace, SyncToken.NAME.name)
-            serializer.startTag(XmlUtils.NS_WEBDAV, "sync-level")
-                serializer.text(if (infiniteDepth) "infinite" else "1")
-            serializer.endTag(XmlUtils.NS_WEBDAV, "sync-level")
-            limit?.let { nresults ->
-                serializer.startTag(XmlUtils.NS_WEBDAV, "limit")
-                    serializer.startTag(XmlUtils.NS_WEBDAV, "nresults")
-                    serializer.text(nresults.toString())
-                    serializer.endTag(XmlUtils.NS_WEBDAV, "nresults")
-                serializer.endTag(XmlUtils.NS_WEBDAV, "limit")
+        serializer.insertTag(SYNC_COLLECTION) {
+            insertTag(SyncToken.NAME) {
+                if (syncToken != null)
+                    text(syncToken)
             }
-            serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-            properties.forEach {
-                serializer.startTag(it.namespace, it.name)
-                serializer.endTag(it.namespace, it.name)
+            insertTag(SYNC_LEVEL) {
+                text(if (infiniteDepth) "infinite" else "1")
             }
-            serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
-        serializer.endTag(XmlUtils.NS_WEBDAV, "sync-collection")
+            if (limit != null)
+                insertTag(LIMIT) {
+                    insertTag(NRESULTS) {
+                        text(limit.toString())
+                    }
+                }
+            insertTag(PROP) {
+                for (prop in properties)
+                    insertTag(prop)
+            }
+        }
         serializer.endDocument()
 
         followRedirects {

@@ -9,6 +9,7 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.ResourceType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -93,6 +94,11 @@ data class Response(
 
     companion object {
 
+        val RESPONSE = Property.Name(XmlUtils.NS_WEBDAV, "response")
+        val MULTISTATUS = Property.Name(XmlUtils.NS_WEBDAV, "multistatus")
+        val STATUS = Property.Name(XmlUtils.NS_WEBDAV, "status")
+        val LOCATION = Property.Name(XmlUtils.NS_WEBDAV, "location")
+
         /**
          * Parses an XML response element.
          */
@@ -108,45 +114,44 @@ data class Response(
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
-                    if (parser.namespace == XmlUtils.NS_WEBDAV)
-                        when (parser.name) {
-                            "href" -> {
-                                var sHref = parser.nextText()
-                                if (!sHref.startsWith("/")) {
-                                    /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
-                                       URLs. However, some servers reply with relative paths. */
-                                    val firstColon = sHref.indexOf(':')
-                                    if (firstColon != -1) {
-                                        /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
-                                           which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
-                                           For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
-                                           with "./" to allow resolving by HttpUrl. */
-                                        var hierarchical = false
-                                        try {
-                                            if (sHref.substring(firstColon, firstColon + 3) == "://")
-                                                hierarchical = true
-                                        } catch (e: IndexOutOfBoundsException) {
-                                            // no "://"
-                                        }
-                                        if (!hierarchical)
-                                            sHref = "./$sHref"
+                    when (parser.propertyName()) {
+                        DavResource.HREF -> {
+                            var sHref = parser.nextText()
+                            if (!sHref.startsWith("/")) {
+                                /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
+                                   URLs. However, some servers reply with relative paths. */
+                                val firstColon = sHref.indexOf(':')
+                                if (firstColon != -1) {
+                                    /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
+                                       which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
+                                       For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
+                                       with "./" to allow resolving by HttpUrl. */
+                                    var hierarchical = false
+                                    try {
+                                        if (sHref.substring(firstColon, firstColon + 3) == "://")
+                                            hierarchical = true
+                                    } catch (e: IndexOutOfBoundsException) {
+                                        // no "://"
                                     }
+                                    if (!hierarchical)
+                                        sHref = "./$sHref"
                                 }
-                                href = location.resolve(sHref)
                             }
-                            "status" ->
-                                status = try {
-                                    StatusLine.parse(parser.nextText())
-                                } catch(e: ProtocolException) {
-                                    log.warning("Invalid status line, treating as HTTP error 500")
-                                    StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
-                                }
-                            "propstat" ->
-                                PropStat.parse(parser).let { propStat += it }
-                            "error" ->
-                                error = Error.parseError(parser)
-                            "location" ->
-                                newLocation = parser.nextText().toHttpUrlOrNull()
+                            href = location.resolve(sHref)
+                        }
+                        STATUS ->
+                            status = try {
+                                StatusLine.parse(parser.nextText())
+                            } catch(e: ProtocolException) {
+                                log.warning("Invalid status line, treating as HTTP error 500")
+                                StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
+                            }
+                        PropStat.NAME ->
+                            PropStat.parse(parser).let { propStat += it }
+                        Error.NAME ->
+                            error = Error.parseError(parser)
+                        LOCATION ->
+                            newLocation = parser.nextText().toHttpUrlOrNull()
                         }
                 eventType = parser.next()
             }

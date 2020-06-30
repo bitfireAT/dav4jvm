@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm.property
 
+import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
@@ -30,7 +31,7 @@ data class CurrentUserPrincipal(
         override fun create(parser: XmlPullParser): CurrentUserPrincipal {
             // <!ELEMENT current-user-principal (unauthenticated | href)>
             var href: String? = null
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "href") {
+            XmlUtils.processTag(parser, DavResource.HREF) {
                 href = XmlUtils.readText(parser)
             }
             return CurrentUserPrincipal(href)

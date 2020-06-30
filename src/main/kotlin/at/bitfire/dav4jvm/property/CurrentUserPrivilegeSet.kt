@@ -9,6 +9,7 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class CurrentUserPrivilegeSet(
@@ -22,8 +23,19 @@ data class CurrentUserPrivilegeSet(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "current-user-privilege-set")
+
+        val PRIVILEGE = Property.Name(XmlUtils.NS_WEBDAV, "privilege")
+        val READ = Property.Name(XmlUtils.NS_WEBDAV, "read")
+        val WRITE = Property.Name(XmlUtils.NS_WEBDAV, "write")
+        val WRITE_PROPERTIES = Property.Name(XmlUtils.NS_WEBDAV, "write-properties")
+        val WRITE_CONTENT = Property.Name(XmlUtils.NS_WEBDAV, "write-content")
+        val BIND = Property.Name(XmlUtils.NS_WEBDAV, "bind")
+        val UNBIND = Property.Name(XmlUtils.NS_WEBDAV, "unbind")
+        val ALL = Property.Name(XmlUtils.NS_WEBDAV, "all")
+
     }
 
 
@@ -36,29 +48,29 @@ data class CurrentUserPrivilegeSet(
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet()
 
-            XmlUtils.processTag(parser, XmlUtils.NS_WEBDAV, "privilege") {
+            XmlUtils.processTag(parser, PRIVILEGE) {
                 val depth = parser.depth
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_WEBDAV)
-                        when (parser.name) {
-                            "read" ->
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                        when (parser.propertyName()) {
+                            READ ->
                                 privs.mayRead = true
-                            "write" -> {
+                            WRITE -> {
                                 privs.mayBind = true
                                 privs.mayUnbind = true
                                 privs.mayWriteProperties = true
                                 privs.mayWriteContent = true
                             }
-                            "write-properties" ->
+                            WRITE_PROPERTIES ->
                                 privs.mayWriteProperties = true
-                            "write-content" ->
+                            WRITE_CONTENT ->
                                 privs.mayWriteContent = true
-                            "bind" ->
+                            BIND ->
                                 privs.mayBind = true
-                            "unbind" ->
+                            UNBIND ->
                                 privs.mayUnbind = true
-                            "all" -> {
+                            ALL -> {
                                 privs.mayRead = true
                                 privs.mayBind = true
                                 privs.mayUnbind = true

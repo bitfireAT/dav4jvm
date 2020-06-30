@@ -9,6 +9,7 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
@@ -18,8 +19,13 @@ data class SupportedCalendarComponentSet(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALDAV, "supported-calendar-component-set")
+
+        val ALLCOMP = Property.Name(XmlUtils.NS_CALDAV, "allcomp")
+        val COMP = Property.Name(XmlUtils.NS_CALDAV, "comp")
+
     }
 
 
@@ -37,14 +43,14 @@ data class SupportedCalendarComponentSet(
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.namespace == XmlUtils.NS_CALDAV) {
-                    when (parser.name) {
-                        "allcomp" -> {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    when (parser.propertyName()) {
+                        ALLCOMP -> {
                             components.supportsEvents = true
                             components.supportsTasks = true
                             components.supportsJournal = true
                         }
-                        "comp" ->
+                        COMP ->
                             when (parser.getAttributeValue(null, "name")?.toUpperCase()) {
                                 "VEVENT" -> components.supportsEvents = true
                                 "VTODO" -> components.supportsTasks = true
