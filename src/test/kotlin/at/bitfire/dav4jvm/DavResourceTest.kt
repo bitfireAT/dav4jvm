@@ -329,7 +329,7 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
         var called = false
-        dav.delete(null) {
+        dav.delete {
             called = true
         }
         assertTrue(called)
@@ -339,18 +339,19 @@ class DavResourceTest {
         assertEquals(url.encodedPath, rq.path)
         assertNull(rq.getHeader("If-Match"))
 
-        // precondition: If-Match, 200 OK
+        // precondition: If-Match / If-Schedule-Tag-Match, 200 OK
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody("Resource has been deleted."))
         called = false
-        dav.delete("DeleteOnlyThisETag") {
+        dav.delete("DeleteOnlyThisETag", "DeleteOnlyThisScheduleTag") {
             called = true
         }
         assertTrue(called)
 
         rq = mockServer.takeRequest()
         assertEquals("\"DeleteOnlyThisETag\"", rq.getHeader("If-Match"))
+        assertEquals("\"DeleteOnlyThisScheduleTag\"", rq.getHeader("If-Schedule-Tag-Match"))
 
         // 302 Moved Temporarily
         mockServer.enqueue(MockResponse()

@@ -220,8 +220,8 @@ open class DavResource @JvmOverloads constructor(
      * When the server returns an ETag, it is stored in response properties.
      *
      * @param body          new resource body to upload
-     * @param ifMatch       value of `If-Match` header to set, or null to omit
-     * @param ifScheduleTag value of `If-Schedule-Tag` header to set, or null to omit
+     * @param ifETag        value of `If-Match` header to set, or null to omit
+     * @param ifScheduleTag value of `If-Schedule-Tag-Match` header to set, or null to omit
      * @param ifNoneMatch   indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
      * @param callback      called with server response unless an exception is thrown
      *
@@ -229,15 +229,15 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifMatch: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
+    fun put(body: RequestBody, ifETag: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
         followRedirects {
             val builder = Request.Builder()
                     .put(body)
                     .url(location)
 
-            if (ifMatch != null)
+            if (ifETag != null)
                 // only overwrite specific version
-                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatch))
+                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
             if (ifScheduleTag != null)
                 // only overwrite specific version
                 builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
@@ -258,21 +258,24 @@ open class DavResource @JvmOverloads constructor(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param ifMatchETag  value of `If-Match` header to set, or null to omit
-     * @param callback     called with server response unless an exception is thrown
+     * @param ifETag        value of `If-Match` header to set, or null to omit
+     * @param ifScheduleTag value of `If-Schedule-Tag-Match` header to set, or null to omit
+     * @param callback      called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP errors, or when 207 Multi-Status is returned
      *         (because then there was probably a problem with a member resource)
      */
     @Throws(IOException::class, HttpException::class)
-    fun delete(ifMatchETag: String?, callback: (Response) -> Unit) {
+    fun delete(ifETag: String? = null, ifScheduleTag: String? = null, callback: (Response) -> Unit) {
         followRedirects {
             val builder = Request.Builder()
                     .delete()
                     .url(location)
-            if (ifMatchETag != null)
-                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag))
+            if (ifETag != null)
+                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
+            if (ifScheduleTag != null)
+                builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
