@@ -2,7 +2,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 
 object Libs {
     // okhttp HTTP library
-    const val okhttpVersion = "4.6.0"
+    const val okhttpVersion = "4.7.2"
 
     // XmlPullParser library
     const val xpp3Version = "1.1.6"

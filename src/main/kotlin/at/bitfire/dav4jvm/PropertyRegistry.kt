@@ -46,6 +46,7 @@ object PropertyRegistry {
             QuotaAvailableBytes.Factory(),
             QuotaUsedBytes.Factory(),
             ResourceType.Factory(),
+            ScheduleTag.Factory(),
             Source.Factory(),
             SupportedAddressData.Factory(),
             SupportedCalendarComponentSet.Factory(),
