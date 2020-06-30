@@ -12,6 +12,11 @@ If you need support for older Android versions, stay with 1.x.
 
 - don't rely on ServiceLoader anymore
 
+## Version 2.1.1
+
+- add ScheduleTag
+- use okhttp 4.7.2
+
 
 # Version 1.x
 
