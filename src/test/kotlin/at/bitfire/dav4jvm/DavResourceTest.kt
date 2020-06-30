@@ -270,7 +270,7 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_CREATED)
                 .setHeader("ETag", "W/\"Weak PUT ETag\""))
         var called = false
-        dav.put(sampleText.toRequestBody("text/plain".toMediaType()), null, false) { response ->
+        dav.put(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             called = true
             assertEquals("Weak PUT ETag", GetETag.fromResponse(response)!!.eTag)
             assertEquals(response.request.url, dav.location)
@@ -290,7 +290,7 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
                 .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
         called = false
-        dav.put(sampleText.toRequestBody("text/plain".toMediaType()), null, true) { response ->
+        dav.put(sampleText.toRequestBody("text/plain".toMediaType()), ifNoneMatch = true) { response ->
             called = true
             assertEquals(url.resolve("/target"), response.request.url)
             assertNull("Weak PUT ETag", GetETag.fromResponse(response)?.eTag)
@@ -307,7 +307,7 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_PRECON_FAILED))
         called = false
         try {
-            dav.put(sampleText.toRequestBody("text/plain".toMediaType()), "ExistingETag", false) {
+            dav.put(sampleText.toRequestBody("text/plain".toMediaType()), "ExistingETag") {
                 called = true
             }
             fail("Expected PreconditionFailedException")

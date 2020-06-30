@@ -8,11 +8,16 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.property.CalendarData
+import at.bitfire.dav4jvm.property.GetContentType
+import at.bitfire.dav4jvm.property.GetETag
+import at.bitfire.dav4jvm.property.ScheduleTag
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -119,6 +124,11 @@ class DavCalendar @JvmOverloads constructor(
      * @throws DavException on WebDAV error
      */
     fun multiget(urls: List<HttpUrl>, callback: DavResponseCallback): List<Property> {
+        fun XmlSerializer.emptyTag(propertyName: Property.Name) {
+            startTag(propertyName.namespace, propertyName.name)
+            endTag(propertyName.namespace, propertyName.name)
+        }
+
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -131,12 +141,10 @@ class DavCalendar @JvmOverloads constructor(
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.startTag(XmlUtils.NS_CALDAV, "calendar-multiget")
             serializer.startTag(XmlUtils.NS_WEBDAV, "prop")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getcontenttype")      // to determine the character set
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getcontenttype")
-                serializer.startTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.endTag(XmlUtils.NS_WEBDAV, "getetag")
-                serializer.startTag(XmlUtils.NS_CALDAV, "calendar-data")
-                serializer.endTag(XmlUtils.NS_CALDAV, "calendar-data")
+                serializer.emptyTag(GetContentType.NAME)     // to determine the character set
+                serializer.emptyTag(GetETag.NAME)
+                serializer.emptyTag(ScheduleTag.NAME)
+                serializer.emptyTag(CalendarData.NAME)
             serializer.endTag(XmlUtils.NS_WEBDAV, "prop")
             for (url in urls) {
                 serializer.startTag(XmlUtils.NS_WEBDAV, "href")

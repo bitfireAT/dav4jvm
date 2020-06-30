@@ -219,24 +219,28 @@ open class DavResource @JvmOverloads constructor(
      *
      * When the server returns an ETag, it is stored in response properties.
      *
-     * @param body         new resource body to upload
-     * @param ifMatchETag  value of `If-Match` header to set, or null to omit
-     * @param ifNoneMatch  indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
-     * @param callback     called with server response unless an exception is thrown
+     * @param body          new resource body to upload
+     * @param ifMatch       value of `If-Match` header to set, or null to omit
+     * @param ifScheduleTag value of `If-Schedule-Tag` header to set, or null to omit
+     * @param ifNoneMatch   indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
+     * @param callback      called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifMatchETag: String?, ifNoneMatch: Boolean, callback: (Response) -> Unit) {
+    fun put(body: RequestBody, ifMatch: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
         followRedirects {
             val builder = Request.Builder()
                     .put(body)
                     .url(location)
 
-            if (ifMatchETag != null)
+            if (ifMatch != null)
                 // only overwrite specific version
-                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatchETag))
+                builder.header("If-Match", QuotedStringUtils.asQuotedString(ifMatch))
+            if (ifScheduleTag != null)
+                // only overwrite specific version
+                builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
             if (ifNoneMatch)
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*")
