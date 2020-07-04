@@ -61,12 +61,24 @@ object XmlUtils {
     }
 
     @Throws(IOException::class, XmlPullParserException::class)
+    fun readTextProperty(parser: XmlPullParser, name: Property.Name): String? {
+        val depth = parser.depth
+        var eventType = parser.eventType
+        var result: String? = null
+        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+                result = parser.nextText()
+            eventType = parser.next()
+        }
+        return result
+    }
+
+    @Throws(IOException::class, XmlPullParserException::class)
     fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
         val depth = parser.depth
         var eventType = parser.eventType
         while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 &&
-                    Property.Name(parser.namespace, parser.name) == name)
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
                 list.add(parser.nextText())
             eventType = parser.next()
         }

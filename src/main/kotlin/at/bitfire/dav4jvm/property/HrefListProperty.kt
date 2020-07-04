@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm.property
 
+import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
@@ -22,7 +23,7 @@ abstract class HrefListProperty: Property {
     abstract class Factory: PropertyFactory {
 
         fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
-            XmlUtils.readTextPropertyList(parser, Property.Name(XmlUtils.NS_WEBDAV, "href"), list.hrefs)
+            XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
             return list
         }
 

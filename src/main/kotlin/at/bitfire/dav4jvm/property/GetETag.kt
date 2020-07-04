@@ -25,7 +25,7 @@ class GetETag(
                 response.header("ETag")?.let { GetETag(it) }
     }
 
-    var eTag: String?
+    val eTag: String?
 
     init {
         /* entity-tag = [ weak ] opaque-tag

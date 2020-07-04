@@ -22,6 +22,7 @@ object PropertyRegistry {
 
     private fun registerDefaultFactories() {
         register(listOf(
+            AddMember.Factory(),
             AddressbookDescription.Factory(),
             AddressbookHomeSet.Factory(),
             AddressData.Factory(),
