@@ -10,10 +10,10 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import okhttp3.*
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.io.IOException
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -31,6 +31,27 @@ open class DavCollection @JvmOverloads constructor(
         val SYNC_LEVEL = Property.Name(XmlUtils.NS_WEBDAV, "sync-level")
         val LIMIT = Property.Name(XmlUtils.NS_WEBDAV, "limit")
         val NRESULTS = Property.Name(XmlUtils.NS_WEBDAV, "nresults")
+    }
+
+    /**
+     * Sends a POST request. Primarily intended to be used with an Add-Member URL (RFC 5995).
+     */
+    @Throws(IOException::class, HttpException::class)
+    fun post(body: RequestBody, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
+        followRedirects {
+            val builder = Request.Builder()
+                    .post(body)
+                    .url(location)
+
+            if (ifNoneMatch)
+                // don't overwrite anything existing
+                builder.header("If-None-Match", "*")
+
+            httpClient.newCall(builder.build()).execute()
+        }.use { response ->
+            checkStatus(response)
+            callback(response)
+        }
     }
 
     /**

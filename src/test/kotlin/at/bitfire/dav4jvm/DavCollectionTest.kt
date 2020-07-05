@@ -9,15 +9,20 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.SyncToken
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.net.HttpURLConnection
 
 class DavCollectionTest {
+
+    private val sampleText = "SAMPLE RESPONSE"
 
     private val httpClient = OkHttpClient.Builder()
             .followRedirects(false)
@@ -221,6 +226,22 @@ class DavCollectionTest {
             assertTrue(e.errors.any { it.name == Property.Name(XmlUtils.NS_WEBDAV, "number-of-matches-within-limits") })
             assertEquals(1, e.errors.size)
         }
+    }
+
+    @Test
+    fun testPost() {
+        val url = sampleUrl()
+        val dav = DavCollection(httpClient, url)
+
+        // 201 Created
+        mockServer.enqueue(MockResponse().setResponseCode(HttpURLConnection.HTTP_CREATED))
+        var called = false
+        dav.post(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
+            assertEquals("POST", mockServer.takeRequest().method)
+            assertEquals(response.request.url, dav.location)
+            called = true
+        }
+        assertTrue(called)
     }
 
 }

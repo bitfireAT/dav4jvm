@@ -349,7 +349,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws HttpException in case of an HTTP error
      */
-    private fun checkStatus(response: Response) =
+    protected fun checkStatus(response: Response) =
             checkStatus(response.code, response.message, response)
 
     /**
