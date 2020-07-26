@@ -82,6 +82,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
     fun options(callback: (davCapabilities: Set<String>, response: Response) -> Unit) {
@@ -104,7 +105,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error
+     * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun move(destination: HttpUrl, forceOverride: Boolean, callback: (response: Response) -> Unit) {
@@ -145,7 +146,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error
+     * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun copy(destination:HttpUrl, forceOverride:Boolean, callback: (response: Response) -> Unit) {
@@ -179,6 +180,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
     fun mkCol(xmlBody: String?, callback: (response: Response) -> Unit) {
@@ -206,6 +208,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
     fun get(accept: String, callback: (response: Response) -> Unit) {
@@ -235,6 +238,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
     fun put(body: RequestBody, ifETag: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
@@ -273,6 +277,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws IOException on I/O error
      * @throws HttpException on HTTP errors, or when 207 Multi-Status is returned
      *         (because then there was probably a problem with a member resource)
+     * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
     fun delete(ifETag: String? = null, ifScheduleTag: String? = null, callback: (Response) -> Unit) {
@@ -310,7 +315,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (like no 207 Multi-Status response)
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun propfind(depth: Int, vararg reqProp: Property.Name, callback: DavResponseCallback) {
@@ -386,8 +391,10 @@ open class DavResource @JvmOverloads constructor(
      * @param sendRequest called to send the request (may be called multiple times)
      *
      * @return response of the last request (whether it is a redirect or not)
+     *
+     * @throws DavException on HTTPS -> HTTP redirect
      */
-    protected fun followRedirects(sendRequest: () -> Response): Response {
+    internal fun followRedirects(sendRequest: () -> Response): Response {
         lateinit var response: Response
         for (attempt in 1..MAX_REDIRECTS) {
             response = sendRequest()
@@ -397,6 +404,10 @@ open class DavResource @JvmOverloads constructor(
                     val target = it.header("Location")?.let { location.resolve(it) }
                     if (target != null) {
                         log.fine("Redirected, new location = $target")
+
+                        if (location.isHttps && !target.isHttps)
+                            throw DavException("Received redirect from HTTPS to HTTP")
+
                         location = target
                     } else
                         throw DavException("Redirected without new Location")

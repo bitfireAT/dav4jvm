@@ -13,9 +13,13 @@ import at.bitfire.dav4jvm.property.DisplayName
 import at.bitfire.dav4jvm.property.GetContentType
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ResourceType
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -720,6 +724,59 @@ class DavResourceTest {
             assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
         }
         assertTrue(called)
+    }
+
+
+    @Test
+    fun testFollowRedirects_302() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+        var i = 0
+        dav.followRedirects {
+            if (i++ == 0)
+                okhttp3.Response.Builder()
+                        .protocol(Protocol.HTTP_1_1)
+                        .code(302)
+                        .message("Found")
+                        .header("Location", "http://to.com/")
+                        .request(Request.Builder()
+                                .get()
+                                .url("http://from.com/")
+                                .build())
+                        .body("New location!".toResponseBody())
+                        .build()
+            else
+                okhttp3.Response.Builder()
+                        .protocol(Protocol.HTTP_1_1)
+                        .code(204)
+                        .message("No Content")
+                        .request(Request.Builder()
+                                .get()
+                                .url("http://to.com/")
+                                .build())
+                        .build()
+        }.let { response ->
+            assertEquals(204, response.code)
+            assertEquals("http://to.com/".toHttpUrl(), dav.location)
+        }
+    }
+
+    @Test(expected = DavException::class)
+    fun testFollowRedirects_HttpsToHttp() {
+        val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
+        dav.followRedirects {
+            okhttp3.Response.Builder()
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(302)
+                    .message("Found")
+                    .header("Location", "http://to.com/")
+                    .request(Request.Builder()
+                            .get()
+                            .url("https://from.com/")
+                            .build())
+                    .body("New location!".toResponseBody())
+                    .build()
+        }
     }
 
 }
