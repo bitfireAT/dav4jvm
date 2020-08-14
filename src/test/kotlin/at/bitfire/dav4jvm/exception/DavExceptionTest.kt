@@ -87,12 +87,14 @@ class DavExceptionTest {
         }
     }
 
+    @Test
     fun testSerialization() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
         mockServer.enqueue(MockResponse()
                 .setResponseCode(500)
+                .setHeader("Content-Type", "text/plain")
                 .setBody("12345"))
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
