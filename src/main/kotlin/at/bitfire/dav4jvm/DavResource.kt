@@ -427,14 +427,14 @@ open class DavResource @JvmOverloads constructor(
      */
     private fun assertMultiStatus(response: Response) {
         if (response.code != 207)
-            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}")
+            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
 
         if (response.body == null)
-            throw DavException("Received 207 Multi-Status without body")
+            throw DavException("Received 207 Multi-Status without body", httpResponse = response)
 
         response.body?.contentType()?.let {
             if (((it.type != "application" && it.type != "text")) || it.subtype != "xml")
-                throw DavException("Received non-XML 207 Multi-Status")
+                throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
         } ?: log.warning("Received 207 Multi-Status without Content-Type, assuming XML")
     }
 
