@@ -37,7 +37,7 @@ dependencies {
     implementation(kotlin("stdlib"))
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
-    implementation("org.apache.commons:commons-lang3:3.9")
+    implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
     api("org.ogce:xpp3:${Libs.xpp3Version}")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
