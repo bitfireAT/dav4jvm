@@ -172,7 +172,7 @@ class BasicDigestAuthHandler(
             params.add("cnonce=${quotedString(clientNonce)}")
 
             val nc = nonceCount.getAndIncrement()
-            val ncValue = String.format("%08x", nc)
+            val ncValue = String.format(Locale.ROOT, "%08x", nc)
             params.add("nc=$ncValue")
 
             val a1: String? = when (algorithm) {

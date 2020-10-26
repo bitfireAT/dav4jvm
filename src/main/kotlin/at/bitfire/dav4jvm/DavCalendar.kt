@@ -44,7 +44,7 @@ class DavCalendar @JvmOverloads constructor(
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 
-        private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US)
+        private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.ROOT)
         init {
             timeFormatUTC.timeZone = TimeZone.getTimeZone("Etc/UTC")
         }

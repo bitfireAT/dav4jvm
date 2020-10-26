@@ -17,7 +17,7 @@ import java.util.*
 object HttpUtils {
 
     const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-    val httpDateFormat = SimpleDateFormat(httpDateFormatStr)
+    val httpDateFormat = SimpleDateFormat(httpDateFormatStr, Locale.ROOT)
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
