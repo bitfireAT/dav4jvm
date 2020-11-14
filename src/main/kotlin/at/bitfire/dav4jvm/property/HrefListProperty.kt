@@ -17,7 +17,11 @@ abstract class HrefListProperty: Property {
 
     val hrefs = LinkedList<String>()
 
+    val href
+        get() = hrefs.firstOrNull()
+
     override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
+
 
 
     abstract class Factory: PropertyFactory {

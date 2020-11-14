@@ -44,6 +44,7 @@ object PropertyRegistry {
             GetETag.Factory(),
             GetLastModified.Factory(),
             GroupMembership.Factory(),
+            Owner.Factory(),
             QuotaAvailableBytes.Factory(),
             QuotaUsedBytes.Factory(),
             ResourceType.Factory(),
