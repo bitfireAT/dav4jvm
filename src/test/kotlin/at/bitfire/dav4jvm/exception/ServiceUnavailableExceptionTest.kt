@@ -17,33 +17,39 @@ import kotlin.math.abs
 
 class ServiceUnavailableExceptionTest {
 
+    val response503 = Response.Builder()
+            .request(Request.Builder()
+                    .url("http://www.example.com")
+                    .get()
+                    .build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(503).message("Try later")
+            .build()
+
     @Test
-    fun testRetryAfter() {
-        var response = Response.Builder()
-                .request(Request.Builder()
-                        .url("http://www.example.com")
-                        .get()
-                        .build())
-                .protocol(Protocol.HTTP_1_1)
-                .code(503).message("Try later")
-                .build()
-
-        var e = ServiceUnavailableException(response)
+    fun testRetryAfter_NoTime() {
+        val e = ServiceUnavailableException(response503)
         assertNull(e.retryAfter)
+    }
 
-        response = response.newBuilder()
+    @Test
+    fun testRetryAfter_Seconds() {
+        val response = response503.newBuilder()
                 .header("Retry-After", "120")
                 .build()
-        e = ServiceUnavailableException(response)
+        val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
         assertTrue(withinTimeRange(e.retryAfter!!, 120))
+    }
 
+    @Test
+    fun testRetryAfter_Date() {
         val cal = Calendar.getInstance()
         cal.add(Calendar.MINUTE, 30)
-        response = response.newBuilder()
+        val response = response503.newBuilder()
                 .header("Retry-After", HttpUtils.formatDate(cal.time))
                 .build()
-        e = ServiceUnavailableException(response)
+        val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
         assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
     }

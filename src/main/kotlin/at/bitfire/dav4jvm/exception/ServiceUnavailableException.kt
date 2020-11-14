@@ -22,18 +22,18 @@ class ServiceUnavailableException: HttpException {
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
-        response.header("Retry-After")?.let {
-            retryAfter = HttpUtils.parseDate(it) ?:
+        response.header("Retry-After")?.let { after ->
+            retryAfter = HttpUtils.parseDate(after) ?:
                     // not a HTTP-date, must be delta-seconds
                     try {
-                        val seconds = Integer.parseInt(it)
+                        val seconds = Integer.parseInt(after)
 
                         val cal = Calendar.getInstance()
                         cal.add(Calendar.SECOND, seconds)
                         cal.time
 
                     } catch (ignored: NumberFormatException) {
-                        Dav4jvm.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds")
+                        Dav4jvm.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds: $after")
                         null
                     }
         }
