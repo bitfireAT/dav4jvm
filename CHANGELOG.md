@@ -17,6 +17,11 @@ If you need support for older Android versions, stay with 1.x.
 - add ScheduleTag
 - use okhttp 4.7.2
 
+## Version 2.1.2
+
+- add DAV:owner
+- fix date parsing bug
+
 
 # Version 1.x
 
