@@ -53,7 +53,7 @@ object HttpUtils {
      * @return date, or null if date could not be parsed
      */
     fun parseDate(dateStr: String) = try {
-        DateUtils.parseDate(dateStr, Locale.ROOT,
+        DateUtils.parseDate(dateStr, Locale.US,
                 httpDateFormatStr,
                 "EEE, dd MMM yyyy HH:mm:ss zzz", // RFC 822, updated by RFC 1123 with any TZ
                 "EEEE, dd-MMM-yy HH:mm:ss zzz", // RFC 850, obsoleted by RFC 1036 with any TZ.

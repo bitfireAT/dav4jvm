@@ -8,18 +8,19 @@ object Libs {
     const val xpp3Version = "1.1.6"
 }
 
-group="com.gitlab.bitfireAT"
-
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
-plugins {
-    kotlin("jvm") version "1.5.10"
+group="com.gitlab.bitfireAT"
+version="1.0"
 
-    id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
+plugins {
+    kotlin("jvm") version "1.5.21"
+    `maven-publish`
+
+    //id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
     id("org.jetbrains.dokka") version "0.10.1"
-    maven
 }
 
 tasks {
@@ -41,10 +42,4 @@ dependencies {
     api("org.ogce:xpp3:${Libs.xpp3Version}")
 
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
-}
-
-buildConfigKotlin {
-    sourceSet("main", Action {
-        buildConfig(name = "okhttpVersion", value = Libs.okhttpVersion)
-    })
 }
