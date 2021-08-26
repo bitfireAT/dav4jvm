@@ -14,13 +14,28 @@ repositories {
 }
 
 group="com.gitlab.bitfireAT"
-version="1.0"
+version="2.1.3"
 
 plugins {
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.5.30"
     `maven-publish`
 
     id("org.jetbrains.dokka") version "1.5.0"
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+
+    repositories {
+        maven {
+            name = "dav4jvm"
+            url = uri(layout.buildDirectory.dir("repo"))
+        }
+    }
 }
 
 tasks.withType<DokkaTask>().configureEach {
@@ -37,11 +52,12 @@ tasks.withType<DokkaTask>().configureEach {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk7"))
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
     api("org.ogce:xpp3:${Libs.xpp3Version}")
 
+    testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
 }
