@@ -8,7 +8,7 @@ Repository: https://gitlab.com/bitfireAT/dav4jvm/
 
 Discussion: https://forums.bitfire.at/category/18/libraries
 
-Generated KDoc: https://bitfireAT.gitlab.io/dav4jvm/dokka/dav4jvm/
+Generated KDoc: https://bitfireAT.gitlab.io/dav4jvm/dokka/html/
 
 
 ## How to use

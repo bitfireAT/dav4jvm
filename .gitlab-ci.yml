@@ -16,7 +16,7 @@ test:
 
 pages:
   script:
-    - ./gradlew dokka
+    - ./gradlew dokkaHtml
     - mkdir public && mv build/dokka public
   artifacts:
     paths:

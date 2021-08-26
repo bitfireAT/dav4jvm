@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTask
+import java.net.URL
 
 object Libs {
     // okhttp HTTP library
@@ -19,16 +20,17 @@ plugins {
     kotlin("jvm") version "1.5.21"
     `maven-publish`
 
-    //id("com.github.kukuhyoniatmoko.buildconfigkotlin") version "1.0.5"
-    id("org.jetbrains.dokka") version "0.10.1"
+    id("org.jetbrains.dokka") version "1.5.0"
 }
 
-tasks {
-    val dokka by getting(DokkaTask::class) {
-        configuration {
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets {
+        named("main") {
+            moduleName.set("dav4jvm")
             sourceLink {
-                url = "https://gitlab.com/bitfireAT/dav4jvm/tree/master/"
-                lineSuffix = "#L"
+                localDirectory.set(file("src/main/kotlin"))
+                remoteUrl.set(URL("https://gitlab.com/bitfireAT/dav4jvm/tree/master/src/main/kotlin"))
+                remoteLineSuffix.set("#L")
             }
         }
     }
