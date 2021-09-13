@@ -263,6 +263,21 @@ class DavResourceTest {
     }
 
     @Test
+    fun testGetRange_Ok() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+
+        mockServer.enqueue(MockResponse()
+            .setResponseCode(HttpURLConnection.HTTP_PARTIAL))
+        var called = false
+        dav.getRange(100, 342) { response ->
+            assertEquals("bytes=100-441", response.request.header("Range"))
+            called = true
+        }
+        assertTrue(called)
+    }
+
+    @Test
     fun testPut() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)

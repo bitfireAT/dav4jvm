@@ -29,7 +29,9 @@ class BasicDigestAuthHandler(
         val domain: String?,
 
         val username: String,
-        val password: String
+        val password: String,
+
+        val insecurePreemptive: Boolean = false
 ): Authenticator, Interceptor {
 
     companion object {
@@ -68,7 +70,7 @@ class BasicDigestAuthHandler(
         if (response == null) {
             // we're not processing a 401 response
 
-            if (basicAuth == null && digestAuth == null && request.isHttps) {
+            if (basicAuth == null && digestAuth == null && (request.isHttps || insecurePreemptive)) {
                 Dav4jvm.log.fine("Trying Basic auth preemptively")
                 basicAuth = Challenge("Basic", "")
             }

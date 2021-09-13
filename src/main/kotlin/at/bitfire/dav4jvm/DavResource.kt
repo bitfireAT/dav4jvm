@@ -45,6 +45,7 @@ open class DavResource @JvmOverloads constructor(
     companion object {
         const val MAX_REDIRECTS = 5
 
+        const val HTTP_MULTISTATUS = 207
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
         val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
@@ -123,7 +124,7 @@ open class DavResource @JvmOverloads constructor(
                     .execute()
         }.use { response ->
             checkStatus(response)
-            if (response.code == 207)
+            if (response.code == HTTP_MULTISTATUS)
                 /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
@@ -165,7 +166,7 @@ open class DavResource @JvmOverloads constructor(
         }.use{ response ->
             checkStatus(response)
 
-            if (response.code == 207)
+            if (response.code == HTTP_MULTISTATUS)
                 /* Multiple resources were to be affected by the COPY, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
@@ -198,6 +199,31 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Sends a HEAD request to the resource.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param callback called with server response unless an exception is thrown
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
+     */
+    fun head(callback: (response: Response) -> Unit) {
+        followRedirects {
+            httpClient.newCall(
+                Request.Builder()
+                    .head()
+                    .url(location)
+                    .build()
+            ).execute()
+        }.use { response ->
+            checkStatus(response)
+            callback(response)
+        }
+    }
+
+    /**
      * Sends a GET request to the resource. Sends `Accept-Encoding: identity` to disable
      * compression, because compression might change the ETag.
      *
@@ -221,6 +247,43 @@ open class DavResource @JvmOverloads constructor(
                     .build()).execute()
         }.use { response ->
             checkStatus(response)
+            callback(response)
+        }
+    }
+
+    /**
+     * Sends a GET request to the resource for a specific byte range.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param offset   zero-based index of first byte to request
+     * @param size     number of bytes to request
+     * @param callback called with server response unless an exception is thrown
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on high-level errors
+     */
+    @Throws(IOException::class, HttpException::class)
+    fun getRange(offset: Long, size: Int, headers: Headers? = null, callback: (response: Response) -> Unit) {
+        followRedirects {
+            val request = Request.Builder()
+                .get()
+                .url(location)
+
+            if (headers != null)
+                request.headers(headers)
+            
+            val lastIndex = offset + size - 1
+            request.header("Range", "bytes=$offset-$lastIndex")
+
+            httpClient.newCall(request.build()).execute()
+        }.use { response ->
+            checkStatus(response)
+
+            if (response.code != HttpURLConnection.HTTP_PARTIAL)
+                throw DavException("Expected 206 Partial Content, got ${response.code} ${response.message}")
+
             callback(response)
         }
     }
@@ -294,10 +357,10 @@ open class DavResource @JvmOverloads constructor(
         }.use { response ->
             checkStatus(response)
 
-            if (response.code == 207)
-            /* If an error occurs deleting a member resource (a resource other than
-               the resource identified in the Request-URI), then the response can be
-               a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
+            if (response.code == HTTP_MULTISTATUS)
+                /* If an error occurs deleting a member resource (a resource other than
+                   the resource identified in the Request-URI), then the response can be
+                   a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
                 throw HttpException(response)
 
             callback(response)
@@ -426,7 +489,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException if the response is not a Multi-Status response
      */
     private fun assertMultiStatus(response: Response) {
-        if (response.code != 207)
+        if (response.code != HTTP_MULTISTATUS)
             throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
 
         if (response.body == null)
