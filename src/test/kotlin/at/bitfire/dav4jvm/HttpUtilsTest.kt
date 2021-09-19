@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -14,12 +14,12 @@ class HttpUtilsTest {
 
     @Test
     fun testFilename() {
-        val sampleUrl = "https://example.com".toHttpUrlOrNull()!!
-        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/")!!))
-        assertEquals("hier1", HttpUtils.fileName(sampleUrl.resolve("/hier1")!!))
-        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/hier1/")!!))
-        assertEquals("hier2", HttpUtils.fileName(sampleUrl.resolve("/hier2")!!))
-        assertEquals("", HttpUtils.fileName(sampleUrl.resolve("/hier2/")!!))
+        assertEquals("", HttpUtils.fileName("https://example.com".toHttpUrl()))
+        assertEquals("", HttpUtils.fileName("https://example.com/".toHttpUrl()))
+        assertEquals("file1", HttpUtils.fileName("https://example.com/file1".toHttpUrl()))
+        assertEquals("dir1", HttpUtils.fileName("https://example.com/dir1/".toHttpUrl()))
+        assertEquals("file2", HttpUtils.fileName("https://example.com/dir1/file2".toHttpUrl()))
+        assertEquals("dir2", HttpUtils.fileName("https://example.com/dir1/dir2/".toHttpUrl()))
     }
 
 }

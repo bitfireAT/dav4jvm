@@ -21,13 +21,17 @@ object HttpUtils {
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
+     * Empty if the resource is the base directory.
      *
-     * @return resource name or `` (empty string) if the URL ends with a slash
-     *         (i.e. the resource is a collection).
+     * * `dir` for `https://example.com/dir/`
+     * * `file` for `https://example.com/file`
+     * * `` for `https://example.com` or  `https://example.com/`
+     *
+     * @return resource name
      */
     fun fileName(url: HttpUrl): String {
-        val pathSegments = url.pathSegments
-        return pathSegments[pathSegments.size - 1]
+        val pathSegments = url.pathSegments.dropLastWhile { it == "" }
+        return pathSegments.lastOrNull() ?: ""
     }
 
     fun listHeader(response: Response, name: String): Array<String> {
