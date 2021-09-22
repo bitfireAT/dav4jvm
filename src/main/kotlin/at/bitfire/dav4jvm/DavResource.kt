@@ -32,6 +32,9 @@ import at.bitfire.dav4jvm.Response as DavResponse
  * callback will be called. Otherwise, an exception is thrown. *These callbacks
  * don't need to close the response.*
  *
+ * To cancel a request, interrupt the thread. This will cause the requests to
+ * throw `InterruptedException` or `InterruptedIOException`.
+ *
  * @param httpClient    [OkHttpClient] to access this object (must not follow redirects)
  * @param location      location of the WebDAV resource
  * @param log           will be used for logging
@@ -150,7 +153,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun copy(destination:HttpUrl, forceOverride:Boolean, callback: (response: Response) -> Unit) {
+    fun copy(destination:HttpUrl, forceOverride: Boolean, callback: (response: Response) -> Unit) {
         val requestBuilder = Request.Builder()
                 .method("COPY", null)
                 .header("Content-Length", "0")
@@ -229,43 +232,33 @@ open class DavResource @JvmOverloads constructor(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param accept   value of Accept header (must not be null, but may be *&#47;*)
+     * @param accept   value of `Accept` header (always sent for clarity; use *&#47;* if you don't care)
      * @param callback called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
+    @Deprecated("Use get(accept, headers, callback) with explicit Accept-Encoding instead")
     @Throws(IOException::class, HttpException::class)
-    fun get(accept: String, callback: (response: Response) -> Unit) {
-        followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .get()
-                    .url(location)
-                    .header("Accept", accept)
-                    .header("Accept-Encoding", "identity")    // disable compression because it can change the ETag
-                    .build()).execute()
-        }.use { response ->
-            checkStatus(response)
-            callback(response)
-        }
-    }
+    fun get(accept: String, callback: (response: Response) -> Unit) =
+        get(accept, Headers.headersOf("Accept-Encoding", "identity"), callback)
 
     /**
-     * Sends a GET request to the resource for a specific byte range.
+     * Sends a GET request to the resource. Follows up to [MAX_REDIRECTS] redirects.
      *
-     * Follows up to [MAX_REDIRECTS] redirects.
+     * Note: Add `Accept-Encoding: identity` to [headers] if you want to disable compression
+     * (compression might change the returned ETag).
      *
-     * @param offset   zero-based index of first byte to request
-     * @param size     number of bytes to request
+     * @param accept   value of `Accept` header (always sent for clarity; use *&#47;* if you don't care)
+     * @param headers  additional headers to send with the request
      * @param callback called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on high-level errors
+     * @throws DavException on HTTPS -> HTTP redirect
      */
-    @Throws(IOException::class, HttpException::class)
-    fun getRange(offset: Long, size: Int, headers: Headers? = null, callback: (response: Response) -> Unit) {
+    fun get(accept: String, headers: Headers?, callback: (response: Response) -> Unit) {
         followRedirects {
             val request = Request.Builder()
                 .get()
@@ -273,17 +266,51 @@ open class DavResource @JvmOverloads constructor(
 
             if (headers != null)
                 request.headers(headers)
-            
-            val lastIndex = offset + size - 1
-            request.header("Range", "bytes=$offset-$lastIndex")
+
+            // always Accept header
+            request.header("Accept", accept)
 
             httpClient.newCall(request.build()).execute()
         }.use { response ->
             checkStatus(response)
+            callback(response)
+        }
+    }
 
-            if (response.code != HttpURLConnection.HTTP_PARTIAL)
-                throw DavException("Expected 206 Partial Content, got ${response.code} ${response.message}")
+    /**
+     * Sends a GET request to the resource for a specific byte range. Make sure to check the
+     * response code: servers may return the whole resource with 200 or partials with 206.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param accept   value of `Accept` header (always sent for clarity; use *&#47;* if you don't care)
+     * @param offset   zero-based index of first byte to request
+     * @param size     number of bytes to request
+     * @param headers  additional headers to send with the request
+     * @param callback called with server response unless an exception is thrown
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on high-level errors
+     */
+    @Throws(IOException::class, HttpException::class)
+    fun getRange(accept: String, offset: Long, size: Int, headers: Headers? = null, callback: (response: Response) -> Unit) {
+        followRedirects {
+            val request = Request.Builder()
+                .get()
+                .url(location)
 
+            if (headers != null)
+                request.headers(headers)
+
+            val lastIndex = offset + size - 1
+            request
+                .header("Accept", accept)
+                .header("Range", "bytes=$offset-$lastIndex")
+
+            httpClient.newCall(request.build()).execute()
+        }.use { response ->
+            checkStatus(response)
             callback(response)
         }
     }

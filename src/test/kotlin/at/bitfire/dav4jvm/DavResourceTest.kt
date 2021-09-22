@@ -214,7 +214,7 @@ class DavResourceTest {
                 .setHeader("Content-Type", "application/x-test-result")
                 .setBody(sampleText))
         var called = false
-        dav.get("*/*") { response ->
+        dav.get("*/*", null) { response ->
             called = true
             assertEquals(sampleText, response.body!!.string())
 
@@ -238,7 +238,7 @@ class DavResourceTest {
                 .setHeader("ETag", "\"StrongETag\"")
                 .setBody(sampleText))
         called = false
-        dav.get("*/*") { response ->
+        dav.get("*/*", null) { response ->
             called = true
             assertEquals(sampleText, response.body!!.string())
             assertEquals("StrongETag", GetETag(response.header("ETag")).eTag)
@@ -255,7 +255,7 @@ class DavResourceTest {
                 .setResponseCode(HttpURLConnection.HTTP_OK)
                 .setBody(sampleText))
         called = false
-        dav.get("*/*") { response ->
+        dav.get("*/*", null) { response ->
             called = true
             assertNull(response.header("ETag"))
         }
@@ -270,7 +270,7 @@ class DavResourceTest {
         mockServer.enqueue(MockResponse()
             .setResponseCode(HttpURLConnection.HTTP_PARTIAL))
         var called = false
-        dav.getRange(100, 342) { response ->
+        dav.getRange("*/*", 100, 342) { response ->
             assertEquals("bytes=100-441", response.request.header("Range"))
             called = true
         }
