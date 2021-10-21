@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressData(
-        val vCard: String?
+        val card: String?
 ): Property {
 
     companion object {

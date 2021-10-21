@@ -28,6 +28,7 @@ class DavAddressBook @JvmOverloads constructor(
 ): DavCollection(httpClient, location, log) {
 
     companion object {
+        val MIME_JCARD = "application/vcard+json".toMediaType()
         val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
         val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
 
@@ -82,9 +83,12 @@ class DavAddressBook @JvmOverloads constructor(
     /**
      * Sends an addressbook-multiget REPORT request to the resource.
      *
-     * @param urls     list of vCard URLs to be requested
-     * @param vCard4   whether vCards should be requested as vCard4 4.0 (true: 4.0, false: 3.0)
-     * @param callback called for every WebDAV response XML element in the result
+     * @param urls         list of vCard URLs to be requested
+     * @param contentType  MIME type of requested format; may be "text/vcard" for vCard or
+     *                     "application/vcard+json" for jCard
+     * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
+     *                     Currently only useful value: "4.0" for vCard 4.
+     * @param callback     called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but
      * are not part of response XML elements
@@ -93,7 +97,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, vCard4: Boolean, callback: DavResponseCallback): List<Property> {
+    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -110,10 +114,10 @@ class DavAddressBook @JvmOverloads constructor(
                 insertTag(GetContentType.NAME)
                 insertTag(GetETag.NAME)
                 insertTag(AddressData.NAME) {
-                    if (vCard4) {
-                        attribute(null, AddressData.CONTENT_TYPE, "text/vcard")
-                        attribute(null, AddressData.VERSION, "4.0")
-                    }
+                    if (contentType != null)
+                        attribute(null, AddressData.CONTENT_TYPE, contentType)
+                    if (version != null)
+                        attribute(null, AddressData.VERSION, version)
                 }
             }
             for (url in urls)

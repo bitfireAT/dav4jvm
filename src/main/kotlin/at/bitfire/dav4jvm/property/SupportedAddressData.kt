@@ -32,6 +32,8 @@ class SupportedAddressData: Property {
     val types = mutableSetOf<MediaType>()
 
     fun hasVCard4() = types.any { "text/vcard; version=4.0".equals(it.toString(), true) }
+    fun hasJCard() = types.any { "application".equals(it.type, true) && "vcard+json".equals(it.subtype, true) }
+
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
