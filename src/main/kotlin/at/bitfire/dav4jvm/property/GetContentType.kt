@@ -24,7 +24,7 @@ data class GetContentType(
     constructor(mediaType: MediaType): this(mediaType.toString())
 
 
-    class Factory : PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

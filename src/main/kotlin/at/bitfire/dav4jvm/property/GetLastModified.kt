@@ -19,7 +19,7 @@ data class GetLastModified(
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

@@ -122,8 +122,11 @@ class DavCalendar @JvmOverloads constructor(
      * Sends a calendar-multiget REPORT to the resource. Received responses are sent
      * to the callback, whether they are successful (2xx) or not.
      *
-     * @param urls     list of iCalendar URLs to be requested
-     * @param callback called for every WebDAV response XML element in the result
+     * @param urls         list of iCalendar URLs to be requested
+     * @param contentType  MIME type of requested format; may be "text/calendar" for iCalendar or
+     *                     "application/calendar+json" for jCard. *null*: don't request specific representation type
+     * @param version      Version subtype of the requested format, like "2.0" for iCalendar 2. *null*: don't request specific version
+     * @param callback     called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but
      * are not part of response XML elements
@@ -132,7 +135,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, callback: DavResponseCallback): List<Property> {
+    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: DavResponseCallback): List<Property> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -148,7 +151,12 @@ class DavCalendar @JvmOverloads constructor(
                 insertTag(GetContentType.NAME)     // to determine the character set
                 insertTag(GetETag.NAME)
                 insertTag(ScheduleTag.NAME)
-                insertTag(CalendarData.NAME)
+                insertTag(CalendarData.NAME) {
+                    if (contentType != null)
+                        attribute(null, CalendarData.CONTENT_TYPE, contentType)
+                    if (version != null)
+                        attribute(null, CalendarData.VERSION, version)
+                }
             }
             for (url in urls)
                 insertTag(HREF) {

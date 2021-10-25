@@ -48,7 +48,7 @@ class GetETag(
     override fun toString() = eTag ?: "(null)"
 
 
-    class Factory : PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

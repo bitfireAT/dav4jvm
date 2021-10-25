@@ -29,7 +29,7 @@ data class SupportedCalendarComponentSet(
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

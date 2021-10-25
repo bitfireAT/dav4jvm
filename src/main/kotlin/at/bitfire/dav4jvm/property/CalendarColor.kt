@@ -45,7 +45,7 @@ data class CalendarColor(
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

@@ -24,7 +24,7 @@ data class CurrentUserPrincipal(
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

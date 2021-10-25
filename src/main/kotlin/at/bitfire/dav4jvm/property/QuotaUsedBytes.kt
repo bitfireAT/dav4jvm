@@ -20,7 +20,7 @@ data class QuotaUsedBytes(
 
     }
 
-    class Factory : PropertyFactory {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): QuotaUsedBytes? {

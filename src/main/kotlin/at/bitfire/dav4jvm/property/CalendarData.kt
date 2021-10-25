@@ -18,10 +18,14 @@ data class CalendarData(
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALDAV, "calendar-data")
+
+        // attributes
+        const val CONTENT_TYPE = "content-type"
+        const val VERSION = "version"
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

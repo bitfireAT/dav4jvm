@@ -16,14 +16,14 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
-class SupportedAddressData: Property {
+class SupportedCalendarData: Property {
 
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CARDDAV, "supported-address-data")
+        val NAME = Property.Name(XmlUtils.NS_CALDAV, "supported-calendar-data")
 
-        val ADDRESS_DATA_TYPE = Property.Name(XmlUtils.NS_CARDDAV, "address-data-type")
+        val CALENDAR_DATA_TYPE = Property.Name(XmlUtils.NS_CALDAV, "calendar-data")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
 
@@ -31,8 +31,7 @@ class SupportedAddressData: Property {
 
     val types = mutableSetOf<MediaType>()
 
-    fun hasVCard4() = types.any { "text/vcard; version=4.0".equals(it.toString(), true) }
-    fun hasJCard() = types.any { "application".equals(it.type, true) && "vcard+json".equals(it.subtype, true) }
+    fun hasJCal() = types.any { "application".equals(it.type, true) && "calendar+json".equals(it.subtype, true) }
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
@@ -41,11 +40,11 @@ class SupportedAddressData: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedAddressData? {
-            val supported = SupportedAddressData()
+        override fun create(parser: XmlPullParser): SupportedCalendarData? {
+            val supported = SupportedCalendarData()
 
             try {
-                XmlUtils.processTag(parser, ADDRESS_DATA_TYPE) {
+                XmlUtils.processTag(parser, CALENDAR_DATA_TYPE) {
                     parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
                         var type = contentType
                         parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }

@@ -20,7 +20,7 @@ data class AddressbookDescription(
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-description")
     }
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

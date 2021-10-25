@@ -23,7 +23,7 @@ data class AddMember(
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "add-member")
     }
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =

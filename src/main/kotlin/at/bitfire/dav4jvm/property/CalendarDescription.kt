@@ -21,7 +21,7 @@ data class CalendarDescription(
     }
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

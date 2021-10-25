@@ -21,7 +21,7 @@ data class GetCTag(
     }
 
 
-    class Factory : PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

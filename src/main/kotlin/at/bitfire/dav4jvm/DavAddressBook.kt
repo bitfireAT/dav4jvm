@@ -85,9 +85,9 @@ class DavAddressBook @JvmOverloads constructor(
      *
      * @param urls         list of vCard URLs to be requested
      * @param contentType  MIME type of requested format; may be "text/vcard" for vCard or
-     *                     "application/vcard+json" for jCard
+     *                     "application/vcard+json" for jCard. *null*: don't request specific representation type
      * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
-     *                     Currently only useful value: "4.0" for vCard 4.
+     *                     Currently only useful value: "4.0" for vCard 4. *null*: don't request specific version
      * @param callback     called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but

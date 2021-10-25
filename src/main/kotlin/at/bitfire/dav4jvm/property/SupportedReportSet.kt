@@ -30,7 +30,7 @@ class SupportedReportSet: Property {
     override fun toString() = "[${reports.joinToString(", ")}]"
 
 
-    class Factory: PropertyFactory {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
