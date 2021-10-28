@@ -219,7 +219,7 @@ class DavResourceTest {
             assertEquals(sampleText, response.body!!.string())
 
             assertEquals("My Weak ETag", GetETag.fromResponse(response)?.eTag)
-            assertEquals("application/x-test-result", GetContentType(response.body!!.contentType()!!).type)
+            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
         }
         assertTrue(called)
 

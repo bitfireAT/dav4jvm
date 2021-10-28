@@ -10,18 +10,17 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.xmlpull.v1.XmlPullParser
 
 data class GetContentType(
-        val type: String?
+        val type: MediaType?
 ): Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getcontenttype")
     }
-
-    constructor(mediaType: MediaType): this(mediaType.toString())
 
 
     object Factory: PropertyFactory {
@@ -30,7 +29,8 @@ data class GetContentType(
 
         override fun create(parser: XmlPullParser) =
                 // <!ELEMENT getcontenttype (#PCDATA) >
-                GetContentType(XmlUtils.readText(parser))
+                GetContentType(XmlUtils.readText(parser)?.toMediaTypeOrNull())
 
     }
+
 }
