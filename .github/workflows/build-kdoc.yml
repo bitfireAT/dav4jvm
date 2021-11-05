@@ -1,0 +1,29 @@
+name: Build KDoc
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    name: Build and publish KDoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: 11
+          cache: 'gradle'
+      - uses: gradle/wrapper-validation-action@v1
+
+      - name: Build KDoc
+        run: ./gradlew dokkaHtml
+      - name: Publish KDoc
+        if: success()
+        uses: crazy-max/ghaction-github-pages@v2.5.0
+        with:
+          target_branch: gh-pages
+          build_dir: build/dokka/html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
