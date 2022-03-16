@@ -18,6 +18,7 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
+import java.lang.Long.min
 import java.util.logging.Level
 
 /**
@@ -79,13 +80,15 @@ open class DavException @JvmOverloads constructor(
                 request = httpResponse.request.toString()
 
                 httpResponse.request.body?.let { body ->
-                    body.contentType()?.let {
-                        if (isPlainText(it)) {
+                    body.contentType()?.let { type ->
+                        if (isPlainText(type)) {
                             val buffer = Buffer()
                             body.writeTo(buffer)
+
                             val baos = ByteArrayOutputStream()
-                            buffer.writeTo(baos)
-                            requestBody = baos.toString(it.charset(Charsets.UTF_8)!!.name())
+                            buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
+
+                            requestBody = baos.toString(type.charset(Charsets.UTF_8)!!.name())
                         }
                     }
                 }

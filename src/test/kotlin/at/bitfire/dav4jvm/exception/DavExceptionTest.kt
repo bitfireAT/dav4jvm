@@ -10,7 +10,12 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.property.ResourceType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -38,11 +43,40 @@ class DavExceptionTest {
 
 
     /**
+     * Test truncation of a too large plain text request in [DavException].
+     */
+    @Test
+    fun testRequestLargeTextError() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+
+        val builder = StringBuilder()
+        builder.append(CharArray(DavException.MAX_EXCERPT_SIZE+100) { '*' })
+        val body = builder.toString()
+
+        val e = DavException("Error with large request body", null, Response.Builder()
+            .request(Request.Builder()
+                .url("http://example.com")
+                .post(body.toRequestBody("text/plain".toMediaType()))
+                .build())
+            .protocol(Protocol.HTTP_1_1)
+            .code(204)
+            .message("No Content")
+            .build())
+
+        assertTrue(e.errors.isEmpty())
+        assertEquals(
+            body.substring(0, DavException.MAX_EXCERPT_SIZE),
+            e.requestBody
+        )
+    }
+
+    /**
      * Test a large HTML response which has a multi-octet UTF-8 character
      * exactly at the cut-off position.
      */
     @Test
-    fun testLargeTextError() {
+    fun testResponseLargeTextError() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
@@ -62,14 +96,14 @@ class DavExceptionTest {
             assertEquals(e.code, 404)
             assertTrue(e.errors.isEmpty())
             assertEquals(
-                    body.substring(0, DavException.MAX_EXCERPT_SIZE-1),
-                    e.responseBody!!.substring(0, DavException.MAX_EXCERPT_SIZE-1)
+                body.substring(0, DavException.MAX_EXCERPT_SIZE-1),
+                e.responseBody!!.substring(0, DavException.MAX_EXCERPT_SIZE-1)
             )
         }
     }
 
     @Test
-    fun testNonTextError() {
+    fun testResponseNonTextError() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
