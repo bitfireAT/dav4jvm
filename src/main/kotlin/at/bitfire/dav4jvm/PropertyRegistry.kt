@@ -44,6 +44,8 @@ object PropertyRegistry {
             GetETag.Factory,
             GetLastModified.Factory,
             GroupMembership.Factory,
+            MaxICalendarSize.Factory,
+            MaxVCardSize.Factory,
             Owner.Factory,
             QuotaAvailableBytes.Factory,
             QuotaUsedBytes.Factory,
