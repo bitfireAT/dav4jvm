@@ -83,7 +83,8 @@ open class DavResource @JvmOverloads constructor(
 
 
     /**
-     * Sends an OPTIONS request to this resource. Doesn't follow redirects.
+     * Sends an OPTIONS request to this resource without HTTP compression (because some servers have
+     * broken compression for OPTIONS). Doesn't follow redirects.
      *
      * @param callback called with server response unless an exception is thrown
      *
@@ -97,6 +98,7 @@ open class DavResource @JvmOverloads constructor(
                 .method("OPTIONS", null)
                 .header("Content-Length", "0")
                 .url(location)
+                .header("Accept-Encoding", "identity")      // disable compression
                 .build()).execute().use { response ->
             checkStatus(response)
             callback(HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(), response)
