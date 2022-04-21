@@ -13,11 +13,11 @@ repositories {
     mavenCentral()
 }
 
-group="com.gitlab.bitfireAT"
+group="com.github.bitfireAT"
 version="2.1.3"
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.20"
     `maven-publish`
 
     id("org.jetbrains.dokka") version "1.5.0"
