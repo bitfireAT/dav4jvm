@@ -533,8 +533,8 @@ open class DavResource @JvmOverloads constructor(
                    Some broken servers return an XML response with some other MIME type. So we try to see
                    whether the response is maybe XML although the Content-Type is something else. */
                 try {
-                    val firstBytes = ByteArray(5)
-                    body.source().peek().read(firstBytes)
+                    val firstBytes = ByteArray(XML_SIGNATURE.size)
+                    body.source().peek().readFully(firstBytes)
                     if (XML_SIGNATURE.contentEquals(firstBytes)) {
                         Dav4jvm.log.warning("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
 
