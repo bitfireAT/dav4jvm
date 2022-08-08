@@ -6,10 +6,12 @@
 
 package at.bitfire.dav4jvm.property
 
+import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
+import java.util.logging.Level
 
 data class QuotaUsedBytes(
         val quotaUsedBytes: Long
@@ -17,15 +19,18 @@ data class QuotaUsedBytes(
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "quota-used-bytes")
-
     }
 
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): QuotaUsedBytes? {
-            XmlUtils.readText(parser)?.let {
-                return QuotaUsedBytes(it.toLong())
+            XmlUtils.readText(parser)?.let { valueStr ->
+                try {
+                    return QuotaUsedBytes(valueStr.toLong())
+                } catch(e: NumberFormatException) {
+                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
+                }
             }
             return null
         }

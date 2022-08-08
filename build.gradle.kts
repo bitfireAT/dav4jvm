@@ -17,7 +17,7 @@ group="com.github.bitfireAT"
 version="2.1.3"
 
 plugins {
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.7.0"
     `maven-publish`
 
     id("org.jetbrains.dokka") version "1.5.0"
