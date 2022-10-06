@@ -8,10 +8,21 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.*
+import at.bitfire.dav4jvm.exception.ConflictException
+import at.bitfire.dav4jvm.exception.DavException
+import at.bitfire.dav4jvm.exception.ForbiddenException
+import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.exception.NotFoundException
+import at.bitfire.dav4jvm.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -53,6 +64,9 @@ open class DavResource @JvmOverloads constructor(
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
         val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
+        val PROPERTYUPDATE = Property.Name(XmlUtils.NS_WEBDAV, "propertyupdate")
+        val SET = Property.Name(XmlUtils.NS_WEBDAV, "set")
+        val REMOVE = Property.Name(XmlUtils.NS_WEBDAV, "remove")
         val PROP = Property.Name(XmlUtils.NS_WEBDAV, "prop")
         val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
 
@@ -441,6 +455,83 @@ open class DavResource @JvmOverloads constructor(
         }
     }
 
+    fun search(search: String, callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit) {
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                    .url(location)
+                    .method("SEARCH", search.toRequestBody(MIME_XML))
+                    .build()).execute()
+        }.use {
+            processMultiStatus(it, callback)
+        }
+    }
+    
+    /**
+     * PropPatch only supports set and remove of properties!
+     */
+    fun propPatch(
+        setProperties: Map<Property.Name, String>,
+        removeProperties: List<Property.Name>,
+        callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit
+    ) {
+        followRedirects {
+            val string = createPropPatchXml(setProperties, removeProperties)
+
+            httpClient.newCall(
+                Request.Builder()
+                    .url(location)
+                    .method(
+                        "PROPPATCH",
+                        string
+                            .toRequestBody(MIME_XML)
+                    )
+                    .build()
+            ).execute()
+        }.use {
+            processMultiStatus(it, callback)
+        }
+    }
+    
+    fun createPropPatchXml(
+        setProperties: Map<Property.Name, String>,
+        removeProperties: List<Property.Name>
+    ): String {
+        // build XML request body
+        val serializer = XmlUtils.newSerializer()
+        val writer = StringWriter()
+        serializer.setOutput(writer)
+        serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
+        serializer.startDocument("UTF-8", null)
+        serializer.insertTag(PROPERTYUPDATE) {
+
+            // DAV:set
+            if (setProperties.isNotEmpty()) {
+                serializer.insertTag(SET) {
+                    for (prop in setProperties) {
+                        serializer.insertTag(PROP) {
+                            serializer.insertTag(prop.key) {
+                                text(prop.value)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // DAV:remove
+            if (removeProperties.isNotEmpty()) {
+                serializer.insertTag(REMOVE) {
+                    for (prop in removeProperties) {
+                        insertTag(PROP) {
+                            insertTag(prop)
+                        }
+                    }
+                }
+            }
+        }
+
+        serializer.endDocument()
+        return writer.toString()
+    }
 
     // status handling
 
