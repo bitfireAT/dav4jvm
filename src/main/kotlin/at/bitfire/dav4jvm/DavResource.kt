@@ -456,29 +456,6 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
-     * Sends a SEARCH request with the given body to the server.
-     *
-     * Follows up to [MAX_REDIRECTS] redirects.
-     *
-     * @param search    search request body (XML format)
-     * @param callback  called for every XML response element in the Multi-Status response
-     *
-     * @throws IOException on I/O error
-     * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
-     */
-    fun search(search: String, callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit) {
-        followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("SEARCH", search.toRequestBody(MIME_XML))
-                    .build()).execute()
-        }.use {
-            processMultiStatus(it, callback)
-        }
-    }
-    
-    /**
      * Sends a PROPPATCH request to the server in order to set and remove properties.
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
@@ -487,11 +464,14 @@ open class DavResource @JvmOverloads constructor(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
+     * Currently expects a 207 Multi-Status response although servers are allowed to
+     * return other values, too.
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    fun propPatch(
+    fun proppatch(
         setProperties: Map<Property.Name, String>,
         removeProperties: List<Property.Name>,
         callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit
@@ -506,6 +486,9 @@ open class DavResource @JvmOverloads constructor(
                     .build()
             ).execute()
         }.use {
+            // TODO handle not only 207 Multi-Status
+            // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
+
             processMultiStatus(it, callback)
         }
     }
@@ -548,6 +531,29 @@ open class DavResource @JvmOverloads constructor(
 
         serializer.endDocument()
         return writer.toString()
+    }
+
+    /**
+     * Sends a SEARCH request (RFC 5323) with the given body to the server.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects. Expects a 207 Multi-Status response.
+     *
+     * @param search    search request body (XML format, DAV:searchrequest or DAV:query-schema-discovery)
+     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
+     */
+    fun search(search: String, callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit) {
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                .url(location)
+                .method("SEARCH", search.toRequestBody(MIME_XML))
+                .build()).execute()
+        }.use {
+            processMultiStatus(it, callback)
+        }
     }
 
 
