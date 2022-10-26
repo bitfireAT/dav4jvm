@@ -71,6 +71,51 @@ open class DavResource @JvmOverloads constructor(
         val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
+
+
+        /**
+         * Creates a request body for the PROPPATCH request.
+         */
+        internal fun createProppatchXml(
+            setProperties: Map<Property.Name, String>,
+            removeProperties: List<Property.Name>
+        ): String {
+            // build XML request body
+            val serializer = XmlUtils.newSerializer()
+            val writer = StringWriter()
+            serializer.setOutput(writer)
+            serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
+            serializer.startDocument("UTF-8", null)
+            serializer.insertTag(PROPERTYUPDATE) {
+                // DAV:set
+                if (setProperties.isNotEmpty()) {
+                    serializer.insertTag(SET) {
+                        for (prop in setProperties) {
+                            serializer.insertTag(PROP) {
+                                serializer.insertTag(prop.key) {
+                                    text(prop.value)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // DAV:remove
+                if (removeProperties.isNotEmpty()) {
+                    serializer.insertTag(REMOVE) {
+                        for (prop in removeProperties) {
+                            insertTag(PROP) {
+                                insertTag(prop)
+                            }
+                        }
+                    }
+                }
+            }
+
+            serializer.endDocument()
+            return writer.toString()
+        }
+
     }
 
     /**
@@ -477,7 +522,7 @@ open class DavResource @JvmOverloads constructor(
         callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit
     ) {
         followRedirects {
-            val rqBody = createPropPatchXml(setProperties, removeProperties)
+            val rqBody = createProppatchXml(setProperties, removeProperties)
 
             httpClient.newCall(
                 Request.Builder()
@@ -491,46 +536,6 @@ open class DavResource @JvmOverloads constructor(
 
             processMultiStatus(it, callback)
         }
-    }
-    
-    private fun createPropPatchXml(
-        setProperties: Map<Property.Name, String>,
-        removeProperties: List<Property.Name>
-    ): String {
-        // build XML request body
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
-        serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
-        serializer.startDocument("UTF-8", null)
-        serializer.insertTag(PROPERTYUPDATE) {
-            // DAV:set
-            if (setProperties.isNotEmpty()) {
-                serializer.insertTag(SET) {
-                    for (prop in setProperties) {
-                        serializer.insertTag(PROP) {
-                            serializer.insertTag(prop.key) {
-                                text(prop.value)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // DAV:remove
-            if (removeProperties.isNotEmpty()) {
-                serializer.insertTag(REMOVE) {
-                    for (prop in removeProperties) {
-                        insertTag(PROP) {
-                            insertTag(prop)
-                        }
-                    }
-                }
-            }
-        }
-
-        serializer.endDocument()
-        return writer.toString()
     }
 
     /**

@@ -393,19 +393,6 @@ class DavResourceTest {
     }
 
     @Test
-    fun testProppatch() {
-        val url = sampleUrl()
-        val dav = DavResource(httpClient, url)
-
-        dav.proppatch(
-            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
-            removeProperties = listOf(Property.Name("sample", "removeThis"))
-        ) { response, hrefRelation ->
-            
-        }
-    }
-
-    @Test
     fun testPropfindAndMultiStatus() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
@@ -745,6 +732,57 @@ class DavResourceTest {
             assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
         }
         assertTrue(called)
+    }
+
+    @Test
+    fun testProppatch() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+
+        // multi-status response with <response>/<propstat> elements
+        mockServer.enqueue(MockResponse()
+            .setResponseCode(207)
+            .setHeader("Content-Type", "application/xml; charset=utf-8")
+            .setBody("<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                    "  <response>" +
+                    "    <href>/dav</href>" +
+                    "    <propstat>" +
+                    "      <prop>" +
+                    "         <s:setThis>Some Value</s:setThis>" +
+                    "      </prop>" +
+                    "      <status>HTTP/1.1 200 OK</status>" +
+                    "    </propstat>" +
+                    "    <propstat>" +
+                    "      <prop>" +
+                    "         <s:removeThis/>" +
+                    "      </prop>" +
+                    "      <status>HTTP/1.1 404 Not Found</status>" +
+                    "    </propstat>" +
+                    "  </response>" +
+                    "</multistatus>"))
+
+        var called = false
+        dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        ) { response, hrefRelation ->
+            called = true
+            assertEquals(Response.HrefRelation.SELF, hrefRelation)
+        }
+        assertTrue(called)
+    }
+
+    @Test
+    fun testProppatch_createProppatchXml() {
+        val xml = DavResource.createProppatchXml(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        )
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<d:propertyupdate xmlns:d=\"DAV:\">" +
+                    "<d:set><d:prop><n1:setThis xmlns:n1=\"sample\">Some Value</n1:setThis></d:prop></d:set>" +
+                    "<d:remove><d:prop><n2:removeThis xmlns:n2=\"sample\" /></d:prop></d:remove>" +
+                "</d:propertyupdate>", xml)
     }
 
     @Test
