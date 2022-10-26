@@ -455,6 +455,18 @@ open class DavResource @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Sends a SEARCH request with the given body to the server.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @param search    search request body (XML format)
+     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
+     */
     fun search(search: String, callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit) {
         followRedirects {
             httpClient.newCall(Request.Builder()
@@ -467,7 +479,17 @@ open class DavResource @JvmOverloads constructor(
     }
     
     /**
-     * PropPatch only supports set and remove of properties!
+     * Sends a PROPPATCH request to the server in order to set and remove properties.
+     *
+     * @param setProperties     map of properties that shall be set (values currently have to be strings)
+     * @param removeProperties  list of names of properties that shall be removed
+     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
     fun propPatch(
         setProperties: Map<Property.Name, String>,
@@ -475,16 +497,12 @@ open class DavResource @JvmOverloads constructor(
         callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit
     ) {
         followRedirects {
-            val string = createPropPatchXml(setProperties, removeProperties)
+            val rqBody = createPropPatchXml(setProperties, removeProperties)
 
             httpClient.newCall(
                 Request.Builder()
                     .url(location)
-                    .method(
-                        "PROPPATCH",
-                        string
-                            .toRequestBody(MIME_XML)
-                    )
+                    .method("PROPPATCH", rqBody.toRequestBody(MIME_XML))
                     .build()
             ).execute()
         }.use {
@@ -492,7 +510,7 @@ open class DavResource @JvmOverloads constructor(
         }
     }
     
-    fun createPropPatchXml(
+    private fun createPropPatchXml(
         setProperties: Map<Property.Name, String>,
         removeProperties: List<Property.Name>
     ): String {
@@ -503,7 +521,6 @@ open class DavResource @JvmOverloads constructor(
         serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
         serializer.startDocument("UTF-8", null)
         serializer.insertTag(PROPERTYUPDATE) {
-
             // DAV:set
             if (setProperties.isNotEmpty()) {
                 serializer.insertTag(SET) {
@@ -532,6 +549,7 @@ open class DavResource @JvmOverloads constructor(
         serializer.endDocument()
         return writer.toString()
     }
+
 
     // status handling
 
