@@ -8,10 +8,21 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.*
+import at.bitfire.dav4jvm.exception.ConflictException
+import at.bitfire.dav4jvm.exception.DavException
+import at.bitfire.dav4jvm.exception.ForbiddenException
+import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.exception.NotFoundException
+import at.bitfire.dav4jvm.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -53,10 +64,58 @@ open class DavResource @JvmOverloads constructor(
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
         val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
+        val PROPERTYUPDATE = Property.Name(XmlUtils.NS_WEBDAV, "propertyupdate")
+        val SET = Property.Name(XmlUtils.NS_WEBDAV, "set")
+        val REMOVE = Property.Name(XmlUtils.NS_WEBDAV, "remove")
         val PROP = Property.Name(XmlUtils.NS_WEBDAV, "prop")
         val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
+
+
+        /**
+         * Creates a request body for the PROPPATCH request.
+         */
+        internal fun createProppatchXml(
+            setProperties: Map<Property.Name, String>,
+            removeProperties: List<Property.Name>
+        ): String {
+            // build XML request body
+            val serializer = XmlUtils.newSerializer()
+            val writer = StringWriter()
+            serializer.setOutput(writer)
+            serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
+            serializer.startDocument("UTF-8", null)
+            serializer.insertTag(PROPERTYUPDATE) {
+                // DAV:set
+                if (setProperties.isNotEmpty()) {
+                    serializer.insertTag(SET) {
+                        for (prop in setProperties) {
+                            serializer.insertTag(PROP) {
+                                serializer.insertTag(prop.key) {
+                                    text(prop.value)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // DAV:remove
+                if (removeProperties.isNotEmpty()) {
+                    serializer.insertTag(REMOVE) {
+                        for (prop in removeProperties) {
+                            insertTag(PROP) {
+                                insertTag(prop)
+                            }
+                        }
+                    }
+                }
+            }
+
+            serializer.endDocument()
+            return writer.toString()
+        }
+
     }
 
     /**
@@ -436,6 +495,67 @@ open class DavResource @JvmOverloads constructor(
                     .method("PROPFIND", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", if (depth >= 0) depth.toString() else "infinity")
                     .build()).execute()
+        }.use {
+            processMultiStatus(it, callback)
+        }
+    }
+
+    /**
+     * Sends a PROPPATCH request to the server in order to set and remove properties.
+     *
+     * @param setProperties     map of properties that shall be set (values currently have to be strings)
+     * @param removeProperties  list of names of properties that shall be removed
+     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * Currently expects a 207 Multi-Status response although servers are allowed to
+     * return other values, too.
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
+     */
+    fun proppatch(
+        setProperties: Map<Property.Name, String>,
+        removeProperties: List<Property.Name>,
+        callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit
+    ) {
+        followRedirects {
+            val rqBody = createProppatchXml(setProperties, removeProperties)
+
+            httpClient.newCall(
+                Request.Builder()
+                    .url(location)
+                    .method("PROPPATCH", rqBody.toRequestBody(MIME_XML))
+                    .build()
+            ).execute()
+        }.use {
+            // TODO handle not only 207 Multi-Status
+            // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
+
+            processMultiStatus(it, callback)
+        }
+    }
+
+    /**
+     * Sends a SEARCH request (RFC 5323) with the given body to the server.
+     *
+     * Follows up to [MAX_REDIRECTS] redirects. Expects a 207 Multi-Status response.
+     *
+     * @param search    search request body (XML format, DAV:searchrequest or DAV:query-schema-discovery)
+     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
+     */
+    fun search(search: String, callback: (at.bitfire.dav4jvm.Response, at.bitfire.dav4jvm.Response.HrefRelation) -> Unit) {
+        followRedirects {
+            httpClient.newCall(Request.Builder()
+                .url(location)
+                .method("SEARCH", search.toRequestBody(MIME_XML))
+                .build()).execute()
         }.use {
             processMultiStatus(it, callback)
         }
