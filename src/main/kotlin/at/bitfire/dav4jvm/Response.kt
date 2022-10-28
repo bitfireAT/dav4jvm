@@ -102,7 +102,7 @@ data class Response(
         /**
          * Parses an XML response element.
          */
-        fun parse(parser: XmlPullParser, location: HttpUrl, callback: DavResponseCallback) {
+        fun parse(parser: XmlPullParser, location: HttpUrl, callback: MultiResponseCallback) {
             val depth = parser.depth
 
             var href: HttpUrl? = null
@@ -205,7 +205,7 @@ data class Response(
                 }
             }
 
-            callback(
+            callback.onResponse(
                     Response(
                             location,
                             href!!,
@@ -220,5 +220,3 @@ data class Response(
     }
 
 }
-
-typealias DavResponseCallback = (response: Response, relation: Response.HrefRelation) -> Unit

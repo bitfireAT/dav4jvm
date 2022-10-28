@@ -66,7 +66,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun calendarQuery(component: String, start: Date?, end: Date?, callback: DavResponseCallback): List<Property> {
+    fun calendarQuery(component: String, start: Date?, end: Date?, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -135,7 +135,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: DavResponseCallback): List<Property> {
+    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>

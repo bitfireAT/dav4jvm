@@ -49,7 +49,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun addressbookQuery(callback: DavResponseCallback): List<Property> {
+    fun addressbookQuery(callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -97,7 +97,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: DavResponseCallback): List<Property> {
+    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,

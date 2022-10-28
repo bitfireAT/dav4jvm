@@ -10,9 +10,11 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.*
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import java.io.IOException
 import java.io.StringWriter
 import java.util.logging.Logger
@@ -37,7 +39,7 @@ open class DavCollection @JvmOverloads constructor(
      * Sends a POST request. Primarily intended to be used with an Add-Member URL (RFC 5995).
      */
     @Throws(IOException::class, HttpException::class)
-    fun post(body: RequestBody, ifNoneMatch: Boolean = false, callback: (Response) -> Unit) {
+    fun post(body: RequestBody, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
         followRedirects {
             val builder = Request.Builder()
                     .post(body)
@@ -50,7 +52,7 @@ open class DavCollection @JvmOverloads constructor(
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
             checkStatus(response)
-            callback(response)
+            callback.onResponse(response)
         }
     }
 
@@ -70,7 +72,7 @@ open class DavCollection @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: DavResponseCallback): List<Property> {
+    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
