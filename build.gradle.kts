@@ -3,7 +3,7 @@ import java.net.URL
 
 object Libs {
     // okhttp HTTP library
-    const val okhttpVersion = "4.9.3"
+    const val okhttpVersion = "4.10.0"
 
     // XmlPullParser library
     const val xpp3Version = "1.1.6"
@@ -14,13 +14,13 @@ repositories {
 }
 
 group="com.github.bitfireAT"
-version="2.1.3"
+version="2.2"
 
 plugins {
-    kotlin("jvm") version "1.7.0"
+    kotlin("jvm") version "1.7.20"
     `maven-publish`
 
-    id("org.jetbrains.dokka") version "1.5.0"
+    id("org.jetbrains.dokka") version "1.7.20"
 }
 
 publishing {
