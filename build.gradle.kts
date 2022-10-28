@@ -44,7 +44,7 @@ tasks.withType<DokkaTask>().configureEach {
             moduleName.set("dav4jvm")
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://gitlab.com/bitfireAT/dav4jvm/tree/master/src/main/kotlin"))
+                remoteUrl.set(URL("https://github.com/bitfireAT/dav4jvm/tree/main/src/main/kotlin/"))
                 remoteLineSuffix.set("#L")
             }
         }

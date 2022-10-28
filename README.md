@@ -1,7 +1,8 @@
 
-[![Tests](https://github.com/bitfireAT/dav4jvm/actions/workflows/test.yml/badge.svg)](https://github.com/bitfireAT/dav4jvm/actions/workflows/test.yml)
 [![License](https://img.shields.io/github/license/bitfireAT/dav4jvm)](https://github.com/bitfireAT/dav4jvm/blob/main/LICENSE)
+[![Tests](https://github.com/bitfireAT/dav4jvm/actions/workflows/test.yml/badge.svg)](https://github.com/bitfireAT/dav4jvm/actions/workflows/test.yml)
 [![JitPack](https://img.shields.io/jitpack/v/github/bitfireAT/dav4jvm)](https://jitpack.io/#bitfireAT/dav4jvm)
+[![KDoc](https://img.shields.io/badge/documentation-KDoc-informational)](https://bitfireat.github.io/dav4jvm/)
 
 
 # dav4jvm
@@ -10,7 +11,6 @@ dav4jvm is a WebDAV/CalDAV/CardDAV library for JVM (Java/Kotlin). It has
 been developed for [DAVx⁵](https://www.davx5.com) initially.
 
 Repository: https://github.com/bitfireAT/dav4jvm/
-(~~was: https://gitlab.com/bitfireAT/dav4jvm/~~)
 
 Generated KDoc: https://bitfireat.github.io/dav4jvm/
 
