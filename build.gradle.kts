@@ -51,14 +51,18 @@ tasks.withType<DokkaTask>().configureEach {
     }
 }
 
+configurations {
+    all {
+        exclude(group = "xml-apis", module = "xml-apis")
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib-jdk7"))
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}") {
-        exclude(group = "javax.xml", module = "namespace")
-    }
+    api("org.ogce:xpp3:${Libs.xpp3Version}")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
