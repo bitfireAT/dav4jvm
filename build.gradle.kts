@@ -13,7 +13,7 @@ repositories {
     mavenCentral()
 }
 
-group="com.github.bitfireAT"
+group="com.github.Raymo111"
 version="2.2"
 
 plugins {
@@ -44,7 +44,7 @@ tasks.withType<DokkaTask>().configureEach {
             moduleName.set("dav4jvm")
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/bitfireAT/dav4jvm/tree/main/src/main/kotlin/"))
+                remoteUrl.set(URL("https://github.com/Raymo111/dav4jvm/tree/main/src/main/kotlin/"))
                 remoteLineSuffix.set("#L")
             }
         }
@@ -56,7 +56,9 @@ dependencies {
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}")
+    api("org.ogce:xpp3:${Libs.xpp3Version}") {
+        exclude(group = "javax.xml", module = "xml-api")
+    }
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
