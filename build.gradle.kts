@@ -14,7 +14,7 @@ repositories {
 }
 
 group="com.github.Raymo111"
-version="2.2"
+version="2.2.1"
 
 plugins {
     kotlin("jvm") version "1.7.20"
@@ -57,7 +57,7 @@ dependencies {
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
     api("org.ogce:xpp3:${Libs.xpp3Version}") {
-        exclude(group = "javax.xml", module = "xml-api")
+        exclude(group = "javax.xml", module = "namespace")
     }
 
     testImplementation("junit:junit:4.13.2")
