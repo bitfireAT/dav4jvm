@@ -9,7 +9,6 @@ package at.bitfire.dav4jvm
 import org.kobjects.ktxml.api.EventType
 import org.kobjects.ktxml.mini.MiniXmlPullParser
 import org.kobjects.ktxml.api.XmlPullParserException
-import org.xmlpull.v1.XmlPullParserFactory
 import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 
@@ -20,20 +19,6 @@ object XmlUtils {
     const val NS_CARDDAV = "urn:ietf:params:xml:ns:carddav"
     const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
     const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
-
-    private val factory: XmlPullParserFactory
-    init {
-        try {
-            factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = true
-        } catch (e: XmlPullParserException) {
-            throw RuntimeException("Couldn't create XmlPullParserFactory", e)
-        }
-    }
-
-    fun newPullParser() = factory.newPullParser()!!
-    fun newSerializer() = factory.newSerializer()!!
-
 
     @Throws(IOException::class, XmlPullParserException::class)
     fun processTag(parser: MiniXmlPullParser, name: Property.Name, processor: () -> Unit) {

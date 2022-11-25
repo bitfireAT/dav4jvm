@@ -15,6 +15,7 @@ import okhttp3.Response
 import okio.Buffer
 import org.kobjects.ktxml.api.EventType
 import org.kobjects.ktxml.api.XmlPullParserException
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
@@ -114,8 +115,7 @@ open class DavException @JvmOverloads constructor(
                             if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
                                 // look for precondition/postcondition XML elements
                                 try {
-                                    val parser = XmlUtils.newPullParser()
-                                    parser.setInput(body.charStream())
+                                    val parser = MiniXmlPullParser(body.charStream().toString().iterator())
 
                                     var eventType = parser.eventType
                                     while (eventType != EventType.END_DOCUMENT) {

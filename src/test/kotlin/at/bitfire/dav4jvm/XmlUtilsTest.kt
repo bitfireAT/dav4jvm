@@ -10,14 +10,14 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.io.StringReader
 
 class XmlUtilsTest {
 
     @Test
     fun testProcessTagRoot() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<test></test>"))
+        val parser = MiniXmlPullParser(StringReader("<test></test>").toString().iterator())
         // now on START_DOCUMENT [0]
 
         var processed = false
@@ -29,8 +29,7 @@ class XmlUtilsTest {
 
     @Test
     fun testProcessTagDepth1() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<root><test></test></root>"))
+        val parser = MiniXmlPullParser(StringReader("<root><test></test></root>").toString().iterator())
         parser.next()       // now on START_TAG <root>
 
         var processed = false
@@ -42,8 +41,7 @@ class XmlUtilsTest {
 
     @Test
     fun testReadText() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>"))
+        val parser = MiniXmlPullParser(StringReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>").toString().iterator())
         parser.next()
         parser.next()       // now on START_TAG <test>
 
@@ -57,8 +55,7 @@ class XmlUtilsTest {
 
     @Test
     fun testReadTextCDATA() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>"))
+        val parser = MiniXmlPullParser(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>").toString().iterator())
         parser.next()       // now on START_TAG <test>
 
         assertEquals("Test 1</test><test><garbage/>Test 2", XmlUtils.readText(parser))
@@ -67,8 +64,7 @@ class XmlUtilsTest {
 
     @Test
     fun testReadTextPropertyRoot() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>"))
+        val parser = MiniXmlPullParser(StringReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>").toString().iterator())
         parser.next()        // now on START_TAG <root>
 
         val entries = mutableListOf<String>()
@@ -82,8 +78,7 @@ class XmlUtilsTest {
 
     @Test
     fun testReadTextPropertyListDepth1() {
-        val parser = XmlUtils.newPullParser()
-        parser.setInput(StringReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>"))
+        val parser = MiniXmlPullParser(StringReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>").toString().iterator())
         parser.next()       // now on START_TAG <test> [1]
 
         val entries = mutableListOf<String>()

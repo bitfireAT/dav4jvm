@@ -16,6 +16,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.kobjects.ktxml.api.EventType
 import org.kobjects.ktxml.api.XmlPullParserException
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
@@ -701,31 +702,31 @@ open class DavResource @JvmOverloads constructor(
      */
     protected fun processMultiStatus(reader: Reader, callback: MultiResponseCallback): List<Property> {
         val responseProperties = mutableListOf<Property>()
-        val parser = XmlUtils.newPullParser()
+        var parser = null as MiniXmlPullParser?
 
         fun parseMultiStatus(): List<Property> {
             // <!ELEMENT multistatus (response*, responsedescription?,
             //                        sync-token?) >
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
-                if (eventType == EventType.START_TAG && parser.depth == depth + 1)
-                    when (parser.propertyName()) {
+            val depth = parser!!.depth
+            var eventType = parser!!.eventType
+            while (!(eventType == EventType.END_TAG && parser!!.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser!!.depth == depth + 1)
+                    when (parser!!.propertyName()) {
                         DavResponse.RESPONSE ->
-                            at.bitfire.dav4jvm.Response.parse(parser, location, callback)
+                            at.bitfire.dav4jvm.Response.parse(parser!!, location, callback)
                         SyncToken.NAME ->
-                            XmlUtils.readText(parser)?.let {
+                            XmlUtils.readText(parser!!)?.let {
                                 responseProperties += SyncToken(it)
                             }
                     }
-                eventType = parser.next()
+                eventType = parser!!.next()
             }
 
             return responseProperties
         }
 
         try {
-            parser.setInput(reader)
+            parser = MiniXmlPullParser(reader.toString().iterator())
 
             var eventType = parser.eventType
             while (eventType != EventType.END_DOCUMENT) {
@@ -733,7 +734,7 @@ open class DavResource @JvmOverloads constructor(
                     if (parser.propertyName() == DavResponse.MULTISTATUS)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements
-                eventType = parser.next()
+                eventType = parser!!.next()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")
