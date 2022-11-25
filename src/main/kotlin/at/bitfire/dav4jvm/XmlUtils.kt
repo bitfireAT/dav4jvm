@@ -53,7 +53,7 @@ object XmlUtils {
         val depth = parser.depth
         var eventType = parser.eventType
         while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.TEXT && parser.depth == depth)
+            if (eventType == EventType.TEXT && parser.depth == depth)
                 text = parser.text
             eventType = parser.next()
         }
@@ -92,11 +92,9 @@ object XmlUtils {
         endTag(name.namespace, name.name)
     }
 
-    fun XmlPullParser.propertyName(): Property.Name {
+    fun MiniXmlPullParser.propertyName(): Property.Name {
         val propNs = namespace
         val propName = name
-        if (propNs == null || propName == null)
-            throw IllegalStateException("Current event must be START_TAG or END_TAG")
         return Property.Name(propNs, propName)
     }
 

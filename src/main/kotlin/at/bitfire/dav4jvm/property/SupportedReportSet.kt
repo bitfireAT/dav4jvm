@@ -44,8 +44,8 @@ class SupportedReportSet: Property {
             val supported = SupportedReportSet()
             XmlUtils.processTag(parser, SUPPORTED_REPORT) {
                 XmlUtils.processTag(parser, REPORT) {
-                    parser.nextTag()
-                    if (parser.eventType == XmlPullParser.TEXT)
+                    parser.next()
+                    if (parser.eventType == EventType.TEXT)
                         supported.reports += parser.text
                     else if (parser.eventType == EventType.START_TAG)
                         supported.reports += "${parser.namespace}${parser.name}"
