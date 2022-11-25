@@ -734,7 +734,7 @@ open class DavResource @JvmOverloads constructor(
                     if (parser.propertyName() == DavResponse.MULTISTATUS)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements
-                eventType = parser!!.next()
+                eventType = parser.next()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")

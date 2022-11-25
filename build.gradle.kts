@@ -17,7 +17,7 @@ repositories {
 }
 
 group="com.github.Raymo111"
-version="2.2.2"
+version="3.0"
 
 plugins {
     kotlin("jvm") version "1.7.20"
@@ -72,5 +72,11 @@ kotlin {
                 implementation("org.kobjects.ktxml:core:0.2.2")
             }
         }
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
