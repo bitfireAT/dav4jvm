@@ -45,9 +45,9 @@ class SupportedCalendarData: Property {
 
             try {
                 XmlUtils.processTag(parser, CALENDAR_DATA_TYPE) {
-                    parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
+                    parser.getAttributeValue(null.toString(), CONTENT_TYPE)?.let { contentType ->
                         var type = contentType
-                        parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
+                        parser.getAttributeValue(null.toString(), VERSION)?.let { version -> type += "; version=$version" }
                         type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }
