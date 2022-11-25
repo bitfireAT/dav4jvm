@@ -7,8 +7,8 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.property.*
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import org.kobjects.ktxml.mini.MiniXmlPullParser
+import org.kobjects.ktxml.api.XmlPullParserException
 import java.util.logging.Level
 
 object PropertyRegistry {
@@ -84,7 +84,7 @@ object PropertyRegistry {
         }
     }
 
-    fun create(name: Property.Name, parser: XmlPullParser) =
+    fun create(name: Property.Name, parser: MiniXmlPullParser) =
             try {
                 factories[name]?.create(parser)
             } catch (e: XmlPullParserException) {

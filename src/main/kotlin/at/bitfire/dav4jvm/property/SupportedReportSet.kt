@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 class SupportedReportSet: Property {
 
@@ -34,7 +35,7 @@ class SupportedReportSet: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedReportSet? {
+        override fun create(parser: MiniXmlPullParser): SupportedReportSet? {
             /* <!ELEMENT supported-report-set (supported-report*)>
                <!ELEMENT supported-report report>
                <!ELEMENT report ANY>
@@ -46,7 +47,7 @@ class SupportedReportSet: Property {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
                         supported.reports += parser.text
-                    else if (parser.eventType == XmlPullParser.START_TAG)
+                    else if (parser.eventType == EventType.START_TAG)
                         supported.reports += "${parser.namespace}${parser.name}"
                 }
             }

@@ -10,7 +10,7 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.util.*
 
 abstract class HrefListProperty: Property {
@@ -26,7 +26,7 @@ abstract class HrefListProperty: Property {
 
     abstract class Factory: PropertyFactory {
 
-        fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
+        fun create(parser: MiniXmlPullParser, list: HrefListProperty): HrefListProperty {
             XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
             return list
         }

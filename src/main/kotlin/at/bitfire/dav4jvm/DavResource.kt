@@ -14,8 +14,8 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.api.XmlPullParserException
 import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
@@ -708,8 +708,8 @@ open class DavResource @JvmOverloads constructor(
             //                        sync-token?) >
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         DavResponse.RESPONSE ->
                             at.bitfire.dav4jvm.Response.parse(parser, location, callback)
@@ -728,8 +728,8 @@ open class DavResource @JvmOverloads constructor(
             parser.setInput(reader)
 
             var eventType = parser.eventType
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+            while (eventType != EventType.END_DOCUMENT) {
+                if (eventType == EventType.START_TAG && parser.depth == 1)
                     if (parser.propertyName() == DavResponse.MULTISTATUS)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements

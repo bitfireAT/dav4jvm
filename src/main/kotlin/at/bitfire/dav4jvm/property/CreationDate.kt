@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 data class CreationDate(
         var creationDate: String
@@ -22,7 +22,7 @@ data class CreationDate(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CreationDate? {
+        override fun create(parser: MiniXmlPullParser): CreationDate? {
             XmlUtils.readText(parser)?.let { it ->
                 return CreationDate(it)
             }

@@ -13,8 +13,8 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import okhttp3.MediaType
 import okhttp3.Response
 import okio.Buffer
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.api.XmlPullParserException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
@@ -118,8 +118,8 @@ open class DavException @JvmOverloads constructor(
                                     parser.setInput(body.charStream())
 
                                     var eventType = parser.eventType
-                                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+                                    while (eventType != EventType.END_DOCUMENT) {
+                                        if (eventType == EventType.START_TAG && parser.depth == 1)
                                             if (parser.propertyName() == Error.NAME)
                                                 errors = Error.parseError(parser)
                                         eventType = parser.next()

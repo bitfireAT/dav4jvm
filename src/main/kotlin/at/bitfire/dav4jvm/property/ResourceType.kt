@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 class ResourceType: Property {
 
@@ -33,13 +34,13 @@ class ResourceType: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): ResourceType? {
+        override fun create(parser: MiniXmlPullParser): ResourceType? {
             val type = ResourceType()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth + 1) {
                     // use static objects to allow types.contains()
                     var typeName = Property.Name(parser.namespace, parser.name)
                     when (typeName) {

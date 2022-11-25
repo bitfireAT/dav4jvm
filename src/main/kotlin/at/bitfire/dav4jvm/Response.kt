@@ -15,7 +15,8 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.net.ProtocolException
 
 /**
@@ -102,7 +103,7 @@ data class Response(
         /**
          * Parses an XML response element.
          */
-        fun parse(parser: XmlPullParser, location: HttpUrl, callback: MultiResponseCallback) {
+        fun parse(parser: MiniXmlPullParser, location: HttpUrl, callback: MultiResponseCallback) {
             val depth = parser.depth
 
             var href: HttpUrl? = null
@@ -112,8 +113,8 @@ data class Response(
             var newLocation: HttpUrl? = null
 
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth+1)
                     when (parser.propertyName()) {
                         DavResource.HREF -> {
                             var sHref = parser.nextText()

@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 data class DisplayName(
         val displayName: String?
@@ -25,7 +25,7 @@ data class DisplayName(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: MiniXmlPullParser) =
                 // <!ELEMENT displayname (#PCDATA) >
                 DisplayName(XmlUtils.readText(parser))
 

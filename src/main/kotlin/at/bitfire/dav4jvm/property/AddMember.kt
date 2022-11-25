@@ -10,7 +10,7 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 /**
  * Defined in RFC 5995 3.2.1 DAV:add-member Property (Protected).
@@ -26,7 +26,7 @@ data class AddMember(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: MiniXmlPullParser) =
                 AddMember(XmlUtils.readTextProperty(parser, DavResource.HREF))
     }
 }

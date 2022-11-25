@@ -10,7 +10,7 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 // see RFC 5397: WebDAV Current Principal Extension
 
@@ -28,7 +28,7 @@ data class CurrentUserPrincipal(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CurrentUserPrincipal {
+        override fun create(parser: MiniXmlPullParser): CurrentUserPrincipal {
             // <!ELEMENT current-user-principal (unauthenticated | href)>
             var href: String? = null
             XmlUtils.processTag(parser, DavResource.HREF) {

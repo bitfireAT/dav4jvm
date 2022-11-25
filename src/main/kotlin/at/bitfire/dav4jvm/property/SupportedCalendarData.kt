@@ -12,8 +12,8 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import org.kobjects.ktxml.mini.MiniXmlPullParser
+import org.kobjects.ktxml.api.XmlPullParserException
 import java.util.logging.Level
 
 class SupportedCalendarData: Property {
@@ -40,7 +40,7 @@ class SupportedCalendarData: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedCalendarData? {
+        override fun create(parser: MiniXmlPullParser): SupportedCalendarData? {
             val supported = SupportedCalendarData()
 
             try {

@@ -10,7 +10,7 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.util.logging.Level
 
 data class MaxVCardSize(
@@ -24,7 +24,7 @@ data class MaxVCardSize(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): MaxVCardSize? {
+        override fun create(parser: MiniXmlPullParser): MaxVCardSize? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return MaxVCardSize(valueStr.toLong())

@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 data class CurrentUserPrivilegeSet(
         // not all privileges from RFC 3744 are implemented by now
@@ -43,7 +44,7 @@ data class CurrentUserPrivilegeSet(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet? {
+        override fun create(parser: MiniXmlPullParser): CurrentUserPrivilegeSet? {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet()
@@ -51,8 +52,8 @@ data class CurrentUserPrivilegeSet(
             XmlUtils.processTag(parser, PRIVILEGE) {
                 val depth = parser.depth
                 var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                    if (eventType == EventType.START_TAG && parser.depth == depth + 1)
                         when (parser.propertyName()) {
                             READ ->
                                 privs.mayRead = true

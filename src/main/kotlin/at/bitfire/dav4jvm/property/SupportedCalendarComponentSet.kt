@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 data class SupportedCalendarComponentSet(
         var supportsEvents: Boolean,
@@ -33,7 +34,7 @@ data class SupportedCalendarComponentSet(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedCalendarComponentSet? {
+        override fun create(parser: MiniXmlPullParser): SupportedCalendarComponentSet? {
             /* <!ELEMENT supported-calendar-component-set (comp+)>
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
@@ -42,8 +43,8 @@ data class SupportedCalendarComponentSet(
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         ALLCOMP -> {
                             components.supportsEvents = true

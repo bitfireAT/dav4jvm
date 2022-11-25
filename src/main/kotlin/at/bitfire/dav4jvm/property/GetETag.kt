@@ -11,7 +11,7 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.Response
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 class GetETag(
         rawETag: String?
@@ -52,7 +52,7 @@ class GetETag(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: MiniXmlPullParser) =
                 GetETag(XmlUtils.readText(parser))
 
     }

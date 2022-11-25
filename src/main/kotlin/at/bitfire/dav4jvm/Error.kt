@@ -8,7 +8,8 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.io.Serializable
 
 /**
@@ -25,13 +26,13 @@ class Error(
 
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "error")
 
-        fun parseError(parser: XmlPullParser): List<Error> {
+        fun parseError(parser: MiniXmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth + 1)
                     names += Property.Name(parser.namespace, parser.name)
                 eventType = parser.next()
             }

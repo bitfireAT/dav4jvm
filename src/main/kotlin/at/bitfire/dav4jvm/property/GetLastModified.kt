@@ -7,7 +7,7 @@
 package at.bitfire.dav4jvm.property
 
 import at.bitfire.dav4jvm.*
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 
 data class GetLastModified(
         var lastModified: Long
@@ -23,7 +23,7 @@ data class GetLastModified(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetLastModified? {
+        override fun create(parser: MiniXmlPullParser): GetLastModified? {
             // <!ELEMENT getlastmodified (#PCDATA) >
             XmlUtils.readText(parser)?.let { rawDate ->
                 val date = HttpUtils.parseDate(rawDate)

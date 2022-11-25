@@ -4,17 +4,20 @@ import java.net.URL
 object Libs {
     // okhttp HTTP library
     const val okhttpVersion = "4.10.0"
-
-    // XmlPullParser library
-    const val xpp3Version = "1.1.6"
 }
 
 repositories {
     mavenCentral()
+//    maven {
+//        url = uri("https://jitpack.io") // maven repo where the current library resides
+//    }
+//    maven {
+//        url = uri("https://dl.bintray.com/unverbraucht/java9-fixed-jars") // repo for fetching `xmlpull` dependency that's java 9 enabled
+//    }
 }
 
 group="com.github.Raymo111"
-version="2.2.1"
+version="2.2.2"
 
 plugins {
     kotlin("jvm") version "1.7.20"
@@ -51,19 +54,23 @@ tasks.withType<DokkaTask>().configureEach {
     }
 }
 
-configurations {
-    all {
-        exclude(group = "xml-apis", module = "xml-apis")
-    }
-}
-
 dependencies {
     implementation(kotlin("stdlib-jdk7"))
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}")
+//    implementation("com.github.kobjects:kxml2:2.5.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
+}
+
+kotlin {
+    sourceSets {
+        main {
+            dependencies {
+                implementation("org.kobjects.ktxml:core:0.2.2")
+            }
+        }
+    }
 }

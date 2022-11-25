@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
 import java.io.StringReader
 
 class XmlUtilsTest {
@@ -48,11 +48,11 @@ class XmlUtilsTest {
         parser.next()       // now on START_TAG <test>
 
         assertEquals("Test 1", XmlUtils.readText(parser))
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        assertEquals(EventType.END_TAG, parser.eventType)
         parser.next()
 
         assertEquals("Test 2", XmlUtils.readText(parser))
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        assertEquals(EventType.END_TAG, parser.eventType)
     }
 
     @Test
@@ -62,7 +62,7 @@ class XmlUtilsTest {
         parser.next()       // now on START_TAG <test>
 
         assertEquals("Test 1</test><test><garbage/>Test 2", XmlUtils.readText(parser))
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        assertEquals(EventType.END_TAG, parser.eventType)
     }
 
     @Test
@@ -77,7 +77,7 @@ class XmlUtilsTest {
         assertEquals("Test 2", entries[1])
 
         parser.next()       // END_TAG </root>
-        assertEquals(XmlPullParser.END_DOCUMENT, parser.eventType)
+        assertEquals(EventType.END_DOCUMENT, parser.eventType)
     }
 
     @Test
@@ -90,7 +90,7 @@ class XmlUtilsTest {
         XmlUtils.readTextPropertyList(parser, Property.Name("", "entry"), entries)
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        assertEquals(EventType.END_TAG, parser.eventType)
         assertEquals("test", parser.name)
     }
 

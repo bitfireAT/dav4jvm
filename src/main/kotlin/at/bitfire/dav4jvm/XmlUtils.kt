@@ -6,8 +6,9 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
+import org.kobjects.ktxml.api.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
@@ -35,23 +36,23 @@ object XmlUtils {
 
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun processTag(parser: XmlPullParser, name: Property.Name, processor: () -> Unit) {
+    fun processTag(parser: MiniXmlPullParser, name: Property.Name, processor: () -> Unit) {
         val depth = parser.depth
         var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+        while (!((eventType == EventType.END_TAG || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == EventType.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
                 processor()
             eventType = parser.next()
         }
     }
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun readText(parser: XmlPullParser): String? {
+    fun readText(parser: MiniXmlPullParser): String? {
         var text: String? = null
 
         val depth = parser.depth
         var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+        while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
             if (eventType == XmlPullParser.TEXT && parser.depth == depth)
                 text = parser.text
             eventType = parser.next()
@@ -61,12 +62,12 @@ object XmlUtils {
     }
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextProperty(parser: XmlPullParser, name: Property.Name): String? {
+    fun readTextProperty(parser: MiniXmlPullParser, name: Property.Name): String? {
         val depth = parser.depth
         var eventType = parser.eventType
         var result: String? = null
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+        while (!((eventType == EventType.END_TAG || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == EventType.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
                 result = parser.nextText()
             eventType = parser.next()
         }
@@ -74,11 +75,11 @@ object XmlUtils {
     }
 
     @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
+    fun readTextPropertyList(parser: MiniXmlPullParser, name: Property.Name, list: MutableCollection<String>) {
         val depth = parser.depth
         var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+        while (!((eventType == EventType.END_TAG || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
+            if (eventType == EventType.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
                 list.add(parser.nextText())
             eventType = parser.next()
         }

@@ -12,7 +12,8 @@ import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
-import org.xmlpull.v1.XmlPullParser
+import org.kobjects.ktxml.api.EventType
+import org.kobjects.ktxml.mini.MiniXmlPullParser
 import java.net.ProtocolException
 import java.util.*
 
@@ -35,15 +36,15 @@ data class PropStat(
         private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
         private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
 
-        fun parse(parser: XmlPullParser): PropStat {
+        fun parse(parser: MiniXmlPullParser): PropStat {
             val depth = parser.depth
 
             var status: StatusLine? = null
             val prop = LinkedList<Property>()
 
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+            while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
+                if (eventType == EventType.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         DavResource.PROP ->
                             prop.addAll(Property.parse(parser))
