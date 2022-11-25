@@ -9,7 +9,6 @@ package at.bitfire.dav4jvm
 import org.kobjects.ktxml.api.EventType
 import org.kobjects.ktxml.mini.MiniXmlPullParser
 import org.kobjects.ktxml.api.XmlPullParserException
-import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 
 object XmlUtils {
@@ -19,6 +18,9 @@ object XmlUtils {
     const val NS_CARDDAV = "urn:ietf:params:xml:ns:carddav"
     const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
     const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
+
+    // New KXMLSerializer
+    fun newSerializer() = KXmlSerializer()
 
     @Throws(IOException::class, XmlPullParserException::class)
     fun processTag(parser: MiniXmlPullParser, name: Property.Name, processor: () -> Unit) {
@@ -71,7 +73,7 @@ object XmlUtils {
     }
 
 
-    fun XmlSerializer.insertTag(name: Property.Name, contentGenerator: XmlSerializer.() -> Unit = {}) {
+    fun KXmlSerializer.insertTag(name: Property.Name, contentGenerator: KXmlSerializer.() -> Unit = {}) {
         startTag(name.namespace, name.name)
         contentGenerator(this)
         endTag(name.namespace, name.name)
