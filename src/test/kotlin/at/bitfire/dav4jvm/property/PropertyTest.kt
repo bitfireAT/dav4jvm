@@ -10,7 +10,7 @@ open class PropertyTest {
     companion object {
 
         fun parseProperty(s: String): List<Property> {
-            val parser = MiniXmlPullParser(StringReader("<test>$s</test>").toString().iterator())
+            val parser = MiniXmlPullParser(StringReader("<test>$s</test>").readText().iterator())
             parser.nextTag()    // move into <test>
             return Property.parse(parser)
         }

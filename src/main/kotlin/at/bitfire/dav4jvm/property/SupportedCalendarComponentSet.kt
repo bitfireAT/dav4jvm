@@ -52,7 +52,7 @@ data class SupportedCalendarComponentSet(
                             components.supportsJournal = true
                         }
                         COMP ->
-                            when (parser.getAttributeValue(null.toString(), "name")?.uppercase()) {
+                            when (parser.getAttributeValue("", "name")?.uppercase()) {
                                 "VEVENT" -> components.supportsEvents = true
                                 "VTODO" -> components.supportsTasks = true
                                 "VJOURNAL" -> components.supportsJournal = true
