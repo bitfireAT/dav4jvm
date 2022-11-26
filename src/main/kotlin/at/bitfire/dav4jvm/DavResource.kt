@@ -726,7 +726,7 @@ open class DavResource @JvmOverloads constructor(
         }
 
         try {
-            parser = MiniXmlPullParser(reader.toString().iterator())
+            parser = MiniXmlPullParser(reader.readText().iterator())
 
             var eventType = parser.eventType
             while (eventType != EventType.END_DOCUMENT) {
