@@ -8,16 +8,10 @@ object Libs {
 
 repositories {
     mavenCentral()
-//    maven {
-//        url = uri("https://jitpack.io") // maven repo where the current library resides
-//    }
-//    maven {
-//        url = uri("https://dl.bintray.com/unverbraucht/java9-fixed-jars") // repo for fetching `xmlpull` dependency that's java 9 enabled
-//    }
 }
 
 group="com.github.Raymo111"
-version="3.0.2"
+version="3.0.3"
 
 plugins {
     kotlin("jvm") version "1.7.20"
@@ -58,8 +52,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk7"))
 
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
-    implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-//    implementation("com.github.kobjects:kxml2:2.5.0")
+    implementation("org.apache.commons:commons-lang3:3.12.0")    // last version that doesn't require Java 8
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
@@ -69,7 +62,7 @@ kotlin {
     sourceSets {
         main {
             dependencies {
-                implementation("org.kobjects.ktxml:core:0.2.2")
+                implementation("org.kobjects.ktxml:core:0.2.3")
             }
         }
     }
