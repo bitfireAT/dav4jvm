@@ -726,7 +726,14 @@ open class DavResource @JvmOverloads constructor(
         }
 
         try {
-            parser = MiniXmlPullParser(reader.readText().iterator(), processNamespaces = true)
+            var xml = reader.readText()
+            if (xml.startsWith("<?xml")) {
+                // remove XML declaration
+                val pos = xml.indexOf("?>")
+                if (pos != -1)
+                    xml = xml.substring(pos + 2)
+            }
+            parser = MiniXmlPullParser(xml.iterator(), processNamespaces = true)
 
             var eventType = parser.eventType
             while (eventType != EventType.END_DOCUMENT) {
@@ -734,12 +741,7 @@ open class DavResource @JvmOverloads constructor(
                     if (parser.propertyName() == DavResponse.MULTISTATUS)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements
-                try {
-                    eventType = parser.next()
-                } catch (e: XmlPullParserException) {
-                    if (!e.message!!.startsWith("PI must not start with xml"))
-                        throw DavException("Couldn't parse multistatus XML element", e)
-                }
+                eventType = parser.next()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")
