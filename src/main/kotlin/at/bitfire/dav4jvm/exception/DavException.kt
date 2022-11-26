@@ -115,7 +115,7 @@ open class DavException @JvmOverloads constructor(
                             if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
                                 // look for precondition/postcondition XML elements
                                 try {
-                                    val parser = MiniXmlPullParser(body.charStream().toString().iterator())
+                                    val parser = MiniXmlPullParser(body.charStream().toString().iterator(), processNamespaces = true)
 
                                     var eventType = parser.eventType
                                     while (eventType != EventType.END_DOCUMENT) {

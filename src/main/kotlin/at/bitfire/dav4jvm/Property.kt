@@ -40,7 +40,7 @@ interface Property {
             while (!(eventType == EventType.END_TAG && parser.depth == depth)) {
                 if (eventType == EventType.START_TAG && parser.depth == depth + 1) {
                     val depthBeforeParsing = parser.depth
-                    val name = Property.Name(parser.namespace, parser.name)
+                    val name = Name(parser.namespace, parser.name)
                     val property = PropertyRegistry.create(name, parser)
                     assert(parser.depth == depthBeforeParsing)
 
