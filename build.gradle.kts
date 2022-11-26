@@ -17,7 +17,7 @@ repositories {
 }
 
 group="com.github.Raymo111"
-version="3.0"
+version="3.0.1"
 
 plugins {
     kotlin("jvm") version "1.7.20"
