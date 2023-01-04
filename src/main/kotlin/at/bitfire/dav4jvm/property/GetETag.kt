@@ -13,8 +13,14 @@ import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
+/**
+ * The GetETag property.
+ *
+ * Can also be used to parse ETags from HTTP responses – just pass the raw ETag
+ * header value to the constructor and then use [eTag] and [weak].
+ */
 class GetETag(
-        rawETag: String?
+    rawETag: String?
 ): Property {
 
     companion object {
@@ -22,7 +28,7 @@ class GetETag(
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getetag")
 
         fun fromResponse(response: Response) =
-                response.header("ETag")?.let { GetETag(it) }
+            response.header("ETag")?.let { GetETag(it) }
     }
 
     val eTag: String?
@@ -33,13 +39,13 @@ class GetETag(
            opaque-tag = quoted-string
         */
         var tag: String? = rawETag
-        tag?.let {
+        if (tag != null) {
             // remove trailing "W/"
-            if (it.startsWith("W/") && it.length >= 3)
+            if (tag.startsWith("W/") && tag.length >= 3)
             // entity tag is weak (doesn't matter for us)
-                tag = it.substring(2)
+                tag = tag.substring(2)
 
-            tag?.let { tag = QuotedStringUtils.decodeQuotedString(it) }
+            tag = QuotedStringUtils.decodeQuotedString(tag)
         }
 
         eTag = tag
