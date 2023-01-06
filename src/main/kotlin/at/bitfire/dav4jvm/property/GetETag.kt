@@ -33,6 +33,8 @@ class GetETag(
 
     val eTag: String?
 
+    val weak: Boolean?
+
     init {
         /* entity-tag = [ weak ] opaque-tag
            weak       = "W/"
@@ -48,6 +50,7 @@ class GetETag(
             tag = QuotedStringUtils.decodeQuotedString(tag)
         }
 
+        weak = rawETag?.startsWith("W/")
         eTag = tag
     }
 
