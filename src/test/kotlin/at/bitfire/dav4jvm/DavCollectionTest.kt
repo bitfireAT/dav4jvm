@@ -104,19 +104,25 @@ class DavCollectionTest {
                 url.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("00001-abcd1", response[GetETag::class.java]?.eTag)
+                    val eTag = response[GetETag::class.java]
+                    assertEquals("00001-abcd1", eTag?.eTag)
+                    assert(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/vcard.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("00002-abcd1", response[GetETag::class.java]?.eTag)
+                    val eTag = response[GetETag::class.java]
+                    assertEquals("00002-abcd1", eTag?.eTag)
+                    assert(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/calendar.ics") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("00003-abcd1", response[GetETag::class.java]?.eTag)
+                    val eTag = response[GetETag::class.java]
+                    assertEquals("00003-abcd1", eTag?.eTag)
+                    assert(eTag?.weak == false)
                     nrCalled++
                 }
             }
@@ -174,13 +180,17 @@ class DavCollectionTest {
                 url.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("00001-abcd1", response[GetETag::class.java]?.eTag)
+                    val eTag = response[GetETag::class.java]
+                    assertEquals("00001-abcd1", eTag?.eTag)
+                    assert(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/vcard.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
-                    assertEquals("00002-abcd1", response[GetETag::class.java]?.eTag)
+                    val eTag = response[GetETag::class.java]
+                    assertEquals("00002-abcd1", eTag?.eTag)
+                    assert(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/removed.txt") -> {
