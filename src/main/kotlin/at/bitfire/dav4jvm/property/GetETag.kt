@@ -49,14 +49,17 @@ class GetETag(
         var tag: String? = rawETag
         if (tag != null) {
             // remove trailing "W/"
-            if (tag.startsWith("W/") && tag.length >= 3)
-            // entity tag is weak (doesn't matter for us)
+            if (tag.startsWith("W/") && tag.length >= 3) {
+                // entity tag is weak
                 tag = tag.substring(2)
+                weak = true
+            } else
+                weak = false
 
             tag = QuotedStringUtils.decodeQuotedString(tag)
-        }
+        } else
+            weak = null
 
-        weak = rawETag?.startsWith("W/")
         eTag = tag
     }
 
