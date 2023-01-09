@@ -71,7 +71,7 @@ class GetETag(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                GetETag(XmlUtils.readText(parser))
+            GetETag(XmlUtils.readText(parser))
 
     }
 

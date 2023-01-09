@@ -18,7 +18,7 @@ class GetETagTest: PropertyTest() {
         val results = parseProperty("<getetag xmlns=\"DAV:\">\"Correct strong ETag\"</getetag>")
         val getETag = results.first() as GetETag
         assertEquals("Correct strong ETag", getETag.eTag)
-        assertTrue(getETag.weak == false)
+        assertFalse(getETag.weak!!)
     }
 
     @Test
@@ -26,7 +26,7 @@ class GetETagTest: PropertyTest() {
         val results = parseProperty("<getetag xmlns=\"DAV:\">Strong ETag without quotes</getetag>")
         val getETag = results.first() as GetETag
         assertEquals("Strong ETag without quotes", getETag.eTag)
-        assertTrue(getETag.weak == false)
+        assertFalse(getETag.weak!!)
     }
 
     @Test
@@ -34,7 +34,7 @@ class GetETagTest: PropertyTest() {
         val results = parseProperty("<getetag xmlns=\"DAV:\">W/\"Correct weak ETag\"</getetag>")
         val getETag = results.first() as GetETag
         assertEquals("Correct weak ETag", getETag.eTag)
-        assertTrue(getETag.weak == true)
+        assertTrue(getETag.weak!!)
     }
 
     @Test
@@ -42,7 +42,7 @@ class GetETagTest: PropertyTest() {
         val results = parseProperty("<getetag xmlns=\"DAV:\">W/Weak ETag without quotes</getetag>")
         val getETag = results.first() as GetETag
         assertEquals("Weak ETag without quotes", getETag.eTag)
-        assertTrue(getETag.weak == true)
+        assertTrue(getETag.weak!!)
     }
 
 }
