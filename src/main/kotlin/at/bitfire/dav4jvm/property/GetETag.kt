@@ -31,8 +31,14 @@ class GetETag(
             response.header("ETag")?.let { GetETag(it) }
     }
 
+    /**
+     * The parsed eTag value. May be null if the tag is weak.
+     */
     val eTag: String?
 
+    /**
+     * If the tag is weak. May be null if the tag passed is null.
+     */
     val weak: Boolean?
 
     init {
