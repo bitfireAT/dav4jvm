@@ -106,7 +106,7 @@ class DavCollectionTest {
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
                     assertEquals("00001-abcd1", eTag?.eTag)
-                    assert(eTag?.weak == false)
+                    assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/vcard.vcf") -> {
@@ -114,7 +114,7 @@ class DavCollectionTest {
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
                     assertEquals("00002-abcd1", eTag?.eTag)
-                    assert(eTag?.weak == false)
+                    assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/calendar.ics") -> {
@@ -122,7 +122,7 @@ class DavCollectionTest {
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
                     assertEquals("00003-abcd1", eTag?.eTag)
-                    assert(eTag?.weak == false)
+                    assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
             }
@@ -182,7 +182,7 @@ class DavCollectionTest {
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
                     assertEquals("00001-abcd1", eTag?.eTag)
-                    assert(eTag?.weak == false)
+                    assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/vcard.vcf") -> {
@@ -190,7 +190,7 @@ class DavCollectionTest {
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
                     assertEquals("00002-abcd1", eTag?.eTag)
-                    assert(eTag?.weak == false)
+                    assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
                 url.resolve("/dav/removed.txt") -> {

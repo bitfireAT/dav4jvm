@@ -245,7 +245,7 @@ class DavResourceTest {
 
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag?.eTag)
-            assert(eTag?.weak == true)
+            assertTrue(eTag?.weak == true)
             assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
         }
         assertTrue(called)
@@ -270,7 +270,7 @@ class DavResourceTest {
             assertEquals(sampleText, response.body!!.string())
             val eTag = GetETag(response.header("ETag"))
             assertEquals("StrongETag", eTag.eTag)
-            assert(eTag.weak == false)
+            assertTrue(eTag.weak == false)
         }
         assertTrue(called)
 
@@ -804,7 +804,7 @@ class DavResourceTest {
             called = true
             val eTag = GetETag.fromResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
-            assert(eTag.weak == true)
+            assertTrue(eTag.weak == true)
             assertEquals(response.request.url, dav.location)
         }
         assertTrue(called)
