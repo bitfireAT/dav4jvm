@@ -13,8 +13,14 @@ import at.bitfire.dav4jvm.XmlUtils
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
+/**
+ * The GetETag property.
+ *
+ * Can also be used to parse ETags from HTTP responses – just pass the raw ETag
+ * header value to the constructor and then use [eTag] and [weak].
+ */
 class GetETag(
-        rawETag: String?
+    rawETag: String?
 ): Property {
 
     companion object {
@@ -22,10 +28,18 @@ class GetETag(
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getetag")
 
         fun fromResponse(response: Response) =
-                response.header("ETag")?.let { GetETag(it) }
+            response.header("ETag")?.let { GetETag(it) }
     }
 
+    /**
+     * The parsed eTag value. May be null if the tag is weak.
+     */
     val eTag: String?
+
+    /**
+     * If the tag is weak. May be null if the tag passed is null.
+     */
+    val weak: Boolean?
 
     init {
         /* entity-tag = [ weak ] opaque-tag
@@ -33,14 +47,18 @@ class GetETag(
            opaque-tag = quoted-string
         */
         var tag: String? = rawETag
-        tag?.let {
+        if (tag != null) {
             // remove trailing "W/"
-            if (it.startsWith("W/") && it.length >= 3)
-            // entity tag is weak (doesn't matter for us)
-                tag = it.substring(2)
+            if (tag.startsWith("W/") && tag.length >= 3) {
+                // entity tag is weak
+                tag = tag.substring(2)
+                weak = true
+            } else
+                weak = false
 
-            tag?.let { tag = QuotedStringUtils.decodeQuotedString(it) }
-        }
+            tag = QuotedStringUtils.decodeQuotedString(tag)
+        } else
+            weak = null
 
         eTag = tag
     }
@@ -53,7 +71,7 @@ class GetETag(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                GetETag(XmlUtils.readText(parser))
+            GetETag(XmlUtils.readText(parser))
 
     }
 

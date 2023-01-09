@@ -19,7 +19,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.ResponseBody.Companion.asResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -244,7 +243,9 @@ class DavResourceTest {
             called = true
             assertEquals(sampleText, response.body!!.string())
 
-            assertEquals("My Weak ETag", GetETag.fromResponse(response)?.eTag)
+            val eTag = GetETag.fromResponse(response)
+            assertEquals("My Weak ETag", eTag!!.eTag)
+            assertTrue(eTag.weak!!)
             assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
         }
         assertTrue(called)
@@ -267,7 +268,9 @@ class DavResourceTest {
         dav.get("*/*", null) { response ->
             called = true
             assertEquals(sampleText, response.body!!.string())
-            assertEquals("StrongETag", GetETag(response.header("ETag")).eTag)
+            val eTag = GetETag(response.header("ETag"))
+            assertEquals("StrongETag", eTag.eTag)
+            assertFalse(eTag.weak!!)
         }
         assertTrue(called)
 
@@ -799,7 +802,9 @@ class DavResourceTest {
         var called = false
         dav.put(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             called = true
-            assertEquals("Weak PUT ETag", GetETag.fromResponse(response)!!.eTag)
+            val eTag = GetETag.fromResponse(response)!!
+            assertEquals("Weak PUT ETag", eTag.eTag)
+            assertTrue(eTag.weak!!)
             assertEquals(response.request.url, dav.location)
         }
         assertTrue(called)
@@ -820,7 +825,9 @@ class DavResourceTest {
         dav.put(sampleText.toRequestBody("text/plain".toMediaType()), ifNoneMatch = true) { response ->
             called = true
             assertEquals(url.resolve("/target"), response.request.url)
-            assertNull("Weak PUT ETag", GetETag.fromResponse(response)?.eTag)
+            val eTag = GetETag.fromResponse(response)
+            assertNull("Weak PUT ETag", eTag?.eTag)
+            assertNull(eTag?.weak)
         }
         assertTrue(called)
 
@@ -838,7 +845,7 @@ class DavResourceTest {
                 called = true
             }
             fail("Expected PreconditionFailedException")
-        } catch(e: PreconditionFailedException) {}
+        } catch(_: PreconditionFailedException) {}
         assertFalse(called)
         rq = mockServer.takeRequest()
         assertEquals("\"ExistingETag\"", rq.getHeader("If-Match"))
