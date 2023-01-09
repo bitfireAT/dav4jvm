@@ -7,9 +7,11 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
+import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 import java.util.*
+import java.util.logging.Level
 
 /**
  * Represents a WebDAV property.
@@ -20,8 +22,8 @@ import java.util.*
 interface Property {
 
     data class Name(
-            val namespace: String,
-            val name: String
+        val namespace: String,
+        val name: String
     ): Serializable {
 
         override fun toString() = "$namespace:$name"
@@ -39,14 +41,19 @@ interface Property {
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     val depthBeforeParsing = parser.depth
-                    val name = Property.Name(parser.namespace, parser.name)
-                    val property = PropertyRegistry.create(name, parser)
-                    assert(parser.depth == depthBeforeParsing)
+                    val name = Name(parser.namespace, parser.name)
 
-                    if (property != null) {
-                        properties.add(property)
-                    } else
-                        log.fine("Ignoring unknown property $name")
+                    try {
+                        val property = PropertyRegistry.create(name, parser)
+                        assert(parser.depth == depthBeforeParsing)
+
+                        if (property != null) {
+                            properties.add(property)
+                        } else
+                            log.fine("Ignoring unknown property $name")
+                    } catch (e: InvalidPropertyException) {
+                        log.log(Level.WARNING, "Ignoring invalid property", e)
+                    }
                 }
                 eventType = parser.next()
             }
