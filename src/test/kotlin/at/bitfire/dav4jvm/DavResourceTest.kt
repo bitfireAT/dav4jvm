@@ -245,7 +245,7 @@ class DavResourceTest {
 
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
-            assertTrue(eTag.weak!!)
+            assertTrue(eTag.weak)
             assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
         }
         assertTrue(called)
@@ -268,9 +268,9 @@ class DavResourceTest {
         dav.get("*/*", null) { response ->
             called = true
             assertEquals(sampleText, response.body!!.string())
-            val eTag = GetETag(response.header("ETag"))
+            val eTag = GetETag(response.header("ETag")!!)
             assertEquals("StrongETag", eTag.eTag)
-            assertFalse(eTag.weak!!)
+            assertFalse(eTag.weak)
         }
         assertTrue(called)
 
@@ -768,7 +768,7 @@ class DavResourceTest {
         dav.proppatch(
             setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
             removeProperties = listOf(Property.Name("sample", "removeThis"))
-        ) { response, hrefRelation ->
+        ) { _, hrefRelation ->
             called = true
             assertEquals(Response.HrefRelation.SELF, hrefRelation)
         }
@@ -804,7 +804,7 @@ class DavResourceTest {
             called = true
             val eTag = GetETag.fromResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
-            assertTrue(eTag.weak!!)
+            assertTrue(eTag.weak)
             assertEquals(response.request.url, dav.location)
         }
         assertTrue(called)
@@ -871,7 +871,7 @@ class DavResourceTest {
                     "  </response>" +
                     "</multistatus>"))
         var called = false
-        dav.search("<TEST/>") { response, hrefRelation, ->
+        dav.search("<TEST/>") { response, hrefRelation ->
             assertEquals(Response.HrefRelation.SELF, hrefRelation)
             assertEquals("Found something", response[DisplayName::class.java]?.displayName)
             called = true

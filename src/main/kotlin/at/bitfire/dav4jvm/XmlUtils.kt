@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
@@ -59,6 +60,16 @@ object XmlUtils {
 
         return text
     }
+
+    /**
+     * Same as [readText], but requires a [XmlPullParser.TEXT] value.
+     *
+     * @throws InvalidPropertyException when no text could be read
+     */
+    @Throws(InvalidPropertyException::class, IOException::class, XmlPullParserException::class)
+    fun requireReadText(parser: XmlPullParser): String =
+        readText(parser) ?:
+        throw InvalidPropertyException("XML text for ${parser.namespace}:${parser.name} must not be empty")
 
     @Throws(IOException::class, XmlPullParserException::class)
     fun readTextProperty(parser: XmlPullParser, name: Property.Name): String? {

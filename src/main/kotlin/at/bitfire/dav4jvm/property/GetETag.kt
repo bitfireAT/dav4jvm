@@ -20,7 +20,7 @@ import org.xmlpull.v1.XmlPullParser
  * header value to the constructor and then use [eTag] and [weak].
  */
 class GetETag(
-    rawETag: String?
+    rawETag: String
 ): Property {
 
     companion object {
@@ -32,38 +32,46 @@ class GetETag(
     }
 
     /**
-     * The parsed eTag value. May be null if the tag is weak.
+     * The parsed ETag value, excluding the weakness indicator and the quotes.
      */
-    val eTag: String?
+    val eTag: String
 
     /**
-     * If the tag is weak. May be null if the tag passed is null.
+     * Whether the ETag is weak.
      */
-    val weak: Boolean?
+    var weak: Boolean
 
     init {
         /* entity-tag = [ weak ] opaque-tag
            weak       = "W/"
            opaque-tag = quoted-string
         */
-        var tag: String? = rawETag
-        if (tag != null) {
-            // remove trailing "W/"
-            if (tag.startsWith("W/") && tag.length >= 3) {
-                // entity tag is weak
-                tag = tag.substring(2)
-                weak = true
-            } else
-                weak = false
+        val tag: String
 
-            tag = QuotedStringUtils.decodeQuotedString(tag)
-        } else
-            weak = null
+        // remove trailing "W/"
+        if (rawETag.startsWith("W/") && rawETag.length >= 2) {
+            // entity tag is weak
+            tag = rawETag.substring(2)
+            weak = true
+        } else {
+            tag = rawETag
+            weak = false
+        }
 
-        eTag = tag
+        eTag = QuotedStringUtils.decodeQuotedString(tag)
     }
 
-    override fun toString() = eTag ?: "(null)"
+    override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
+
+    override fun equals(other: Any?): Boolean {
+        if (other !is GetETag)
+            return false
+        return eTag == other.eTag && weak == other.weak
+    }
+
+    override fun hashCode(): Int {
+        return eTag.hashCode() xor weak.hashCode()
+    }
 
 
     object Factory: PropertyFactory {
@@ -71,7 +79,7 @@ class GetETag(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-            GetETag(XmlUtils.readText(parser))
+            GetETag(XmlUtils.requireReadText(parser))
 
     }
 

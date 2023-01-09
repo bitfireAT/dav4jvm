@@ -105,24 +105,24 @@ class DavCollectionTest {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
-                    assertEquals("00001-abcd1", eTag?.eTag)
-                    assertTrue(eTag?.weak == false)
+                    assertEquals("00001-abcd1", eTag!!.eTag)
+                    assertFalse(eTag.weak)
                     nrCalled++
                 }
                 url.resolve("/dav/vcard.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
-                    assertEquals("00002-abcd1", eTag?.eTag)
-                    assertTrue(eTag?.weak == false)
+                    assertEquals("00002-abcd1", eTag!!.eTag)
+                    assertFalse(eTag.weak)
                     nrCalled++
                 }
                 url.resolve("/dav/calendar.ics") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
-                    assertEquals("00003-abcd1", eTag?.eTag)
-                    assertTrue(eTag?.weak == false)
+                    assertEquals("00003-abcd1", eTag!!.eTag)
+                    assertFalse(eTag.weak)
                     nrCalled++
                 }
             }
