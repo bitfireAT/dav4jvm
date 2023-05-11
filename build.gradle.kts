@@ -3,7 +3,7 @@ import java.net.URL
 
 object Libs {
     // okhttp HTTP library
-    const val okhttpVersion = "4.10.0"
+    const val okhttpVersion = "4.11.0"
 
     // XmlPullParser library
     const val xpp3Version = "1.1.6"
@@ -17,10 +17,10 @@ group="com.github.bitfireAT"
 version="2.2"
 
 plugins {
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.21"
     `maven-publish`
 
-    id("org.jetbrains.dokka") version "1.7.20"
+    id("org.jetbrains.dokka") version "1.8.10"
 }
 
 publishing {
@@ -52,8 +52,6 @@ tasks.withType<DokkaTask>().configureEach {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk7"))
-
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
     api("org.ogce:xpp3:${Libs.xpp3Version}")
