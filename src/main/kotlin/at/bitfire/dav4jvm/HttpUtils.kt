@@ -16,8 +16,8 @@ import java.util.*
 
 object HttpUtils {
 
-    const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
-    val httpDateFormat = SimpleDateFormat(httpDateFormatStr, Locale.ROOT)
+    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss zzz"
+    private val httpDateFormat = SimpleDateFormat(httpDateFormatStr, Locale.ROOT)
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
@@ -58,10 +58,10 @@ object HttpUtils {
      */
     fun parseDate(dateStr: String) = try {
         DateUtils.parseDate(dateStr, Locale.US,
-                httpDateFormatStr,
-                "EEE, dd MMM yyyy HH:mm:ss zzz", // RFC 822, updated by RFC 1123 with any TZ
-                "EEEE, dd-MMM-yy HH:mm:ss zzz", // RFC 850, obsoleted by RFC 1036 with any TZ.
-                "EEE MMM d HH:mm:ss yyyy", // ANSI C's asctime() format
+                httpDateFormatStr,               // RFC 822, updated by RFC 1123 with any TZ
+                "EEE, dd MMM yyyy HH:mm:ss zzz",
+                "EEEE, dd-MMM-yy HH:mm:ss zzz",  // RFC 850, obsoleted by RFC 1036 with any TZ.
+                "EEE MMM d HH:mm:ss yyyy",       // ANSI C's asctime() format
                 // Alternative formats.
                 "EEE, dd-MMM-yyyy HH:mm:ss z",
                 "EEE, dd-MMM-yyyy HH-mm-ss z",
