@@ -19,7 +19,7 @@ We're happy about contributions, but please let us know in the discussions befor
 in your own repository and send a pull request.
 
 
-## How to use
+## Installation
 
 You can use jitpack.io to include dav4jvm:
 
@@ -37,6 +37,50 @@ dav4jvm needs a working XmlPullParser (XPP). On Android, the system already come
 XPP and you don't need to include one; on other systems, you may need to
 import for instance `org.ogce:xpp3` to get dav4jvm to work.
 
+
+## Usage
+
+First, you'll need to set up an OkHttp instance. Use `BasicDigestAuthHandler` to configure the credentials:
+
+    val authHandler = BasicDigestAuthHandler(
+        domain = null, // Optional, to only authenticate against hosts with this domain.
+        username = "user1",
+        password = "pass1"
+    )
+    val okHttpClient = OkHttpClient.Builder()
+        .followRedirects(false)
+        .authenticator(authHandler)
+        .addNetworkInterceptor(authHandler)
+        .build()
+
+
+### Files
+
+Here's an example to create and download a file:
+
+    val location = "https://example.com/webdav/hello.txt".toHttpUrl()
+    val davCollection = DavCollection(account.requireClient(), location)
+
+    // Create a text file
+    davCollection.put("World".toRequestBody(contentType = "text/plain".toMediaType()) { response ->
+        // Upload successful!
+    }
+
+    // Download a text file
+    davCollection.get(accept = "", headers = null) { response ->
+        response.body?.string()
+        // Download successful!
+    }
+
+To list a folder's contents, you need to pass in which properties to fetch:
+
+    val location = "https://example.com/webdav/".toHttpUrl()
+    val davCollection = DavCollection(account.requireClient(), location)
+
+    davCollection.propfind(depth = 1, DisplayName.NAME, GetLastModified.NAME) { response, relation ->
+        // This callback will be called for every file in the folder.
+        // Use `response.properties` to access the successfully retrieved properties.
+    }
 
 ## Custom properties
 
