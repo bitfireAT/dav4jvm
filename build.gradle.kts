@@ -2,11 +2,17 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
 
 object Libs {
-    // okhttp HTTP library
-    const val okhttpVersion = "4.11.0"
 
-    // XmlPullParser library
-    const val xpp3Version = "1.1.6"
+    // ktor HTTP library
+    const val ktorVersion = "2.3.1"
+
+    // XmlUtil library
+    const val xmlVersion = "0.86.0"
+
+    const val kotestVersion = "5.6.2"
+
+    const val klockVersion = "4.0.3"
+
 }
 
 repositories {
@@ -14,16 +20,17 @@ repositories {
 }
 
 group="com.github.bitfireAT"
-version="2.2"
+version="2.2-mpp"
 
 plugins {
-    kotlin("jvm") version "1.8.21"
+    kotlin("multiplatform") version "1.8.21"
+    id("io.kotest.multiplatform") version "5.6.2"
     `maven-publish`
 
     id("org.jetbrains.dokka") version "1.8.10"
 }
 
-publishing {
+/*publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
@@ -36,14 +43,14 @@ publishing {
             url = uri(layout.buildDirectory.dir("repo"))
         }
     }
-}
+}*/
 
 tasks.withType<DokkaTask>().configureEach {
     dokkaSourceSets {
-        named("main") {
+        named("commonMain") {
             moduleName.set("dav4jvm")
             sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
+                localDirectory.set(file("src/commonMain/kotlin"))
                 remoteUrl.set(URL("https://github.com/bitfireAT/dav4jvm/tree/main/src/main/kotlin/"))
                 remoteLineSuffix.set("#L")
             }
@@ -51,11 +58,30 @@ tasks.withType<DokkaTask>().configureEach {
     }
 }
 
-dependencies {
-    api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
-    implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}")
 
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
+kotlin {
+    jvm()
+    linuxX64()
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib"))
+                api("io.ktor:ktor-client-core:${Libs.ktorVersion}")
+                api("io.ktor:ktor-client-auth:${Libs.ktorVersion}")
+                implementation("io.github.pdvrieze.xmlutil:core:${Libs.xmlVersion}")
+                implementation("com.soywiz.korlibs.klock:klock:${Libs.klockVersion}")
+            }
+        }
+
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("io.kotest:kotest-framework-engine:${Libs.kotestVersion}")
+                implementation("io.kotest:kotest-assertions-core:${Libs.kotestVersion}")
+                implementation("io.ktor:ktor-client-mock:${Libs.ktorVersion}")
+                implementation("io.ktor:ktor-client-auth:${Libs.ktorVersion}")
+            }
+        }
+    }
 }
