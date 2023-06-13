@@ -7,5 +7,14 @@
 package at.bitfire.dav4jvm.exception
 
 import io.ktor.client.statement.*
+import io.ktor.http.*
 
-class NotFoundException(response: HttpResponse) : HttpException(response)
+class NotFoundException internal constructor(statusCode: HttpStatusCode, exceptionData: ExceptionData) :
+    HttpException(statusCode, exceptionData) {
+
+    companion object {
+        suspend operator fun invoke(httpResponse: HttpResponse) =
+            NotFoundException(httpResponse.status, createExceptionData(httpResponse))
+    }
+
+}

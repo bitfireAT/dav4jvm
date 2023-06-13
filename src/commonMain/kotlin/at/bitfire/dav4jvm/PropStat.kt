@@ -11,7 +11,6 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.nextText
 import io.ktor.http.*
-import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
 import nl.adaptivity.xmlutil.XmlReader
 import kotlin.jvm.JvmField
@@ -36,26 +35,22 @@ data class PropStat(
         private val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
         fun parse(parser: XmlReader): PropStat {
-            val depth = parser.depth
-
             var status: HttpStatusCode? = null
             val prop = mutableListOf<Property>()
 
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
-                    when (parser.name) {
-                        DavResource.PROP ->
-                            prop.addAll(Property.parse(parser))
-                        STATUS ->
-                            status = try {
-                                StatusLine.parse(parser.nextText()).status
-                            } catch (e: IllegalStateException) {
-                                // invalid status line, treat as 500 Internal Server Error
-                                INVALID_STATUS
-                            }
-                    }
-                eventType = parser.next()
+            XmlUtils.processTag(parser) {
+                when (parser.name) {
+                    DavResource.PROP ->
+                        prop.addAll(Property.parse(parser))
+
+                    STATUS ->
+                        status = try {
+                            StatusLine.parse(parser.nextText()).status
+                        } catch (e: IllegalStateException) {
+                            // invalid status line, treat as 500 Internal Server Error
+                            INVALID_STATUS
+                        }
+                }
             }
 
             return PropStat(prop, status ?: ASSUMING_OK)

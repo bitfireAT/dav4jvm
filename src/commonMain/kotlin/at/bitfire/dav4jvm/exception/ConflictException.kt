@@ -9,6 +9,12 @@ package at.bitfire.dav4jvm.exception
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
-class ConflictException(response: HttpResponse) : HttpException(response) {
+class ConflictException internal constructor(statusCode: HttpStatusCode, exceptionData: ExceptionData) :
+    HttpException(statusCode, exceptionData) {
+
+    companion object {
+        suspend operator fun invoke(httpResponse: HttpResponse) =
+            ConflictException(httpResponse.status, createExceptionData(httpResponse))
+    }
 
 }

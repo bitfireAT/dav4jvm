@@ -18,7 +18,6 @@ import io.ktor.http.*
 import io.ktor.util.logging.*
 import io.ktor.utils.io.charsets.*
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlStreaming
 import kotlin.jvm.JvmOverloads
 
 class DavAddressBook @JvmOverloads constructor(
@@ -56,7 +55,7 @@ class DavAddressBook @JvmOverloads constructor(
            <!ELEMENT filter (prop-filter*)>
         */
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument(encoding = "UTF-8")
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
@@ -67,14 +66,14 @@ class DavAddressBook @JvmOverloads constructor(
             insertTag(FILTER)
         }
         serializer.endDocument()
-        val response = httpClient.request(HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
             url(location)
-            method = DavResource.Report
+            method = Report
             //.method("REPORT", writer.toString().toRequestBody(MIME_XML))
             header(HttpHeaders.ContentType, MIME_XML.toString())
             setBody(writer.toString())
             header("Depth", "1")
-        })
+        }.execute()
         return processMultiStatus(response, callback)
     }
 
@@ -107,7 +106,7 @@ class DavAddressBook @JvmOverloads constructor(
                                             DAV:href+)>
         */
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument(encoding = "UTF-8")
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
@@ -130,13 +129,13 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endDocument()
 
         //TODO followRedirects {
-        val request = httpClient.request {
+        val request = httpClient.prepareRequest {
             url(location)
-            method = DavResource.Report
+            method = Report
             setBody(writer.toString())
             header(HttpHeaders.ContentType, MIME_XML)
             header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
-        }
+        }.execute()
         return processMultiStatus(request, callback)
     }
 

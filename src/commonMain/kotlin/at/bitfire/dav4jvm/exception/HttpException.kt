@@ -7,19 +7,25 @@
 package at.bitfire.dav4jvm.exception
 
 import io.ktor.client.statement.*
+import io.ktor.http.*
 
 /**
  * Signals that a HTTP error was sent by the server.
  */
-open class HttpException(response: HttpResponse) : DavException(
-    "HTTP ${response.status}",
-    httpResponse = response
+open class HttpException internal constructor(statusCode: HttpStatusCode, exceptionData: ExceptionData) : DavException(
+    "HTTP ${statusCode}",
+    exceptionData = exceptionData
 ) {
+
+    companion object {
+        suspend operator fun invoke(response: HttpResponse) =
+            HttpException(response.status, createExceptionData(response))
+    }
 
     var code: Int
 
     init {
-        code = response.status.value
+        code = statusCode.value
     }
 
 }

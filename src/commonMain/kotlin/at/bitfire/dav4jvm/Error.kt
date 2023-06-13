@@ -8,7 +8,8 @@
 
 package at.bitfire.dav4jvm
 
-import nl.adaptivity.xmlutil.*
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 
 /**
@@ -18,7 +19,7 @@ import nl.adaptivity.xmlutil.*
  * At the moment, there is no logic for subclassing errors.
  */
 class Error(
-        val name: QName
+    val name: QName
 ) {
 
     companion object {
@@ -28,13 +29,7 @@ class Error(
         fun parseError(parser: XmlReader): List<Error> {
             val names = mutableSetOf<QName>()
 
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
-                    names += parser.name
-                eventType = parser.next()
-            }
+            XmlUtils.processTag(parser) { names += parser.name }
 
             return names.map { Error(it) }
         }
@@ -48,7 +43,7 @@ class Error(
     }
 
     override fun equals(other: Any?) =
-            (other is Error) && other.name == name
+        (other is Error) && other.name == name
 
     override fun hashCode() = name.hashCode()
 

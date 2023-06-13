@@ -24,7 +24,6 @@ import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
 import nl.adaptivity.xmlutil.XmlException
-import nl.adaptivity.xmlutil.XmlStreaming
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmOverloads
 import at.bitfire.dav4jvm.Response as DavResponse
@@ -84,7 +83,7 @@ open class DavResource @JvmOverloads constructor(
         ): String {
             // build XML request body
             val writer = StringBuilder()
-            val serializer = XmlStreaming.newWriter(writer)
+            val serializer = XmlUtils.createWriter(writer)
             serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
             serializer.startDocument(encoding = "UTF-8")
             serializer.insertTag(PROPERTYUPDATE) {
@@ -154,12 +153,12 @@ open class DavResource @JvmOverloads constructor(
      */
     @Throws(IOException::class, HttpException::class, CancellationException::class)
     suspend fun options(callback: CapabilitiesCallback) {
-        val response = httpClient.request(HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
             method = HttpMethod.Options
             header("Content-Length", "0")
             url(location)
             header("Accept-Encoding", "identity")      // disable compression
-        })
+        }.execute()
         checkStatus(response)
         callback.onCapabilities(
             HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
@@ -180,17 +179,15 @@ open class DavResource @JvmOverloads constructor(
      */
     @Throws(IOException::class, HttpException::class, DavException::class, CancellationException::class)
     suspend fun move(destination: Url, forceOverride: Boolean, callback: ResponseCallback) {
-        val requestBuilder = HttpRequestBuilder().apply {
+        //TODO emulate followRedirects
+        val response = httpClient.prepareRequest {
             method = Move
             header("Content-Length", "0")
             header("Destination", destination.toString())
-        }
+            if (forceOverride) header("Overwrite", "F")
+            url(location)
+        }.execute()
 
-        if (forceOverride) requestBuilder.header("Overwrite", "F")
-
-        //TODO emulate followRedirects
-        requestBuilder.url(location)
-        val response = httpClient.request(requestBuilder)
         checkStatus(response)
         if (response.status == HttpStatusCode.MultiStatus)
         /* Multiple resources were to be affected by the MOVE, but errors on some
@@ -218,19 +215,15 @@ open class DavResource @JvmOverloads constructor(
      */
     @Throws(IOException::class, HttpException::class, DavException::class, CancellationException::class)
     suspend fun copy(destination: Url, forceOverride: Boolean, callback: ResponseCallback) {
-        val requestBuilder = HttpRequestBuilder().apply {
+        //TODO followRedirects
+        val response = httpClient.prepareRequest {
             method = Copy
             header("Content-Length", "0")
             header("Destination", destination.toString())
-        }
+            if (forceOverride) header("Overwrite", "F")
+            url(location)
+        }.execute()
 
-        if (forceOverride) requestBuilder.header("Overwrite", "F")
-
-        //TODO followRedirects
-        requestBuilder.url(location)
-        val response = httpClient.request(
-            requestBuilder
-        )
         checkStatus(response)
 
         if (response.status == HttpStatusCode.MultiStatus)
@@ -253,14 +246,12 @@ open class DavResource @JvmOverloads constructor(
     suspend fun mkCol(xmlBody: String?, callback: ResponseCallback) {
 
         //TODO followRedirects {
-        val response = httpClient.request(
-            HttpRequestBuilder().apply {
-                method = MKCol
-                setBody(xmlBody)
-                header(HttpHeaders.ContentType, MIME_XML)
-                url(location)
-            }
-        )
+        val response = httpClient.prepareRequest {
+            method = MKCol
+            setBody(xmlBody)
+            header(HttpHeaders.ContentType, MIME_XML)
+            url(location)
+        }.execute()
         checkStatus(response)
         callback.onResponse(response)
     }
@@ -278,12 +269,11 @@ open class DavResource @JvmOverloads constructor(
      */
     suspend fun head(callback: ResponseCallback) {
         //TODO followRedirects {
-        val response = httpClient.request(
-            HttpRequestBuilder().apply {
-                method = HttpMethod.Head
-                url(location)
-            }
-        )
+        val response = httpClient.prepareRequest {
+            method = HttpMethod.Head
+            url(location)
+        }.execute()
+
 
         checkStatus(response)
         callback.onResponse(response)
@@ -324,18 +314,14 @@ open class DavResource @JvmOverloads constructor(
      */
     suspend fun get(accept: String, headers: Headers?, callback: ResponseCallback) {
         //TODO followRedirects {
-        val request = HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
             method = HttpMethod.Get
             url(location)
-        }
+            if (headers != null)
+                this.headers.appendAll(headers)
+            header(HttpHeaders.Accept, accept)
+        }.execute()
 
-        if (headers != null)
-            request.headers.appendAll(headers)
-
-        // always Accept header
-        request.header(HttpHeaders.Accept, accept)
-
-        val response = httpClient.request(request)
         checkStatus(response)
         callback.onResponse(response)
     }
@@ -365,20 +351,16 @@ open class DavResource @JvmOverloads constructor(
         callback: ResponseCallback
     ) {
         //TODO followRedirects {
-        val request = HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
             method = HttpMethod.Get
             url(location)
-        }
+            if (headers != null)
+                this.headers.appendAll(headers)
+            val lastIndex = offset + size - 1
+            header(HttpHeaders.Accept, accept)
+            header(HttpHeaders.Range, "bytes=$offset-$lastIndex")
+        }.execute()
 
-
-        if (headers != null)
-            request.headers.appendAll(headers)
-
-        val lastIndex = offset + size - 1
-        request.header(HttpHeaders.Accept, accept)
-        request.header(HttpHeaders.Range, "bytes=$offset-$lastIndex")
-
-        val response = httpClient.request(request)
         checkStatus(response)
         callback.onResponse(response)
     }
@@ -408,23 +390,22 @@ open class DavResource @JvmOverloads constructor(
         callback: ResponseCallback
     ) {
         //TODO followRedirects {
-        val builder = HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
+            method = HttpMethod.Put
             header(HttpHeaders.ContentType, contentType)
             setBody(body)
             url(location)
-        }
+            if (ifETag != null)
+            // only overwrite specific version
+                header(HttpHeaders.IfMatch, QuotedStringUtils.asQuotedString(ifETag))
+            if (ifScheduleTag != null)
+            // only overwrite specific version
+                header(HttpHeaders.IfScheduleTagMatch, QuotedStringUtils.asQuotedString(ifScheduleTag))
+            if (ifNoneMatch)
+            // don't overwrite anything existing
+                header(HttpHeaders.IfNoneMatch, "*")
+        }.execute()
 
-        if (ifETag != null)
-        // only overwrite specific version
-            builder.header(HttpHeaders.IfMatch, QuotedStringUtils.asQuotedString(ifETag))
-        if (ifScheduleTag != null)
-        // only overwrite specific version
-            builder.header(HttpHeaders.IfScheduleTagMatch, QuotedStringUtils.asQuotedString(ifScheduleTag))
-        if (ifNoneMatch)
-        // don't overwrite anything existing
-            builder.header(HttpHeaders.IfNoneMatch, "*")
-
-        val response = httpClient.request(builder)
         checkStatus(response)
         callback.onResponse(response)
     }
@@ -447,17 +428,15 @@ open class DavResource @JvmOverloads constructor(
     @Throws(IOException::class, HttpException::class, CancellationException::class)
     suspend fun delete(ifETag: String? = null, ifScheduleTag: String? = null, callback: ResponseCallback) {
         //TODO followRedirects {
-        val builder = HttpRequestBuilder().apply {
+        val response = httpClient.prepareRequest {
             method = HttpMethod.Delete
             url(location)
-        }
+            if (ifETag != null)
+                header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
+            if (ifScheduleTag != null)
+                header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
+        }.execute()
 
-        if (ifETag != null)
-            builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
-        if (ifScheduleTag != null)
-            builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
-
-        val response = httpClient.request(builder)
         checkStatus(response)
 
         if (response.status == HttpStatusCode.MultiStatus)
@@ -486,7 +465,7 @@ open class DavResource @JvmOverloads constructor(
     suspend fun propfind(depth: Int, vararg reqProp: QName, callback: MultiResponseCallback) {
         // build XML request body
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
@@ -500,13 +479,13 @@ open class DavResource @JvmOverloads constructor(
         serializer.endDocument()
 
         //TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             url(location)
             method = Propfind
             setBody(writer.toString())
             header(HttpHeaders.ContentType, MIME_XML)
             header("Depth", if (depth >= 0) depth.toString() else "infinity")
-        }
+        }.execute()
         processMultiStatus(response, callback)
     }
 
@@ -534,13 +513,13 @@ open class DavResource @JvmOverloads constructor(
         //TODO followRedirects {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
 
             url(location)
             method = Proppatch
             setBody(rqBody)
             header(HttpHeaders.ContentType, MIME_XML)
-        }
+        }.execute()
         // TODO handle not only 207 Multi-Status
         // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
 
@@ -561,12 +540,12 @@ open class DavResource @JvmOverloads constructor(
      */
     suspend fun search(search: String, callback: MultiResponseCallback) {
         ///TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             url(location)
             method = Search
             setBody(search)
             header(HttpHeaders.ContentType, MIME_XML)
-        }
+        }.execute()
         processMultiStatus(response, callback)
     }
 
@@ -578,7 +557,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws HttpException (with XML error names, if available) in case of an HTTP error
      */
-    protected fun checkStatus(response: HttpResponse) {
+    protected suspend fun checkStatus(response: HttpResponse) {
         val status = response.status
         if (status.isSuccess())
         // everything OK
@@ -700,25 +679,21 @@ open class DavResource @JvmOverloads constructor(
         checkStatus(response)
         assertMultiStatus(response)
         val responseProperties = mutableListOf<Property>()
-        val parser = XmlStreaming.newReader(response.bodyAsText())
+        val parser = XmlUtils.createReader(response.bodyAsText())
 
         fun parseMultiStatus(): List<Property> {
             // <!ELEMENT multistatus (response*, responsedescription?,
             //                        sync-token?) >
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1)
-                    when (parser.name) {
-                        DavResponse.RESPONSE ->
-                            at.bitfire.dav4jvm.Response.parse(parser, location, callback)
+            XmlUtils.processTag(parser) {
+                when (parser.name) {
+                    DavResponse.RESPONSE ->
+                        at.bitfire.dav4jvm.Response.parse(parser, location, callback)
 
-                        SyncToken.NAME ->
-                            XmlUtils.readText(parser)?.let {
-                                responseProperties += SyncToken(it)
-                            }
-                    }
-                eventType = parser.next()
+                    SyncToken.NAME ->
+                        XmlUtils.readText(parser)?.let {
+                            responseProperties += SyncToken(it)
+                        }
+                }
             }
 
             return responseProperties

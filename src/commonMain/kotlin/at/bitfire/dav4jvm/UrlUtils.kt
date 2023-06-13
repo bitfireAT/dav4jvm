@@ -34,8 +34,16 @@ object UrlUtils {
             return true
 
         // drop #fragment parts and convert to URI
-        val uri1 = URLBuilder(url1).apply { fragment = "" }.build()
-        val uri2 = URLBuilder(url2).apply { fragment = "" }.build()
+        val uri1 = URLBuilder(url1.toString()).apply {
+            host = host.lowercase()
+            encodedPath = encodedPath.decodeURLPart()
+            fragment = ""
+        }.build()
+        val uri2 = URLBuilder(url2.toString()).apply {
+            host = host.lowercase()
+            encodedPath = encodedPath.decodeURLPart()
+            fragment = ""
+        }.build()
 
         return uri1 == uri2
     }

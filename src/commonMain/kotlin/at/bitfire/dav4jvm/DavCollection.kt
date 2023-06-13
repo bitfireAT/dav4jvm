@@ -16,7 +16,6 @@ import io.ktor.http.*
 import io.ktor.util.logging.*
 import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlStreaming
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmOverloads
 
@@ -42,7 +41,7 @@ open class DavCollection @JvmOverloads constructor(
     @Throws(IOException::class, HttpException::class, CancellationException::class)
     suspend fun post(body: Any, contentType: ContentType, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
         //TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             method = HttpMethod.Post
             setBody(body)
             url(location)
@@ -50,7 +49,7 @@ open class DavCollection @JvmOverloads constructor(
             if (ifNoneMatch)
             // don't overwrite anything existing
                 header(HttpHeaders.IfNoneMatch, "*")
-        }
+        }.execute()
 
         checkStatus(response)
         callback.onResponse(response)
@@ -90,7 +89,7 @@ open class DavCollection @JvmOverloads constructor(
            <!-- DAV:prop defined in RFC 4918, Section 14.18 -->
         */
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument(encoding = "UTF-8")
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.insertTag(SYNC_COLLECTION) {
@@ -115,13 +114,13 @@ open class DavCollection @JvmOverloads constructor(
         serializer.endDocument()
 
         //TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             url(location)
-            method = DavResource.Report
+            method = Report
             setBody(writer.toString())
             header(HttpHeaders.ContentType, MIME_XML)
             header("Depth", "0")
-        }
+        }.execute()
         return processMultiStatus(response, callback)
     }
 

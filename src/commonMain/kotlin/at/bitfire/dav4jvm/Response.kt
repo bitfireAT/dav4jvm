@@ -12,7 +12,6 @@ import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.XmlUtils.nextText
 import at.bitfire.dav4jvm.property.ResourceType
 import io.ktor.http.*
-import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
 import nl.adaptivity.xmlutil.XmlReader
 import kotlin.reflect.KClass
@@ -24,37 +23,37 @@ import kotlin.reflect.KClass
  *                         error?, responsedescription? , location?) >
  */
 data class Response(
-        /**
-         * URL of the requested resource. For instance, if `this` is a result
-         * of a PROPFIND request, the `requestedUrl` would be the URL where the
-         * PROPFIND request has been sent to (usually the collection URL).
-         */
-        val requestedUrl: Url,
+    /**
+     * URL of the requested resource. For instance, if `this` is a result
+     * of a PROPFIND request, the `requestedUrl` would be the URL where the
+     * PROPFIND request has been sent to (usually the collection URL).
+     */
+    val requestedUrl: Url,
 
-        /**
-         * URL of this response (`href` element)
-         */
-        val href: Url,
+    /**
+     * URL of this response (`href` element)
+     */
+    val href: Url,
 
-        /**
-         * status of this response (`status` XML element)
-         */
-        val status: StatusLine?,
+    /**
+     * status of this response (`status` XML element)
+     */
+    val status: StatusLine?,
 
-        /**
-         * property/status elements (`propstat` XML elements)
-         */
-        val propstat: List<PropStat>,
+    /**
+     * property/status elements (`propstat` XML elements)
+     */
+    val propstat: List<PropStat>,
 
-        /**
-         * list of precondition/postcondition elements (`error` XML elements)
-         */
-        val error: List<Error>? = null,
+    /**
+     * list of precondition/postcondition elements (`error` XML elements)
+     */
+    val error: List<Error>? = null,
 
-        /**
-         * new location of this response (`location` XML element), used for redirects
-         */
-        val newLocation: Url? = null
+    /**
+     * new location of this response (`location` XML element), used for redirects
+     */
+    val newLocation: Url? = null
 ) {
 
     enum class HrefRelation {
@@ -75,15 +74,15 @@ data class Response(
      * Convenience method to get a certain property with empty status or status code 2xx
      * from the current response.
      */
-    inline operator fun<reified T: Property> get(clazz: KClass<T>) =
-            properties.filterIsInstance<T>().firstOrNull()
+    inline operator fun <reified T : Property> get(clazz: KClass<T>) =
+        properties.filterIsInstance<T>().firstOrNull()
 
     /**
      * Returns whether the request was successful.
      *
      * @return true: no status XML element or status code 2xx; false: otherwise
      */
-    fun isSuccess() = status?.status?.isSuccess() ?: false
+    fun isSuccess() = status?.status?.isSuccess() ?: true
 
     /**
      * Returns the name (last path segment) of the resource.
@@ -102,7 +101,6 @@ data class Response(
          * Parses an XML response element.
          */
         fun parse(parser: XmlReader, location: Url, callback: MultiResponseCallback) {
-            val depth = parser.depth
 
             var href: Url? = null
             var status: StatusLine? = null
@@ -110,50 +108,51 @@ data class Response(
             var error: List<Error>? = null
             var newLocation: Url? = null
 
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth+1)
-                    when (parser.name) {
-                        DavResource.HREF -> {
-                            var sHref = parser.nextText()
-                            if (!sHref.startsWith("/")) {
-                                /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
-                                   URLs. However, some servers reply with relative paths. */
-                                val firstColon = sHref.indexOf(':')
-                                if (firstColon != -1) {
-                                    /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
-                                       which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
-                                       For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
-                                       with "./" to allow resolving by HttpUrl. */
-                                    var hierarchical = false
-                                    try {
-                                        if (sHref.substring(firstColon, firstColon + 3) == "://")
-                                            hierarchical = true
-                                    } catch (e: IndexOutOfBoundsException) {
-                                        // no "://"
-                                    }
-                                    if (!hierarchical)
-                                        sHref = "./$sHref"
+            XmlUtils.processTag(parser) {
+                when (parser.name) {
+                    DavResource.HREF -> {
+                        var sHref = parser.nextText()
+                        if (!sHref.startsWith("/")) {
+                            /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
+                               URLs. However, some servers reply with relative paths. */
+                            val firstColon = sHref.indexOf(':')
+                            if (firstColon != -1) {
+                                /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
+                                   which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
+                                   For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
+                                   with "./" to allow resolving by HttpUrl. */
+                                var hierarchical = false
+                                try {
+                                    if (sHref.substring(firstColon, firstColon + 3) == "://")
+                                        hierarchical = true
+                                } catch (e: IndexOutOfBoundsException) {
+                                    // no "://"
                                 }
+                                if (!hierarchical)
+                                    sHref = "./$sHref"
                             }
-                            href = URLBuilder(location).takeFrom(sHref).build()
                         }
-                        STATUS ->
-                            status = try {
-                                StatusLine.parse(parser.nextText())
-                            } catch(e: IllegalStateException) {
-                                log.warn("Invalid status line, treating as HTTP error 500")
-                                StatusLine(HttpProtocolVersion.HTTP_1_1, HttpStatusCode(500, "Invalid status line"))
-                            }
-                        PropStat.NAME ->
-                            PropStat.parse(parser).let { propStat += it }
-                        Error.NAME ->
-                            error = Error.parseError(parser)
-                        LOCATION ->
-                            //TODO are invalid urls possible?
-                            newLocation = Url(parser.nextText())
+                        href = URLBuilder(location).takeFrom(sHref).build()
+                    }
+
+                    STATUS ->
+                        status = try {
+                            StatusLine.parse(parser.nextText())
+                        } catch (e: IllegalStateException) {
+                            log.warn("Invalid status line, treating as HTTP error 500")
+                            StatusLine(HttpProtocolVersion.HTTP_1_1, HttpStatusCode(500, "Invalid status line"))
                         }
-                eventType = parser.next()
+
+                    PropStat.NAME ->
+                        PropStat.parse(parser).let { propStat += it }
+
+                    Error.NAME ->
+                        error = Error.parseError(parser)
+
+                    LOCATION ->
+                        //TODO are invalid urls possible?
+                        newLocation = Url(parser.nextText())
+                }
             }
 
             if (href == null) {
@@ -164,13 +163,13 @@ data class Response(
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
             propStat.filter { it.isSuccess() }
-                    .map { it.properties }
-                    .filterIsInstance<ResourceType>()
-                    .firstOrNull()
-                    ?.let { type ->
-                        if (type.types.contains(ResourceType.COLLECTION))
-                            href = UrlUtils.withTrailingSlash(href!!)
-                    }
+                .map { it.properties }
+                .filterIsInstance<ResourceType>()
+                .firstOrNull()
+                ?.let { type ->
+                    if (type.types.contains(ResourceType.COLLECTION))
+                        href = UrlUtils.withTrailingSlash(href!!)
+                }
 
             //log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
 
@@ -178,6 +177,7 @@ data class Response(
             val relation = when {
                 UrlUtils.equals(UrlUtils.omitTrailingSlash(href!!), UrlUtils.omitTrailingSlash(location)) ->
                     HrefRelation.SELF
+
                 else -> {
                     if (location.protocol == href!!.protocol && location.host == href!!.host && location.port == href!!.port) {
                         val locationSegments = location.pathSegments
@@ -185,7 +185,7 @@ data class Response(
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size
-                        if (locationSegments[nBasePathSegments-1] == "")
+                        if (locationSegments[nBasePathSegments - 1] == "")
                             nBasePathSegments--
 
                         /* example:   locationSegments  = [ "davCollection", "" ]
@@ -194,7 +194,8 @@ data class Response(
                         */
                         var relation = HrefRelation.OTHER
                         if (hrefSegments.size > nBasePathSegments) {
-                            val sameBasePath = (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
+                            val sameBasePath =
+                                (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
                             if (sameBasePath)
                                 relation = HrefRelation.MEMBER
                         }
@@ -206,15 +207,16 @@ data class Response(
             }
 
             callback.onResponse(
-                    Response(
-                            location,
-                            href!!,
-                            status,
-                            propStat,
-                            error,
-                            newLocation
-                    ),
-                    relation)
+                Response(
+                    location,
+                    href!!,
+                    status,
+                    propStat,
+                    error,
+                    newLocation
+                ),
+                relation
+            )
         }
 
     }

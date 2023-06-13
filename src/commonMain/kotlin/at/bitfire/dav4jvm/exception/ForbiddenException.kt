@@ -7,5 +7,13 @@
 package at.bitfire.dav4jvm.exception
 
 import io.ktor.client.statement.*
+import io.ktor.http.*
 
-class ForbiddenException(response: HttpResponse) : HttpException(response)
+class ForbiddenException internal constructor(statusCode: HttpStatusCode, exceptionData: ExceptionData) :
+    HttpException(statusCode, exceptionData) {
+
+    companion object {
+        suspend operator fun invoke(httpResponse: HttpResponse) =
+            ForbiddenException(httpResponse.status, createExceptionData(httpResponse))
+    }
+}

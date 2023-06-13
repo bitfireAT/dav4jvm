@@ -9,7 +9,6 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.*
-import nl.adaptivity.xmlutil.core.impl.multiplatform.Reader
 
 object XmlUtils {
 
@@ -19,29 +18,41 @@ object XmlUtils {
     const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
     const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
 
+    fun createReader(source: String) = XmlStreaming.newReader(source).also { /*Initialize*/ it.next() }
+    fun createWriter(destination: Appendable) =
+        XmlStreaming.newWriter(destination, repairNamespaces = true, xmlDeclMode = XmlDeclMode.Auto)
 
     @Throws(IOException::class, XmlException::class)
-    fun processTag(parser: XmlReader, name: QName, processor: () -> Unit) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == EventType.END_ELEMENT || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1 && parser.name == name)
+    fun processTag(
+        parser: XmlReader,
+        name: QName? = null,
+        eventType: EventType = EventType.START_ELEMENT,
+        depthIncrement: Int = 1,
+        processor: () -> Unit
+    ) {
+        if (!parser.isStarted) parser.next()
+        val targetDepth = parser.depth + depthIncrement
+        val endTagDepth = parser.depth
+        var mEventType = parser.eventType
+        if (mEventType != EventType.START_ELEMENT && mEventType != EventType.START_DOCUMENT) throw XmlException("Need to be at the start of a tag or document to process it! Was $mEventType")
+        val processingDoc = mEventType == EventType.START_DOCUMENT
+        val endTagName: QName? = if (!processingDoc) parser.name else null
+        do {
+            if (parser.depth == targetDepth && mEventType == eventType && (name == null || parser.name == name)) {
                 processor()
-            eventType = parser.next()
-        }
+            }
+            mEventType = parser.next()
+        } while (
+            !((mEventType == EventType.END_ELEMENT && parser.name == endTagName && parser.depth <= endTagDepth) ||
+                    (processingDoc && mEventType == EventType.END_DOCUMENT))
+        )
     }
 
     @Throws(IOException::class, XmlException::class)
     fun readText(parser: XmlReader): String? {
         var text: String? = null
 
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-            if (eventType == EventType.TEXT && parser.depth == depth)
-                text = parser.text
-            eventType = parser.next()
-        }
+        processTag(parser, eventType = EventType.TEXT, depthIncrement = 0) { text = parser.text }
 
         return text
     }
@@ -53,31 +64,19 @@ object XmlUtils {
      */
     @Throws(InvalidPropertyException::class, IOException::class, XmlException::class)
     fun requireReadText(parser: XmlReader): String =
-        readText(parser) ?:
-        throw InvalidPropertyException("XML text for ${parser.namespaceURI}:${parser.name} must not be empty")
+        readText(parser)
+            ?: throw InvalidPropertyException("XML text for ${parser.namespaceURI}:${parser.name} must not be empty")
 
     @Throws(IOException::class, XmlException::class)
     fun readTextProperty(parser: XmlReader, name: QName): String? {
-        val depth = parser.depth
-        var eventType = parser.eventType
         var result: String? = null
-        while (!((eventType == EventType.END_ELEMENT || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1 && parser.name == name)
-                result = parser.nextText()
-            eventType = parser.next()
-        }
+        processTag(parser, name) { result = parser.nextText() }
         return result
     }
 
     @Throws(IOException::class, XmlException::class)
     fun readTextPropertyList(parser: XmlReader, name: QName, list: MutableCollection<String>) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == EventType.END_ELEMENT || eventType == EventType.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1 && parser.name == name)
-                list.add(parser.nextText())
-            eventType = parser.next()
-        }
+        processTag(parser, name) { list.add(parser.nextText()) }
     }
 
 
@@ -93,9 +92,10 @@ object XmlUtils {
         return when (next()) {
             EventType.TEXT -> {
                 val rText = text
-                if (next() != EventType.END_ELEMENT) throw  XmlException()
+                if (next() != EventType.END_ELEMENT) throw XmlException()
                 rText
             }
+
             EventType.END_ELEMENT -> ""
             else -> throw XmlException()
         }

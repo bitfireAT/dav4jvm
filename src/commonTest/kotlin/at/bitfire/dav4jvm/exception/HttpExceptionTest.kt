@@ -7,13 +7,14 @@
 package at.bitfire.dav4jvm.exception
 
 import at.bitfire.dav4jvm.buildRequest
+import at.bitfire.dav4jvm.createMockClient
 import at.bitfire.dav4jvm.createResponse
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlin.test.assertTrue
+import io.ktor.http.content.*
+import io.ktor.utils.io.core.*
 
 object HttpExceptionTest : FunSpec({
 
@@ -24,20 +25,20 @@ object HttpExceptionTest : FunSpec({
             method = HttpMethod.Post
             url("http://example.com")
             header(HttpHeaders.ContentType, "text/something")
-            setBody("\"REQUEST\\nBODY\"")
+            setBody(ByteArrayContent("REQUEST\nBODY".toByteArray()))
         }
 
-        val response = HttpClient(MockEngine).createResponse(
+        val response = createMockClient().createResponse(
             request,
             HttpStatusCode.InternalServerError.description(responseMessage),
             headersOf(HttpHeaders.ContentType, "text/something-other"),
             "SERVER\r\nRESPONSE"
         )
         val e = HttpException(response)
-        assertTrue(e.message!!.contains("500"))
-        assertTrue(e.message!!.contains(responseMessage))
-        assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
-        assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
+        e.message.shouldContain("500")
+        e.message.shouldContain(responseMessage)
+        e.requestBody.shouldContain("REQUEST\nBODY")
+        e.responseBody.shouldContain("SERVER\r\nRESPONSE")
     }
 
 })

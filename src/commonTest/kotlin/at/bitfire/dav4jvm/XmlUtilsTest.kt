@@ -9,15 +9,25 @@ package at.bitfire.dav4jvm
 import io.kotest.core.spec.style.FunSpec
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlStreaming
+import nl.adaptivity.xmlutil.XmlReader
 import nl.adaptivity.xmlutil.localPart
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 object XmlUtilsTest : FunSpec({
 
+    fun advanceTo(
+        parser: XmlReader,
+        eventType: EventType? = null,
+        name: QName? = null
+    ) {
+        if (eventType == name) throw IllegalStateException("Both can't be null")
+        while ((name == null || !(parser.isStartElement() || parser.isEndElement()) || parser.name != name) && (eventType == null || parser.eventType != eventType))
+            parser.next()
+    }
+
     test("testProcessTagRoot") {
-        val parser = XmlStreaming.newReader("<test></test>")
+        val parser = XmlUtils.createReader("<test></test>")
         // now on START_DOCUMENT [0]
 
         var processed = false
@@ -28,8 +38,8 @@ object XmlUtilsTest : FunSpec({
     }
 
     test("testProcessTagDepth1") {
-        val parser = XmlStreaming.newReader("<root><test></test></root>")
-        parser.next()       // now on START_TAG <root>
+        val parser = XmlUtils.createReader("<root><test></test></root>")
+        parser.next()      // now on START_TAG <root>
 
         var processed = false
         XmlUtils.processTag(parser, QName("", "test")) {
@@ -39,7 +49,7 @@ object XmlUtilsTest : FunSpec({
     }
 
     test("testReadText") {
-        val parser = XmlStreaming.newReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>")
+        val parser = XmlUtils.createReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>")
         parser.next()
         parser.next()       // now on START_TAG <test>
 
@@ -52,7 +62,7 @@ object XmlUtilsTest : FunSpec({
     }
 
     test("testReadTextCDATA") {
-        val parser = XmlStreaming.newReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>")
+        val parser = XmlUtils.createReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>")
         parser.next()       // now on START_TAG <test>
 
         assertEquals("Test 1</test><test><garbage/>Test 2", XmlUtils.readText(parser))
@@ -60,8 +70,8 @@ object XmlUtilsTest : FunSpec({
     }
 
     test("testReadTextPropertyRoot") {
-        val parser = XmlStreaming.newReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>")
-        parser.next()        // now on START_TAG <root>
+        val parser = XmlUtils.createReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>")
+        parser.next()         // now on START_TAG <root>
 
         val entries = mutableListOf<String>()
         XmlUtils.readTextPropertyList(parser, QName("", "entry"), entries)
@@ -73,7 +83,7 @@ object XmlUtilsTest : FunSpec({
     }
 
     test("testReadTextPropertyListDepth1") {
-        val parser = XmlStreaming.newReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>")
+        val parser = XmlUtils.createReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>")
         parser.next()       // now on START_TAG <test> [1]
 
         val entries = mutableListOf<String>()

@@ -27,16 +27,15 @@ class StatusLine(
             // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
 
             // Parse protocol like "HTTP/1.1" followed by a space.
-            val codeStart: Int = statusLine.indexOf(" ")
-            val protocol: HttpProtocolVersion
-            if (statusLine.startsWith("HTTP/")) {
-                protocol = HttpProtocolVersion.parse(statusLine.takeWhile { !it.isWhitespace() })
+            val codeStart: Int = statusLine.indexOf(" ") + 1
+            val protocol: HttpProtocolVersion = if (statusLine.startsWith("HTTP/")) {
+                HttpProtocolVersion.parse(statusLine.takeWhile { !it.isWhitespace() })
             } else if (statusLine.startsWith("ICY ")) {
                 // Shoutcast uses ICY instead of "HTTP/1.0".
-                protocol = HttpProtocolVersion.HTTP_1_0
+                HttpProtocolVersion.HTTP_1_0
             } else if (statusLine.startsWith("SOURCETABLE ")) {
                 // NTRIP r1 uses SOURCETABLE instead of HTTP/1.1
-                protocol = HttpProtocolVersion.HTTP_1_1
+                HttpProtocolVersion.HTTP_1_1
             } else {
                 throw IllegalStateException("Unexpected status line: $statusLine")
             }

@@ -15,7 +15,13 @@ import korlibs.time.seconds
 
 class ServiceUnavailableException// not a HTTP-date, must be delta-seconds// Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
 // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
-    (response: HttpResponse) : HttpException(response) {
+internal constructor(response: HttpResponse, exceptionData: ExceptionData) :
+    HttpException(response.status, exceptionData) {
+
+    companion object {
+        suspend operator fun invoke(httpResponse: HttpResponse) =
+            ServiceUnavailableException(httpResponse, createExceptionData(httpResponse))
+    }
 
     var retryAfter: DateTimeTz? = null
 

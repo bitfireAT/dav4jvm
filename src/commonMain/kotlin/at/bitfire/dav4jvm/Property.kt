@@ -8,8 +8,6 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
-import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlException
 import nl.adaptivity.xmlutil.XmlReader
 
 /**
@@ -24,28 +22,20 @@ interface Property {
 
         fun parse(parser: XmlReader): List<Property> {
             // <!ELEMENT prop ANY >
-            val depth = parser.depth
             val properties = mutableListOf<Property>()
+            XmlUtils.processTag(parser) {
+                val name = parser.name
 
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
-                    val depthBeforeParsing = parser.depth
-                    val name = parser.name
+                try {
+                    val property = PropertyRegistry.create(name, parser)
 
-                    try {
-                        val property = PropertyRegistry.create(name, parser)
-                        if (parser.depth != depthBeforeParsing) throw XmlException("Invalid depth!")
-
-                        if (property != null) {
-                            properties.add(property)
-                        } else
-                            log.trace("Ignoring unknown property $name")
-                    } catch (e: InvalidPropertyException) {
-                        log.warn("Ignoring invalid property", e)
-                    }
+                    if (property != null) {
+                        properties.add(property)
+                    } else
+                        log.trace("Ignoring unknown property $name")
+                } catch (e: InvalidPropertyException) {
+                    log.warn("Ignoring invalid property", e)
                 }
-                eventType = parser.next()
             }
 
             return properties

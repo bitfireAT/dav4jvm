@@ -8,10 +8,10 @@ package at.bitfire.dav4jvm.exception
 
 import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.buildRequest
+import at.bitfire.dav4jvm.createMockClient
 import at.bitfire.dav4jvm.createResponse
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
+import io.kotest.matchers.longs.shouldBeLessThan
 import io.ktor.client.request.*
 import io.ktor.http.*
 import korlibs.time.DateTime
@@ -20,25 +20,25 @@ import korlibs.time.minutes
 import kotlin.math.abs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 object ServiceUnavailableExceptionTest : FunSpec({
 
-    val httpClient = HttpClient(MockEngine)
+    val httpClient = createMockClient()
 
-    fun buildResponse(headers: Headers = headersOf()) = httpClient.createResponse(
+    suspend fun buildResponse(headers: Headers = headersOf()) = httpClient.createResponse(
         buildRequest {
             url("http://www.example.com")
             method = HttpMethod.Get
         },
-        HttpStatusCode.ServiceUnavailable.description("Try later")
+        HttpStatusCode.ServiceUnavailable.description("Try later"),
+        headers
     )
 
-    fun withinTimeRange(d: DateTimeTz, seconds: Int): Boolean {
-        val msCheck = d.local.unixMillisLong
+    fun withinTimeRange(d: DateTimeTz, seconds: Int) {
+        val msCheck = d.utc.unixMillisLong
         val msShouldBe = DateTime.nowUnixMillisLong() + seconds * 1000
         // assume max. 5 seconds difference for test running
-        return abs(msCheck - msShouldBe) < 5000
+        abs(msCheck - msShouldBe).shouldBeLessThan(5000)
     }
 
     test("testRetryAfter_NoTime") {
@@ -47,18 +47,18 @@ object ServiceUnavailableExceptionTest : FunSpec({
     }
 
     test("testRetryAfter_Seconds") {
-        val response = buildResponse(headersOf("Retry-After", "120"))
+        val response = buildResponse(headersOf(HttpHeaders.RetryAfter, "120"))
         val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
-        assertTrue(withinTimeRange(e.retryAfter!!, 120))
+        withinTimeRange(e.retryAfter!!, 120)
     }
 
     test("testRetryAfter_Date") {
         val t = (DateTime.now() + 30.minutes)
-        val response = buildResponse(headersOf("Retry-After", HttpUtils.formatDate(t)))
+        val response = buildResponse(headersOf(HttpHeaders.RetryAfter, HttpUtils.formatDate(t)))
         val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
-        assertTrue(withinTimeRange(e.retryAfter!!, 30 * 60))
+        withinTimeRange(e.retryAfter!!, 30 * 60)
     }
 
 })

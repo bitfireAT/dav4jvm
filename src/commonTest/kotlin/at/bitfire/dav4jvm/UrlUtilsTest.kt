@@ -6,64 +6,39 @@
 
 package at.bitfire.dav4jvm
 
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.datatest.withData
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.ktor.http.*
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 object UrlUtilsTest : FunSpec({
 
     fun String.toHttpUrlOrNull() = Url(this)
 
-    test("testEquals") {
-        assertTrue(
-            UrlUtils.equals(
-                "http://host/resource".toHttpUrlOrNull(),
-                "http://host/resource".toHttpUrlOrNull()
-            )
-        )
-        assertTrue(
-            UrlUtils.equals(
-                "http://host:80/resource".toHttpUrlOrNull(),
-                "http://host/resource".toHttpUrlOrNull()
-            )
-        )
-        assertTrue(
-            UrlUtils.equals(
-                "https://HOST:443/resource".toHttpUrlOrNull(),
-                "https://host/resource".toHttpUrlOrNull()
-            )
-        )
-        assertTrue(
-            UrlUtils.equals(
-                "https://host:443/my@dav/".toHttpUrlOrNull(),
-                "https://host/my%40dav/".toHttpUrlOrNull()
-            )
-        )
-        assertTrue(
-            UrlUtils.equals(
-                "http://host/resource".toHttpUrlOrNull(),
-                "http://host/resource#frag1".toHttpUrlOrNull()
-            )
-        )
+    withData(
+        "http://host/resource".toHttpUrlOrNull() to "http://host/resource".toHttpUrlOrNull(),
+        "http://host:80/resource".toHttpUrlOrNull() to "http://host/resource".toHttpUrlOrNull(),
+        "https://HOST:443/resource".toHttpUrlOrNull() to "https://host/resource".toHttpUrlOrNull(),
+        "https://host:443/my@dav/".toHttpUrlOrNull() to "https://host/my%40dav/".toHttpUrlOrNull(),
+        "http://host/resource".toHttpUrlOrNull() to "http://host/resource#frag1".toHttpUrlOrNull(),
+        "https://host/%5bresource%5d/".toHttpUrlOrNull() to "https://host/[resource]/".toHttpUrlOrNull()
+    ) { (a, b) ->
+        withClue("$a shouldEqual $b") {
+            UrlUtils.equals(a, b).shouldBeTrue()
+        }
+    }
 
-        // should work, but currently doesn't (see MR #5)
-        // assertTrue(UrlUtils.equals(HttpUrl.parse("https://host/%5bresource%5d/")!!, HttpUrl.parse("https://host/[resource]/")!!))
-
-        assertFalse(
-            UrlUtils.equals(
-                "http://host/resource".toHttpUrlOrNull(),
-                "http://host/resource/".toHttpUrlOrNull()
-            )
-        )
-        assertFalse(
-            UrlUtils.equals(
-                "http://host/resource".toHttpUrlOrNull(),
-                "http://host:81/resource".toHttpUrlOrNull()
-            )
-        )
+    withData(
+        "http://host/resource".toHttpUrlOrNull() to "http://host/resource/".toHttpUrlOrNull(),
+        "http://host/resource".toHttpUrlOrNull() to "http://host:81/resource".toHttpUrlOrNull()
+    ) { (a, b) ->
+        withClue("$a shouldNotEqual $b") {
+            UrlUtils.equals(a, b).shouldBeFalse()
+        }
     }
 
     test("testHostToDomain") {

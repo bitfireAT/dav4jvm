@@ -22,7 +22,6 @@ import korlibs.time.Date
 import korlibs.time.DateFormat
 import korlibs.time.format
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlStreaming
 import kotlin.jvm.JvmOverloads
 
 class DavCalendar @JvmOverloads constructor(
@@ -82,7 +81,7 @@ class DavCalendar @JvmOverloads constructor(
 
         */
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument(encoding = "UTF-8")
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
@@ -110,13 +109,13 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         //TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             url(location)
-            method = DavResource.Report
+            method = Report
             setBody(writer.toString())
             header(HttpHeaders.ContentType, MIME_XML)
             header("Depth", "1")
-        }
+        }.execute()
         return processMultiStatus(response, callback)
     }
 
@@ -148,7 +147,7 @@ class DavCalendar @JvmOverloads constructor(
                                         DAV:prop)?, DAV:href+)>
         */
         val writer = StringBuilder()
-        val serializer = XmlStreaming.newWriter(writer)
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument(encoding = "UTF-8")
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
@@ -172,12 +171,12 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         //TODO followRedirects {
-        val response = httpClient.request {
+        val response = httpClient.prepareRequest {
             url(location)
-            method = DavResource.Report
+            method = Report
             setBody(writer.toString())
             header(HttpHeaders.ContentType, MIME_XML)
-        }
+        }.execute()
         return processMultiStatus(response, callback)
 
     }

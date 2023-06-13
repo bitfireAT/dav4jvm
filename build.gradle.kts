@@ -78,10 +78,33 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("io.kotest:kotest-framework-engine:${Libs.kotestVersion}")
+                implementation("io.kotest:kotest-framework-datatest:${Libs.kotestVersion}")
                 implementation("io.kotest:kotest-assertions-core:${Libs.kotestVersion}")
                 implementation("io.ktor:ktor-client-mock:${Libs.ktorVersion}")
                 implementation("io.ktor:ktor-client-auth:${Libs.ktorVersion}")
             }
         }
+
+        val jvmTest by getting {
+            dependencies {
+                implementation("io.kotest:kotest-runner-junit5:${Libs.kotestVersion}")
+            }
+        }
+    }
+}
+
+tasks.named<Test>("jvmTest") {
+    useJUnitPlatform()
+    filter {
+        isFailOnNoMatchingTests = false
+    }
+    testLogging {
+        showExceptions = true
+        showStandardStreams = true
+        events = setOf(
+            org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+            org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
+        )
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }

@@ -10,7 +10,6 @@ import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.SyncToken
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.http.*
 import io.ktor.utils.io.charsets.*
@@ -24,17 +23,7 @@ object DavCollectionTest : FunSpec({
 
     val sampleText = "SAMPLE RESPONSE"
     val sampleUrl = Url("http://mock-server.com/dav/")
-
-    fun clientWithMocKEngine(handler: MockRequestHandler) = HttpClient(MockEngine) {
-        followRedirects = false
-        engine {
-            addHandler(handler)
-        }
-    }
-
-    fun Url.resolve(path: String) = URLBuilder(this).apply {
-        takeFrom(path)
-    }.build()
+    val httpClient = createMockClient()
 
 
     /**
@@ -42,7 +31,7 @@ object DavCollectionTest : FunSpec({
      */
     test("testInitialSyncCollectionReport") {
         val url = sampleUrl
-        val httpClient = clientWithMocKEngine { request ->
+        httpClient.changeMockHandler { request ->
             if (request.url == sampleUrl) {
                 respond(
                     "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -143,7 +132,7 @@ object DavCollectionTest : FunSpec({
      */
     test("testInitialSyncCollectionReportWithTruncation") {
         val url = sampleUrl
-        val httpClient = clientWithMocKEngine { request ->
+        httpClient.changeMockHandler { request ->
             if (request.url == sampleUrl) {
                 respond(
                     "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -233,7 +222,7 @@ object DavCollectionTest : FunSpec({
     test("testSyncCollectionReportWithUnsupportedLimit") {
         val url = sampleUrl
 
-        val httpClient = clientWithMocKEngine { request ->
+        httpClient.changeMockHandler { request ->
             if (request.url == sampleUrl) {
                 respond(
                     "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -262,7 +251,7 @@ object DavCollectionTest : FunSpec({
 
     test("testPost") {
         val url = sampleUrl
-        val httpClient = clientWithMocKEngine { request ->
+        httpClient.changeMockHandler { request ->
             if (request.url == sampleUrl) {
                 respond("", HttpStatusCode.Created)
             } else {
@@ -273,7 +262,7 @@ object DavCollectionTest : FunSpec({
 
         var called = false
         dav.post(sampleText, ContentType.Text.Plain) { response ->
-            val request = (httpClient.engine as MockEngine).requestHistory.first()
+            val request = httpClient.lastMockRequest
             assertEquals(HttpMethod.Post, request.method)
             assertEquals(request.url, dav.location)
             called = true

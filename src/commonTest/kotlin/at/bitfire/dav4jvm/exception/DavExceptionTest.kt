@@ -9,10 +9,14 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.*
 import at.bitfire.dav4jvm.property.ResourceType
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldHaveLength
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.util.*
 import io.ktor.utils.io.charsets.*
 import nl.adaptivity.xmlutil.QName
@@ -28,9 +32,7 @@ object DavExceptionTest : FunSpec({
 
     val sampleUrl = Url("http://mock-server.com/dav/")
 
-    val httpClient = HttpClient(MockEngine) {
-        followRedirects = false
-    }
+    val httpClient = createMockClient()
 
     /**
      * Test truncation of a too large plain text request in [DavException].
@@ -47,6 +49,7 @@ object DavExceptionTest : FunSpec({
             buildRequest {
                 url("http://example.com")
                 method = HttpMethod.Post
+                setBody(TextContent(body, ContentType.Text.Plain))
                 header(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             },
             HttpStatusCode.NoContent
@@ -77,7 +80,7 @@ object DavExceptionTest : FunSpec({
         httpClient.changeMockHandler { request ->
             if (request.url == sampleUrl) {
                 respond(
-                    "",
+                    body,
                     HttpStatusCode.NotFound,
                     headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
                 )
@@ -90,12 +93,11 @@ object DavExceptionTest : FunSpec({
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
-            assertEquals(e.code, 404)
-            assertTrue(e.errors.isEmpty())
-            assertEquals(
-                body.substring(0, DavException.MAX_EXCERPT_SIZE - 1),
-                e.responseBody!!.substring(0, DavException.MAX_EXCERPT_SIZE - 1)
-            )
+            e.code.shouldBe(404)
+            e.errors.shouldBeEmpty()
+            e.responseBody.shouldHaveLength(DavException.MAX_EXCERPT_SIZE)
+            e.responseBody!!.substring(0, DavException.MAX_EXCERPT_SIZE - 1)
+                .shouldBe(body.substring(0, DavException.MAX_EXCERPT_SIZE - 1))
         }
     }
 
@@ -146,8 +148,7 @@ object DavExceptionTest : FunSpec({
             val response = httpClient.lastMockResponse
 
             assertEquals(HttpStatusCode.InternalServerError, response.statusCode)
-            assertTrue(response.body is String)
-            assertTrue(response.body.toString().contains("12345"))
+            e.responseBody.shouldContain("12345")
         }
     }
 

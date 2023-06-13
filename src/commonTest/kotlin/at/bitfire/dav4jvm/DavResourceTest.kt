@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ResourceType
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -32,9 +31,7 @@ object DavResourceTest : FunSpec({
 
     val sampleUrl = Url("http://mock-server.com/dav/")
 
-    val httpClient = HttpClient(MockEngine) {
-        followRedirects = false
-    }
+    val httpClient = createMockClient()
 
 
     test("testCopy") {
@@ -454,7 +451,7 @@ object DavResourceTest : FunSpec({
                 respond(
                     "",
                     HttpStatusCode.OK,
-                    headersOf("DAV", "  1,  2 ,3,hyperactive-access")
+                    headersOf("DAV", listOf("  1", "  2 ", "3", "hyperactive-access"))
                 )
             } else {
                 respondError(HttpStatusCode.BadRequest)

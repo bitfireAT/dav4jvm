@@ -9,7 +9,6 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.property.GetETag
 import io.kotest.core.spec.style.FunSpec
 import nl.adaptivity.xmlutil.EventType
-import nl.adaptivity.xmlutil.XmlStreaming
 import nl.adaptivity.xmlutil.localPart
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -17,7 +16,7 @@ import kotlin.test.assertTrue
 object PropertyTest : FunSpec({
 
     test("testParse_InvalidProperty") {
-        val parser = XmlStreaming.newReader("<multistatus xmlns='DAV:'><getetag/></multistatus>")
+        val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag/></multistatus>")
         do {
             parser.next()
         } while (parser.eventType != EventType.START_ELEMENT && parser.name.localPart != "multistatus")
@@ -35,7 +34,7 @@ object PropertyTest : FunSpec({
     }
 
     test("testParse_ValidProperty") {
-        val parser = XmlStreaming.newReader("<multistatus xmlns='DAV:'><getetag>12345</getetag></multistatus>")
+        val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag>12345</getetag></multistatus>")
         do {
             parser.next()
         } while (parser.eventType != EventType.START_ELEMENT && parser.name.localPart != "multistatus")
