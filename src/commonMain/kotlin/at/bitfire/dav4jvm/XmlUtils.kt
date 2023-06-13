@@ -81,9 +81,35 @@ object XmlUtils {
 
 
     fun XmlWriter.insertTag(name: QName, contentGenerator: XmlWriter.() -> Unit = {}) {
-        smartStartTag(name)
+
+        if (name.namespaceURI == XMLConstants.XML_NS_URI || name.namespaceURI == XMLConstants.XMLNS_ATTRIBUTE_NS_URI) {
+            val namespace = namespaceContext.getNamespaceURI(name.prefix) ?: XMLConstants.NULL_NS_URI
+            startTag(namespace, name.localPart, name.prefix)
+        } else {
+            var writeNs = false
+
+            val usedPrefix = getPrefix(name.namespaceURI) ?: run {
+                val currentNs = getNamespaceUri(name.prefix) ?: XMLConstants.NULL_NS_URI
+                if (name.namespaceURI != currentNs) {
+                    writeNs = true
+                }
+                if (name.prefix != XMLConstants.DEFAULT_NS_PREFIX) name.prefix else generateAutoPrefix()
+            }
+            startTag(name.namespaceURI, name.localPart, usedPrefix)
+            if (writeNs) this.namespaceAttr(usedPrefix, name.namespaceURI)
+        }
+
         contentGenerator(this)
         endTag(name)
+    }
+
+    private fun XmlWriter.generateAutoPrefix(): String {
+        var prefix: String
+        var prefixN = 1
+        do {
+            prefix = "n${prefixN++}"
+        } while (getNamespaceUri(prefix) != null)
+        return prefix
     }
 
     @Throws(XmlException::class)
