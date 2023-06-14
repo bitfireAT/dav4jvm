@@ -1208,18 +1208,21 @@ object DavResourceTest : FunSpec({
     }
 
     test("testAssertMultiStatus_NonXML_ReallyNotXML") {
-        val dav = DavResource(httpClient, Url("https://from.com"))
-        val response = httpClient.createResponse(
-            buildRequest {
-                url(dav.location)
-            },
-            HttpStatusCode.MultiStatus,
-            headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()),
-            "Some error occurred"
-        )
-        dav.assertMultiStatus(
-            response
-        )
+        val ex = shouldThrow<DavException> {
+            val dav = DavResource(httpClient, Url("https://from.com"))
+            val response = httpClient.createResponse(
+                buildRequest {
+                    url(dav.location)
+                },
+                HttpStatusCode.MultiStatus,
+                headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()),
+                "Some error occurred"
+            )
+            dav.assertMultiStatus(
+                response
+            )
+        }
+        ex.message.shouldBe("Received non-XML 207 Multi-Status")
     }
 
     test("testAssertMultiStatus_Not207") {
