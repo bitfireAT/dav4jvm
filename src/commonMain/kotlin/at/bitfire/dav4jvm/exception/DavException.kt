@@ -9,9 +9,11 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.isEmpty
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.util.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.XmlException
@@ -51,6 +53,7 @@ open class DavException internal constructor(
             httpResponse: HttpResponse? = null
         ): DavException = DavException(message, ex, createExceptionData(httpResponse))
 
+        @OptIn(InternalAPI::class)
         internal suspend fun createExceptionData(
             httpResponse: HttpResponse? = null
         ): ExceptionData {
@@ -87,12 +90,12 @@ open class DavException internal constructor(
                     Dav4jvm.log.warn("Couldn't read HTTP request", e)
                     requestBody = "Couldn't read HTTP request: ${e.message}"
                 }
-                Dav4jvm.log.trace("Reading response $responseBody")
+                Dav4jvm.log.trace("Reading response $response")
                 try {
                     // save response body excerpt
-                    val bodyChannel = httpResponse.bodyAsChannel()
+                    val bodyChannel = httpResponse.content
                     val contentType = httpResponse.contentType()
-                    if (!bodyChannel.isClosedForRead && contentType != null && isPlainText(contentType)) {
+                    if (!bodyChannel.isEmpty() && contentType != null && isPlainText(contentType)) {
                         // Read a length limited version of the body
                         val read = bodyChannel.readRemaining(MAX_EXCERPT_SIZE.toLong())
                         responseBody = read.readBytes().decodeToString()

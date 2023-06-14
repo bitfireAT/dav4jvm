@@ -1247,7 +1247,8 @@ object DavResourceTest : FunSpec({
                 url(dav.location)
             },
             HttpStatusCode.MultiStatus,
-            headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
+            headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString()),
+            "<multistaus />"
         )
         dav.assertMultiStatus(
             response
@@ -1261,7 +1262,8 @@ object DavResourceTest : FunSpec({
                 url(dav.location)
             },
             HttpStatusCode.MultiStatus,
-            headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString())
+            headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString()),
+            "<multistaus />"
         )
         dav.assertMultiStatus(
             response

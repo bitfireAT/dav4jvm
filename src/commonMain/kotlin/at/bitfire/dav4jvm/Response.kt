@@ -120,7 +120,7 @@ data class Response(
                                 /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
                                    which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
                                    For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
-                                   with "./" to allow resolving by HttpUrl. */
+                                   with the root path to allow resolving by Url. */
                                 var hierarchical = false
                                 try {
                                     if (sHref.substring(firstColon, firstColon + 3) == "://")
@@ -129,7 +129,7 @@ data class Response(
                                     // no "://"
                                 }
                                 if (!hierarchical)
-                                    sHref = "./$sHref"
+                                    sHref = "/${location.encodedPath.drop(1)}$sHref"
                             }
                         }
                         href = URLBuilder(location).takeFrom(sHref).build()

@@ -16,6 +16,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.util.*
 import io.ktor.util.logging.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
@@ -591,15 +592,16 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws DavException if the response is not a Multi-Status response
      */
+    @OptIn(InternalAPI::class)
     suspend fun assertMultiStatus(response: HttpResponse) {
         if (response.status != HttpStatusCode.MultiStatus)
             throw DavException(
                 "Expected 207 Multi-Status, got ${response.status}",
                 httpResponse = response
             )
-        val bodyChannel = response.bodyAsChannel()
+        val bodyChannel = response.content
         log.trace("AssertMultiStatus: Checking if content is available ${response.contentLength()}->${bodyChannel.isClosedForRead}")
-        if (response.contentLength() == 0L || bodyChannel.isClosedForRead) {
+        if (response.contentLength() == 0L || bodyChannel.isEmpty()) {
             throw DavException(
                 "Got 207 Multi-Status without content!",
                 httpResponse = response
@@ -607,13 +609,13 @@ open class DavResource @JvmOverloads constructor(
         }
         val contentType = response.contentType()
         contentType?.let { mimeType ->
-            if (!ContentType.Application.Xml.match(mimeType) && !ContentType.Text.Xml.match(mimeType)) {
+            if (!(mimeType.match(ContentType.Application.Xml) || mimeType.match(ContentType.Text.Xml))) {
                 /* Content-Type is not application/xml or text/xml although that is expected here.
                    Some broken servers return an XML response with some other MIME type. So we try to see
                    whether the response is maybe XML although the Content-Type is something else. */
                 try {
                     val firstBytes = ByteArray(XML_SIGNATURE.size)
-                    log.trace("AssertMultiStatus: Malformed contentType, checking for XML")
+                    log.trace("AssertMultiStatus: Malformed contentType $mimeType, checking for XML")
                     withMemory(XML_SIGNATURE.size) { memory ->
                         log.trace("AssertMultiStatus: Peeking into memory")
                         bodyChannel.peekTo(memory, 0)

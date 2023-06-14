@@ -8,6 +8,8 @@ package at.bitfire.dav4jvm
 
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.bits.*
 import korlibs.time.*
 import korlibs.time.locale.ExtendedTimezoneNames
 
@@ -76,7 +78,7 @@ object HttpUtils {
         for (df in extendedDateFormats) {
             try {
                 return df.parse(dateStr)
-            } catch(_: Exception) {
+            } catch (_: Exception) {
             }
         }
         Dav4jvm.log.warn("Couldn't parse date: $dateStr, ignoring")
@@ -84,3 +86,5 @@ object HttpUtils {
     }
 
 }
+
+suspend fun ByteReadChannel.isEmpty() = isClosedForRead || withMemory(1) { mem -> peekTo(mem, 0, 0, 1, 1) } == 0L

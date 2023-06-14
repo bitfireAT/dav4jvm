@@ -9,13 +9,11 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlException
 import nl.adaptivity.xmlutil.XmlReader
 import kotlin.jvm.JvmField
 
-class ResourceType: Property {
+class ResourceType : Property {
 
     companion object {
         @JvmField
@@ -33,31 +31,25 @@ class ResourceType: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlReader): ResourceType {
             val type = ResourceType()
 
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
-                    // use static objects to allow types.contains()
-                    var typeName = parser.name
-                    when (typeName) {
-                        COLLECTION -> typeName = COLLECTION
-                        PRINCIPAL -> typeName = PRINCIPAL
-                        ADDRESSBOOK -> typeName = ADDRESSBOOK
-                        CALENDAR -> typeName = CALENDAR
-                        SUBSCRIBED -> typeName = SUBSCRIBED
-                    }
-                    type.types.add(typeName)
+            XmlUtils.processTag(parser) {
+                // use static objects to allow types.contains()
+                var typeName = parser.name
+                when (typeName) {
+                    COLLECTION -> typeName = COLLECTION
+                    PRINCIPAL -> typeName = PRINCIPAL
+                    ADDRESSBOOK -> typeName = ADDRESSBOOK
+                    CALENDAR -> typeName = CALENDAR
+                    SUBSCRIBED -> typeName = SUBSCRIBED
                 }
-                eventType = parser.next()
+                type.types.add(typeName)
             }
-            if (parser.depth != depth) throw XmlException("Wrong depth!")
 
             return type
         }
