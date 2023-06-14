@@ -23,15 +23,14 @@ object XmlUtils {
         XmlStreaming.newWriter(destination, repairNamespaces = true, xmlDeclMode = XmlDeclMode.Auto)
 
     @Throws(IOException::class, XmlException::class)
-    fun processTag(
+    inline fun processTag(
         parser: XmlReader,
         name: QName? = null,
         eventType: EventType = EventType.START_ELEMENT,
-        depthIncrement: Int = 1,
+        targetDepth: Int = parser.depth + 1,
         processor: () -> Unit
     ) {
         if (!parser.isStarted) parser.next()
-        val targetDepth = parser.depth + depthIncrement
         val endTagDepth = parser.depth
         var mEventType = parser.eventType
         if (mEventType != EventType.START_ELEMENT && mEventType != EventType.START_DOCUMENT) throw XmlException("Need to be at the start of a tag or document to process it! Was $mEventType")
@@ -52,7 +51,7 @@ object XmlUtils {
     fun readText(parser: XmlReader): String? {
         var text: String? = null
 
-        processTag(parser, eventType = EventType.TEXT, depthIncrement = 0) { text = parser.text }
+        processTag(parser, eventType = EventType.TEXT, targetDepth = parser.depth) { text = parser.text }
 
         return text
     }

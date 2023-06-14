@@ -13,6 +13,10 @@ object Libs {
 
     const val klockVersion = "4.0.3"
 
+    const val coroutinesDebugVersion = "1.7.1"
+
+    const val logbackVersion = "1.4.8"
+
 }
 
 repositories {
@@ -88,6 +92,8 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation("io.kotest:kotest-runner-junit5:${Libs.kotestVersion}")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:${Libs.coroutinesDebugVersion}")
+                implementation("ch.qos.logback:logback-classic:${Libs.logbackVersion}")
             }
         }
     }

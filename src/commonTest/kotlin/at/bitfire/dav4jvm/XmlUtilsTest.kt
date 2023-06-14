@@ -9,22 +9,11 @@ package at.bitfire.dav4jvm
 import io.kotest.core.spec.style.FunSpec
 import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
-import nl.adaptivity.xmlutil.XmlReader
 import nl.adaptivity.xmlutil.localPart
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 object XmlUtilsTest : FunSpec({
-
-    fun advanceTo(
-        parser: XmlReader,
-        eventType: EventType? = null,
-        name: QName? = null
-    ) {
-        if (eventType == name) throw IllegalStateException("Both can't be null")
-        while ((name == null || !(parser.isStartElement() || parser.isEndElement()) || parser.name != name) && (eventType == null || parser.eventType != eventType))
-            parser.next()
-    }
 
     test("testProcessTagRoot") {
         val parser = XmlUtils.createReader("<test></test>")

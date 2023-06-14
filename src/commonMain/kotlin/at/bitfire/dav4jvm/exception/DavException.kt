@@ -9,11 +9,9 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
-import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
-import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.XmlException
@@ -64,7 +62,7 @@ open class DavException internal constructor(
 
             if (httpResponse != null) {
                 response = httpResponse.toString()
-
+                Dav4jvm.log.trace("Reading request")
                 try {
                     request = httpResponse.request.toString()
 
@@ -89,18 +87,17 @@ open class DavException internal constructor(
                     Dav4jvm.log.warn("Couldn't read HTTP request", e)
                     requestBody = "Couldn't read HTTP request: ${e.message}"
                 }
-
+                Dav4jvm.log.trace("Reading response $responseBody")
                 try {
-                    //TODO see if this actually works
                     // save response body excerpt
-                    val bodyChannel = httpResponse.body<ByteReadChannel>()
+                    val bodyChannel = httpResponse.bodyAsChannel()
                     val contentType = httpResponse.contentType()
                     if (!bodyChannel.isClosedForRead && contentType != null && isPlainText(contentType)) {
                         // Read a length limited version of the body
                         val read = bodyChannel.readRemaining(MAX_EXCERPT_SIZE.toLong())
                         responseBody = read.readBytes().decodeToString()
                         if (contentType.match(ContentType.Application.Xml) || contentType.match(ContentType.Text.Xml)) {
-                            val xmlBody = responseBody + bodyChannel.readRemaining().readText()
+                            val xmlBody = responseBody + bodyChannel.readRemaining().readBytes().decodeToString()
                             try {
                                 val parser = XmlUtils.createReader(xmlBody)
                                 XmlUtils.processTag(parser, name = Error.NAME) {

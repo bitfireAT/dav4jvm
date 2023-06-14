@@ -15,13 +15,14 @@ import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.util.logging.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.bits.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.EOFException
 import io.ktor.utils.io.errors.*
-import nl.adaptivity.xmlutil.EventType
 import nl.adaptivity.xmlutil.QName
 import nl.adaptivity.xmlutil.XmlException
 import kotlin.coroutines.cancellation.CancellationException
@@ -125,11 +126,14 @@ open class DavResource @JvmOverloads constructor(
         private set             // allow internal modification only (for redirects)
 
     init {
-        // Don't follow redirects (only useful for GET/POST).
-        // This means we have to handle 30x responses ourselves.
-        require(httpClient.pluginOrNull(HttpRedirect) == null) { "httpClient must not follow redirects automatically" }
-
         this.location = location
+        //Let the client follow redirects while we listen for changes
+        require(httpClient.pluginOrNull(HttpRedirect) != null) { "httpClient must follow redirects automatically!" }
+        httpClient.monitor.subscribe(HttpRedirect.HttpResponseRedirect) { response ->
+            if (response.request.url != this.location || response.headers[HttpHeaders.Location] == null) return@subscribe
+            this.location = URLBuilder(this.location).takeFrom(response.headers[HttpHeaders.Location]!!).build()
+        }
+
     }
 
     override fun toString() = location.toString()
@@ -581,41 +585,6 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
-     * Send a request and follows up to [MAX_REDIRECTS] redirects.
-     *
-     * @param sendRequest called to send the request (may be called multiple times)
-     *
-     * @return response of the last request (whether it is a redirect or not)
-     *
-     * @throws DavException on HTTPS -> HTTP redirect
-     */
-    //TODO figure out if this is needed or if we can rely on ktor redirect follow
-    /*internal fun followRedirects(sendRequest: () -> Response): Response {
-        HttpRedirect.HttpResponseRedirect
-        lateinit var response: Response
-        for (attempt in 1..MAX_REDIRECTS) {
-            response = sendRequest()
-            if (response.isRedirect)
-            // handle 3xx Redirection
-                response.use {
-                    val target = it.header("Location")?.let { location.resolve(it) }
-                    if (target != null) {
-                        log.fine("Redirected, new location = $target")
-
-                        if (location.isHttps && !target.isHttps)
-                            throw DavException("Received redirect from HTTPS to HTTP")
-
-                        location = target
-                    } else
-                        throw DavException("Redirected without new Location")
-                }
-            else
-                break
-        }
-        return response
-    }*/
-
-    /**
      * Validates a 207 Multi-Status response.
      *
      * @param response will be checked for Multi-Status response
@@ -628,22 +597,30 @@ open class DavResource @JvmOverloads constructor(
                 "Expected 207 Multi-Status, got ${response.status}",
                 httpResponse = response
             )
-
+        val bodyChannel = response.bodyAsChannel()
+        log.trace("AssertMultiStatus: Checking if content is available ${response.contentLength()}->${bodyChannel.isClosedForRead}")
+        if (response.contentLength() == 0L || bodyChannel.isClosedForRead) {
+            throw DavException(
+                "Got 207 Multi-Status without content!",
+                httpResponse = response
+            )
+        }
         val contentType = response.contentType()
         contentType?.let { mimeType ->
-            if ((mimeType.match(ContentType.Application.Any) && mimeType.match(ContentType.Text.Any)) || mimeType.match(
-                    ContentType("*", "xml")
-                )
-            ) {
+            if (!ContentType.Application.Xml.match(mimeType) && !ContentType.Text.Xml.match(mimeType)) {
                 /* Content-Type is not application/xml or text/xml although that is expected here.
                    Some broken servers return an XML response with some other MIME type. So we try to see
                    whether the response is maybe XML although the Content-Type is something else. */
                 try {
                     val firstBytes = ByteArray(XML_SIGNATURE.size)
+                    log.trace("AssertMultiStatus: Malformed contentType, checking for XML")
                     withMemory(XML_SIGNATURE.size) { memory ->
-                        response.bodyAsChannel().peekTo(memory, 0)
+                        log.trace("AssertMultiStatus: Peeking into memory")
+                        bodyChannel.peekTo(memory, 0)
+                        log.trace("Got $memory")
                         memory.loadByteArray(0, firstBytes)
                     }
+                    log.trace("AssertMultiStatus: First bytes were ${firstBytes.decodeToString()}")
                     if (XML_SIGNATURE.contentEquals(firstBytes)) {
                         Dav4jvm.log.warn("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
 
@@ -700,14 +677,8 @@ open class DavResource @JvmOverloads constructor(
         }
 
         try {
-
-            var eventType = parser.eventType
-            while (eventType != EventType.END_DOCUMENT) {
-                if (eventType == EventType.START_ELEMENT && parser.depth == 1)
-                    if (parser.name == DavResponse.MULTISTATUS)
-                        return parseMultiStatus()
-                // ignore further <multistatus> elements
-                eventType = parser.next()
+            XmlUtils.processTag(parser, DavResponse.MULTISTATUS, targetDepth = 1) {
+                return parseMultiStatus()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")

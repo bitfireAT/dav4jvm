@@ -14,6 +14,9 @@ import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ResourceType
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -172,7 +175,7 @@ object DavResourceTest : FunSpec({
 
         // 207 multi-status (e.g. single resource couldn't be deleted when DELETEing a collection)
         httpClient.changeMockHandler { request ->
-            if (request.url == sampleUrl) {
+            if (request.url == sampleUrl.resolve("/new-location")) {
                 respond("", HttpStatusCode.MultiStatus)
             } else {
                 respondError(HttpStatusCode.BadRequest)
@@ -319,7 +322,7 @@ object DavResourceTest : FunSpec({
 
         // 200 OK without ETag in response
         httpClient.changeMockHandler { request ->
-            if (request.url == sampleUrl) {
+            if (request.url == sampleUrl.resolve("/target")) {
                 respond(
                     sampleText,
                     HttpStatusCode.OK
@@ -1081,7 +1084,7 @@ object DavResourceTest : FunSpec({
             called = true
             assertEquals(url.resolve("/target"), response.request.url)
             val eTag = GetETag.fromResponse(response)
-            assertNull("Weak PUT ETag", eTag?.eTag)
+            eTag?.eTag.shouldBeNull()
             assertNull(eTag?.weak)
         }
         assertTrue(called)
@@ -1093,7 +1096,7 @@ object DavResourceTest : FunSpec({
 
         // precondition: If-Match, 412 Precondition Failed
         httpClient.changeMockHandler { request ->
-            if (request.url == sampleUrl) {
+            if (request.url == sampleUrl.resolve("/target")) {
                 respondError(HttpStatusCode.PreconditionFailed)
             } else {
                 respondError(HttpStatusCode.BadRequest)
@@ -1164,7 +1167,7 @@ object DavResourceTest : FunSpec({
     /** test helpers **/
 
     test("testAssertMultiStatus_NoBody_NoXML") {
-        shouldThrow<DavException> {
+        val ex = shouldThrow<DavException> {
             val dav = DavResource(httpClient, Url("https://from.com"))
             val response = httpClient.createResponse(buildRequest {
                 url(dav.location)
@@ -1173,10 +1176,11 @@ object DavResourceTest : FunSpec({
                 response
             )
         }
+        ex.message.shouldBe("Got 207 Multi-Status without content!")
     }
 
     test("testAssertMultiStatus_NoBody_XML") {
-        shouldThrow<DavException> {
+        val ex = shouldThrow<DavException> {
             val dav = DavResource(httpClient, Url("https://from.com"))
             val response = httpClient.createResponse(buildRequest {
                 url(dav.location)
@@ -1185,6 +1189,7 @@ object DavResourceTest : FunSpec({
                 response
             )
         }
+        ex.message.shouldBe("Got 207 Multi-Status without content!")
     }
 
     test("testAssertMultiStatus_NonXML_ButContentIsXML") {
@@ -1218,7 +1223,7 @@ object DavResourceTest : FunSpec({
     }
 
     test("testAssertMultiStatus_Not207") {
-        shouldThrow<DavException> {
+        val ex = shouldThrow<DavException> {
             val dav = DavResource(httpClient, Url("https://from.com"))
             val response = httpClient.createResponse(
                 buildRequest {
@@ -1232,6 +1237,7 @@ object DavResourceTest : FunSpec({
                 response
             )
         }
+        ex.message.shouldStartWith("Expected 207 Multi-Status, got ")
     }
 
     test("testAssertMultiStatus_Ok_ApplicationXml") {
@@ -1241,8 +1247,7 @@ object DavResourceTest : FunSpec({
                 url(dav.location)
             },
             HttpStatusCode.MultiStatus,
-            headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString()),
-            ""
+            headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
         )
         dav.assertMultiStatus(
             response
@@ -1256,8 +1261,7 @@ object DavResourceTest : FunSpec({
                 url(dav.location)
             },
             HttpStatusCode.MultiStatus,
-            headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString()),
-            ""
+            headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString())
         )
         dav.assertMultiStatus(
             response
