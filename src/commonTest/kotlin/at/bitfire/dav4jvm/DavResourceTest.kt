@@ -1018,12 +1018,12 @@ object DavResourceTest : FunSpec({
             setProperties = mapOf(Pair(QName("sample", "setThis"), "Some Value")),
             removeProperties = listOf(QName("sample", "removeThis"))
         )
-        assertEquals(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+        xml.shouldBe(
+            "<?xml version='1.0' encoding='UTF-8' ?>" +
                     "<d:propertyupdate xmlns:d=\"DAV:\">" +
                     "<d:set><d:prop><n1:setThis xmlns:n1=\"sample\">Some Value</n1:setThis></d:prop></d:set>" +
-                    "<d:remove><d:prop><n1:removeThis xmlns:n1=\"sample\"/></d:prop></d:remove>" +
-                    "</d:propertyupdate>", xml
+                    "<d:remove><d:prop><n1:removeThis xmlns:n1=\"sample\" /></d:prop></d:remove>" +
+                    "</d:propertyupdate>"
         )
     }
 

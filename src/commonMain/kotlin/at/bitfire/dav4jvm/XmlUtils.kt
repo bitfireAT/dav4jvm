@@ -9,6 +9,8 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import io.ktor.utils.io.errors.*
 import nl.adaptivity.xmlutil.*
+import nl.adaptivity.xmlutil.core.KtXmlWriter
+import nl.adaptivity.xmlutil.core.XmlVersion
 
 object XmlUtils {
 
@@ -18,16 +20,26 @@ object XmlUtils {
     const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
     const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
 
-    fun createReader(source: String) = XmlStreaming.newReader(source).also { /*Initialize*/ it.next() }
-    fun createWriter(destination: Appendable) =
-        XmlStreaming.newWriter(destination, repairNamespaces = true, xmlDeclMode = XmlDeclMode.Auto)
+    fun createReader(source: String) = XmlStreaming.newGenericReader(source).also { /*Initialize*/ it.next() }
+    fun createWriter(destination: Appendable) = KtXmlWriter(
+        destination,
+        isRepairNamespaces = true,
+        xmlDeclMode = XmlDeclMode.Auto,
+        xmlVersion = XmlVersion.XML10
+    )
 
     @Throws(IOException::class, XmlException::class)
-    inline fun processTag(
+    fun processTag(
         parser: XmlReader,
         name: QName? = null,
         eventType: EventType = EventType.START_ELEMENT,
         targetDepth: Int = parser.depth + 1,
+        processor: () -> Unit
+    ) = processTag(parser, { d, e, n -> d == targetDepth && e == eventType && (name == null || name == n) }, processor)
+
+    fun processTag(
+        parser: XmlReader,
+        selector: (depth: Int, eventType: EventType, name: QName?) -> Boolean,
         processor: () -> Unit
     ) {
         if (!parser.isStarted) parser.next()
@@ -36,11 +48,16 @@ object XmlUtils {
         if (mEventType != EventType.START_ELEMENT && mEventType != EventType.START_DOCUMENT) throw XmlException("Need to be at the start of a tag or document to process it! Was $mEventType")
         val processingDoc = mEventType == EventType.START_DOCUMENT
         val endTagName: QName? = if (!processingDoc) parser.name else null
+        var cName = if (!processingDoc) parser.name else null
         do {
-            if (parser.depth == targetDepth && mEventType == eventType && (name == null || parser.name == name)) {
+            if (selector(parser.depth, mEventType, cName)) {
                 processor()
             }
             mEventType = parser.next()
+            cName = when (mEventType) {
+                EventType.END_ELEMENT, EventType.START_ELEMENT, EventType.ENTITY_REF -> parser.name
+                else -> null
+            }
         } while (
             !((mEventType == EventType.END_ELEMENT && parser.name == endTagName && parser.depth <= endTagDepth) ||
                     (processingDoc && mEventType == EventType.END_DOCUMENT))
@@ -50,8 +67,10 @@ object XmlUtils {
     @Throws(IOException::class, XmlException::class)
     fun readText(parser: XmlReader): String? {
         var text: String? = null
-
-        processTag(parser, eventType = EventType.TEXT, targetDepth = parser.depth) { text = parser.text }
+        val cDepth = parser.depth
+        processTag(parser, { d, e, _ -> d == cDepth && (e == EventType.TEXT || e == EventType.CDSECT) }) {
+            text = parser.text
+        }
 
         return text
     }
@@ -115,7 +134,7 @@ object XmlUtils {
     fun XmlReader.nextText(): String {
         require(EventType.START_ELEMENT, null)
         return when (next()) {
-            EventType.TEXT -> {
+            EventType.TEXT, EventType.CDSECT -> {
                 val rText = text
                 if (next() != EventType.END_ELEMENT) throw XmlException()
                 rText

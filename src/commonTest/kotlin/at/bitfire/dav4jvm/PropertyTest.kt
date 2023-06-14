@@ -17,9 +17,7 @@ object PropertyTest : FunSpec({
 
     test("testParse_InvalidProperty") {
         val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag/></multistatus>")
-        do {
-            parser.next()
-        } while (parser.eventType != EventType.START_ELEMENT && parser.name.localPart != "multistatus")
+        parser.next()
 
         // we're now at the start of <multistatus>
         assertEquals(EventType.START_ELEMENT, parser.eventType)
@@ -35,9 +33,7 @@ object PropertyTest : FunSpec({
 
     test("testParse_ValidProperty") {
         val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag>12345</getetag></multistatus>")
-        do {
-            parser.next()
-        } while (parser.eventType != EventType.START_ELEMENT && parser.name.localPart != "multistatus")
+        parser.next()
 
         // we're now at the start of <multistatus>
         assertEquals(EventType.START_ELEMENT, parser.eventType)

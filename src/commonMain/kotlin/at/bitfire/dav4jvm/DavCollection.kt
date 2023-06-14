@@ -45,7 +45,7 @@ open class DavCollection @JvmOverloads constructor(
             method = HttpMethod.Post
             setBody(body)
             url(location)
-
+            header(HttpHeaders.ContentType, contentType)
             if (ifNoneMatch)
             // don't overwrite anything existing
                 header(HttpHeaders.IfNoneMatch, "*")

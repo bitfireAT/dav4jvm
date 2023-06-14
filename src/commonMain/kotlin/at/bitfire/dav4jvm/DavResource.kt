@@ -86,9 +86,10 @@ open class DavResource @JvmOverloads constructor(
             // build XML request body
             val writer = StringBuilder()
             val serializer = XmlUtils.createWriter(writer)
-            serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
             serializer.startDocument(encoding = "UTF-8")
+            serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
             serializer.insertTag(PROPERTYUPDATE) {
+                namespaceAttr("d", XmlUtils.NS_WEBDAV) //Fixes an issue where the namespace is not present
                 // DAV:set
                 if (setProperties.isNotEmpty()) {
                     serializer.insertTag(SET) {
@@ -660,7 +661,7 @@ open class DavResource @JvmOverloads constructor(
         val responseProperties = mutableListOf<Property>()
         val parser = XmlUtils.createReader(response.bodyAsText())
 
-        fun parseMultiStatus(): List<Property> {
+        fun parseMultiStatus() {
             // <!ELEMENT multistatus (response*, responsedescription?,
             //                        sync-token?) >
             XmlUtils.processTag(parser) {
@@ -674,17 +675,16 @@ open class DavResource @JvmOverloads constructor(
                         }
                 }
             }
-
-            return responseProperties
         }
 
         try {
+            var didParse: Boolean = false
             XmlUtils.processTag(parser, DavResponse.MULTISTATUS, targetDepth = 1) {
-                return parseMultiStatus()
+                didParse = true
+                parseMultiStatus()
             }
-
-            throw DavException("Multi-Status response didn't contain multistatus XML element")
-
+            if (!didParse) throw DavException("Multi-Status response didn't contain multistatus XML element")
+            return responseProperties
         } catch (e: EOFException) {
             throw DavException("Incomplete multistatus XML element", e)
         } catch (e: XmlException) {
