@@ -1,14 +1,6 @@
 import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
 
-object Libs {
-    // okhttp HTTP library
-    const val okhttpVersion = "4.11.0"
-
-    // XmlPullParser library
-    const val xpp3Version = "1.1.6"
-}
-
 repositories {
     mavenCentral()
 }
@@ -17,10 +9,10 @@ group="com.github.bitfireAT"
 version="2.2"
 
 plugins {
-    kotlin("jvm") version "1.8.21"
+    alias(libs.plugins.kotlin.jvm)
     `maven-publish`
 
-    id("org.jetbrains.dokka") version "1.8.10"
+    alias(libs.plugins.dokka)
 }
 
 publishing {
@@ -52,10 +44,10 @@ tasks.withType<DokkaTask>().configureEach {
 }
 
 dependencies {
-    api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
-    implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}")
+    api(libs.okhttp)
+    implementation(libs.commons.lang3)
+    api(libs.xpp3)
 
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")
+    testImplementation(libs.junit4)
+    testImplementation(libs.okhttp.mockwebserver)
 }
