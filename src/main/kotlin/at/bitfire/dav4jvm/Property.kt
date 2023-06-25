@@ -8,15 +8,14 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.XmlReader
 import java.io.Serializable
-import java.util.*
 import java.util.logging.Level
 
 /**
  * Represents a WebDAV property.
  *
- * Every [Property] must define a static field (use `@JvmStatic`) called `NAME` of type [Property.Name],
+ * Every [Property] must define a static field (use `@JvmStatic`) called `NAME` of type [QName],
  * which will be accessed by reflection.
  */
 interface Property {
@@ -31,30 +30,23 @@ interface Property {
 
     companion object {
 
-        fun parse(parser: XmlPullParser): List<Property> {
+        fun parse(parser: XmlReader): List<Property> {
             // <!ELEMENT prop ANY >
-            val depth = parser.depth
-            val properties = LinkedList<Property>()
+            val properties = mutableListOf<Property>()
 
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    val depthBeforeParsing = parser.depth
-                    val name = Name(parser.namespace, parser.name)
+            XmlUtils.processTag(parser) {
+                val name = parser.name
 
-                    try {
-                        val property = PropertyRegistry.create(name, parser)
-                        assert(parser.depth == depthBeforeParsing)
+                try {
+                    val property = PropertyRegistry.create(name, parser)
 
-                        if (property != null) {
-                            properties.add(property)
-                        } else
-                            log.fine("Ignoring unknown property $name")
-                    } catch (e: InvalidPropertyException) {
-                        log.log(Level.WARNING, "Ignoring invalid property", e)
-                    }
+                    if (property != null) {
+                        properties.add(property)
+                    } else
+                        log.fine("Ignoring unknown property $name")
+                } catch (e: InvalidPropertyException) {
+                    log.log(Level.WARNING, "Ignoring invalid property", e)
                 }
-                eventType = parser.next()
             }
 
             return properties

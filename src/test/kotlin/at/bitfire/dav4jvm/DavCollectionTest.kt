@@ -9,6 +9,7 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.SyncToken
+import nl.adaptivity.xmlutil.QName
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -244,7 +245,7 @@ class DavCollectionTest {
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(507, e.code)
-            assertTrue(e.errors.any { it.name == Property.Name(XmlUtils.NS_WEBDAV, "number-of-matches-within-limits") })
+            assertTrue(e.errors.any { it.name == QName(XmlUtils.NS_WEBDAV, "number-of-matches-within-limits") })
             assertEquals(1, e.errors.size)
         }
     }

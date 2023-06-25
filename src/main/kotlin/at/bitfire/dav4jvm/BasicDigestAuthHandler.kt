@@ -262,8 +262,7 @@ class BasicDigestAuthHandler(
         val qop: String
     ) { // quality of protection:
         Auth("auth"), // authentication only
-        AuthInt("auth-int") // authentication with integrity protection
-        ;
+        AuthInt("auth-int"); // authentication with integrity protection
 
         companion object {
             fun selectFrom(paramValue: String?): Protection? {

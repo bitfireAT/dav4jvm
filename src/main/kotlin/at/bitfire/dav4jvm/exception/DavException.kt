@@ -9,12 +9,10 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
-import at.bitfire.dav4jvm.XmlUtils.propertyName
+import nl.adaptivity.xmlutil.XmlException
 import okhttp3.MediaType
 import okhttp3.Response
 import okio.Buffer
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.Serializable
@@ -112,20 +110,14 @@ open class DavException @JvmOverloads constructor(
                         body.contentType()?.let {
                             if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
                                 // look for precondition/postcondition XML elements
+                                val xmlBody = responseBody + body.string()
                                 try {
-                                    val parser = XmlUtils.newPullParser()
-                                    parser.setInput(body.charStream())
+                                    val parser = XmlUtils.createReader(xmlBody)
 
-                                    var eventType = parser.eventType
-                                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1) {
-                                            if (parser.propertyName() == Error.NAME) {
-                                                errors = Error.parseError(parser)
-                                            }
-                                        }
-                                        eventType = parser.next()
+                                    XmlUtils.processTag(parser, name = Error.NAME) {
+                                        errors = Error.parseError(parser)
                                     }
-                                } catch (e: XmlPullParserException) {
+                                } catch (e: XmlException) {
                                     Dav4jvm.log.log(Level.WARNING, "Couldn't parse XML response", e)
                                 }
                             }

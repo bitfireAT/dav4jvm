@@ -41,13 +41,14 @@ import at.bitfire.dav4jvm.property.SupportedCalendarComponentSet
 import at.bitfire.dav4jvm.property.SupportedCalendarData
 import at.bitfire.dav4jvm.property.SupportedReportSet
 import at.bitfire.dav4jvm.property.SyncToken
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import nl.adaptivity.xmlutil.XmlException
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
+import javax.xml.namespace.QName
 
 object PropertyRegistry {
 
-    private val factories = mutableMapOf<Property.Name, PropertyFactory>()
+    private val factories = mutableMapOf<QName, PropertyFactory>()
 
     init {
         Dav4jvm.log.info("Registering DAV property factories")
@@ -119,10 +120,10 @@ object PropertyRegistry {
         }
     }
 
-    fun create(name: Property.Name, parser: XmlPullParser) =
+    fun create(name: QName, parser: XmlReader) =
         try {
             factories[name]?.create(parser)
-        } catch (e: XmlPullParserException) {
+        } catch (e: XmlException) {
             Dav4jvm.log.log(Level.WARNING, "Couldn't parse $name", e)
             null
         }

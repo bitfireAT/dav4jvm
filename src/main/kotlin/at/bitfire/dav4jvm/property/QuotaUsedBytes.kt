@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 
 data class QuotaUsedBytes(
@@ -18,13 +19,13 @@ data class QuotaUsedBytes(
 ) : Property {
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "quota-used-bytes")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "quota-used-bytes")
     }
 
     object Factory : PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): QuotaUsedBytes? {
+        override fun create(parser: XmlReader): QuotaUsedBytes? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return QuotaUsedBytes(valueStr.toLong())

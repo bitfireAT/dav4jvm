@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 
 data class GetContentLength(
@@ -18,13 +19,13 @@ data class GetContentLength(
 ) : Property {
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getcontentlength")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "getcontentlength")
     }
 
     object Factory : PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetContentLength? {
+        override fun create(parser: XmlReader): GetContentLength? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return GetContentLength(valueStr.toLong())

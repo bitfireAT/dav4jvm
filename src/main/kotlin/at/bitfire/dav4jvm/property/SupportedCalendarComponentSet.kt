@@ -9,8 +9,10 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
+import kotlin.jvm.JvmField
 
 data class SupportedCalendarComponentSet(
     var supportsEvents: Boolean,
@@ -21,17 +23,17 @@ data class SupportedCalendarComponentSet(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CALDAV, "supported-calendar-component-set")
+        val NAME = QName(XmlUtils.NS_CALDAV, "supported-calendar-component-set")
 
-        val ALLCOMP = Property.Name(XmlUtils.NS_CALDAV, "allcomp")
-        val COMP = Property.Name(XmlUtils.NS_CALDAV, "comp")
+        val ALLCOMP = QName(XmlUtils.NS_CALDAV, "allcomp")
+        val COMP = QName(XmlUtils.NS_CALDAV, "comp")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedCalendarComponentSet? {
+        override fun create(parser: XmlReader): SupportedCalendarComponentSet? {
             /* <!ELEMENT supported-calendar-component-set (comp+)>
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
@@ -40,9 +42,9 @@ data class SupportedCalendarComponentSet(
 
             val depth = parser.depth
             var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    when (parser.propertyName()) {
+            while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+                    when (parser.name) {
                         ALLCOMP -> {
                             components.supportsEvents = true
                             components.supportsTasks = true

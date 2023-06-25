@@ -9,22 +9,24 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
+import kotlin.jvm.JvmField
 
 class ResourceType : Property {
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "resourcetype")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "resourcetype")
 
-        val COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "collection") // WebDAV
-        val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal") // WebDAV ACL
-        val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
-        val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar") // CalDAV
-        val SUBSCRIBED = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
+        val COLLECTION = QName(XmlUtils.NS_WEBDAV, "collection") // WebDAV
+        val PRINCIPAL = QName(XmlUtils.NS_WEBDAV, "principal") // WebDAV ACL
+        val ADDRESSBOOK = QName(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
+        val CALENDAR = QName(XmlUtils.NS_CALDAV, "calendar") // CalDAV
+        val SUBSCRIBED = QName(XmlUtils.NS_CALENDARSERVER, "subscribed")
     }
 
-    val types = mutableSetOf<Property.Name>()
+    val types = mutableSetOf<QName>()
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
@@ -32,27 +34,21 @@ class ResourceType : Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): ResourceType? {
+        override fun create(parser: XmlReader): ResourceType {
             val type = ResourceType()
 
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    // use static objects to allow types.contains()
-                    var typeName = Property.Name(parser.namespace, parser.name)
-                    when (typeName) {
-                        COLLECTION -> typeName = COLLECTION
-                        PRINCIPAL -> typeName = PRINCIPAL
-                        ADDRESSBOOK -> typeName = ADDRESSBOOK
-                        CALENDAR -> typeName = CALENDAR
-                        SUBSCRIBED -> typeName = SUBSCRIBED
-                    }
-                    type.types.add(typeName)
+            XmlUtils.processTag(parser) {
+                // use static objects to allow types.contains()
+                var typeName = parser.name
+                when (typeName) {
+                    COLLECTION -> typeName = COLLECTION
+                    PRINCIPAL -> typeName = PRINCIPAL
+                    ADDRESSBOOK -> typeName = ADDRESSBOOK
+                    CALENDAR -> typeName = CALENDAR
+                    SUBSCRIBED -> typeName = SUBSCRIBED
                 }
-                eventType = parser.next()
+                type.types.add(typeName)
             }
-            assert(parser.depth == depth)
 
             return type
         }

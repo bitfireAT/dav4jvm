@@ -7,9 +7,9 @@
 package at.bitfire.dav4jvm.exception
 
 import at.bitfire.dav4jvm.DavResource
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.property.ResourceType
+import nl.adaptivity.xmlutil.QName
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -49,9 +49,6 @@ class DavExceptionTest {
      */
     @Test
     fun testRequestLargeTextError() {
-        val url = sampleUrl()
-        val dav = DavResource(httpClient, url)
-
         val builder = StringBuilder()
         builder.append(CharArray(DavException.MAX_EXCERPT_SIZE + 100) { '*' })
         val body = builder.toString()
@@ -184,7 +181,7 @@ class DavExceptionTest {
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(e.code, 423)
-            assertTrue(e.errors.any { it.name == Property.Name(XmlUtils.NS_WEBDAV, "lock-token-submitted") })
+            assertTrue(e.errors.any { it.name == QName(XmlUtils.NS_WEBDAV, "lock-token-submitted") })
             assertEquals(body, e.responseBody)
         }
     }

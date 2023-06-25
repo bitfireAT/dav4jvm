@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 import java.util.regex.Pattern
 
@@ -20,7 +21,7 @@ data class CalendarColor(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_APPLE_ICAL, "calendar-color")
+        val NAME = QName(XmlUtils.NS_APPLE_ICAL, "calendar-color")
 
         private val PATTERN = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?")!!
 
@@ -49,7 +50,7 @@ data class CalendarColor(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CalendarColor? {
+        override fun create(parser: XmlReader): CalendarColor? {
             XmlUtils.readText(parser)?.let {
                 try {
                     return CalendarColor(parseARGBColor(it))

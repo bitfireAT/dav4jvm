@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 data class CalendarDescription(
     val description: String?
@@ -17,14 +18,14 @@ data class CalendarDescription(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CALDAV, "calendar-description")
+        val NAME = QName(XmlUtils.NS_CALDAV, "calendar-description")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             // <!ELEMENT calendar-description (#PCDATA)>
             CalendarDescription(XmlUtils.readText(parser))
     }

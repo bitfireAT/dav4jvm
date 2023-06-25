@@ -11,7 +11,8 @@ import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 data class GetLastModified(
     var lastModified: Long
@@ -19,14 +20,14 @@ data class GetLastModified(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getlastmodified")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "getlastmodified")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetLastModified? {
+        override fun create(parser: XmlReader): GetLastModified? {
             // <!ELEMENT getlastmodified (#PCDATA) >
             XmlUtils.readText(parser)?.let { rawDate ->
                 val date = HttpUtils.parseDate(rawDate)

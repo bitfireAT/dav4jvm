@@ -7,56 +7,45 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.property.GetETag
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.toCName
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
-import java.io.StringReader
 
 class PropertyTest {
 
     @Test
     fun testParse_InvalidProperty() {
-        val parser = XmlPullParserFactory.newInstance().apply {
-            isNamespaceAware = true
-        }.newPullParser()
-        parser.setInput(StringReader("<multistatus xmlns='DAV:'><getetag/></multistatus>"))
-        do {
-            parser.next()
-        } while (parser.eventType != XmlPullParser.START_TAG && parser.name != "multistatus")
+        val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag/></multistatus>")
+        parser.next()
 
         // we're now at the start of <multistatus>
-        assertEquals(XmlPullParser.START_TAG, parser.eventType)
-        assertEquals("multistatus", parser.name)
+        assertEquals(EventType.START_ELEMENT, parser.eventType)
+        assertEquals("multistatus", parser.name.toCName())
 
         // parse invalid DAV:getetag
         assertTrue(Property.parse(parser).isEmpty())
 
         // we're now at the end of <multistatus>
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
-        assertEquals("multistatus", parser.name)
+        assertEquals(EventType.END_ELEMENT, parser.eventType)
+        assertEquals("multistatus", parser.name.toCName())
     }
 
     @Test
     fun testParse_ValidProperty() {
-        val parser = XmlPullParserFactory.newInstance().apply {
-            isNamespaceAware = true
-        }.newPullParser()
-        parser.setInput(StringReader("<multistatus xmlns='DAV:'><getetag>12345</getetag></multistatus>"))
-        do {
-            parser.next()
-        } while (parser.eventType != XmlPullParser.START_TAG && parser.name != "multistatus")
+        val parser = XmlUtils.createReader("<multistatus xmlns='DAV:'><getetag>12345</getetag></multistatus>")
+        parser.next()
 
         // we're now at the start of <multistatus>
-        assertEquals(XmlPullParser.START_TAG, parser.eventType)
-        assertEquals("multistatus", parser.name)
+        assertEquals(EventType.START_ELEMENT, parser.eventType)
+        assertEquals("multistatus", parser.name.toCName())
 
         val etag = Property.parse(parser).first()
         assertEquals(GetETag("12345"), etag)
 
         // we're now at the end of <multistatus>
-        assertEquals(XmlPullParser.END_TAG, parser.eventType)
-        assertEquals("multistatus", parser.name)
+        assertEquals(EventType.END_ELEMENT, parser.eventType)
+        assertEquals("multistatus", parser.name.toCName())
     }
 }

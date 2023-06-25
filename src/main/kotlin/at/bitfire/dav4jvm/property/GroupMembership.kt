@@ -6,22 +6,22 @@
 
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 class GroupMembership : HrefListProperty() {
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "group-membership")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "group-membership")
     }
 
     object Factory : HrefListProperty.Factory() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             create(parser, GroupMembership())
     }
 }

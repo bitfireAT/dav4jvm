@@ -9,8 +9,9 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 data class CurrentUserPrivilegeSet(
     // not all privileges from RFC 3744 are implemented by now
@@ -25,23 +26,23 @@ data class CurrentUserPrivilegeSet(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "current-user-privilege-set")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "current-user-privilege-set")
 
-        val PRIVILEGE = Property.Name(XmlUtils.NS_WEBDAV, "privilege")
-        val READ = Property.Name(XmlUtils.NS_WEBDAV, "read")
-        val WRITE = Property.Name(XmlUtils.NS_WEBDAV, "write")
-        val WRITE_PROPERTIES = Property.Name(XmlUtils.NS_WEBDAV, "write-properties")
-        val WRITE_CONTENT = Property.Name(XmlUtils.NS_WEBDAV, "write-content")
-        val BIND = Property.Name(XmlUtils.NS_WEBDAV, "bind")
-        val UNBIND = Property.Name(XmlUtils.NS_WEBDAV, "unbind")
-        val ALL = Property.Name(XmlUtils.NS_WEBDAV, "all")
+        val PRIVILEGE = QName(XmlUtils.NS_WEBDAV, "privilege")
+        val READ = QName(XmlUtils.NS_WEBDAV, "read")
+        val WRITE = QName(XmlUtils.NS_WEBDAV, "write")
+        val WRITE_PROPERTIES = QName(XmlUtils.NS_WEBDAV, "write-properties")
+        val WRITE_CONTENT = QName(XmlUtils.NS_WEBDAV, "write-content")
+        val BIND = QName(XmlUtils.NS_WEBDAV, "bind")
+        val UNBIND = QName(XmlUtils.NS_WEBDAV, "unbind")
+        val ALL = QName(XmlUtils.NS_WEBDAV, "all")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet? {
+        override fun create(parser: XmlReader): CurrentUserPrivilegeSet? {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet()
@@ -49,9 +50,9 @@ data class CurrentUserPrivilegeSet(
             XmlUtils.processTag(parser, PRIVILEGE) {
                 val depth = parser.depth
                 var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                        when (parser.propertyName()) {
+                while (!(eventType == EventType.END_ELEMENT && parser.depth == depth)) {
+                    if (eventType == EventType.START_ELEMENT && parser.depth == depth + 1) {
+                        when (parser.name) {
                             READ ->
                                 privs.mayRead = true
                             WRITE -> {

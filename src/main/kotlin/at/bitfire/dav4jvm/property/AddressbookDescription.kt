@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 data class AddressbookDescription(
     var description: String? = null
@@ -17,14 +18,14 @@ data class AddressbookDescription(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-description")
+        val NAME = QName(XmlUtils.NS_CARDDAV, "addressbook-description")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             // <!ELEMENT addressbook-description (#PCDATA)>
             AddressbookDescription(XmlUtils.readText(parser))
     }

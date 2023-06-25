@@ -7,11 +7,18 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import org.xmlpull.v1.XmlPullParserFactory
-import org.xmlpull.v1.XmlSerializer
-import java.io.IOException
+import io.ktor.utils.io.errors.IOException
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XMLConstants
+import nl.adaptivity.xmlutil.XmlDeclMode.Auto
+import nl.adaptivity.xmlutil.XmlException
+import nl.adaptivity.xmlutil.XmlReader
+import nl.adaptivity.xmlutil.XmlStreaming
+import nl.adaptivity.xmlutil.XmlWriter
+import nl.adaptivity.xmlutil.core.KtXmlWriter
+import nl.adaptivity.xmlutil.core.XmlVersion
+import nl.adaptivity.xmlutil.endTag
 
 object XmlUtils {
 
@@ -21,95 +28,130 @@ object XmlUtils {
     const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
     const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
 
-    private val factory: XmlPullParserFactory
-    init {
-        try {
-            factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = true
-        } catch (e: XmlPullParserException) {
-            throw RuntimeException("Couldn't create XmlPullParserFactory", e)
-        }
+    fun createReader(source: String): XmlReader = XmlStreaming.newGenericReader(source).also {
+        it.next() // Initialize
     }
+    fun createWriter(destination: Appendable) = KtXmlWriter(
+        destination,
+        isRepairNamespaces = true,
+        xmlDeclMode = Auto,
+        xmlVersion = XmlVersion.XML10
+    )
 
-    fun newPullParser() = factory.newPullParser()!!
-    fun newSerializer() = factory.newSerializer()!!
+    @Throws(IOException::class, XmlException::class)
+    fun processTag(
+        parser: XmlReader,
+        name: QName? = null,
+        eventType: EventType = EventType.START_ELEMENT,
+        targetDepth: Int = parser.depth + 1,
+        processor: () -> Unit
+    ) = processTag(parser, { d, e, n -> d == targetDepth && e == eventType && (name == null || name == n) }, processor)
 
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun processTag(parser: XmlPullParser, name: Property.Name, processor: () -> Unit) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name) {
+    fun processTag(
+        parser: XmlReader,
+        selector: (depth: Int, eventType: EventType, name: QName?) -> Boolean,
+        processor: () -> Unit
+    ) {
+        if (!parser.isStarted) parser.next()
+        val endTagDepth = parser.depth
+        var mEventType = parser.eventType
+        if (mEventType != EventType.START_ELEMENT && mEventType != EventType.START_DOCUMENT) throw XmlException("Need to be at the start of a tag or document to process it! Was $mEventType")
+        val processingDoc = mEventType == EventType.START_DOCUMENT
+        val endTagName: QName? = if (!processingDoc) parser.name else null
+        var cName = if (!processingDoc) parser.name else null
+        do {
+            if (selector(parser.depth, mEventType, cName)) {
                 processor()
             }
-            eventType = parser.next()
-        }
+            mEventType = parser.next()
+            cName = when (mEventType) {
+                EventType.END_ELEMENT, EventType.START_ELEMENT, EventType.ENTITY_REF -> parser.name
+                else -> null
+            }
+        } while (
+            !(
+                (mEventType == EventType.END_ELEMENT && parser.name == endTagName && parser.depth <= endTagDepth) ||
+                    (processingDoc && mEventType == EventType.END_DOCUMENT)
+                )
+        )
     }
 
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readText(parser: XmlPullParser): String? {
+    @Throws(IOException::class, XmlException::class)
+    fun readText(parser: XmlReader): String? {
         var text: String? = null
-
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.TEXT && parser.depth == depth) {
-                text = parser.text
-            }
-            eventType = parser.next()
+        val cDepth = parser.depth
+        processTag(parser, { d, e, _ -> d == cDepth && (e == EventType.TEXT || e == EventType.CDSECT) }) {
+            text = parser.text
         }
 
         return text
     }
 
     /**
-     * Same as [readText], but requires a [XmlPullParser.TEXT] value.
+     * Same as [readText], but requires a [XmlReader] value.
      *
      * @throws InvalidPropertyException when no text could be read
      */
-    @Throws(InvalidPropertyException::class, IOException::class, XmlPullParserException::class)
-    fun requireReadText(parser: XmlPullParser): String =
+    @Throws(InvalidPropertyException::class, IOException::class, XmlException::class)
+    fun requireReadText(parser: XmlReader): String =
         readText(parser)
-            ?: throw InvalidPropertyException("XML text for ${parser.namespace}:${parser.name} must not be empty")
+            ?: throw InvalidPropertyException("XML text for ${parser.namespaceURI}:${parser.name} must not be empty")
 
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextProperty(parser: XmlPullParser, name: Property.Name): String? {
-        val depth = parser.depth
-        var eventType = parser.eventType
+    @Throws(IOException::class, XmlException::class)
+    fun readTextProperty(parser: XmlReader, name: QName): String? {
         var result: String? = null
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name) {
-                result = parser.nextText()
-            }
-            eventType = parser.next()
-        }
+        processTag(parser, name) { result = parser.nextText() }
         return result
     }
 
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name) {
-                list.add(parser.nextText())
+    @Throws(IOException::class, XmlException::class)
+    fun readTextPropertyList(parser: XmlReader, name: QName, list: MutableCollection<String>) {
+        processTag(parser, name) { list.add(parser.nextText()) }
+    }
+
+    fun XmlWriter.insertTag(name: QName, contentGenerator: XmlWriter.() -> Unit = {}) {
+        if (name.namespaceURI == XMLConstants.XML_NS_URI || name.namespaceURI == XMLConstants.XMLNS_ATTRIBUTE_NS_URI) {
+            val namespace = namespaceContext.getNamespaceURI(name.prefix) ?: XMLConstants.NULL_NS_URI
+            startTag(namespace, name.localPart, name.prefix)
+        } else {
+            var writeNs = false
+
+            val usedPrefix = getPrefix(name.namespaceURI) ?: run {
+                val currentNs = getNamespaceUri(name.prefix) ?: XMLConstants.NULL_NS_URI
+                if (name.namespaceURI != currentNs) {
+                    writeNs = true
+                }
+                if (name.prefix != XMLConstants.DEFAULT_NS_PREFIX) name.prefix else generateAutoPrefix()
             }
-            eventType = parser.next()
+            startTag(name.namespaceURI, name.localPart, usedPrefix)
+            if (writeNs) this.namespaceAttr(usedPrefix, name.namespaceURI)
         }
-    }
 
-    fun XmlSerializer.insertTag(name: Property.Name, contentGenerator: XmlSerializer.() -> Unit = {}) {
-        startTag(name.namespace, name.name)
         contentGenerator(this)
-        endTag(name.namespace, name.name)
+        endTag(name)
     }
 
-    fun XmlPullParser.propertyName(): Property.Name {
-        val propNs = namespace
-        val propName = name
-        if (propNs == null || propName == null) {
-            throw IllegalStateException("Current event must be START_TAG or END_TAG")
+    private fun XmlWriter.generateAutoPrefix(): String {
+        var prefix: String
+        var prefixN = 1
+        do {
+            prefix = "n${prefixN++}"
+        } while (getNamespaceUri(prefix) != null)
+        return prefix
+    }
+
+    @Throws(XmlException::class)
+    fun XmlReader.nextText(): String {
+        require(EventType.START_ELEMENT, null)
+        return when (next()) {
+            EventType.TEXT, EventType.CDSECT -> {
+                val rText = text
+                if (next() != EventType.END_ELEMENT) throw XmlException()
+                rText
+            }
+
+            EventType.END_ELEMENT -> ""
+            else -> throw XmlException()
         }
-        return Property.Name(propNs, propName)
     }
 }

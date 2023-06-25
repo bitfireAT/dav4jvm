@@ -2,6 +2,9 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
 
 object Libs {
+    // Ktor HTTP library
+    const val ktorVersion = "2.3.1"
+
     // okhttp HTTP library
     const val okhttpVersion = "4.11.0"
 
@@ -56,7 +59,8 @@ tasks.withType<DokkaTask>().configureEach {
 dependencies {
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
     implementation("org.apache.commons:commons-lang3:3.8.1") // last version that doesn't require Java 8
-    api("org.ogce:xpp3:${Libs.xpp3Version}")
+    implementation("io.github.pdvrieze.xmlutil:core:0.86.0")
+    implementation("io.ktor:ktor-io:${Libs.ktorVersion}")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:${Libs.okhttpVersion}")

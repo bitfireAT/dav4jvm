@@ -9,11 +9,12 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Response.Companion.STATUS
-import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.XmlUtils.nextText
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
-import org.xmlpull.v1.XmlPullParser
-import java.net.ProtocolException
+import okio.ProtocolException
 import java.util.*
 
 /**
@@ -30,33 +31,28 @@ data class PropStat(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "propstat")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "propstat")
 
         private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
         private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
 
-        fun parse(parser: XmlPullParser): PropStat {
-            val depth = parser.depth
-
+        fun parse(parser: XmlReader): PropStat {
             var status: StatusLine? = null
             val prop = LinkedList<Property>()
 
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    when (parser.propertyName()) {
-                        DavResource.PROP ->
-                            prop.addAll(Property.parse(parser))
-                        STATUS ->
-                            status = try {
-                                StatusLine.parse(parser.nextText())
-                            } catch (e: ProtocolException) {
-                                // invalid status line, treat as 500 Internal Server Error
-                                INVALID_STATUS
-                            }
-                    }
+            XmlUtils.processTag(parser) {
+                when (parser.name) {
+                    DavResource.PROP ->
+                        prop.addAll(Property.parse(parser))
+
+                    STATUS ->
+                        status = try {
+                            StatusLine.parse(parser.nextText())
+                        } catch (e: ProtocolException) {
+                            // invalid status line, treat as 500 Internal Server Error
+                            INVALID_STATUS
+                        }
                 }
-                eventType = parser.next()
             }
 
             return PropStat(prop, status ?: ASSUMING_OK)

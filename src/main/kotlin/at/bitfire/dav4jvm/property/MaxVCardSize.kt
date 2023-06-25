@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import java.util.logging.Level
 
 data class MaxVCardSize(
@@ -18,13 +19,13 @@ data class MaxVCardSize(
 ) : Property {
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CARDDAV, "max-resource-size")
+        val NAME = QName(XmlUtils.NS_CARDDAV, "max-resource-size")
     }
 
     object Factory : PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): MaxVCardSize? {
+        override fun create(parser: XmlReader): MaxVCardSize? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return MaxVCardSize(valueStr.toLong())

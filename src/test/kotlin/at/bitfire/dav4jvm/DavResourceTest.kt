@@ -13,6 +13,7 @@ import at.bitfire.dav4jvm.property.DisplayName
 import at.bitfire.dav4jvm.property.GetContentType
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ResourceType
+import nl.adaptivity.xmlutil.QName
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -851,8 +852,8 @@ class DavResourceTest {
 
         var called = false
         dav.proppatch(
-            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
-            removeProperties = listOf(Property.Name("sample", "removeThis"))
+            setProperties = mapOf(Pair(QName("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(QName("sample", "removeThis"))
         ) { _, hrefRelation ->
             called = true
             assertEquals(Response.HrefRelation.SELF, hrefRelation)
@@ -863,14 +864,14 @@ class DavResourceTest {
     @Test
     fun testProppatch_createProppatchXml() {
         val xml = DavResource.createProppatchXml(
-            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
-            removeProperties = listOf(Property.Name("sample", "removeThis"))
+            setProperties = mapOf(Pair(QName("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(QName("sample", "removeThis"))
         )
         assertEquals(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-                "<d:propertyupdate xmlns:d=\"DAV:\">" +
+            "<?xml version='UTF-8' encoding='UTF-8' ?>" +
+                "<d:propertyupdate>" +
                 "<d:set><d:prop><n1:setThis xmlns:n1=\"sample\">Some Value</n1:setThis></d:prop></d:set>" +
-                "<d:remove><d:prop><n2:removeThis xmlns:n2=\"sample\" /></d:prop></d:remove>" +
+                "<d:remove><d:prop><n1:removeThis xmlns:n1=\"sample\" /></d:prop></d:remove>" +
                 "</d:propertyupdate>",
             xml
         )

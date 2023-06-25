@@ -10,8 +10,9 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlUtils
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import okhttp3.Response
-import org.xmlpull.v1.XmlPullParser
 
 /**
  * The GetETag property.
@@ -25,7 +26,7 @@ class GetETag(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getetag")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "getetag")
 
         fun fromResponse(response: Response) =
             response.header("ETag")?.let { GetETag(it) }
@@ -78,7 +79,7 @@ class GetETag(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             GetETag(XmlUtils.requireReadText(parser))
     }
 }

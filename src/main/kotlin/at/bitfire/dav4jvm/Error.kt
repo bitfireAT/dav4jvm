@@ -8,7 +8,8 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 import java.io.Serializable
 
 /**
@@ -18,32 +19,25 @@ import java.io.Serializable
  * At the moment, there is no logic for subclassing errors.
  */
 class Error(
-    val name: Property.Name
+    val name: QName
 ) : Serializable {
 
     companion object {
 
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "error")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "error")
 
-        fun parseError(parser: XmlPullParser): List<Error> {
-            val names = mutableSetOf<Property.Name>()
+        fun parseError(parser: XmlReader): List<Error> {
+            val names = mutableSetOf<QName>()
 
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    names += Property.Name(parser.namespace, parser.name)
-                }
-                eventType = parser.next()
-            }
+            XmlUtils.processTag(parser) { names += parser.name }
 
             return names.map { Error(it) }
         }
 
         // some pre-defined errors
 
-        val NEED_PRIVILEGES = Error(Property.Name(XmlUtils.NS_WEBDAV, "need-privileges"))
-        val VALID_SYNC_TOKEN = Error(Property.Name(XmlUtils.NS_WEBDAV, "valid-sync-token"))
+        val NEED_PRIVILEGES = Error(QName(XmlUtils.NS_WEBDAV, "need-privileges"))
+        val VALID_SYNC_TOKEN = Error(QName(XmlUtils.NS_WEBDAV, "valid-sync-token"))
     }
 
     override fun equals(other: Any?) =

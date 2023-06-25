@@ -10,10 +10,11 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlException
+import nl.adaptivity.xmlutil.XmlReader
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
 class SupportedAddressData : Property {
@@ -21,9 +22,9 @@ class SupportedAddressData : Property {
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CARDDAV, "supported-address-data")
+        val NAME = QName(XmlUtils.NS_CARDDAV, "supported-address-data")
 
-        val ADDRESS_DATA_TYPE = Property.Name(XmlUtils.NS_CARDDAV, "address-data-type")
+        val ADDRESS_DATA_TYPE = QName(XmlUtils.NS_CARDDAV, "address-data-type")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
     }
@@ -39,7 +40,7 @@ class SupportedAddressData : Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedAddressData? {
+        override fun create(parser: XmlReader): SupportedAddressData? {
             val supported = SupportedAddressData()
 
             try {
@@ -50,7 +51,7 @@ class SupportedAddressData : Property {
                         type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }
-            } catch (e: XmlPullParserException) {
+            } catch (e: XmlException) {
                 Dav4jvm.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null
             }

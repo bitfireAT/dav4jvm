@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import nl.adaptivity.xmlutil.QName
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -13,7 +14,7 @@ class ErrorTest {
 
     @Test
     fun testEquals() {
-        val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
+        val errors = listOf(Error(QName("DAV:", "valid-sync-token")))
         assertTrue(errors.contains(Error.VALID_SYNC_TOKEN))
     }
 }

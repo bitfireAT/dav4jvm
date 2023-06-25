@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 data class GetCTag(
     val cTag: String?
@@ -17,14 +18,14 @@ data class GetCTag(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_CALENDARSERVER, "getctag")
+        val NAME = QName(XmlUtils.NS_CALENDARSERVER, "getctag")
     }
 
     object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             GetCTag(XmlUtils.readText(parser))
     }
 }

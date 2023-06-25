@@ -13,13 +13,13 @@ import at.bitfire.dav4jvm.property.CalendarData
 import at.bitfire.dav4jvm.property.GetContentType
 import at.bitfire.dav4jvm.property.GetETag
 import at.bitfire.dav4jvm.property.ScheduleTag
+import nl.adaptivity.xmlutil.QName
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
-import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Logger
@@ -34,13 +34,13 @@ class DavCalendar @JvmOverloads constructor(
         val MIME_ICALENDAR = "text/calendar".toMediaType()
         val MIME_ICALENDAR_UTF8 = "text/calendar;charset=utf-8".toMediaType()
 
-        val CALENDAR_QUERY = Property.Name(XmlUtils.NS_CALDAV, "calendar-query")
-        val CALENDAR_MULTIGET = Property.Name(XmlUtils.NS_CALDAV, "calendar-multiget")
+        val CALENDAR_QUERY = QName(XmlUtils.NS_CALDAV, "calendar-query")
+        val CALENDAR_MULTIGET = QName(XmlUtils.NS_CALDAV, "calendar-multiget")
 
-        val FILTER = Property.Name(XmlUtils.NS_CALDAV, "filter")
-        val COMP_FILTER = Property.Name(XmlUtils.NS_CALDAV, "comp-filter")
+        val FILTER = QName(XmlUtils.NS_CALDAV, "filter")
+        val COMP_FILTER = QName(XmlUtils.NS_CALDAV, "comp-filter")
         const val COMP_FILTER_NAME = "name"
-        val TIME_RANGE = Property.Name(XmlUtils.NS_CALDAV, "time-range")
+        val TIME_RANGE = QName(XmlUtils.NS_CALDAV, "time-range")
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 
@@ -77,9 +77,8 @@ class DavCalendar @JvmOverloads constructor(
                        type (e.g., VEVENT)
 
          */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
+        val writer = StringBuilder()
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
@@ -89,16 +88,16 @@ class DavCalendar @JvmOverloads constructor(
             }
             insertTag(FILTER) {
                 insertTag(COMP_FILTER) {
-                    attribute(null, COMP_FILTER_NAME, "VCALENDAR")
+                    attribute(null, COMP_FILTER_NAME, null, "VCALENDAR")
                     insertTag(COMP_FILTER) {
-                        attribute(null, COMP_FILTER_NAME, component)
+                        attribute(null, COMP_FILTER_NAME, null, component)
                         if (start != null || end != null) {
                             insertTag(TIME_RANGE) {
                                 if (start != null) {
-                                    attribute(null, TIME_RANGE_START, timeFormatUTC.format(start))
+                                    attribute(null, TIME_RANGE_START, null, timeFormatUTC.format(start))
                                 }
                                 if (end != null) {
-                                    attribute(null, TIME_RANGE_END, timeFormatUTC.format(end))
+                                    attribute(null, TIME_RANGE_END, null, timeFormatUTC.format(end))
                                 }
                             }
                         }
@@ -143,9 +142,8 @@ class DavCalendar @JvmOverloads constructor(
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
          */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
+        val writer = StringBuilder()
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
@@ -156,10 +154,10 @@ class DavCalendar @JvmOverloads constructor(
                 insertTag(ScheduleTag.NAME)
                 insertTag(CalendarData.NAME) {
                     if (contentType != null) {
-                        attribute(null, CalendarData.CONTENT_TYPE, contentType)
+                        attribute(null, CalendarData.CONTENT_TYPE, null, contentType)
                     }
                     if (version != null) {
-                        attribute(null, CalendarData.VERSION, version)
+                        attribute(null, CalendarData.VERSION, null, version)
                     }
                 }
             }

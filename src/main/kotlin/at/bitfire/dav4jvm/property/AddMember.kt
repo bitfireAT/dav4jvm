@@ -10,7 +10,8 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 /**
  * Defined in RFC 5995 3.2.1 DAV:add-member Property (Protected).
@@ -20,13 +21,13 @@ data class AddMember(
 ) : Property {
     companion object {
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "add-member")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "add-member")
     }
 
     object Factory : PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlReader) =
             AddMember(XmlUtils.readTextProperty(parser, DavResource.HREF))
     }
 }

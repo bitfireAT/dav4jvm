@@ -7,7 +7,6 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
-import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.exception.ConflictException
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.ForbiddenException
@@ -17,6 +16,9 @@ import at.bitfire.dav4jvm.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.SyncToken
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlException
+import nl.adaptivity.xmlutil.XmlReader
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -25,12 +27,8 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
 import java.io.EOFException
 import java.io.IOException
-import java.io.Reader
-import java.io.StringWriter
 import java.net.HttpURLConnection
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -63,12 +61,12 @@ open class DavResource @JvmOverloads constructor(
         const val HTTP_MULTISTATUS = 207
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
-        val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
-        val PROPERTYUPDATE = Property.Name(XmlUtils.NS_WEBDAV, "propertyupdate")
-        val SET = Property.Name(XmlUtils.NS_WEBDAV, "set")
-        val REMOVE = Property.Name(XmlUtils.NS_WEBDAV, "remove")
-        val PROP = Property.Name(XmlUtils.NS_WEBDAV, "prop")
-        val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
+        val PROPFIND = QName(XmlUtils.NS_WEBDAV, "propfind")
+        val PROPERTYUPDATE = QName(XmlUtils.NS_WEBDAV, "propertyupdate")
+        val SET = QName(XmlUtils.NS_WEBDAV, "set")
+        val REMOVE = QName(XmlUtils.NS_WEBDAV, "remove")
+        val PROP = QName(XmlUtils.NS_WEBDAV, "prop")
+        val HREF = QName(XmlUtils.NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
 
@@ -76,13 +74,12 @@ open class DavResource @JvmOverloads constructor(
          * Creates a request body for the PROPPATCH request.
          */
         internal fun createProppatchXml(
-            setProperties: Map<Property.Name, String>,
-            removeProperties: List<Property.Name>
+            setProperties: Map<QName, String>,
+            removeProperties: List<QName>
         ): String {
             // build XML request body
-            val serializer = XmlUtils.newSerializer()
-            val writer = StringWriter()
-            serializer.setOutput(writer)
+            val writer = StringBuilder()
+            val serializer = XmlUtils.createWriter(writer)
             serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
             serializer.startDocument("UTF-8", null)
             serializer.insertTag(PROPERTYUPDATE) {
@@ -489,11 +486,10 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun propfind(depth: Int, vararg reqProp: Property.Name, callback: MultiResponseCallback) {
+    fun propfind(depth: Int, vararg reqProp: QName, callback: MultiResponseCallback) {
         // build XML request body
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
+        val writer = StringBuilder()
+        val serializer = XmlUtils.createWriter(writer)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
@@ -536,8 +532,8 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
     fun proppatch(
-        setProperties: Map<Property.Name, String>,
-        removeProperties: List<Property.Name>,
+        setProperties: Map<QName, String>,
+        removeProperties: List<QName>,
         callback: MultiResponseCallback
     ) {
         followRedirects {
@@ -713,68 +709,37 @@ open class DavResource @JvmOverloads constructor(
     protected fun processMultiStatus(response: Response, callback: MultiResponseCallback): List<Property> {
         checkStatus(response)
         assertMultiStatus(response)
-        response.body!!.use {
-            return processMultiStatus(it.charStream(), callback)
-        }
-    }
 
-    /**
-     * Processes a Multi-Status response.
-     *
-     * @param reader   the Multi-Status response is read from this
-     * @param callback called for every XML response element in the Multi-Status response
-     *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements (like `sync-token` which is returned as [SyncToken])
-     *
-     * @throws IOException on I/O error
-     * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (like an invalid XML response)
-     */
-    protected fun processMultiStatus(reader: Reader, callback: MultiResponseCallback): List<Property> {
         val responseProperties = mutableListOf<Property>()
-        val parser = XmlUtils.newPullParser()
+        val parser: XmlReader = XmlUtils.createReader(response.body!!.charStream().readText())
 
-        fun parseMultiStatus(): List<Property> {
+        fun parseMultiStatus() {
             // <!ELEMENT multistatus (response*, responsedescription?,
             //                        sync-token?) >
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
-                    when (parser.propertyName()) {
-                        DavResponse.RESPONSE ->
-                            at.bitfire.dav4jvm.Response.parse(parser, location, callback)
-                        SyncToken.NAME ->
-                            XmlUtils.readText(parser)?.let {
-                                responseProperties += SyncToken(it)
-                            }
-                    }
-                }
-                eventType = parser.next()
-            }
+            XmlUtils.processTag(parser) {
+                when (parser.name) {
+                    DavResponse.RESPONSE ->
+                        at.bitfire.dav4jvm.Response.parse(parser, location, callback)
 
-            return responseProperties
+                    SyncToken.NAME ->
+                        XmlUtils.readText(parser)?.let {
+                            responseProperties += SyncToken(it)
+                        }
+                }
+            }
         }
 
         try {
-            parser.setInput(reader)
-
-            var eventType = parser.eventType
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == 1) {
-                    if (parser.propertyName() == DavResponse.MULTISTATUS) {
-                        return parseMultiStatus()
-                    }
-                }
-                // ignore further <multistatus> elements
-                eventType = parser.next()
+            var didParse: Boolean = false
+            XmlUtils.processTag(parser, DavResponse.MULTISTATUS, targetDepth = 1) {
+                didParse = true
+                parseMultiStatus()
             }
-
-            throw DavException("Multi-Status response didn't contain multistatus XML element")
+            if (!didParse) throw DavException("Multi-Status response didn't contain multistatus XML element")
+            return responseProperties
         } catch (e: EOFException) {
             throw DavException("Incomplete multistatus XML element", e)
-        } catch (e: XmlPullParserException) {
+        } catch (e: XmlException) {
             throw DavException("Couldn't parse multistatus XML element", e)
         }
     }

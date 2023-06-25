@@ -6,20 +6,19 @@
 
 package at.bitfire.dav4jvm
 
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 interface PropertyFactory {
 
     /**
      * Name of the Property the factory creates,
-     * e.g. Property.Name("DAV:", "displayname") if the factory creates DisplayName objects)
+     * e.g. QName("DAV:", "displayname") if the factory creates DisplayName objects)
      */
-    fun getName(): Property.Name
+    fun getName(): QName
 
     /**
      * Parses XML of a property and returns its data class.
-     * @throws XmlPullParserException in case of parsing errors
      */
-    fun create(parser: XmlPullParser): Property?
+    fun create(parser: XmlReader): Property?
 }

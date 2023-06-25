@@ -10,13 +10,13 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.SyncToken
+import nl.adaptivity.xmlutil.QName
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
-import java.io.StringWriter
 import java.util.logging.Logger
 
 /**
@@ -29,10 +29,10 @@ open class DavCollection @JvmOverloads constructor(
 ) : DavResource(httpClient, location, log) {
 
     companion object {
-        val SYNC_COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(XmlUtils.NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(XmlUtils.NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(XmlUtils.NS_WEBDAV, "nresults")
+        val SYNC_COLLECTION = QName(XmlUtils.NS_WEBDAV, "sync-collection")
+        val SYNC_LEVEL = QName(XmlUtils.NS_WEBDAV, "sync-level")
+        val LIMIT = QName(XmlUtils.NS_WEBDAV, "limit")
+        val NRESULTS = QName(XmlUtils.NS_WEBDAV, "nresults")
     }
 
     /**
@@ -73,7 +73,7 @@ open class DavCollection @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: MultiResponseCallback): List<Property> {
+    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: QName, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -84,9 +84,8 @@ open class DavCollection @JvmOverloads constructor(
 
            <!-- DAV:prop defined in RFC 4918, Section 14.18 -->
          */
-        val serializer = XmlUtils.newSerializer()
-        val writer = StringWriter()
-        serializer.setOutput(writer)
+        val writer = StringBuilder()
+        val serializer = XmlUtils.createWriter(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.insertTag(SYNC_COLLECTION) {

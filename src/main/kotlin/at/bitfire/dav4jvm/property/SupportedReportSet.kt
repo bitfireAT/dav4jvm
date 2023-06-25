@@ -9,17 +9,19 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
+import nl.adaptivity.xmlutil.EventType
+import nl.adaptivity.xmlutil.QName
+import nl.adaptivity.xmlutil.XmlReader
 
 class SupportedReportSet : Property {
 
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "supported-report-set")
+        val NAME = QName(XmlUtils.NS_WEBDAV, "supported-report-set")
 
-        val SUPPORTED_REPORT = Property.Name(XmlUtils.NS_WEBDAV, "supported-report")
-        val REPORT = Property.Name(XmlUtils.NS_WEBDAV, "report")
+        val SUPPORTED_REPORT = QName(XmlUtils.NS_WEBDAV, "supported-report")
+        val REPORT = QName(XmlUtils.NS_WEBDAV, "report")
 
         const val SYNC_COLLECTION = "DAV:sync-collection" // collection synchronization (RFC 6578)
     }
@@ -32,7 +34,7 @@ class SupportedReportSet : Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedReportSet? {
+        override fun create(parser: XmlReader): SupportedReportSet? {
             /* <!ELEMENT supported-report-set (supported-report*)>
                <!ELEMENT supported-report report>
                <!ELEMENT report ANY>
@@ -42,10 +44,10 @@ class SupportedReportSet : Property {
             XmlUtils.processTag(parser, SUPPORTED_REPORT) {
                 XmlUtils.processTag(parser, REPORT) {
                     parser.nextTag()
-                    if (parser.eventType == XmlPullParser.TEXT) {
+                    if (parser.eventType == EventType.TEXT) {
                         supported.reports += parser.text
-                    } else if (parser.eventType == XmlPullParser.START_TAG) {
-                        supported.reports += "${parser.namespace}${parser.name}"
+                    } else if (parser.eventType == EventType.START_ELEMENT) {
+                        supported.reports += "${parser.namespaceURI}${parser.name}"
                     }
                 }
             }

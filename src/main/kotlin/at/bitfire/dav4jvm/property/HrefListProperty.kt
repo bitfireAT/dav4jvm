@@ -10,12 +10,11 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
-import org.xmlpull.v1.XmlPullParser
-import java.util.*
+import nl.adaptivity.xmlutil.XmlReader
 
 abstract class HrefListProperty : Property {
 
-    val hrefs = LinkedList<String>()
+    val hrefs = mutableListOf<String>()
 
     val href
         get() = hrefs.firstOrNull()
@@ -24,7 +23,7 @@ abstract class HrefListProperty : Property {
 
     abstract class Factory : PropertyFactory {
 
-        fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
+        fun create(parser: XmlReader, list: HrefListProperty): HrefListProperty {
             XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
             return list
         }
