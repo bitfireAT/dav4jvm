@@ -25,10 +25,10 @@ import java.util.*
 import java.util.logging.Logger
 
 class DavCalendar @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavCollection(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    log: Logger = Dav4jvm.log
+) : DavCollection(httpClient, location, log) {
 
     companion object {
         val MIME_ICALENDAR = "text/calendar".toMediaType()
@@ -49,7 +49,6 @@ class DavCalendar @JvmOverloads constructor(
             timeFormatUTC.timeZone = TimeZone.getTimeZone("Etc/UTC")
         }
     }
-
 
     /**
      * Sends a calendar-query REPORT to the resource.
@@ -77,7 +76,7 @@ class DavCalendar @JvmOverloads constructor(
            name value: a calendar object or calendar component
                        type (e.g., VEVENT)
 
-        */
+         */
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
@@ -95,10 +94,12 @@ class DavCalendar @JvmOverloads constructor(
                         attribute(null, COMP_FILTER_NAME, component)
                         if (start != null || end != null) {
                             insertTag(TIME_RANGE) {
-                                if (start != null)
+                                if (start != null) {
                                     attribute(null, TIME_RANGE_START, timeFormatUTC.format(start))
-                                if (end != null)
+                                }
+                                if (end != null) {
                                     attribute(null, TIME_RANGE_END, timeFormatUTC.format(end))
+                                }
                             }
                         }
                     }
@@ -108,11 +109,13 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "1")
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use {
             return processMultiStatus(it, callback)
         }
@@ -139,7 +142,7 @@ class DavCalendar @JvmOverloads constructor(
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
-        */
+         */
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
@@ -148,14 +151,16 @@ class DavCalendar @JvmOverloads constructor(
         serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
         serializer.insertTag(CALENDAR_MULTIGET) {
             insertTag(PROP) {
-                insertTag(GetContentType.NAME)     // to determine the character set
+                insertTag(GetContentType.NAME) // to determine the character set
                 insertTag(GetETag.NAME)
                 insertTag(ScheduleTag.NAME)
                 insertTag(CalendarData.NAME) {
-                    if (contentType != null)
+                    if (contentType != null) {
                         attribute(null, CalendarData.CONTENT_TYPE, contentType)
-                    if (version != null)
+                    }
+                    if (version != null) {
                         attribute(null, CalendarData.VERSION, version)
+                    }
                 }
             }
             for (url in urls)
@@ -166,13 +171,14 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use {
             return processMultiStatus(it, callback)
         }
     }
-
 }

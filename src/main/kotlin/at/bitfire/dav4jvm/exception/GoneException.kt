@@ -9,9 +9,8 @@ package at.bitfire.dav4jvm.exception
 import okhttp3.Response
 import java.net.HttpURLConnection
 
-class GoneException: HttpException {
+class GoneException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_GONE, message)
-
+    constructor(response: Response) : super(response)
+    constructor(message: String?) : super(HttpURLConnection.HTTP_GONE, message)
 }

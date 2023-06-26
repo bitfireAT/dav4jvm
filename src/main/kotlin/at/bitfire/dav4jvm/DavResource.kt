@@ -8,10 +8,21 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.*
+import at.bitfire.dav4jvm.exception.ConflictException
+import at.bitfire.dav4jvm.exception.DavException
+import at.bitfire.dav4jvm.exception.ForbiddenException
+import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.exception.NotFoundException
+import at.bitfire.dav4jvm.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -41,9 +52,9 @@ import at.bitfire.dav4jvm.Response as DavResponse
  * @param log           will be used for logging
  */
 open class DavResource @JvmOverloads constructor(
-        val httpClient: OkHttpClient,
-        location: HttpUrl,
-        val log: Logger = Dav4jvm.log
+    val httpClient: OkHttpClient,
+    location: HttpUrl,
+    val log: Logger = Dav4jvm.log
 ) {
 
     companion object {
@@ -60,7 +71,6 @@ open class DavResource @JvmOverloads constructor(
         val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
-
 
         /**
          * Creates a request body for the PROPPATCH request.
@@ -104,14 +114,13 @@ open class DavResource @JvmOverloads constructor(
             serializer.endDocument()
             return writer.toString()
         }
-
     }
 
     /**
      * URL of this resource (changes when being redirected by server)
      */
     var location: HttpUrl
-        private set             // allow internal modification only (for redirects)
+        private set // allow internal modification only (for redirects)
 
     init {
         // Don't follow redirects (only useful for GET/POST).
@@ -123,12 +132,10 @@ open class DavResource @JvmOverloads constructor(
 
     override fun toString() = location.toString()
 
-
     /**
      * Gets the file name of this resource. See [HttpUtils.fileName] for details.
      */
     fun fileName() = HttpUtils.fileName(location)
-
 
     /**
      * Sends an OPTIONS request to this resource without HTTP compression (because some servers have
@@ -142,12 +149,14 @@ open class DavResource @JvmOverloads constructor(
      */
     @Throws(IOException::class, HttpException::class)
     fun options(callback: CapabilitiesCallback) {
-        httpClient.newCall(Request.Builder()
+        httpClient.newCall(
+            Request.Builder()
                 .method("OPTIONS", null)
                 .header("Content-Length", "0")
                 .url(location)
-                .header("Accept-Encoding", "identity")      // disable compression
-                .build()).execute().use { response ->
+                .header("Accept-Encoding", "identity") // disable compression
+                .build()
+        ).execute().use { response ->
             checkStatus(response)
             callback.onCapabilities(
                 HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
@@ -170,24 +179,27 @@ open class DavResource @JvmOverloads constructor(
     @Throws(IOException::class, HttpException::class, DavException::class)
     fun move(destination: HttpUrl, forceOverride: Boolean, callback: ResponseCallback) {
         val requestBuilder = Request.Builder()
-                .method("MOVE", null)
-                .header("Content-Length", "0")
-                .header("Destination", destination.toString())
+            .method("MOVE", null)
+            .header("Content-Length", "0")
+            .header("Destination", destination.toString())
 
         if (forceOverride) requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)
-            httpClient.newCall(requestBuilder
-                    .build())
-                    .execute()
+            httpClient.newCall(
+                requestBuilder
+                    .build()
+            )
+                .execute()
         }.use { response ->
             checkStatus(response)
-            if (response.code == HTTP_MULTISTATUS)
-                /* Multiple resources were to be affected by the MOVE, but errors on some
+            if (response.code == HTTP_MULTISTATUS) {
+                    /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
                 throw HttpException(response)
+            }
 
             // update location
             location.resolve(response.header("Location") ?: destination.toString())?.let {
@@ -209,27 +221,30 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun copy(destination:HttpUrl, forceOverride: Boolean, callback: ResponseCallback) {
+    fun copy(destination: HttpUrl, forceOverride: Boolean, callback: ResponseCallback) {
         val requestBuilder = Request.Builder()
-                .method("COPY", null)
-                .header("Content-Length", "0")
-                .header("Destination", destination.toString())
+            .method("COPY", null)
+            .header("Content-Length", "0")
+            .header("Destination", destination.toString())
 
         if (forceOverride) requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)
-            httpClient.newCall(requestBuilder
-                    .build())
-                    .execute()
-        }.use{ response ->
+            httpClient.newCall(
+                requestBuilder
+                    .build()
+            )
+                .execute()
+        }.use { response ->
             checkStatus(response)
 
-            if (response.code == HTTP_MULTISTATUS)
-                /* Multiple resources were to be affected by the COPY, but errors on some
+            if (response.code == HTTP_MULTISTATUS) {
+                    /* Multiple resources were to be affected by the COPY, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
                 throw HttpException(response)
+            }
 
             callback.onResponse(response)
         }
@@ -247,10 +262,12 @@ open class DavResource @JvmOverloads constructor(
         val rqBody = xmlBody?.toRequestBody(MIME_XML)
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .method("MKCOL", rqBody)
                     .url(location)
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use { response ->
             checkStatus(response)
             callback.onResponse(response)
@@ -320,8 +337,9 @@ open class DavResource @JvmOverloads constructor(
                 .get()
                 .url(location)
 
-            if (headers != null)
+            if (headers != null) {
                 request.headers(headers)
+            }
 
             // always Accept header
             request.header("Accept", accept)
@@ -356,8 +374,9 @@ open class DavResource @JvmOverloads constructor(
                 .get()
                 .url(location)
 
-            if (headers != null)
+            if (headers != null) {
                 request.headers(headers)
+            }
 
             val lastIndex = offset + size - 1
             request
@@ -390,18 +409,21 @@ open class DavResource @JvmOverloads constructor(
     fun put(body: RequestBody, ifETag: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
         followRedirects {
             val builder = Request.Builder()
-                    .put(body)
-                    .url(location)
+                .put(body)
+                .url(location)
 
-            if (ifETag != null)
+            if (ifETag != null) {
                 // only overwrite specific version
                 builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
-            if (ifScheduleTag != null)
+            }
+            if (ifScheduleTag != null) {
                 // only overwrite specific version
                 builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
-            if (ifNoneMatch)
+            }
+            if (ifNoneMatch) {
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*")
+            }
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
@@ -429,22 +451,25 @@ open class DavResource @JvmOverloads constructor(
     fun delete(ifETag: String? = null, ifScheduleTag: String? = null, callback: ResponseCallback) {
         followRedirects {
             val builder = Request.Builder()
-                    .delete()
-                    .url(location)
-            if (ifETag != null)
+                .delete()
+                .url(location)
+            if (ifETag != null) {
                 builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
-            if (ifScheduleTag != null)
+            }
+            if (ifScheduleTag != null) {
                 builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
+            }
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
             checkStatus(response)
 
-            if (response.code == HTTP_MULTISTATUS)
-                /* If an error occurs deleting a member resource (a resource other than
+            if (response.code == HTTP_MULTISTATUS) {
+                    /* If an error occurs deleting a member resource (a resource other than
                    the resource identified in the Request-URI), then the response can be
                    a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
                 throw HttpException(response)
+            }
 
             callback.onResponse(response)
         }
@@ -482,11 +507,13 @@ open class DavResource @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("PROPFIND", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", if (depth >= 0) depth.toString() else "infinity")
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use {
             processMultiStatus(it, callback)
         }
@@ -544,15 +571,16 @@ open class DavResource @JvmOverloads constructor(
      */
     fun search(search: String, callback: MultiResponseCallback) {
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                .url(location)
-                .method("SEARCH", search.toRequestBody(MIME_XML))
-                .build()).execute()
+            httpClient.newCall(
+                Request.Builder()
+                    .url(location)
+                    .method("SEARCH", search.toRequestBody(MIME_XML))
+                    .build()
+            ).execute()
         }.use {
             processMultiStatus(it, callback)
         }
     }
-
 
     // status handling
 
@@ -562,7 +590,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(response: Response) =
-            checkStatus(response.code, response.message, response)
+        checkStatus(response.code, response.message, response)
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
@@ -570,9 +598,10 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException (with XML error names, if available) in case of an HTTP error
      */
     private fun checkStatus(code: Int, message: String?, response: Response?) {
-        if (code / 100 == 2)
+        if (code / 100 == 2) {
             // everything OK
             return
+        }
 
         throw when (code) {
             HttpURLConnection.HTTP_UNAUTHORIZED ->
@@ -605,22 +634,25 @@ open class DavResource @JvmOverloads constructor(
         lateinit var response: Response
         for (attempt in 1..MAX_REDIRECTS) {
             response = sendRequest()
-            if (response.isRedirect)
+            if (response.isRedirect) {
                 // handle 3xx Redirection
                 response.use {
                     val target = it.header("Location")?.let { location.resolve(it) }
                     if (target != null) {
                         log.fine("Redirected, new location = $target")
 
-                        if (location.isHttps && !target.isHttps)
+                        if (location.isHttps && !target.isHttps) {
                             throw DavException("Received redirect from HTTPS to HTTP")
+                        }
 
                         location = target
-                    } else
+                    } else {
                         throw DavException("Redirected without new Location")
+                    }
                 }
-            else
+            } else {
                 break
+            }
         }
         return response
     }
@@ -633,11 +665,12 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException if the response is not a Multi-Status response
      */
     fun assertMultiStatus(response: Response) {
-        if (response.code != HTTP_MULTISTATUS)
+        if (response.code != HTTP_MULTISTATUS) {
             throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
+        }
 
-        val body = response.body ?:
-            throw DavException("Received 207 Multi-Status without body", httpResponse = response)
+        val body = response.body
+            ?: throw DavException("Received 207 Multi-Status without body", httpResponse = response)
 
         body.contentType()?.let { mimeType ->
             if (((mimeType.type != "application" && mimeType.type != "text")) || mimeType.subtype != "xml") {
@@ -661,7 +694,6 @@ open class DavResource @JvmOverloads constructor(
             }
         } ?: log.warning("Received 207 Multi-Status without Content-Type, assuming XML")
     }
-
 
     // Multi-Status handling
 
@@ -709,7 +741,7 @@ open class DavResource @JvmOverloads constructor(
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         DavResponse.RESPONSE ->
                             at.bitfire.dav4jvm.Response.parse(parser, location, callback)
@@ -718,6 +750,7 @@ open class DavResource @JvmOverloads constructor(
                                 responseProperties += SyncToken(it)
                             }
                     }
+                }
                 eventType = parser.next()
             }
 
@@ -729,20 +762,20 @@ open class DavResource @JvmOverloads constructor(
 
             var eventType = parser.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                    if (parser.propertyName() == DavResponse.MULTISTATUS)
+                if (eventType == XmlPullParser.START_TAG && parser.depth == 1) {
+                    if (parser.propertyName() == DavResponse.MULTISTATUS) {
                         return parseMultiStatus()
+                    }
+                }
                 // ignore further <multistatus> elements
                 eventType = parser.next()
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")
-
         } catch (e: EOFException) {
             throw DavException("Incomplete multistatus XML element", e)
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", e)
         }
     }
-
 }

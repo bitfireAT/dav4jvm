@@ -24,10 +24,9 @@ interface Property {
     data class Name(
         val namespace: String,
         val name: String
-    ): Serializable {
+    ) : Serializable {
 
         override fun toString() = "$namespace:$name"
-
     }
 
     companion object {
@@ -60,7 +59,5 @@ interface Property {
 
             return properties
         }
-
     }
-
 }

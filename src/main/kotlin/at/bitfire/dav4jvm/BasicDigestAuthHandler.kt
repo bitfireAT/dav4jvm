@@ -6,12 +6,20 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.*
+import okhttp3.Authenticator
+import okhttp3.Challenge
+import okhttp3.Credentials
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
+import okhttp3.Route
 import okio.Buffer
 import okio.ByteString.Companion.toByteString
 import java.io.IOException
-import java.util.*
+import java.util.LinkedList
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -25,14 +33,14 @@ import java.util.concurrent.atomic.AtomicInteger
  * Usage: Set as authenticator *and* as network interceptor.
  */
 class BasicDigestAuthHandler(
-        /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
-        val domain: String?,
+    /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
+    val domain: String?,
 
-        val username: String,
-        val password: String,
+    val username: String,
+    val password: String,
 
-        val insecurePreemptive: Boolean = false
-): Authenticator, Interceptor {
+    val insecurePreemptive: Boolean = false
+) : Authenticator, Interceptor {
 
     companion object {
         private const val HEADER_AUTHORIZATION = "Authorization"
@@ -57,7 +65,6 @@ class BasicDigestAuthHandler(
     private var basicAuth: Challenge? = null
     private var digestAuth: Challenge? = null
 
-
     fun authenticateRequest(request: Request, response: Response?): Request? {
         domain?.let {
             val host = request.url.host
@@ -74,7 +81,6 @@ class BasicDigestAuthHandler(
                 Dav4jvm.log.fine("Trying Basic auth preemptively")
                 basicAuth = Challenge("Basic", "")
             }
-
         } else {
             // we're processing a 401 response
 
@@ -120,8 +126,8 @@ class BasicDigestAuthHandler(
                  So, UTF-8 encoding for credentials is compatible with all RFC 7617 servers and many,
                  but not all pre-RFC 7617 servers. */
                 return request.newBuilder()
-                        .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charsets.UTF_8))
-                        .build()
+                    .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charsets.UTF_8))
+                    .build()
             }
 
             response != null ->
@@ -132,8 +138,9 @@ class BasicDigestAuthHandler(
     }
 
     fun digestRequest(request: Request, digest: Challenge?): Request? {
-        if (digest == null)
+        if (digest == null) {
             return null
+        }
 
         val realm = digest.authParams["realm"]
         val opaque = digest.authParams["opaque"]
@@ -147,23 +154,25 @@ class BasicDigestAuthHandler(
 
         val params = LinkedList<String>()
         params.add("username=${quotedString(username)}")
-        if (realm != null)
+        if (realm != null) {
             params.add("realm=${quotedString(realm)}")
-        else {
+        } else {
             Dav4jvm.log.warning("No realm provided, aborting Digest auth")
             return null
         }
-        if (nonce != null)
+        if (nonce != null) {
             params.add("nonce=${quotedString(nonce)}")
-        else {
+        } else {
             Dav4jvm.log.warning("No nonce provided, aborting Digest auth")
             return null
         }
-        if (opaque != null)
+        if (opaque != null) {
             params.add("opaque=${quotedString(opaque)}")
+        }
 
-        if (algorithm != null)
+        if (algorithm != null) {
             params.add("algorithm=${quotedString(algorithm.algorithm)}")
+        }
 
         val method = request.method
         val digestURI = request.url.encodedPath
@@ -194,7 +203,7 @@ class BasicDigestAuthHandler(
                     try {
                         val body = request.body
                         "$method:$digestURI:" + (if (body != null) h(body) else h(""))
-                    } catch(e: IOException) {
+                    } catch (e: IOException) {
                         Dav4jvm.log.warning("Couldn't get entity-body for hash calculation")
                         null
                     }
@@ -202,9 +211,9 @@ class BasicDigestAuthHandler(
             }
             Dav4jvm.log.finer("A2=$a2")
 
-            if (a1 != null && a2 != null)
+            if (a1 != null && a2 != null) {
                 response = kd(h(a1), "$nonce:$ncValue:$clientNonce:${qop.qop}:${h(a2)}")
-
+            }
         } else {
             Dav4jvm.log.finer("Using legacy Digest auth")
 
@@ -219,18 +228,19 @@ class BasicDigestAuthHandler(
         return if (response != null) {
             params.add("response=" + quotedString(response))
             request.newBuilder()
-                    .header(HEADER_AUTHORIZATION, "Digest " + params.joinToString(", "))
-                    .build()
-        } else
+                .header(HEADER_AUTHORIZATION, "Digest " + params.joinToString(", "))
+                .build()
+        } else {
             null
+        }
     }
 
-
     private enum class Algorithm(
-            val algorithm: String
+        val algorithm: String
     ) {
         MD5("MD5"),
-        MD5_SESSION("MD5-sess");
+        MD5_SESSION("MD5-sess")
+        ;
 
         companion object {
             fun determine(paramValue: String?): Algorithm? {
@@ -250,9 +260,10 @@ class BasicDigestAuthHandler(
 
     private enum class Protection(
         val qop: String
-    ) {    // quality of protection:
-        Auth("auth"),              // authentication only
-        AuthInt("auth-int");       // authentication with integrity protection
+    ) { // quality of protection:
+        Auth("auth"), // authentication only
+        AuthInt("auth-int") // authentication with integrity protection
+        ;
 
         companion object {
             fun selectFrom(paramValue: String?): Protection? {
@@ -266,29 +277,29 @@ class BasicDigestAuthHandler(
                         }
 
                     // prefer auth-int as it provides more protection
-                    if (qopAuthInt)
+                    if (qopAuthInt) {
                         return AuthInt
-                    else if (qopAuth)
+                    } else if (qopAuth) {
                         return Auth
+                    }
                 }
                 return null
             }
         }
     }
 
-
     override fun authenticate(route: Route?, response: Response) =
-            authenticateRequest(response.request, response)
+        authenticateRequest(response.request, response)
 
     override fun intercept(chain: Interceptor.Chain): Response {
         var request = chain.request()
         if (request.header(HEADER_AUTHORIZATION) == null) {
             // try to apply cached authentication
             val authRequest = authenticateRequest(request, null)
-            if (authRequest != null)
+            if (authRequest != null) {
                 request = authRequest
+            }
         }
         return chain.proceed(request)
     }
-
 }

@@ -23,10 +23,10 @@ import java.util.logging.Logger
  * Represents a WebDAV collection.
  */
 open class DavCollection @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavResource(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    log: Logger = Dav4jvm.log
+) : DavResource(httpClient, location, log) {
 
     companion object {
         val SYNC_COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "sync-collection")
@@ -42,12 +42,13 @@ open class DavCollection @JvmOverloads constructor(
     fun post(body: RequestBody, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
         followRedirects {
             val builder = Request.Builder()
-                    .post(body)
-                    .url(location)
+                .post(body)
+                .url(location)
 
-            if (ifNoneMatch)
+            if (ifNoneMatch) {
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*")
+            }
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
@@ -82,7 +83,7 @@ open class DavCollection @JvmOverloads constructor(
            <!ELEMENT nresults (#PCDATA)> <!-- only digits -->
 
            <!-- DAV:prop defined in RFC 4918, Section 14.18 -->
-        */
+         */
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
@@ -90,18 +91,20 @@ open class DavCollection @JvmOverloads constructor(
         serializer.setPrefix("", XmlUtils.NS_WEBDAV)
         serializer.insertTag(SYNC_COLLECTION) {
             insertTag(SyncToken.NAME) {
-                if (syncToken != null)
+                if (syncToken != null) {
                     text(syncToken)
+                }
             }
             insertTag(SYNC_LEVEL) {
                 text(if (infiniteDepth) "infinite" else "1")
             }
-            if (limit != null)
+            if (limit != null) {
                 insertTag(LIMIT) {
                     insertTag(NRESULTS) {
                         text(limit.toString())
                     }
                 }
+            }
             insertTag(PROP) {
                 for (prop in properties)
                     insertTag(prop)
@@ -110,14 +113,15 @@ open class DavCollection @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "0")
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use {
             return processMultiStatus(it, callback)
         }
     }
-
 }

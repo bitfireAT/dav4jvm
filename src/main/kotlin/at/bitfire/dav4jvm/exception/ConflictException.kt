@@ -9,9 +9,8 @@ package at.bitfire.dav4jvm.exception
 import okhttp3.Response
 import java.net.HttpURLConnection
 
-class ConflictException: HttpException {
+class ConflictException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_CONFLICT, message)
-
+    constructor(response: Response) : super(response)
+    constructor(message: String?) : super(HttpURLConnection.HTTP_CONFLICT, message)
 }

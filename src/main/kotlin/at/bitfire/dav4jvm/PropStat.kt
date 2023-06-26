@@ -22,9 +22,9 @@ import java.util.*
  *     <!ELEMENT propstat (prop, status, error?, responsedescription?) >
  */
 data class PropStat(
-        val properties: List<Property>,
-        val status: StatusLine,
-        val error: List<Error>? = null
+    val properties: List<Property>,
+    val status: StatusLine,
+    val error: List<Error>? = null
 ) {
 
     companion object {
@@ -43,7 +43,7 @@ data class PropStat(
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         DavResource.PROP ->
                             prop.addAll(Property.parse(parser))
@@ -55,15 +55,13 @@ data class PropStat(
                                 INVALID_STATUS
                             }
                     }
+                }
                 eventType = parser.next()
             }
 
             return PropStat(prop, status ?: ASSUMING_OK)
         }
-
     }
 
-
-    fun isSuccess() = status.code/100 == 2
-
+    fun isSuccess() = status.code / 100 == 2
 }

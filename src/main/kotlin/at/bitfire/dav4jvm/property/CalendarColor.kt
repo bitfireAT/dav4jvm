@@ -15,8 +15,8 @@ import java.util.logging.Level
 import java.util.regex.Pattern
 
 data class CalendarColor(
-        val color: Int
-): Property {
+    val color: Int
+) : Property {
 
     companion object {
         @JvmField
@@ -39,13 +39,13 @@ data class CalendarColor(
                 val color_rgb = Integer.parseInt(m.group(1), 16)
                 val color_alpha = m.group(2)?.let { Integer.parseInt(m.group(2), 16) and 0xFF } ?: 0xFF
                 return (color_alpha shl 24) or color_rgb
-            } else
+            } else {
                 throw IllegalArgumentException("Couldn't parse color value: $davColor")
+            }
         }
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -59,7 +59,5 @@ data class CalendarColor(
             }
             return null
         }
-
     }
-
 }

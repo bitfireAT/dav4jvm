@@ -22,10 +22,10 @@ import java.io.StringWriter
 import java.util.logging.Logger
 
 class DavAddressBook @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavCollection(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    log: Logger = Dav4jvm.log
+) : DavCollection(httpClient, location, log) {
 
     companion object {
         val MIME_JCARD = "application/vcard+json".toMediaType()
@@ -54,7 +54,7 @@ class DavAddressBook @JvmOverloads constructor(
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
            <!ELEMENT filter (prop-filter*)>
-        */
+         */
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
@@ -70,11 +70,13 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("REPORT", writer.toString().toRequestBody(MIME_XML))
                     .header("Depth", "1")
-                    .build()).execute()
+                    .build()
+            ).execute()
         }.use { response ->
             return processMultiStatus(response, callback)
         }
@@ -102,7 +104,7 @@ class DavAddressBook @JvmOverloads constructor(
                                             DAV:propname |
                                             DAV:prop)?,
                                             DAV:href+)>
-        */
+         */
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
@@ -114,10 +116,12 @@ class DavAddressBook @JvmOverloads constructor(
                 insertTag(GetContentType.NAME)
                 insertTag(GetETag.NAME)
                 insertTag(AddressData.NAME) {
-                    if (contentType != null)
+                    if (contentType != null) {
                         attribute(null, AddressData.CONTENT_TYPE, contentType)
-                    if (version != null)
+                    }
+                    if (version != null) {
                         attribute(null, AddressData.VERSION, version)
+                    }
                 }
             }
             for (url in urls)
@@ -128,14 +132,15 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
+            httpClient.newCall(
+                Request.Builder()
                     .url(location)
                     .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
-                    .build()).execute()
+                    .header("Depth", "0") // "The request MUST include a Depth: 0 header [...]"
+                    .build()
+            ).execute()
         }.use {
             return processMultiStatus(it, callback)
         }
     }
-
 }

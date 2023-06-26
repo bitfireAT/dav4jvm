@@ -12,22 +12,20 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressbookDescription(
-        var description: String? = null
-): Property {
+    var description: String? = null
+) : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-description")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT addressbook-description (#PCDATA)>
-                AddressbookDescription(XmlUtils.readText(parser))
-
+            // <!ELEMENT addressbook-description (#PCDATA)>
+            AddressbookDescription(XmlUtils.readText(parser))
     }
-
 }

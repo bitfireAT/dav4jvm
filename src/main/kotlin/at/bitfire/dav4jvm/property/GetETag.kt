@@ -21,7 +21,7 @@ import org.xmlpull.v1.XmlPullParser
  */
 class GetETag(
     rawETag: String
-): Property {
+) : Property {
 
     companion object {
         @JvmField
@@ -45,7 +45,7 @@ class GetETag(
         /* entity-tag = [ weak ] opaque-tag
            weak       = "W/"
            opaque-tag = quoted-string
-        */
+         */
         val tag: String
 
         // remove trailing "W/"
@@ -61,11 +61,12 @@ class GetETag(
         eTag = QuotedStringUtils.decodeQuotedString(tag)
     }
 
-    override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
+    override fun toString() = "ETag(weak=$weak, tag=$eTag)"
 
     override fun equals(other: Any?): Boolean {
-        if (other !is GetETag)
+        if (other !is GetETag) {
             return false
+        }
         return eTag == other.eTag && weak == other.weak
     }
 
@@ -73,14 +74,11 @@ class GetETag(
         return eTag.hashCode() xor weak.hashCode()
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
             GetETag(XmlUtils.requireReadText(parser))
-
     }
-
 }

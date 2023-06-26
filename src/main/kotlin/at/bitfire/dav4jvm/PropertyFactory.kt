@@ -22,5 +22,4 @@ interface PropertyFactory {
      * @throws XmlPullParserException in case of parsing errors
      */
     fun create(parser: XmlPullParser): Property?
-
 }

@@ -10,7 +10,9 @@ import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.*
 import kotlin.math.abs
@@ -18,13 +20,15 @@ import kotlin.math.abs
 class ServiceUnavailableExceptionTest {
 
     val response503 = Response.Builder()
-            .request(Request.Builder()
-                    .url("http://www.example.com")
-                    .get()
-                    .build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(503).message("Try later")
-            .build()
+        .request(
+            Request.Builder()
+                .url("http://www.example.com")
+                .get()
+                .build()
+        )
+        .protocol(Protocol.HTTP_1_1)
+        .code(503).message("Try later")
+        .build()
 
     @Test
     fun testRetryAfter_NoTime() {
@@ -35,8 +39,8 @@ class ServiceUnavailableExceptionTest {
     @Test
     fun testRetryAfter_Seconds() {
         val response = response503.newBuilder()
-                .header("Retry-After", "120")
-                .build()
+            .header("Retry-After", "120")
+            .build()
         val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
         assertTrue(withinTimeRange(e.retryAfter!!, 120))
@@ -47,19 +51,17 @@ class ServiceUnavailableExceptionTest {
         val cal = Calendar.getInstance()
         cal.add(Calendar.MINUTE, 30)
         val response = response503.newBuilder()
-                .header("Retry-After", HttpUtils.formatDate(cal.time))
-                .build()
+            .header("Retry-After", HttpUtils.formatDate(cal.time))
+            .build()
         val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
-        assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
+        assertTrue(withinTimeRange(e.retryAfter!!, 30 * 60))
     }
-
 
     private fun withinTimeRange(d: Date, seconds: Int): Boolean {
         val msCheck = d.time
-        val msShouldBe = Date().time + seconds*1000
+        val msShouldBe = Date().time + seconds * 1000
         // assume max. 5 seconds difference for test running
         return abs(msCheck - msShouldBe) < 5000
     }
-
 }

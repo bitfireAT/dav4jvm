@@ -14,21 +14,21 @@ import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 
 data class GetContentLength(
-        val contentLength: Long
+    val contentLength: Long
 ) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "getcontentlength")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): GetContentLength? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return GetContentLength(valueStr.toLong())
-                } catch(e: NumberFormatException) {
+                } catch (e: NumberFormatException) {
                     Dav4jvm.log.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
                 }
             }

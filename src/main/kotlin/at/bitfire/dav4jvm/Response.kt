@@ -25,37 +25,37 @@ import java.net.ProtocolException
  *                         error?, responsedescription? , location?) >
  */
 data class Response(
-        /**
-         * URL of the requested resource. For instance, if `this` is a result
-         * of a PROPFIND request, the `requestedUrl` would be the URL where the
-         * PROPFIND request has been sent to (usually the collection URL).
-         */
-        val requestedUrl: HttpUrl,
+    /**
+     * URL of the requested resource. For instance, if `this` is a result
+     * of a PROPFIND request, the `requestedUrl` would be the URL where the
+     * PROPFIND request has been sent to (usually the collection URL).
+     */
+    val requestedUrl: HttpUrl,
 
-        /**
-         * URL of this response (`href` element)
-         */
-        val href: HttpUrl,
+    /**
+     * URL of this response (`href` element)
+     */
+    val href: HttpUrl,
 
-        /**
-         * status of this response (`status` XML element)
-         */
-        val status: StatusLine?,
+    /**
+     * status of this response (`status` XML element)
+     */
+    val status: StatusLine?,
 
-        /**
-         * property/status elements (`propstat` XML elements)
-         */
-        val propstat: List<PropStat>,
+    /**
+     * property/status elements (`propstat` XML elements)
+     */
+    val propstat: List<PropStat>,
 
-        /**
-         * list of precondition/postcondition elements (`error` XML elements)
-         */
-        val error: List<Error>? = null,
+    /**
+     * list of precondition/postcondition elements (`error` XML elements)
+     */
+    val error: List<Error>? = null,
 
-        /**
-         * new location of this response (`location` XML element), used for redirects
-         */
-        val newLocation: HttpUrl? = null
+    /**
+     * new location of this response (`location` XML element), used for redirects
+     */
+    val newLocation: HttpUrl? = null
 ) {
 
     enum class HrefRelation {
@@ -66,31 +66,31 @@ data class Response(
      * All properties from propstat elements with empty status or status code 2xx.
      */
     val properties: List<Property> by lazy {
-        if (isSuccess())
+        if (isSuccess()) {
             propstat.filter { it.isSuccess() }.map { it.properties }.flatten()
-        else
+        } else {
             emptyList()
+        }
     }
 
     /**
      * Convenience method to get a certain property with empty status or status code 2xx
      * from the current response.
      */
-    operator fun<T: Property> get(clazz: Class<T>) =
-            properties.filterIsInstance(clazz).firstOrNull()
+    operator fun<T : Property> get(clazz: Class<T>) =
+        properties.filterIsInstance(clazz).firstOrNull()
 
     /**
      * Returns whether the request was successful.
      *
      * @return true: no status XML element or status code 2xx; false: otherwise
      */
-    fun isSuccess() = status == null || status.code/100 == 2
+    fun isSuccess() = status == null || status.code / 100 == 2
 
     /**
      * Returns the name (last path segment) of the resource.
      */
     fun hrefName() = HttpUtils.fileName(href)
-
 
     companion object {
 
@@ -113,7 +113,7 @@ data class Response(
 
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         DavResource.HREF -> {
                             var sHref = parser.nextText()
@@ -128,13 +128,15 @@ data class Response(
                                        with "./" to allow resolving by HttpUrl. */
                                     var hierarchical = false
                                     try {
-                                        if (sHref.substring(firstColon, firstColon + 3) == "://")
+                                        if (sHref.substring(firstColon, firstColon + 3) == "://") {
                                             hierarchical = true
+                                        }
                                     } catch (e: IndexOutOfBoundsException) {
                                         // no "://"
                                     }
-                                    if (!hierarchical)
+                                    if (!hierarchical) {
                                         sHref = "./$sHref"
+                                    }
                                 }
                             }
                             href = location.resolve(sHref)
@@ -142,7 +144,7 @@ data class Response(
                         STATUS ->
                             status = try {
                                 StatusLine.parse(parser.nextText())
-                            } catch(e: ProtocolException) {
+                            } catch (e: ProtocolException) {
                                 log.warning("Invalid status line, treating as HTTP error 500")
                                 StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                             }
@@ -152,7 +154,8 @@ data class Response(
                             error = Error.parseError(parser)
                         LOCATION ->
                             newLocation = parser.nextText().toHttpUrlOrNull()
-                        }
+                    }
+                }
                 eventType = parser.next()
             }
 
@@ -164,15 +167,16 @@ data class Response(
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
             propStat.filter { it.isSuccess() }
-                    .map { it.properties }
-                    .filterIsInstance(ResourceType::class.java)
-                    .firstOrNull()
-                    ?.let { type ->
-                        if (type.types.contains(ResourceType.COLLECTION))
-                            href = UrlUtils.withTrailingSlash(href!!)
+                .map { it.properties }
+                .filterIsInstance(ResourceType::class.java)
+                .firstOrNull()
+                ?.let { type ->
+                    if (type.types.contains(ResourceType.COLLECTION)) {
+                        href = UrlUtils.withTrailingSlash(href!!)
                     }
+                }
 
-            //log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
+            // log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
 
             // Which resource does this <response> represent?
             val relation = when {
@@ -185,18 +189,20 @@ data class Response(
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size
-                        if (locationSegments[nBasePathSegments-1] == "")
+                        if (locationSegments[nBasePathSegments - 1] == "") {
                             nBasePathSegments--
+                        }
 
                         /* example:   locationSegments  = [ "davCollection", "" ]
                                       nBasePathSegments = 1
                                       hrefSegments      = [ "davCollection", "aMember" ]
-                        */
+                         */
                         var relation = HrefRelation.OTHER
                         if (hrefSegments.size > nBasePathSegments) {
                             val sameBasePath = (0 until nBasePathSegments).none { locationSegments[it] != hrefSegments[it] }
-                            if (sameBasePath)
+                            if (sameBasePath) {
                                 relation = HrefRelation.MEMBER
+                            }
                         }
 
                         relation
@@ -206,17 +212,16 @@ data class Response(
             }
 
             callback.onResponse(
-                    Response(
-                            location,
-                            href!!,
-                            status,
-                            propStat,
-                            error,
-                            newLocation
-                    ),
-                    relation)
+                Response(
+                    location,
+                    href!!,
+                    status,
+                    propStat,
+                    error,
+                    newLocation
+                ),
+                relation
+            )
         }
-
     }
-
 }

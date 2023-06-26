@@ -10,21 +10,18 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class CalendarProxyReadFor: HrefListProperty() {
+class CalendarProxyReadFor : HrefListProperty() {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALENDARSERVER, "calendar-proxy-read-for")
     }
 
-
-    object Factory: HrefListProperty.Factory() {
+    object Factory : HrefListProperty.Factory() {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                create(parser, CalendarProxyReadFor())
-
+            create(parser, CalendarProxyReadFor())
     }
-
 }

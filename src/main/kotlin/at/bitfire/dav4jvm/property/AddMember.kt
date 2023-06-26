@@ -16,17 +16,17 @@ import org.xmlpull.v1.XmlPullParser
  * Defined in RFC 5995 3.2.1 DAV:add-member Property (Protected).
  */
 data class AddMember(
-        val href: String?
-): Property {
+    val href: String?
+) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "add-member")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                AddMember(XmlUtils.readTextProperty(parser, DavResource.HREF))
+            AddMember(XmlUtils.readTextProperty(parser, DavResource.HREF))
     }
 }

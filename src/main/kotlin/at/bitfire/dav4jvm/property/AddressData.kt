@@ -12,8 +12,8 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressData(
-        val card: String?
-): Property {
+    val card: String?
+) : Property {
 
     companion object {
         @JvmField
@@ -24,15 +24,12 @@ data class AddressData(
         const val VERSION = "version"
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT address-data (#PCDATA)>
-                AddressData(XmlUtils.readText(parser))
-
+            // <!ELEMENT address-data (#PCDATA)>
+            AddressData(XmlUtils.readText(parser))
     }
-
 }

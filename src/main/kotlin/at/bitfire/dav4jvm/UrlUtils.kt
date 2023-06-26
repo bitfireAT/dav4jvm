@@ -32,8 +32,9 @@ object UrlUtils {
     fun equals(url1: HttpUrl, url2: HttpUrl): Boolean {
         // if okhttp thinks the two URLs are equal, they're in any case
         // (and it's a simple String comparison)
-        if (url1 == url2)
+        if (url1 == url2) {
             return true
+        }
 
         // drop #fragment parts and convert to URI
         val uri1 = url1.newBuilder().fragment(null).build().toUri()
@@ -57,8 +58,9 @@ object UrlUtils {
      * @return domain name (e.g. `example.com`)
      */
     fun hostToDomain(host: String?): String? {
-        if (host == null)
+        if (host == null) {
             return null
+        }
 
         // remove optional dot at end
         val withoutTrailingDot = host.removeSuffix(".")
@@ -67,8 +69,9 @@ object UrlUtils {
         val labels = withoutTrailingDot.split('.')
         return if (labels.size >= 2) {
             labels[labels.size - 2] + "." + labels[labels.size - 1]
-        } else
+        } else {
             withoutTrailingDot
+        }
     }
 
     /**
@@ -83,10 +86,11 @@ object UrlUtils {
         val idxLast = url.pathSize - 1
         val hasTrailingSlash = url.pathSegments[idxLast] == ""
 
-        return if (hasTrailingSlash)
+        return if (hasTrailingSlash) {
             url.newBuilder().removePathSegment(idxLast).build()
-        else
+        } else {
             url
+        }
     }
 
     /**
@@ -100,10 +104,9 @@ object UrlUtils {
         val idxLast = url.pathSize - 1
         val hasTrailingSlash = url.pathSegments[idxLast] == ""
 
-        return if (hasTrailingSlash)
+        return if (hasTrailingSlash) {
             url
-        else
+        } else
             url.newBuilder().addPathSegment("").build()
     }
-
 }

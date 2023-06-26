@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class OwnerTest: PropertyTest() {
+class OwnerTest : PropertyTest() {
 
     @Test
     fun testOwner_PlainText() {
@@ -26,5 +26,4 @@ class OwnerTest: PropertyTest() {
         val owner = results.first() as Owner
         assertEquals("https://example.com", owner.href)
     }
-
 }

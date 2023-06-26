@@ -12,21 +12,19 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class GetCTag(
-        val cTag: String?
-): Property {
+    val cTag: String?
+) : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALENDARSERVER, "getctag")
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                GetCTag(XmlUtils.readText(parser))
-
+            GetCTag(XmlUtils.readText(parser))
     }
 }

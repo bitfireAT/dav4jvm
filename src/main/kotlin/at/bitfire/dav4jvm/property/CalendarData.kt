@@ -12,8 +12,8 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class CalendarData(
-        val iCalendar: String?
-): Property {
+    val iCalendar: String?
+) : Property {
 
     companion object {
         @JvmField
@@ -24,15 +24,12 @@ data class CalendarData(
         const val VERSION = "version"
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT calendar-data (#PCDATA)>
-                CalendarData(XmlUtils.readText(parser))
-
+            // <!ELEMENT calendar-data (#PCDATA)>
+            CalendarData(XmlUtils.readText(parser))
     }
-
 }

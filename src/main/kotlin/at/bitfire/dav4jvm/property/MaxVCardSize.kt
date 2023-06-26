@@ -14,21 +14,21 @@ import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 
 data class MaxVCardSize(
-        val maxSize: Long
+    val maxSize: Long
 ) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "max-resource-size")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): MaxVCardSize? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return MaxVCardSize(valueStr.toLong())
-                } catch(e: NumberFormatException) {
+                } catch (e: NumberFormatException) {
                     Dav4jvm.log.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
                 }
             }

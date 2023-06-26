@@ -16,7 +16,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
-class SupportedCalendarData: Property {
+class SupportedCalendarData : Property {
 
     companion object {
 
@@ -26,7 +26,6 @@ class SupportedCalendarData: Property {
         val CALENDAR_DATA_TYPE = Property.Name(XmlUtils.NS_CALDAV, "calendar-data")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
-
     }
 
     val types = mutableSetOf<MediaType>()
@@ -35,8 +34,7 @@ class SupportedCalendarData: Property {
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -51,14 +49,12 @@ class SupportedCalendarData: Property {
                         type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }
-            } catch(e: XmlPullParserException) {
+            } catch (e: XmlPullParserException) {
                 Dav4jvm.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null
             }
 
             return supported
         }
-
     }
-
 }

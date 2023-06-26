@@ -13,7 +13,6 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 object HttpUtils {
 
     private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss zzz"
@@ -39,7 +38,6 @@ object HttpUtils {
         return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
     }
 
-
     /**
      * Formats a date for use in HTTP headers using [httpDateFormat].
      *
@@ -57,29 +55,29 @@ object HttpUtils {
      * @return date, or null if date could not be parsed
      */
     fun parseDate(dateStr: String) = try {
-        DateUtils.parseDate(dateStr, Locale.US,
-                httpDateFormatStr,               // RFC 822, updated by RFC 1123 with any TZ
-                "EEE, dd MMM yyyy HH:mm:ss zzz",
-                "EEEE, dd-MMM-yy HH:mm:ss zzz",  // RFC 850, obsoleted by RFC 1036 with any TZ.
-                "EEE MMM d HH:mm:ss yyyy",       // ANSI C's asctime() format
-                // Alternative formats.
-                "EEE, dd-MMM-yyyy HH:mm:ss z",
-                "EEE, dd-MMM-yyyy HH-mm-ss z",
-                "EEE, dd MMM yy HH:mm:ss z",
-                "EEE dd-MMM-yyyy HH:mm:ss z",
-                "EEE dd MMM yyyy HH:mm:ss z",
-                "EEE dd-MMM-yyyy HH-mm-ss z",
-                "EEE dd-MMM-yy HH:mm:ss z",
-                "EEE dd MMM yy HH:mm:ss z",
-                "EEE,dd-MMM-yy HH:mm:ss z",
-                "EEE,dd-MMM-yyyy HH:mm:ss z",
-                "EEE, dd-MM-yyyy HH:mm:ss z",
-                /* RI bug 6641315 claims a cookie of this format was once served by www.yahoo.com */
-                "EEE MMM d yyyy HH:mm:ss z"
+        DateUtils.parseDate(
+            dateStr, Locale.US,
+            httpDateFormatStr, // RFC 822, updated by RFC 1123 with any TZ
+            "EEE, dd MMM yyyy HH:mm:ss zzz",
+            "EEEE, dd-MMM-yy HH:mm:ss zzz", // RFC 850, obsoleted by RFC 1036 with any TZ.
+            "EEE MMM d HH:mm:ss yyyy", // ANSI C's asctime() format
+            // Alternative formats.
+            "EEE, dd-MMM-yyyy HH:mm:ss z",
+            "EEE, dd-MMM-yyyy HH-mm-ss z",
+            "EEE, dd MMM yy HH:mm:ss z",
+            "EEE dd-MMM-yyyy HH:mm:ss z",
+            "EEE dd MMM yyyy HH:mm:ss z",
+            "EEE dd-MMM-yyyy HH-mm-ss z",
+            "EEE dd-MMM-yy HH:mm:ss z",
+            "EEE dd MMM yy HH:mm:ss z",
+            "EEE,dd-MMM-yy HH:mm:ss z",
+            "EEE,dd-MMM-yyyy HH:mm:ss z",
+            "EEE, dd-MM-yyyy HH:mm:ss z",
+            /* RI bug 6641315 claims a cookie of this format was once served by www.yahoo.com */
+            "EEE MMM d yyyy HH:mm:ss z"
         )
     } catch (e: ParseException) {
         Dav4jvm.log.warning("Couldn't parse date: $dateStr, ignoring")
         null
     }
-
 }

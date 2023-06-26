@@ -15,7 +15,10 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.net.HttpURLConnection
@@ -25,8 +28,8 @@ class DavCollectionTest {
     private val sampleText = "SAMPLE RESPONSE"
 
     private val httpClient = OkHttpClient.Builder()
-            .followRedirects(false)
-            .build()
+        .followRedirects(false)
+        .build()
     private val mockServer = MockWebServer()
     private fun sampleUrl() = mockServer.url("/dav/")
 
@@ -36,7 +39,6 @@ class DavCollectionTest {
     @After
     fun stopServer() = mockServer.shutdown()
 
-
     /**
      * Test sample response for an initial sync-collection report from RFC 6578 3.8.
      */
@@ -45,10 +47,12 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
+        mockServer.enqueue(
+            MockResponse()
                 .setResponseCode(207)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                .setBody(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "   <D:multistatus xmlns:D=\"DAV:\">\n" +
                         "     <D:response>\n" +
                         "       <D:href\n" +
@@ -96,7 +100,8 @@ class DavCollectionTest {
                         "       </D:propstat>\n" +
                         "     </D:response>\n" +
                         "     <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>\n" +
-                        "   </D:multistatus>")
+                        "   </D:multistatus>"
+                )
         )
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
@@ -139,10 +144,12 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
+        mockServer.enqueue(
+            MockResponse()
                 .setResponseCode(207)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                .setBody(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "   <D:multistatus xmlns:D=\"DAV:\">\n" +
                         "     <D:response>\n" +
                         "       <D:href>${sampleUrl()}test.doc</D:href>\n" +
@@ -172,7 +179,8 @@ class DavCollectionTest {
                         "       <D:error><D:number-of-matches-within-limits/></D:error>\n" +
                         "     </D:response>" +
                         "     <D:sync-token>http://example.com/ns/sync/1233</D:sync-token>\n" +
-                        "   </D:multistatus>")
+                        "   </D:multistatus>"
+                )
         )
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
@@ -219,17 +227,20 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
+        mockServer.enqueue(
+            MockResponse()
                 .setResponseCode(507)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                .setBody(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "   <D:error xmlns:D=\"DAV:\">\n" +
                         "     <D:number-of-matches-within-limits/>\n" +
-                        "   </D:error>")
+                        "   </D:error>"
+                )
         )
 
         try {
-            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME) { _, _ ->  }
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(507, e.code)
@@ -253,5 +264,4 @@ class DavCollectionTest {
         }
         assertTrue(called)
     }
-
 }

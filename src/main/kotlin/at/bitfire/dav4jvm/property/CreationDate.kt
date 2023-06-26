@@ -12,14 +12,14 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class CreationDate(
-        var creationDate: String
-): Property {
+    var creationDate: String
+) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "creationdate")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): CreationDate? {

@@ -12,22 +12,20 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class DisplayName(
-        val displayName: String?
-): Property {
+    val displayName: String?
+) : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "displayname")
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT displayname (#PCDATA) >
-                DisplayName(XmlUtils.readText(parser))
-
+            // <!ELEMENT displayname (#PCDATA) >
+            DisplayName(XmlUtils.readText(parser))
     }
 }

@@ -11,16 +11,16 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class ResourceType: Property {
+class ResourceType : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "resourcetype")
 
-        val COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "collection")    // WebDAV
-        val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal")      // WebDAV ACL
+        val COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "collection") // WebDAV
+        val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal") // WebDAV ACL
         val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
-        val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar")        // CalDAV
+        val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar") // CalDAV
         val SUBSCRIBED = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
     }
 
@@ -28,8 +28,7 @@ class ResourceType: Property {
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -57,7 +56,5 @@ class ResourceType: Property {
 
             return type
         }
-
     }
-
 }

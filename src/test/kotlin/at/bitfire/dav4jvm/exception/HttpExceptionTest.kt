@@ -22,22 +22,21 @@ class HttpExceptionTest {
     @Test
     fun testHttpFormatting() {
         val request = Request.Builder()
-                .post("REQUEST\nBODY".toRequestBody("text/something".toMediaType()))
-                .url("http://example.com")
-                .build()
+            .post("REQUEST\nBODY".toRequestBody("text/something".toMediaType()))
+            .url("http://example.com")
+            .build()
 
         val response = Response.Builder()
-                .request(request)
-                .protocol(Protocol.HTTP_1_1)
-                .code(500)
-                .message(responseMessage)
-                .body("SERVER\r\nRESPONSE".toResponseBody("text/something-other".toMediaType()))
-                .build()
+            .request(request)
+            .protocol(Protocol.HTTP_1_1)
+            .code(500)
+            .message(responseMessage)
+            .body("SERVER\r\nRESPONSE".toResponseBody("text/something-other".toMediaType()))
+            .build()
         val e = HttpException(response)
         assertTrue(e.message!!.contains("500"))
         assertTrue(e.message!!.contains(responseMessage))
         assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
         assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
     }
-
 }

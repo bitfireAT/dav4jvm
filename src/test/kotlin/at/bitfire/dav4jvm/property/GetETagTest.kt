@@ -1,9 +1,11 @@
 package at.bitfire.dav4jvm.property
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class GetETagTest: PropertyTest() {
+class GetETagTest : PropertyTest() {
 
     @Test
     fun testGetETag_Strong() {
@@ -44,5 +46,4 @@ class GetETagTest: PropertyTest() {
         assertEquals("Weak ETag without quotes", getETag.eTag)
         assertTrue(getETag.weak)
     }
-
 }

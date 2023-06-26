@@ -14,32 +14,29 @@ import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
 class ScheduleTag(
-        rawScheduleTag: String?
-): Property {
+    rawScheduleTag: String?
+) : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALDAV, "schedule-tag")
 
         fun fromResponse(response: Response) =
-                response.header("Schedule-Tag")?.let { ScheduleTag(it) }
+            response.header("Schedule-Tag")?.let { ScheduleTag(it) }
     }
 
     /* Value:  opaque-tag
        opaque-tag = quoted-string
-    */
+     */
     val scheduleTag: String? = rawScheduleTag?.let { QuotedStringUtils.decodeQuotedString(it) }
 
     override fun toString() = scheduleTag ?: "(null)"
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                ScheduleTag(XmlUtils.readText(parser))
-
+            ScheduleTag(XmlUtils.readText(parser))
     }
-
 }

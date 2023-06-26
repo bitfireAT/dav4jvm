@@ -16,7 +16,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 
-class SupportedAddressData: Property {
+class SupportedAddressData : Property {
 
     companion object {
 
@@ -26,7 +26,6 @@ class SupportedAddressData: Property {
         val ADDRESS_DATA_TYPE = Property.Name(XmlUtils.NS_CARDDAV, "address-data-type")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
-
     }
 
     val types = mutableSetOf<MediaType>()
@@ -36,8 +35,7 @@ class SupportedAddressData: Property {
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -52,14 +50,12 @@ class SupportedAddressData: Property {
                         type.toMediaTypeOrNull()?.let { supported.types.add(it) }
                     }
                 }
-            } catch(e: XmlPullParserException) {
+            } catch (e: XmlPullParserException) {
                 Dav4jvm.log.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
                 return null
             }
 
             return supported
         }
-
     }
-
 }

@@ -9,9 +9,8 @@ package at.bitfire.dav4jvm.exception
 import okhttp3.Response
 import java.net.HttpURLConnection
 
-class ForbiddenException: HttpException {
+class ForbiddenException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_FORBIDDEN, message)
-
+    constructor(response: Response) : super(response)
+    constructor(message: String?) : super(HttpURLConnection.HTTP_FORBIDDEN, message)
 }

@@ -13,14 +13,14 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class CurrentUserPrivilegeSet(
-        // not all privileges from RFC 3744 are implemented by now
-        // feel free to add more if you need them for your project
-        var mayRead: Boolean = false,
-        var mayWriteProperties: Boolean = false,
-        var mayWriteContent: Boolean = false,
-        var mayBind: Boolean = false,
-        var mayUnbind: Boolean = false
-): Property {
+    // not all privileges from RFC 3744 are implemented by now
+    // feel free to add more if you need them for your project
+    var mayRead: Boolean = false,
+    var mayWriteProperties: Boolean = false,
+    var mayWriteContent: Boolean = false,
+    var mayBind: Boolean = false,
+    var mayUnbind: Boolean = false
+) : Property {
 
     companion object {
 
@@ -35,11 +35,9 @@ data class CurrentUserPrivilegeSet(
         val BIND = Property.Name(XmlUtils.NS_WEBDAV, "bind")
         val UNBIND = Property.Name(XmlUtils.NS_WEBDAV, "unbind")
         val ALL = Property.Name(XmlUtils.NS_WEBDAV, "all")
-
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -52,7 +50,7 @@ data class CurrentUserPrivilegeSet(
                 val depth = parser.depth
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                         when (parser.propertyName()) {
                             READ ->
                                 privs.mayRead = true
@@ -78,6 +76,7 @@ data class CurrentUserPrivilegeSet(
                                 privs.mayWriteContent = true
                             }
                         }
+                    }
                     eventType = parser.next()
                 }
             }

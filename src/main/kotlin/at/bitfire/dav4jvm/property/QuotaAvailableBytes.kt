@@ -14,21 +14,21 @@ import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 
 data class QuotaAvailableBytes(
-        val quotaAvailableBytes: Long
+    val quotaAvailableBytes: Long
 ) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "quota-available-bytes")
     }
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): QuotaAvailableBytes? {
             XmlUtils.readText(parser)?.let { valueStr ->
                 try {
                     return QuotaAvailableBytes(valueStr.toLong())
-                } catch(e: NumberFormatException) {
+                } catch (e: NumberFormatException) {
                     Dav4jvm.log.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
                 }
             }

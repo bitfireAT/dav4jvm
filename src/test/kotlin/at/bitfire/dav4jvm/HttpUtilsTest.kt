@@ -26,5 +26,4 @@ class HttpUtilsTest {
     fun parseDate() {
         assertEquals(1683825995000, HttpUtils.parseDate("Thu, 11 May 2023 17:26:35 GMT")?.time)
     }
-
 }

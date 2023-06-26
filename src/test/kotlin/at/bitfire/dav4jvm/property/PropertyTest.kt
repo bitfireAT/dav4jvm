@@ -11,10 +11,8 @@ open class PropertyTest {
         fun parseProperty(s: String): List<Property> {
             val parser = XmlUtils.newPullParser()
             parser.setInput(StringReader("<test>$s</test>"))
-            parser.nextTag()    // move into <test>
+            parser.nextTag() // move into <test>
             return Property.parse(parser)
         }
-
     }
-
 }

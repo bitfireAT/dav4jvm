@@ -59,5 +59,4 @@ class PropertyTest {
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("multistatus", parser.name)
     }
-
 }

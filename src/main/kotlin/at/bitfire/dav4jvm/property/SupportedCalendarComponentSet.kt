@@ -13,10 +13,10 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
-        var supportsEvents: Boolean,
-        var supportsTasks: Boolean,
-        var supportsJournal: Boolean
-): Property {
+    var supportsEvents: Boolean,
+    var supportsTasks: Boolean,
+    var supportsJournal: Boolean
+) : Property {
 
     companion object {
 
@@ -25,11 +25,9 @@ data class SupportedCalendarComponentSet(
 
         val ALLCOMP = Property.Name(XmlUtils.NS_CALDAV, "allcomp")
         val COMP = Property.Name(XmlUtils.NS_CALDAV, "comp")
-
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -37,7 +35,7 @@ data class SupportedCalendarComponentSet(
             /* <!ELEMENT supported-calendar-component-set (comp+)>
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
-            */
+             */
             val components = SupportedCalendarComponentSet(false, false, false)
 
             val depth = parser.depth

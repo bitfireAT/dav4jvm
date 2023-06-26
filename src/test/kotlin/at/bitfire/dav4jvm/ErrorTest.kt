@@ -16,5 +16,4 @@ class ErrorTest {
         val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
         assertTrue(errors.contains(Error.VALID_SYNC_TOKEN))
     }
-
 }

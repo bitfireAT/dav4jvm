@@ -30,5 +30,4 @@ class QuotedStringUtilsTest {
         assertEquals("12\"34", QuotedStringUtils.decodeQuotedString("\"12\\\"34\""))
         assertEquals("1234\"", QuotedStringUtils.decodeQuotedString("\"1234\\\"\""))
     }
-
 }

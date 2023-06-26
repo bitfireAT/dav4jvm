@@ -12,23 +12,20 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class CalendarDescription(
-        val description: String?
-): Property {
+    val description: String?
+) : Property {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CALDAV, "calendar-description")
     }
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT calendar-description (#PCDATA)>
-                CalendarDescription(XmlUtils.readText(parser))
-
+            // <!ELEMENT calendar-description (#PCDATA)>
+            CalendarDescription(XmlUtils.readText(parser))
     }
-
 }

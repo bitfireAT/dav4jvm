@@ -11,5 +11,4 @@ import java.util.logging.Logger
 object Dav4jvm {
 
     var log = Logger.getLogger("dav4jvm")!!
-
 }

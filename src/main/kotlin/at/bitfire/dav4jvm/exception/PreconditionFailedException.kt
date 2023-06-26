@@ -9,9 +9,8 @@ package at.bitfire.dav4jvm.exception
 import okhttp3.Response
 import java.net.HttpURLConnection
 
-class PreconditionFailedException: HttpException {
+class PreconditionFailedException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_PRECON_FAILED, message)
-
+    constructor(response: Response) : super(response)
+    constructor(message: String?) : super(HttpURLConnection.HTTP_PRECON_FAILED, message)
 }

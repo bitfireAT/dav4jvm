@@ -11,7 +11,7 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class SupportedReportSet: Property {
+class SupportedReportSet : Property {
 
     companion object {
 
@@ -21,16 +21,14 @@ class SupportedReportSet: Property {
         val SUPPORTED_REPORT = Property.Name(XmlUtils.NS_WEBDAV, "supported-report")
         val REPORT = Property.Name(XmlUtils.NS_WEBDAV, "report")
 
-        const val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
-
+        const val SYNC_COLLECTION = "DAV:sync-collection" // collection synchronization (RFC 6578)
     }
 
     val reports = mutableSetOf<String>()
 
     override fun toString() = "[${reports.joinToString(", ")}]"
 
-
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
@@ -38,21 +36,20 @@ class SupportedReportSet: Property {
             /* <!ELEMENT supported-report-set (supported-report*)>
                <!ELEMENT supported-report report>
                <!ELEMENT report ANY>
-            */
+             */
 
             val supported = SupportedReportSet()
             XmlUtils.processTag(parser, SUPPORTED_REPORT) {
                 XmlUtils.processTag(parser, REPORT) {
                     parser.nextTag()
-                    if (parser.eventType == XmlPullParser.TEXT)
+                    if (parser.eventType == XmlPullParser.TEXT) {
                         supported.reports += parser.text
-                    else if (parser.eventType == XmlPullParser.START_TAG)
+                    } else if (parser.eventType == XmlPullParser.START_TAG) {
                         supported.reports += "${parser.namespace}${parser.name}"
+                    }
                 }
             }
             return supported
         }
-
     }
-
 }

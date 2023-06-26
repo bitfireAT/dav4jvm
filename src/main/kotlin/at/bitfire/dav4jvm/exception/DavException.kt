@@ -28,23 +28,22 @@ import java.util.logging.Level
  * received, but also an explicit HTTP error.
  */
 open class DavException @JvmOverloads constructor(
-        message: String,
-        ex: Throwable? = null,
+    message: String,
+    ex: Throwable? = null,
 
-        /**
-         * An associated HTTP [Response]. Will be closed after evaluation.
-         */
-        httpResponse: Response? = null
-): Exception(message, ex), Serializable {
+    /**
+     * An associated HTTP [Response]. Will be closed after evaluation.
+     */
+    httpResponse: Response? = null
+) : Exception(message, ex), Serializable {
 
     companion object {
 
-        const val MAX_EXCERPT_SIZE = 10*1024   // don't dump more than 20 kB
+        const val MAX_EXCERPT_SIZE = 10 * 1024 // don't dump more than 20 kB
 
         fun isPlainText(type: MediaType) =
-                type.type == "text" ||
+            type.type == "text" ||
                 (type.type == "application" && type.subtype in arrayOf("html", "xml"))
-
     }
 
     var request: String? = null
@@ -70,7 +69,6 @@ open class DavException @JvmOverloads constructor(
      */
     var errors: List<Error> = listOf()
         private set
-
 
     init {
         if (httpResponse != null) {
@@ -104,8 +102,9 @@ open class DavException @JvmOverloads constructor(
 
                     httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
                         body.contentType()?.let { mimeType ->
-                            if (isPlainText(mimeType))
+                            if (isPlainText(mimeType)) {
                                 responseBody = body.string()
+                            }
                         }
                     }
 
@@ -119,9 +118,11 @@ open class DavException @JvmOverloads constructor(
 
                                     var eventType = parser.eventType
                                     while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                                            if (parser.propertyName() == Error.NAME)
+                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1) {
+                                            if (parser.propertyName() == Error.NAME) {
                                                 errors = Error.parseError(parser)
+                                            }
+                                        }
                                         eventType = parser.next()
                                     }
                                 } catch (e: XmlPullParserException) {
@@ -140,5 +141,4 @@ open class DavException @JvmOverloads constructor(
         } else
             response = null
     }
-
 }

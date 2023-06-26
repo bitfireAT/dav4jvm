@@ -9,9 +9,8 @@ package at.bitfire.dav4jvm.exception
 import okhttp3.Response
 import java.net.HttpURLConnection
 
-class UnauthorizedException: HttpException {
+class UnauthorizedException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_UNAUTHORIZED, message)
-
+    constructor(response: Response) : super(response)
+    constructor(message: String?) : super(HttpURLConnection.HTTP_UNAUTHORIZED, message)
 }

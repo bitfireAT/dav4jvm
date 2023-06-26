@@ -10,21 +10,18 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class AddressbookHomeSet: HrefListProperty() {
+class AddressbookHomeSet : HrefListProperty() {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-home-set")
     }
 
-
-    object Factory: HrefListProperty.Factory() {
+    object Factory : HrefListProperty.Factory() {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                create(parser, AddressbookHomeSet())
-
+            create(parser, AddressbookHomeSet())
     }
-
 }

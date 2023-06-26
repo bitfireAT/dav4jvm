@@ -31,7 +31,7 @@ class XmlUtilsTest {
     fun testProcessTagDepth1() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test></test></root>"))
-        parser.next()       // now on START_TAG <root>
+        parser.next() // now on START_TAG <root>
 
         var processed = false
         XmlUtils.processTag(parser, Property.Name("", "test")) {
@@ -45,7 +45,7 @@ class XmlUtilsTest {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>"))
         parser.next()
-        parser.next()       // now on START_TAG <test>
+        parser.next() // now on START_TAG <test>
 
         assertEquals("Test 1", XmlUtils.readText(parser))
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
@@ -59,7 +59,7 @@ class XmlUtilsTest {
     fun testReadTextCDATA() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>"))
-        parser.next()       // now on START_TAG <test>
+        parser.next() // now on START_TAG <test>
 
         assertEquals("Test 1</test><test><garbage/>Test 2", XmlUtils.readText(parser))
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
@@ -69,14 +69,14 @@ class XmlUtilsTest {
     fun testReadTextPropertyRoot() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>"))
-        parser.next()        // now on START_TAG <root>
+        parser.next() // now on START_TAG <root>
 
         val entries = mutableListOf<String>()
         XmlUtils.readTextPropertyList(parser, Property.Name("", "entry"), entries)
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
 
-        parser.next()       // END_TAG </root>
+        parser.next() // END_TAG </root>
         assertEquals(XmlPullParser.END_DOCUMENT, parser.eventType)
     }
 
@@ -84,7 +84,7 @@ class XmlUtilsTest {
     fun testReadTextPropertyListDepth1() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>"))
-        parser.next()       // now on START_TAG <test> [1]
+        parser.next() // now on START_TAG <test> [1]
 
         val entries = mutableListOf<String>()
         XmlUtils.readTextPropertyList(parser, Property.Name("", "entry"), entries)
@@ -93,5 +93,4 @@ class XmlUtilsTest {
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("test", parser.name)
     }
-
 }

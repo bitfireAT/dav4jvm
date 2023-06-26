@@ -10,21 +10,18 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
-class GroupMembership: HrefListProperty() {
+class GroupMembership : HrefListProperty() {
 
     companion object {
         @JvmField
         val NAME = Property.Name(XmlUtils.NS_WEBDAV, "group-membership")
     }
 
-
-    object Factory: HrefListProperty.Factory() {
+    object Factory : HrefListProperty.Factory() {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                create(parser, GroupMembership())
-
+            create(parser, GroupMembership())
     }
-
 }

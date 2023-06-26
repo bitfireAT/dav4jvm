@@ -13,8 +13,8 @@ repositories {
     mavenCentral()
 }
 
-group="com.github.bitfireAT"
-version="2.2"
+group = "com.github.bitfireAT"
+version = "2.2"
 
 plugins {
     kotlin("jvm") version "1.8.21"
@@ -22,6 +22,8 @@ plugins {
 
     id("org.jetbrains.dokka") version "1.8.10"
 }
+
+apply(from = "$rootDir/ktlint.gradle.kts")
 
 publishing {
     publications {
@@ -53,7 +55,7 @@ tasks.withType<DokkaTask>().configureEach {
 
 dependencies {
     api("com.squareup.okhttp3:okhttp:${Libs.okhttpVersion}")
-    implementation("org.apache.commons:commons-lang3:3.8.1")    // last version that doesn't require Java 8
+    implementation("org.apache.commons:commons-lang3:3.8.1") // last version that doesn't require Java 8
     api("org.ogce:xpp3:${Libs.xpp3Version}")
 
     testImplementation("junit:junit:4.13.2")
