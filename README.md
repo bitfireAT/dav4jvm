@@ -88,6 +88,12 @@ If you use custom WebDAV properties, register the corresponding factories with `
 before calling other dav4jvm methods.
 
 
+# Useful forks
+
+For specific use-cases, we have a list of forks that cover them:
+- Kotlin Multiplatform (maintained by [McDjuady](https://github.com/McDjuady)): https://github.com/McDjuady/dav4jvm
+
+
 ## Contact / License
 
 dav4jvm is licensed under [Mozilla Public License, v. 2.0](LICENSE).
