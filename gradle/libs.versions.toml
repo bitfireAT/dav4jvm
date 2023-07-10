@@ -1,0 +1,18 @@
+[versions]
+commons-lang3 = "3.8.1" # last version that doesn't require Java 8
+dokka = "1.8.20"
+junit4 = "4.13.2"
+kotlin = "1.8.22"
+okhttpVersion = "4.11.0"
+xpp3Version = "1.1.6"
+
+[libraries]
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
+okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttpVersion" }
+xpp3 = { module = "org.ogce:xpp3", version.ref = "xpp3Version" }
+
+[plugins]
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
