@@ -20,8 +20,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.logging.Logger
 
 class DavCalendar @JvmOverloads constructor(
@@ -44,10 +47,7 @@ class DavCalendar @JvmOverloads constructor(
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 
-        private val timeFormatUTC = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.ROOT)
-        init {
-            timeFormatUTC.timeZone = TimeZone.getTimeZone("Etc/UTC")
-        }
+        private val timeFormatUTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssVV", Locale.US)
     }
 
 
@@ -66,7 +66,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun calendarQuery(component: String, start: Date?, end: Date?, callback: MultiResponseCallback): List<Property> {
+    fun calendarQuery(component: String, start: Instant?, end: Instant?, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -96,9 +96,13 @@ class DavCalendar @JvmOverloads constructor(
                         if (start != null || end != null) {
                             insertTag(TIME_RANGE) {
                                 if (start != null)
-                                    attribute(null, TIME_RANGE_START, timeFormatUTC.format(start))
+                                    attribute(null, TIME_RANGE_START, timeFormatUTC.format(
+                                        ZonedDateTime.ofInstant(start, ZoneOffset.UTC)
+                                    ))
                                 if (end != null)
-                                    attribute(null, TIME_RANGE_END, timeFormatUTC.format(end))
+                                    attribute(null, TIME_RANGE_END, timeFormatUTC.format(
+                                        ZonedDateTime.ofInstant(end, ZoneOffset.UTC)
+                                    ))
                             }
                         }
                     }

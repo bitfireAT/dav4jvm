@@ -14,7 +14,7 @@ import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
 import java.net.ProtocolException
-import java.util.*
+import java.util.LinkedList
 
 /**
  * Represents a WebDAV propstat XML element.

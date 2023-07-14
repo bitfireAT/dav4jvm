@@ -6,11 +6,16 @@
 
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.*
+import at.bitfire.dav4jvm.Dav4jvm
+import at.bitfire.dav4jvm.HttpUtils
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.PropertyFactory
+import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
+import java.time.ZonedDateTime
 
 data class GetLastModified(
-        var lastModified: Long
+    var lastModified: ZonedDateTime
 ): Property {
 
     companion object {
@@ -28,7 +33,7 @@ data class GetLastModified(
             XmlUtils.readText(parser)?.let { rawDate ->
                 val date = HttpUtils.parseDate(rawDate)
                 if (date != null)
-                    return GetLastModified(date.time)
+                    return GetLastModified(date)
                 else
                     Dav4jvm.log.warning("Couldn't parse Last-Modified date")
             }

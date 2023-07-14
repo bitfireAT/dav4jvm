@@ -6,12 +6,20 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.*
+import okhttp3.Authenticator
+import okhttp3.Challenge
+import okhttp3.Credentials
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.Response
+import okhttp3.Route
 import okio.Buffer
 import okio.ByteString.Companion.toByteString
 import java.io.IOException
-import java.util.*
+import java.util.LinkedList
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 /**

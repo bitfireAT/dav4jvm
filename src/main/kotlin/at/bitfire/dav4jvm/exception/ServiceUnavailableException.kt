@@ -10,11 +10,12 @@ import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Response
 import java.net.HttpURLConnection
-import java.util.*
+import java.time.Instant
+import java.util.logging.Level
 
 class ServiceUnavailableException: HttpException {
 
-    var retryAfter: Date? = null
+    var retryAfter: Instant? = null
 
     constructor(message: String?): super(HttpURLConnection.HTTP_UNAVAILABLE, message)
 
@@ -23,17 +24,13 @@ class ServiceUnavailableException: HttpException {
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
         response.header("Retry-After")?.let { after ->
-            retryAfter = HttpUtils.parseDate(after) ?:
+            retryAfter = HttpUtils.parseDate(after)?.toInstant() ?:
                     // not a HTTP-date, must be delta-seconds
                     try {
-                        val seconds = Integer.parseInt(after)
-
-                        val cal = Calendar.getInstance()
-                        cal.add(Calendar.SECOND, seconds)
-                        cal.time
-
-                    } catch (ignored: NumberFormatException) {
-                        Dav4jvm.log.warning("Received Retry-After which was not a HTTP-date nor delta-seconds: $after")
+                        val seconds = after.toLong()
+                        Instant.now().plusSeconds(seconds)
+                    } catch (e: NumberFormatException) {
+                        Dav4jvm.log.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
                         null
                     }
         }
