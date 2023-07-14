@@ -8,6 +8,7 @@ package at.bitfire.dav4jvm
 
 import okhttp3.HttpUrl
 import okhttp3.Response
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -47,11 +48,12 @@ object HttpUtils {
     /**
      * Formats a date for use in HTTP headers using [httpDateFormat].
      *
-     * @param date date to be formatted (`ZonedDateTime` because `Instant` doesn't necessarily support week-of-day, which is required for formatting)
+     * @param date date to be formatted
      *
      * @return date in HTTP-date format
      */
-    fun formatDate(date: ZonedDateTime): String = httpDateFormat.format(date)
+    fun formatDate(date: Instant): String =
+        ZonedDateTime.ofInstant(date, ZoneOffset.UTC).format(httpDateFormat)
 
     /**
      * Parses a HTTP-date according to RFC 7231 section 7.1.1.1.

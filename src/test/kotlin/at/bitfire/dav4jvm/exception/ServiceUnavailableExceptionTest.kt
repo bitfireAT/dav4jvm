@@ -46,7 +46,7 @@ class ServiceUnavailableExceptionTest {
 
     @Test
     fun testRetryAfter_Date() {
-        val after30min = ZonedDateTime.now().plusSeconds(30*60)
+        val after30min = Instant.now().plusSeconds(30*60)
         val response = response503.newBuilder()
                 .header("Retry-After", HttpUtils.formatDate(after30min))
                 .build()

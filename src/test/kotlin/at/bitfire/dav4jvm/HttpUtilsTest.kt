@@ -42,7 +42,7 @@ class HttpUtilsTest {
                 LocalDate.of(1994, 11, 6),
                 LocalTime.of(8, 49, 37),
                 ZoneOffset.UTC
-            )
+            ).toInstant()
         ))
     }
 
