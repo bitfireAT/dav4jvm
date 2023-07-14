@@ -10,7 +10,7 @@ import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
-import java.util.*
+import java.util.LinkedList
 import java.util.logging.Level
 
 /**

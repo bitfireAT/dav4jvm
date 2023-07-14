@@ -11,7 +11,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import java.util.*
+import java.util.LinkedList
 
 abstract class HrefListProperty: Property {
 

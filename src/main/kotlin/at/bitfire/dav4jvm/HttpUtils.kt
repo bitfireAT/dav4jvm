@@ -8,16 +8,20 @@ package at.bitfire.dav4jvm
 
 import okhttp3.HttpUrl
 import okhttp3.Response
-import org.apache.commons.lang3.time.DateUtils
-import java.text.ParseException
-import java.text.SimpleDateFormat
-import java.util.*
-
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 
 object HttpUtils {
 
-    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss zzz"
-    private val httpDateFormat = SimpleDateFormat(httpDateFormatStr, Locale.ROOT)
+    /**
+     * Preferred HTTP date/time format, see RFC 7231 7.1.1.1 IMF-fixdate
+     */
+    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
+    private val httpDateFormat = DateTimeFormatter.ofPattern(httpDateFormatStr, Locale.US)
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
@@ -43,43 +47,50 @@ object HttpUtils {
     /**
      * Formats a date for use in HTTP headers using [httpDateFormat].
      *
-     * @param date date to be formatted
+     * @param date date to be formatted (`ZonedDateTime` because `Instant` doesn't necessarily support week-of-day, which is required for formatting)
+     *
      * @return date in HTTP-date format
      */
-    fun formatDate(date: Date): String = httpDateFormat.format(date)
+    fun formatDate(date: ZonedDateTime): String = httpDateFormat.format(date)
 
     /**
-     * Parses a HTTP-date.
+     * Parses a HTTP-date according to RFC 7231 section 7.1.1.1.
      *
-     * @param dateStr date with format specified by RFC 7231 section 7.1.1.1
-     * or in one of the obsolete formats (copied from okhttp internal date-parsing class)
+     * @param dateStr date formatted in one of the three accepted formats:
+     *
+     *   - preferred format (`IMF-fixdate`)
+     *   - obsolete RFC 850 format
+     *   - ANSI C's `asctime()` format
      *
      * @return date, or null if date could not be parsed
      */
-    fun parseDate(dateStr: String) = try {
-        DateUtils.parseDate(dateStr, Locale.US,
-                httpDateFormatStr,               // RFC 822, updated by RFC 1123 with any TZ
-                "EEE, dd MMM yyyy HH:mm:ss zzz",
-                "EEEE, dd-MMM-yy HH:mm:ss zzz",  // RFC 850, obsoleted by RFC 1036 with any TZ.
-                "EEE MMM d HH:mm:ss yyyy",       // ANSI C's asctime() format
-                // Alternative formats.
-                "EEE, dd-MMM-yyyy HH:mm:ss z",
-                "EEE, dd-MMM-yyyy HH-mm-ss z",
-                "EEE, dd MMM yy HH:mm:ss z",
-                "EEE dd-MMM-yyyy HH:mm:ss z",
-                "EEE dd MMM yyyy HH:mm:ss z",
-                "EEE dd-MMM-yyyy HH-mm-ss z",
-                "EEE dd-MMM-yy HH:mm:ss z",
-                "EEE dd MMM yy HH:mm:ss z",
-                "EEE,dd-MMM-yy HH:mm:ss z",
-                "EEE,dd-MMM-yyyy HH:mm:ss z",
-                "EEE, dd-MM-yyyy HH:mm:ss z",
-                /* RI bug 6641315 claims a cookie of this format was once served by www.yahoo.com */
-                "EEE MMM d yyyy HH:mm:ss z"
+    fun parseDate(dateStr: String): ZonedDateTime? {
+        val zonedFormats = arrayOf(
+            // preferred format
+            httpDateFormat,
+
+            // obsolete RFC 850 format
+            DateTimeFormatter.ofPattern("EEEE, dd-MMM-yy HH:mm:ss zzz", Locale.US),
         )
-    } catch (e: ParseException) {
-        Dav4jvm.log.warning("Couldn't parse date: $dateStr, ignoring")
-        null
+
+        // try the two formats with zone info
+        for (format in zonedFormats)
+            try {
+                return ZonedDateTime.parse(dateStr, format)
+            } catch (ignored: DateTimeParseException) {
+            }
+
+        // try ANSI C's asctime() format
+        try {
+            val formatC = DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US)
+            val local = LocalDateTime.parse(dateStr, formatC)
+            return local.atZone(ZoneOffset.UTC)
+        } catch (ignored: DateTimeParseException) {
+        }
+
+        // no success in parsing
+        Dav4jvm.log.warning("Couldn't parse HTTP date: $dateStr, ignoring")
+        return null
     }
 
 }

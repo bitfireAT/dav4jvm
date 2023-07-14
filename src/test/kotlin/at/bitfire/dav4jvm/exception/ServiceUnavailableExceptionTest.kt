@@ -10,10 +10,12 @@ import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import org.junit.Assert.*
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.*
-import kotlin.math.abs
+import java.time.Instant
+import java.time.ZonedDateTime
 
 class ServiceUnavailableExceptionTest {
 
@@ -44,10 +46,9 @@ class ServiceUnavailableExceptionTest {
 
     @Test
     fun testRetryAfter_Date() {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.MINUTE, 30)
+        val after30min = ZonedDateTime.now().plusSeconds(30*60)
         val response = response503.newBuilder()
-                .header("Retry-After", HttpUtils.formatDate(cal.time))
+                .header("Retry-After", HttpUtils.formatDate(after30min))
                 .build()
         val e = ServiceUnavailableException(response)
         assertNotNull(e.retryAfter)
@@ -55,11 +56,11 @@ class ServiceUnavailableExceptionTest {
     }
 
 
-    private fun withinTimeRange(d: Date, seconds: Int): Boolean {
-        val msCheck = d.time
-        val msShouldBe = Date().time + seconds*1000
-        // assume max. 5 seconds difference for test running
-        return abs(msCheck - msShouldBe) < 5000
-    }
+    private fun withinTimeRange(d: Instant, seconds: Long) =
+        d.isBefore(
+            Instant.now()
+                .plusSeconds(seconds)
+                .plusSeconds(5)     // tolerance for test running
+        )
 
 }
