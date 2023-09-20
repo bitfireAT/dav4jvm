@@ -93,6 +93,8 @@ before calling other dav4jvm methods.
 For specific use-cases, we have a list of forks that cover them:
 - Kotlin Multiplatform (maintained by [McDjuady](https://github.com/McDjuady)): https://github.com/McDjuady/dav4jvm
 
+## Alternatives
+See [Awesome WebDAV: Java libraries](https://github.com/WebDAVDevs/awesome-webdav/blob/main/readme.md#java)
 
 ## Contact / License
 
