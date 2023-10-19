@@ -22,6 +22,8 @@ fun interface MultiResponseCallback {
      * in response to a `PROPFIND` request, this callback will be called once for every found
      * member resource.
      *
+     * Known collections have [response] `href` with trailing slash, see [at.bitfire.dav4jvm.Response.parse] for details.
+     *
      * @param response   the parsed response (including URL)
      * @param relation   relation of the response to the called resource
      */
