@@ -25,37 +25,37 @@ import java.net.ProtocolException
  *                         error?, responsedescription? , location?) >
  */
 data class Response(
-        /**
-         * URL of the requested resource. For instance, if `this` is a result
-         * of a PROPFIND request, the `requestedUrl` would be the URL where the
-         * PROPFIND request has been sent to (usually the collection URL).
-         */
-        val requestedUrl: HttpUrl,
+    /**
+     * URL of the requested resource. For instance, if `this` is a result
+     * of a PROPFIND request, the `requestedUrl` would be the URL where the
+     * PROPFIND request has been sent to (usually the collection URL).
+     */
+    val requestedUrl: HttpUrl,
 
-        /**
-         * URL of this response (`href` element)
-         */
-        val href: HttpUrl,
+    /**
+     * URL of this response (`href` element)
+     */
+    val href: HttpUrl,
 
-        /**
-         * status of this response (`status` XML element)
-         */
-        val status: StatusLine?,
+    /**
+     * status of this response (`status` XML element)
+     */
+    val status: StatusLine?,
 
-        /**
-         * property/status elements (`propstat` XML elements)
-         */
-        val propstat: List<PropStat>,
+    /**
+     * property/status elements (`propstat` XML elements)
+     */
+    val propstat: List<PropStat>,
 
-        /**
-         * list of precondition/postcondition elements (`error` XML elements)
-         */
-        val error: List<Error>? = null,
+    /**
+     * list of precondition/postcondition elements (`error` XML elements)
+     */
+    val error: List<Error>? = null,
 
-        /**
-         * new location of this response (`location` XML element), used for redirects
-         */
-        val newLocation: HttpUrl? = null
+    /**
+     * new location of this response (`location` XML element), used for redirects
+     */
+    val newLocation: HttpUrl? = null
 ) {
 
     enum class HrefRelation {
@@ -100,7 +100,15 @@ data class Response(
         val LOCATION = Property.Name(XmlUtils.NS_WEBDAV, "location")
 
         /**
-         * Parses an XML response element.
+         * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
+         * The arguments of the [MultiResponseCallback.onResponse] are set accordingly.
+         *
+         * If the [ResourceType] of the queried resource is known (= was queried and returned by the server)
+         * and it contains [ResourceType.COLLECTION], the `href` property of the callback will automatically
+         * have a trailing slash.
+         *
+         * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
+         * that you query [ResourceType].
          */
         fun parse(parser: XmlPullParser, location: HttpUrl, callback: MultiResponseCallback) {
             val depth = parser.depth
@@ -164,13 +172,13 @@ data class Response(
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
             propStat.filter { it.isSuccess() }
-                    .map { it.properties }
-                    .filterIsInstance(ResourceType::class.java)
-                    .firstOrNull()
-                    ?.let { type ->
-                        if (type.types.contains(ResourceType.COLLECTION))
-                            href = UrlUtils.withTrailingSlash(href!!)
-                    }
+                .map { it.properties }
+                .filterIsInstance(ResourceType::class.java)
+                .firstOrNull()
+                ?.let { type ->
+                    if (type.types.contains(ResourceType.COLLECTION))
+                        href = UrlUtils.withTrailingSlash(href!!)
+                }
 
             //log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
 
@@ -206,15 +214,16 @@ data class Response(
             }
 
             callback.onResponse(
-                    Response(
-                            location,
-                            href!!,
-                            status,
-                            propStat,
-                            error,
-                            newLocation
-                    ),
-                    relation)
+                Response(
+                    location,
+                    href!!,
+                    status,
+                    propStat,
+                    error,
+                    newLocation
+                ),
+                relation
+            )
         }
 
     }
