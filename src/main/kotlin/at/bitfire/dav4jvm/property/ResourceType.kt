@@ -21,6 +21,10 @@ class ResourceType: Property {
         val PRINCIPAL = Property.Name(XmlUtils.NS_WEBDAV, "principal")      // WebDAV ACL
         val ADDRESSBOOK = Property.Name(XmlUtils.NS_CARDDAV, "addressbook") // CardDAV
         val CALENDAR = Property.Name(XmlUtils.NS_CALDAV, "calendar")        // CalDAV
+
+        // CalendarServer extensions
+        val CALENDAR_PROXY_READ = Property.Name(XmlUtils.NS_CALENDARSERVER, "calendar-proxy-read")      // CalDAV Proxy
+        val CALENDAR_PROXY_WRITE = Property.Name(XmlUtils.NS_CALENDARSERVER, "calendar-proxy-write")    // CalDAV Proxy
         val SUBSCRIBED = Property.Name(XmlUtils.NS_CALENDARSERVER, "subscribed")
     }
 
@@ -42,11 +46,13 @@ class ResourceType: Property {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     // use static objects to allow types.contains()
                     var typeName = Property.Name(parser.namespace, parser.name)
-                    when (typeName) {
+                    when (typeName) {       // if equals(), replace by our instance
                         COLLECTION -> typeName = COLLECTION
                         PRINCIPAL -> typeName = PRINCIPAL
                         ADDRESSBOOK -> typeName = ADDRESSBOOK
                         CALENDAR -> typeName = CALENDAR
+                        CALENDAR_PROXY_READ -> typeName = CALENDAR_PROXY_READ
+                        CALENDAR_PROXY_WRITE -> typeName = CALENDAR_PROXY_WRITE
                         SUBSCRIBED -> typeName = SUBSCRIBED
                     }
                     type.types.add(typeName)
