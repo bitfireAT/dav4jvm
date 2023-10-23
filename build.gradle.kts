@@ -6,7 +6,7 @@ repositories {
 }
 
 group="com.github.bitfireAT"
-version="2.2"
+version=System.getenv("GIT_COMMIT")     // set by jitpack.io
 
 plugins {
     alias(libs.plugins.kotlin.jvm)

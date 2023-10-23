@@ -1,9 +1,9 @@
 [versions]
-commons-lang3 = "3.8.1" # last version that doesn't require Java 8
+commons-lang3 = "3.13.0"
 dokka = "1.8.20"
 junit4 = "4.13.2"
-kotlin = "1.8.22"
-okhttpVersion = "4.11.0"
+kotlin = "1.9.0"
+okhttpVersion = "4.12.0"
 xpp3Version = "1.1.6"
 
 [libraries]
