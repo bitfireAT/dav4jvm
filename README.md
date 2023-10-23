@@ -29,8 +29,8 @@ You can use jitpack.io to include dav4jvm:
         }
     }
     dependencies {
-        implementation 'com.github.bitfireAT:dav4jvm:<version or commit>'  // see tags for latest version, like 1.0, or use the latest commit ID from main branch
-        //implementation 'com.github.bitfireAT:dav4jvm:main-SNAPSHOT'      // use it only for testing because it doesn't generate reproducible builds
+        implementation 'com.github.bitfireAT:dav4jvm:<tag or commit>'  // usually the latest commit ID from main branch
+        //implementation 'com.github.bitfireAT:dav4jvm:main-SNAPSHOT'  // use it only for testing because it doesn't generate reproducible builds
     }
 
 dav4jvm needs a working XmlPullParser (XPP). On Android, the system already comes with
