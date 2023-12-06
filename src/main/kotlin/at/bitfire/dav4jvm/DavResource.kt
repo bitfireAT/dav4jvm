@@ -8,10 +8,21 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.*
+import at.bitfire.dav4jvm.exception.ConflictException
+import at.bitfire.dav4jvm.exception.DavException
+import at.bitfire.dav4jvm.exception.ForbiddenException
+import at.bitfire.dav4jvm.exception.HttpException
+import at.bitfire.dav4jvm.exception.NotFoundException
+import at.bitfire.dav4jvm.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.SyncToken
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -237,19 +248,25 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Sends a MKCOL request to this resource. Follows up to [MAX_REDIRECTS] redirects.
+     * Because the target [location] is by definition a collection, a trailing slash
+     * is appended (unless [location] already has a trailing slash).
+     *
+     * @param xmlBody optional request body (used for MKCALENDAR or Extended MKCOL)
+     * @param method HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
+     * @param callback called for the response
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    fun mkCol(xmlBody: String?, callback: ResponseCallback) {
+    fun mkCol(xmlBody: String?, method: String = "MKCOL", callback: ResponseCallback) {
         val rqBody = xmlBody?.toRequestBody(MIME_XML)
 
         followRedirects {
             httpClient.newCall(Request.Builder()
-                    .method("MKCOL", rqBody)
-                    .url(location)
+                    .method(method, rqBody)
+                    .url(UrlUtils.withTrailingSlash(location))
                     .build()).execute()
         }.use { response ->
             checkStatus(response)
