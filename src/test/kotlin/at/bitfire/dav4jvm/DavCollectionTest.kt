@@ -7,15 +7,19 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.property.GetETag
-import at.bitfire.dav4jvm.property.SyncToken
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.net.HttpURLConnection
@@ -233,7 +237,7 @@ class DavCollectionTest {
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(507, e.code)
-            assertTrue(e.errors.any { it.name == Property.Name(XmlUtils.NS_WEBDAV, "number-of-matches-within-limits") })
+            assertTrue(e.errors.any { it.name == Property.Name(NS_WEBDAV, "number-of-matches-within-limits") })
             assertEquals(1, e.errors.size)
         }
     }

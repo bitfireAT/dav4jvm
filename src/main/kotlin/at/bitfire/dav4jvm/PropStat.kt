@@ -10,6 +10,7 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -30,7 +31,7 @@ data class PropStat(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "propstat")
+        val NAME = Property.Name(NS_WEBDAV, "propstat")
 
         private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
         private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")

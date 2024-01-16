@@ -9,10 +9,10 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.property.DisplayName
-import at.bitfire.dav4jvm.property.GetContentType
-import at.bitfire.dav4jvm.property.GetETag
-import at.bitfire.dav4jvm.property.ResourceType
+import at.bitfire.dav4jvm.property.webdav.DisplayName
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -23,7 +23,11 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.net.HttpURLConnection

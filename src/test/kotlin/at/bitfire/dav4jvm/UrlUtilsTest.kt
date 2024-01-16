@@ -7,7 +7,10 @@
 package at.bitfire.dav4jvm
 
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UrlUtilsTest {

@@ -6,7 +6,7 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.property.GetETag
+import at.bitfire.dav4jvm.property.webdav.GetETag
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

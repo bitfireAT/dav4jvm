@@ -15,7 +15,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
-import java.time.ZonedDateTime
 
 class ServiceUnavailableExceptionTest {
 

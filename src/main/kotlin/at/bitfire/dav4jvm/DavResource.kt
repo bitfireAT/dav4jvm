@@ -16,7 +16,10 @@ import at.bitfire.dav4jvm.exception.NotFoundException
 import at.bitfire.dav4jvm.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.exception.UnauthorizedException
-import at.bitfire.dav4jvm.property.SyncToken
+import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -63,12 +66,12 @@ open class DavResource @JvmOverloads constructor(
         const val HTTP_MULTISTATUS = 207
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
-        val PROPFIND = Property.Name(XmlUtils.NS_WEBDAV, "propfind")
-        val PROPERTYUPDATE = Property.Name(XmlUtils.NS_WEBDAV, "propertyupdate")
-        val SET = Property.Name(XmlUtils.NS_WEBDAV, "set")
-        val REMOVE = Property.Name(XmlUtils.NS_WEBDAV, "remove")
-        val PROP = Property.Name(XmlUtils.NS_WEBDAV, "prop")
-        val HREF = Property.Name(XmlUtils.NS_WEBDAV, "href")
+        val PROPFIND = Property.Name(NS_WEBDAV, "propfind")
+        val PROPERTYUPDATE = Property.Name(NS_WEBDAV, "propertyupdate")
+        val SET = Property.Name(NS_WEBDAV, "set")
+        val REMOVE = Property.Name(NS_WEBDAV, "remove")
+        val PROP = Property.Name(NS_WEBDAV, "prop")
+        val HREF = Property.Name(NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
 
@@ -84,7 +87,7 @@ open class DavResource @JvmOverloads constructor(
             val serializer = XmlUtils.newSerializer()
             val writer = StringWriter()
             serializer.setOutput(writer)
-            serializer.setPrefix("d", XmlUtils.NS_WEBDAV)
+            serializer.setPrefix("d", NS_WEBDAV)
             serializer.startDocument("UTF-8", null)
             serializer.insertTag(PROPERTYUPDATE) {
                 // DAV:set
@@ -486,9 +489,9 @@ open class DavResource @JvmOverloads constructor(
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
-        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
+        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("CAL", NS_CALDAV)
+        serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
         serializer.insertTag(PROPFIND) {
             insertTag(PROP) {

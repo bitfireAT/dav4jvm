@@ -1,5 +1,6 @@
 package at.bitfire.dav4jvm.property
 
+import at.bitfire.dav4jvm.property.webdav.Owner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

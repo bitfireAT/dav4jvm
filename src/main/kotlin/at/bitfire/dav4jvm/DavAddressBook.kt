@@ -9,9 +9,11 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.property.AddressData
-import at.bitfire.dav4jvm.property.GetContentType
-import at.bitfire.dav4jvm.property.GetETag
+import at.bitfire.dav4jvm.property.carddav.AddressData
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -32,9 +34,9 @@ class DavAddressBook @JvmOverloads constructor(
         val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
         val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
 
-        val ADDRESSBOOK_QUERY = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-query")
-        val ADDRESSBOOK_MULTIGET = Property.Name(XmlUtils.NS_CARDDAV, "addressbook-multiget")
-        val FILTER = Property.Name(XmlUtils.NS_CARDDAV, "filter")
+        val ADDRESSBOOK_QUERY = Property.Name(NS_CARDDAV, "addressbook-query")
+        val ADDRESSBOOK_MULTIGET = Property.Name(NS_CARDDAV, "addressbook-multiget")
+        val FILTER = Property.Name(NS_CARDDAV, "filter")
     }
 
     /**
@@ -59,8 +61,8 @@ class DavAddressBook @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
+        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_QUERY) {
             insertTag(PROP) {
                 insertTag(GetETag.NAME)
@@ -107,8 +109,8 @@ class DavAddressBook @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.setPrefix("CARD", XmlUtils.NS_CARDDAV)
+        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_MULTIGET) {
             insertTag(PROP) {
                 insertTag(GetContentType.NAME)

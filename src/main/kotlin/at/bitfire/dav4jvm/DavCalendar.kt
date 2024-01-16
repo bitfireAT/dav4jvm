@@ -9,10 +9,12 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.property.CalendarData
-import at.bitfire.dav4jvm.property.GetContentType
-import at.bitfire.dav4jvm.property.GetETag
-import at.bitfire.dav4jvm.property.ScheduleTag
+import at.bitfire.dav4jvm.property.caldav.CalendarData
+import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.caldav.ScheduleTag
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -37,13 +39,13 @@ class DavCalendar @JvmOverloads constructor(
         val MIME_ICALENDAR = "text/calendar".toMediaType()
         val MIME_ICALENDAR_UTF8 = "text/calendar;charset=utf-8".toMediaType()
 
-        val CALENDAR_QUERY = Property.Name(XmlUtils.NS_CALDAV, "calendar-query")
-        val CALENDAR_MULTIGET = Property.Name(XmlUtils.NS_CALDAV, "calendar-multiget")
+        val CALENDAR_QUERY = Property.Name(NS_CALDAV, "calendar-query")
+        val CALENDAR_MULTIGET = Property.Name(NS_CALDAV, "calendar-multiget")
 
-        val FILTER = Property.Name(XmlUtils.NS_CALDAV, "filter")
-        val COMP_FILTER = Property.Name(XmlUtils.NS_CALDAV, "comp-filter")
+        val FILTER = Property.Name(NS_CALDAV, "filter")
+        val COMP_FILTER = Property.Name(NS_CALDAV, "comp-filter")
         const val COMP_FILTER_NAME = "name"
-        val TIME_RANGE = Property.Name(XmlUtils.NS_CALDAV, "time-range")
+        val TIME_RANGE = Property.Name(NS_CALDAV, "time-range")
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 
@@ -82,8 +84,8 @@ class DavCalendar @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
+        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_QUERY) {
             insertTag(PROP) {
                 insertTag(GetETag.NAME)
@@ -148,8 +150,8 @@ class DavCalendar @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
-        serializer.setPrefix("CAL", XmlUtils.NS_CALDAV)
+        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_MULTIGET) {
             insertTag(PROP) {
                 insertTag(GetContentType.NAME)     // to determine the character set

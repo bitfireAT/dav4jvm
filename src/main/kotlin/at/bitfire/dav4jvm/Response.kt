@@ -10,7 +10,8 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.property.ResourceType
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
@@ -94,10 +95,10 @@ data class Response(
 
     companion object {
 
-        val RESPONSE = Property.Name(XmlUtils.NS_WEBDAV, "response")
-        val MULTISTATUS = Property.Name(XmlUtils.NS_WEBDAV, "multistatus")
-        val STATUS = Property.Name(XmlUtils.NS_WEBDAV, "status")
-        val LOCATION = Property.Name(XmlUtils.NS_WEBDAV, "location")
+        val RESPONSE = Property.Name(NS_WEBDAV, "response")
+        val MULTISTATUS = Property.Name(NS_WEBDAV, "multistatus")
+        val STATUS = Property.Name(NS_WEBDAV, "status")
+        val LOCATION = Property.Name(NS_WEBDAV, "location")
 
         /**
          * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).

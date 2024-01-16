@@ -15,12 +15,6 @@ import java.io.IOException
 
 object XmlUtils {
 
-    const val NS_WEBDAV = "DAV:"
-    const val NS_CALDAV = "urn:ietf:params:xml:ns:caldav"
-    const val NS_CARDDAV = "urn:ietf:params:xml:ns:carddav"
-    const val NS_APPLE_ICAL = "http://apple.com/ns/ical/"
-    const val NS_CALENDARSERVER = "http://calendarserver.org/ns/"
-
     private val factory: XmlPullParserFactory
     init {
         try {
