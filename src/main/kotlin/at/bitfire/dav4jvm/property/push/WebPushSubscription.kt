@@ -6,13 +6,10 @@
 
 package at.bitfire.dav4jvm.property.push
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.util.logging.Level
 
 class WebPushSubscription: Property {
 
@@ -32,18 +29,10 @@ class WebPushSubscription: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): WebPushSubscription? {
-            val subscription = WebPushSubscription()
-
-            try {
-                subscription.pushResource = XmlUtils.readTextProperty(parser, PUSH_RESOURCE)
-            } catch (e: XmlPullParserException) {
-                Dav4jvm.log.log(Level.SEVERE, "Couldn't parse <web-push-subscription>", e)
-                return null
+        override fun create(parser: XmlPullParser) =
+            WebPushSubscription().apply {
+                pushResource = XmlUtils.readTextProperty(parser, PUSH_RESOURCE)
             }
-
-            return subscription
-        }
 
     }
 
