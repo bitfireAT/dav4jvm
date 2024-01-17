@@ -1,15 +1,14 @@
 /*
- * Copyright © Ricki Hirner (bitfire web engineering).
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -30,7 +29,7 @@ data class PropStat(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "propstat")
+        val NAME = Property.Name(NS_WEBDAV, "propstat")
 
         private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
         private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")

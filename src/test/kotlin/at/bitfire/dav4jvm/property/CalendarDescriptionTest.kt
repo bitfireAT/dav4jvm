@@ -1,5 +1,6 @@
 package at.bitfire.dav4jvm.property
 
+import at.bitfire.dav4jvm.property.caldav.CalendarDescription
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

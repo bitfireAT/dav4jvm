@@ -1,13 +1,12 @@
 /*
- * Copyright © Ricki Hirner (bitfire web engineering).
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 
@@ -23,7 +22,7 @@ class Error(
 
     companion object {
 
-        val NAME = Property.Name(XmlUtils.NS_WEBDAV, "error")
+        val NAME = Property.Name(NS_WEBDAV, "error")
 
         fun parseError(parser: XmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
@@ -42,8 +41,8 @@ class Error(
 
         // some pre-defined errors
 
-        val NEED_PRIVILEGES = Error(Property.Name(XmlUtils.NS_WEBDAV, "need-privileges"))
-        val VALID_SYNC_TOKEN = Error(Property.Name(XmlUtils.NS_WEBDAV, "valid-sync-token"))
+        val NEED_PRIVILEGES = Error(Property.Name(NS_WEBDAV, "need-privileges"))
+        val VALID_SYNC_TOKEN = Error(Property.Name(NS_WEBDAV, "valid-sync-token"))
 
     }
 

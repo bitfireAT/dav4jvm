@@ -9,7 +9,8 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.property.SyncToken
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -29,10 +30,10 @@ open class DavCollection @JvmOverloads constructor(
 ): DavResource(httpClient, location, log) {
 
     companion object {
-        val SYNC_COLLECTION = Property.Name(XmlUtils.NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(XmlUtils.NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(XmlUtils.NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(XmlUtils.NS_WEBDAV, "nresults")
+        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
+        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
+        val LIMIT = Property.Name(NS_WEBDAV, "limit")
+        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
     }
 
     /**
@@ -87,7 +88,7 @@ open class DavCollection @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", XmlUtils.NS_WEBDAV)
+        serializer.setPrefix("", NS_WEBDAV)
         serializer.insertTag(SYNC_COLLECTION) {
             insertTag(SyncToken.NAME) {
                 if (syncToken != null)

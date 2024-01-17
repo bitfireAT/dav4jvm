@@ -1,16 +1,15 @@
 /*
- * Copyright © Ricki Hirner (bitfire web engineering).
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v3.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/gpl.html
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.property.ResourceType
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
@@ -94,10 +93,10 @@ data class Response(
 
     companion object {
 
-        val RESPONSE = Property.Name(XmlUtils.NS_WEBDAV, "response")
-        val MULTISTATUS = Property.Name(XmlUtils.NS_WEBDAV, "multistatus")
-        val STATUS = Property.Name(XmlUtils.NS_WEBDAV, "status")
-        val LOCATION = Property.Name(XmlUtils.NS_WEBDAV, "location")
+        val RESPONSE = Property.Name(NS_WEBDAV, "response")
+        val MULTISTATUS = Property.Name(NS_WEBDAV, "multistatus")
+        val STATUS = Property.Name(NS_WEBDAV, "status")
+        val LOCATION = Property.Name(NS_WEBDAV, "location")
 
         /**
          * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
