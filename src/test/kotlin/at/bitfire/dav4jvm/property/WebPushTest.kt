@@ -4,6 +4,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.push.NS_WEBDAV_PUSH
 import at.bitfire.dav4jvm.property.push.PushSubscribe
 import at.bitfire.dav4jvm.property.push.PushTransports
+import at.bitfire.dav4jvm.property.push.Topic
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,18 +29,22 @@ class WebPushTest: PropertyTest() {
     }
 
     @Test
-    fun testPushTransports() {
+    fun testServiceDetection() {
         val results = parseProperty(
                 "<push-transports xmlns=\"DAV:Push\">" +
                 "  <transport><something><else/></something></transport>" +
                 "  <transport><web-push/></transport>" +
-                "</push-transports>")
+                "</push-transports>" +
+                "<topic xmlns=\"DAV:Push\">SomeTopic</topic>")
         val result = results.first() as PushTransports
+
         assertEquals(setOf(
             Property.Name(NS_WEBDAV_PUSH, "something"),
             PushTransports.WEB_PUSH
         ), result.transports)
         assertTrue(result.hasWebPush())
+
+        assertEquals("SomeTopic", (results[1] as Topic).topic)
     }
 
 }
