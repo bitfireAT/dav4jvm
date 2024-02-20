@@ -303,6 +303,36 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Sends a GET request to the resource. Follows up to [MAX_REDIRECTS] redirects.
+     *
+     * Note: Add `Accept-Encoding: identity` to [headers] if you want to disable compression
+     * (compression might change the returned ETag).
+     *
+     * @param accept   value of `Accept` header (always sent for clarity; use *&#47;* if you don't care)
+     * @param headers  additional headers to send with the request
+     *
+     * @return okhttp Response – **caller is responsible for closing it!**
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on HTTPS -> HTTP redirect
+     */
+    fun get(accept: String, headers: Headers?): Response =
+        followRedirects {
+            val request = Request.Builder()
+                .get()
+                .url(location)
+
+            if (headers != null)
+                request.headers(headers)
+
+            // always Accept header
+            request.header("Accept", accept)
+
+            httpClient.newCall(request.build()).execute()
+        }
+
+    /**
      * Sends a GET request to the resource. Sends `Accept-Encoding: identity` to disable
      * compression, because compression might change the ETag.
      *
@@ -317,8 +347,9 @@ open class DavResource @JvmOverloads constructor(
      */
     @Deprecated("Use get(accept, headers, callback) with explicit Accept-Encoding instead")
     @Throws(IOException::class, HttpException::class)
-    fun get(accept: String, callback: ResponseCallback) =
+    fun get(accept: String, callback: ResponseCallback) {
         get(accept, Headers.headersOf("Accept-Encoding", "identity"), callback)
+    }
 
     /**
      * Sends a GET request to the resource. Follows up to [MAX_REDIRECTS] redirects.
@@ -335,19 +366,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     fun get(accept: String, headers: Headers?, callback: ResponseCallback) {
-        followRedirects {
-            val request = Request.Builder()
-                .get()
-                .url(location)
-
-            if (headers != null)
-                request.headers(headers)
-
-            // always Accept header
-            request.header("Accept", accept)
-
-            httpClient.newCall(request.build()).execute()
-        }.use { response ->
+        get(accept, headers).use { response ->
             checkStatus(response)
             callback.onResponse(response)
         }
