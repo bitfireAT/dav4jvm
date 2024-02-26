@@ -188,8 +188,8 @@ open class DavResource @JvmOverloads constructor(
                 .header("Content-Length", "0")
                 .header("Destination", destination.toString())
 
-        if (overwrite)      // RFC 4918 9.9.3
-            requestBuilder.header("Overwrite", "T")
+        if (!overwrite)      // RFC 4918 9.9.3 and 10.6, default value: T
+            requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)
@@ -230,8 +230,8 @@ open class DavResource @JvmOverloads constructor(
                 .header("Content-Length", "0")
                 .header("Destination", destination.toString())
 
-        if (overwrite)
-            requestBuilder.header("Overwrite", "T")
+        if (!overwrite)      // RFC 4918 9.9.3 and 10.6, default value: T
+            requestBuilder.header("Overwrite", "F")
 
         followRedirects {
             requestBuilder.url(location)

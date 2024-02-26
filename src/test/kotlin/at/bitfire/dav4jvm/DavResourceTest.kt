@@ -77,7 +77,7 @@ class DavResourceTest {
         assertEquals("COPY", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertNull(rq.getHeader("Overwrite"))
+        assertEquals("F", rq.getHeader("Overwrite"))
 
         // no preconditions, 204 No content, resource successfully copied to a preexisting
         // destination resource
@@ -95,7 +95,7 @@ class DavResourceTest {
         assertEquals("COPY", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("T", rq.getHeader("Overwrite"))
+        assertNull(rq.getHeader("Overwrite"))
 
         /* NEGATIVE TEST CASES */
 
@@ -333,7 +333,7 @@ class DavResourceTest {
         assertEquals("MOVE", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertNull(rq.getHeader("Overwrite"))
+        assertEquals("F", rq.getHeader("Overwrite"))
 
         // no preconditions, 204 No content, URL already mapped, overwrite
         mockServer.enqueue(MockResponse()
@@ -351,7 +351,7 @@ class DavResourceTest {
         assertEquals("MOVE", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("T", rq.getHeader("Overwrite"))
+        assertNull(rq.getHeader("Overwrite"))
 
         /* NEGATIVE TEST CASES */
 
