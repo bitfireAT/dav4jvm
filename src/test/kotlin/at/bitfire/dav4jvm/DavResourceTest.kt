@@ -95,7 +95,7 @@ class DavResourceTest {
         assertEquals("COPY", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("F", rq.getHeader("Overwrite"))
+        assertEquals("T", rq.getHeader("Overwrite"))
 
         /* NEGATIVE TEST CASES */
 
@@ -351,7 +351,7 @@ class DavResourceTest {
         assertEquals("MOVE", rq.method)
         assertEquals(url.encodedPath, rq.path)
         assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("F", rq.getHeader("Overwrite"))
+        assertEquals("T", rq.getHeader("Overwrite"))
 
         /* NEGATIVE TEST CASES */
 

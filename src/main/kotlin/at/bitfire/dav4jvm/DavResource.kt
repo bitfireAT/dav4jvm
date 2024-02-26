@@ -175,20 +175,21 @@ open class DavResource @JvmOverloads constructor(
      * Updates [location] on success.
      *
      * @param destination where the resource shall be moved to
-     * @param forceOverride whether resources are overwritten when they already exist in destination
+     * @param overwrite whether resources are overwritten when they already exist in destination
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun move(destination: HttpUrl, forceOverride: Boolean, callback: ResponseCallback) {
+    fun move(destination: HttpUrl, overwrite: Boolean, callback: ResponseCallback) {
         val requestBuilder = Request.Builder()
                 .method("MOVE", null)
                 .header("Content-Length", "0")
                 .header("Destination", destination.toString())
 
-        if (forceOverride) requestBuilder.header("Overwrite", "F")
+        if (overwrite)      // RFC 4918 9.9.3
+            requestBuilder.header("Overwrite", "T")
 
         followRedirects {
             requestBuilder.url(location)
@@ -216,20 +217,21 @@ open class DavResource @JvmOverloads constructor(
      * Sends a COPY request for this resource. Follows up to [MAX_REDIRECTS] redirects.
      *
      * @param destination where the resource shall be copied to
-     * @param forceOverride whether resources are overwritten when they already exist in destination
+     * @param overwrite whether resources are overwritten when they already exist in destination
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class, DavException::class)
-    fun copy(destination:HttpUrl, forceOverride: Boolean, callback: ResponseCallback) {
+    fun copy(destination:HttpUrl, overwrite: Boolean, callback: ResponseCallback) {
         val requestBuilder = Request.Builder()
                 .method("COPY", null)
                 .header("Content-Length", "0")
                 .header("Destination", destination.toString())
 
-        if (forceOverride) requestBuilder.header("Overwrite", "F")
+        if (overwrite)
+            requestBuilder.header("Overwrite", "T")
 
         followRedirects {
             requestBuilder.url(location)
