@@ -38,6 +38,9 @@ object UrlUtils {
         // drop #fragment parts and convert to URI
         val uri1 = url1.newBuilder().fragment(null).build().toUri()
         val uri2 = url2.newBuilder().fragment(null).build().toUri()
+        if (uri1 == uri2) {
+            return true
+        }
 
         return try {
             val decoded1 = URI(uri1.scheme, uri1.schemeSpecificPart, uri1.fragment)
