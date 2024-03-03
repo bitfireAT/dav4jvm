@@ -23,6 +23,9 @@ import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.AddressbookDescription
 import at.bitfire.dav4jvm.property.carddav.AddressbookHomeSet
 import at.bitfire.dav4jvm.property.carddav.SupportedAddressData
+import at.bitfire.dav4jvm.property.push.PushSubscribe
+import at.bitfire.dav4jvm.property.push.PushTransports
+import at.bitfire.dav4jvm.property.push.Topic
 import at.bitfire.dav4jvm.property.webdav.AddMember
 import at.bitfire.dav4jvm.property.webdav.CreationDate
 import at.bitfire.dav4jvm.property.webdav.CurrentUserPrincipal
@@ -79,6 +82,8 @@ object PropertyRegistry {
             at.bitfire.dav4jvm.property.caldav.MaxResourceSize.Factory,
             at.bitfire.dav4jvm.property.carddav.MaxResourceSize.Factory,
             Owner.Factory,
+            PushSubscribe.Factory,
+            PushTransports.Factory,
             QuotaAvailableBytes.Factory,
             QuotaUsedBytes.Factory,
             ResourceType.Factory,
@@ -88,7 +93,8 @@ object PropertyRegistry {
             SupportedCalendarComponentSet.Factory,
             SupportedCalendarData.Factory,
             SupportedReportSet.Factory,
-            SyncToken.Factory
+            SyncToken.Factory,
+            Topic.Factory
         ))
     }
 

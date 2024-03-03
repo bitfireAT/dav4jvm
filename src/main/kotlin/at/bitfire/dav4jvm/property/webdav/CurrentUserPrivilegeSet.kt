@@ -43,7 +43,7 @@ data class CurrentUserPrivilegeSet(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet? {
+        override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet()

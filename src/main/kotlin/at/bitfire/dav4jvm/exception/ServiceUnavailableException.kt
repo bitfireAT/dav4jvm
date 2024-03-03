@@ -24,15 +24,15 @@ class ServiceUnavailableException: HttpException {
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
         response.header("Retry-After")?.let { after ->
-            retryAfter = HttpUtils.parseDate(after)?.toInstant() ?:
-                    // not a HTTP-date, must be delta-seconds
-                    try {
-                        val seconds = after.toLong()
-                        Instant.now().plusSeconds(seconds)
-                    } catch (e: NumberFormatException) {
-                        Dav4jvm.log.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
-                        null
-                    }
+            retryAfter = HttpUtils.parseDate(after) ?:
+                // not a HTTP-date, must be delta-seconds
+                try {
+                    val seconds = after.toLong()
+                    Instant.now().plusSeconds(seconds)
+                } catch (e: NumberFormatException) {
+                    Dav4jvm.log.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
+                    null
+                }
         }
     }
 
