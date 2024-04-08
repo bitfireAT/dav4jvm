@@ -25,7 +25,9 @@ import at.bitfire.dav4jvm.property.carddav.AddressbookHomeSet
 import at.bitfire.dav4jvm.property.carddav.SupportedAddressData
 import at.bitfire.dav4jvm.property.push.PushSubscribe
 import at.bitfire.dav4jvm.property.push.PushTransports
+import at.bitfire.dav4jvm.property.push.Subscription
 import at.bitfire.dav4jvm.property.push.Topic
+import at.bitfire.dav4jvm.property.push.WebPushSubscription
 import at.bitfire.dav4jvm.property.webdav.AddMember
 import at.bitfire.dav4jvm.property.webdav.CreationDate
 import at.bitfire.dav4jvm.property.webdav.CurrentUserPrincipal
@@ -89,12 +91,14 @@ object PropertyRegistry {
             ResourceType.Factory,
             ScheduleTag.Factory,
             Source.Factory,
+            Subscription.Factory,
             SupportedAddressData.Factory,
             SupportedCalendarComponentSet.Factory,
             SupportedCalendarData.Factory,
             SupportedReportSet.Factory,
             SyncToken.Factory,
-            Topic.Factory
+            Topic.Factory,
+            WebPushSubscription.Factory
         ))
     }
 
