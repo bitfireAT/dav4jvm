@@ -58,15 +58,15 @@ object HttpUtils {
     /**
      * Parses a HTTP-date according to RFC 7231 section 7.1.1.1.
      *
-     * @param dateStr date formatted in one of the three accepted formats:
+     * @param dateStr date-time formatted in one of the three accepted formats:
      *
      *   - preferred format (`IMF-fixdate`)
      *   - obsolete RFC 850 format
      *   - ANSI C's `asctime()` format
      *
-     * @return date, or null if date could not be parsed
+     * @return date-time, or null if date could not be parsed
      */
-    fun parseDate(dateStr: String): ZonedDateTime? {
+    fun parseDate(dateStr: String): Instant? {
         val zonedFormats = arrayOf(
             // preferred format
             httpDateFormat,
@@ -78,7 +78,7 @@ object HttpUtils {
         // try the two formats with zone info
         for (format in zonedFormats)
             try {
-                return ZonedDateTime.parse(dateStr, format)
+                return ZonedDateTime.parse(dateStr, format).toInstant()
             } catch (ignored: DateTimeParseException) {
             }
 
@@ -86,7 +86,7 @@ object HttpUtils {
         try {
             val formatC = DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US)
             val local = LocalDateTime.parse(dateStr, formatC)
-            return local.atZone(ZoneOffset.UTC)
+            return local.atZone(ZoneOffset.UTC).toInstant()
         } catch (ignored: DateTimeParseException) {
         }
 

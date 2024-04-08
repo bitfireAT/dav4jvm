@@ -12,10 +12,10 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import java.time.ZonedDateTime
+import java.time.Instant
 
 data class GetLastModified(
-    var lastModified: ZonedDateTime
+    var lastModified: Instant
 ): Property {
 
     companion object {
