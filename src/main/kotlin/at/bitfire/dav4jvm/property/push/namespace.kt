@@ -9,5 +9,7 @@ package at.bitfire.dav4jvm.property.push
 /**
  * XML namespace of WebDAV-Push (draft), see:
  * https://github.com/bitfireAT/webdav-push/
+ *
+ * Experimental!
  */
 const val NS_WEBDAV_PUSH = "DAV:Push"

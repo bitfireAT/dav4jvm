@@ -11,6 +11,11 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
+/**
+ * Represents a `{DAV:Push}web-push-subscription` property.
+ *
+ * Experimental! See https://github.com/bitfireAT/webdav-push/
+ */
 class WebPushSubscription: Property {
 
     companion object {

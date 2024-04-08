@@ -14,6 +14,11 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
 
+/**
+ * Represents a `{DAV:Push}push-subscribe` property.
+ *
+ * Experimental! See https://github.com/bitfireAT/webdav-push/
+ */
 class PushSubscribe: Property {
 
     companion object {

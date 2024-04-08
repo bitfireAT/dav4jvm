@@ -12,6 +12,11 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
+/**
+ * Represents a `{DAV:Push}push-transports` property.
+ *
+ * Experimental! See https://github.com/bitfireAT/webdav-push/
+ */
 class PushTransports private constructor(
     val transports: Set<Property.Name>
 ): Property {

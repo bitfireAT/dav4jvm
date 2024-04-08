@@ -11,6 +11,11 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
+/**
+ * Represents a `{DAV:Push}topic` property.
+ *
+ * Experimental! See https://github.com/bitfireAT/webdav-push/
+ */
 class Topic private constructor(
     val topic: String
 ): Property {
