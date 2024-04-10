@@ -9,8 +9,13 @@ package at.bitfire.dav4jvm
 import okhttp3.HttpUrl
 import java.net.URI
 import java.net.URISyntaxException
+import java.net.URLDecoder
+import java.util.logging.Level
+import java.util.logging.Logger
 
 object UrlUtils {
+
+    val logger by lazy { Logger.getLogger(javaClass.name) }
 
     /**
      * Compares two URLs in WebDAV context. If two URLs are considered *equal*, both
@@ -35,15 +40,20 @@ object UrlUtils {
         if (url1 == url2)
             return true
 
-        // drop #fragment parts and convert to URI
-        val uri1 = url1.newBuilder().fragment(null).build().toUri()
-        val uri2 = url2.newBuilder().fragment(null).build().toUri()
+        // convert to java.net.URI (also corrects some mistakes)
+        val uri1 = url1.toUri()
+        val uri2 = url2.toUri()
+
+        // if the URIs are the same (ignoring scheme case and fragments), they're equal for us
+        if (uri1.scheme.equals(uri2.scheme, true) && uri1.schemeSpecificPart == uri2.schemeSpecificPart)
+            return true
 
         return try {
-            val decoded1 = URI(uri1.scheme, uri1.schemeSpecificPart, uri1.fragment)
-            val decoded2 = URI(uri2.scheme, uri2.schemeSpecificPart, uri2.fragment)
+            val decoded1 = URI(url1.scheme, uri1.schemeSpecificPart, null)
+            val decoded2 = URI(uri2.scheme, uri2.schemeSpecificPart, null)
             decoded1 == decoded2
         } catch (e: URISyntaxException) {
+            logger.log(Level.WARNING, "Couldn't decode URI for comparison, assuming inequality", e)
             false
         }
     }
