@@ -55,6 +55,7 @@ interface Property {
                         log.log(Level.WARNING, "Ignoring invalid property", e)
                     }
                 }
+
                 eventType = parser.next()
             }
 
