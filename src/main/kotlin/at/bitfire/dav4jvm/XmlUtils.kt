@@ -6,6 +6,7 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -15,18 +16,30 @@ import java.io.IOException
 
 object XmlUtils {
 
-    private val factory: XmlPullParserFactory
-    init {
-        try {
-            factory = XmlPullParserFactory.newInstance()
-            factory.isNamespaceAware = true
-        } catch (e: XmlPullParserException) {
-            throw RuntimeException("Couldn't create XmlPullParserFactory", e)
-        }
-    }
+    private const val FEATURE_RELAXED = "http://xmlpull.org/v1/doc/features.html#relaxed"
 
-    fun newPullParser() = factory.newPullParser()!!
-    fun newSerializer() = factory.newSerializer()!!
+    private val relaxedFactory =
+        XmlPullParserFactory.newInstance().apply {
+            isNamespaceAware = true
+            setFeature(FEATURE_RELAXED, true)
+        }
+    private val standardFactory: XmlPullParserFactory =
+        XmlPullParserFactory.newInstance().apply {
+            isNamespaceAware = true
+        }
+
+    fun newPullParser(): XmlPullParser =
+        try {
+            relaxedFactory.newPullParser()
+        } catch (_: XmlPullParserException) {
+            // FEATURE_RELAXED may not be supported, try without it
+            null
+        }
+        ?: standardFactory.newPullParser()
+        ?: throw DavException("Couldn't create XML parser")
+
+    fun newSerializer(): XmlSerializer = standardFactory.newSerializer()
+        ?: throw DavException("Couldn't create XML serializer")
 
 
     @Throws(IOException::class, XmlPullParserException::class)
