@@ -16,18 +16,33 @@ import java.io.IOException
 
 object XmlUtils {
 
+    /**
+     * Requests the parser to be as lenient as possible when parsing invalid XML.
+     *
+     * See [https://www.xmlpull.org/](xmlpull.org) and specific implementations, for instance
+     * [Android XML](https://developer.android.com/reference/android/util/Xml#FEATURE_RELAXED)
+     */
     private const val FEATURE_RELAXED = "http://xmlpull.org/v1/doc/features.html#relaxed"
 
+    /** [XmlPullParserFactory] that is namespace-aware and does relaxed parsing */
     private val relaxedFactory =
         XmlPullParserFactory.newInstance().apply {
             isNamespaceAware = true
             setFeature(FEATURE_RELAXED, true)
         }
+
+    /** [XmlPullParserFactory] that is namespace-aware */
     private val standardFactory: XmlPullParserFactory =
         XmlPullParserFactory.newInstance().apply {
             isNamespaceAware = true
         }
 
+    /**
+     * Creates a new [XmlPullParser].
+     *
+     * First tries to create a namespace-aware parser that supports [FEATURE_RELAXED]. If that
+     * fails, it falls back to a namespace-aware parser without relaxed parsing.
+     */
     fun newPullParser(): XmlPullParser =
         try {
             relaxedFactory.newPullParser()
