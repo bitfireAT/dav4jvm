@@ -20,6 +20,13 @@ import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import java.io.EOFException
+import java.io.IOException
+import java.io.Reader
+import java.io.StringWriter
+import java.net.HttpURLConnection
+import java.util.logging.Level
+import java.util.logging.Logger
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -30,13 +37,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.EOFException
-import java.io.IOException
-import java.io.Reader
-import java.io.StringWriter
-import java.net.HttpURLConnection
-import java.util.logging.Level
-import java.util.logging.Logger
 import at.bitfire.dav4jvm.Response as DavResponse
 
 /**
@@ -406,6 +406,30 @@ open class DavResource @JvmOverloads constructor(
                 .header("Range", "bytes=$offset-$lastIndex")
 
             httpClient.newCall(request.build()).execute()
+        }.use { response ->
+            checkStatus(response)
+            callback.onResponse(response)
+        }
+    }
+
+    /**
+     * Sends a GET request to the resource. Follows up to [MAX_REDIRECTS] redirects.
+     */
+    @Throws(IOException::class, HttpException::class)
+    fun post(body: RequestBody, ifNoneMatch: Boolean = false, headers: Headers? = null, callback: ResponseCallback) {
+        followRedirects {
+            val builder = Request.Builder()
+                .post(body)
+                .url(location)
+
+            if (ifNoneMatch)
+            // don't overwrite anything existing
+                builder.header("If-None-Match", "*")
+
+            if (headers != null)
+                builder.headers(headers)
+
+            httpClient.newCall(builder.build()).execute()
         }.use { response ->
             checkStatus(response)
             callback.onResponse(response)
