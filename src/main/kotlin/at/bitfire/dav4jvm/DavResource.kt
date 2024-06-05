@@ -270,8 +270,8 @@ open class DavResource @JvmOverloads constructor(
         val rqBody = xmlBody?.toRequestBody(MIME_XML)
 
         val request = Request.Builder()
-                .method(method, rqBody)
-                .url(UrlUtils.withTrailingSlash(location))
+            .method(method, rqBody)
+            .url(UrlUtils.withTrailingSlash(location))
 
         if (headers != null)
             request.headers(headers)
