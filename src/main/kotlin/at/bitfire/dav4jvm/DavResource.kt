@@ -258,6 +258,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @param xmlBody optional request body (used for MKCALENDAR or Extended MKCOL)
      * @param method HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
+     * @param headers additional headers to send with the request
      * @param callback called for the response
      *
      * @throws IOException on I/O error
@@ -265,14 +266,18 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    fun mkCol(xmlBody: String?, method: String = "MKCOL", callback: ResponseCallback) {
+    fun mkCol(xmlBody: String?, method: String = "MKCOL", headers: Headers? = null, callback: ResponseCallback) {
         val rqBody = xmlBody?.toRequestBody(MIME_XML)
 
+        val request = Request.Builder()
+            .method(method, rqBody)
+            .url(UrlUtils.withTrailingSlash(location))
+
+        if (headers != null)
+            request.headers(headers)
+
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .method(method, rqBody)
-                    .url(UrlUtils.withTrailingSlash(location))
-                    .build()).execute()
+            httpClient.newCall(request.build()).execute()
         }.use { response ->
             checkStatus(response)
             callback.onResponse(response)
