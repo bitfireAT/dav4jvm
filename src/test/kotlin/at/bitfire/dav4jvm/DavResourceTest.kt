@@ -13,6 +13,7 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
+import java.net.HttpURLConnection
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -30,7 +31,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import java.net.HttpURLConnection
 
 class DavResourceTest {
 
@@ -306,6 +306,87 @@ class DavResourceTest {
         dav.getRange("*/*", 100, 342) { response ->
             assertEquals("bytes=100-441", response.request.header("Range"))
             called = true
+        }
+        assertTrue(called)
+    }
+
+    @Test
+    fun testPost() {
+        val url = sampleUrl()
+        val dav = DavResource(httpClient, url)
+
+        /* POSITIVE TEST CASES */
+
+        // 200 OK
+        mockServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setHeader("ETag", "W/\"My Weak ETag\"")
+                .setHeader("Content-Type", "application/x-test-result")
+                .setBody(sampleText)
+        )
+        var called = false
+        dav.post(
+            body = "body".toRequestBody("application/x-test-result".toMediaType())
+        ) { response ->
+            called = true
+            assertEquals(sampleText, response.body!!.string())
+
+            val eTag = GetETag.fromResponse(response)
+            assertEquals("My Weak ETag", eTag!!.eTag)
+            assertTrue(eTag.weak)
+            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
+        }
+        assertTrue(called)
+
+        var rq = mockServer.takeRequest()
+        assertEquals("POST", rq.method)
+        assertEquals(url.encodedPath, rq.path)
+        assertTrue(rq.getHeader("Content-Type")?.contains("application/x-test-result") == true)
+        assertEquals("body", rq.body.readUtf8())
+
+        // 302 Moved Temporarily + 200 OK
+        mockServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+                .setHeader("Location", "/target")
+                .setBody("This resource was moved.")
+        )
+        mockServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setHeader("ETag", "\"StrongETag\"")
+                .setBody(sampleText)
+        )
+        called = false
+        dav.post(
+            body = "body".toRequestBody("application/x-test-result".toMediaType())
+        ) { response ->
+            called = true
+            assertEquals(sampleText, response.body!!.string())
+            val eTag = GetETag(response.header("ETag")!!)
+            assertEquals("StrongETag", eTag.eTag)
+            assertFalse(eTag.weak)
+        }
+        assertTrue(called)
+
+        mockServer.takeRequest()
+        rq = mockServer.takeRequest()
+        assertEquals("POST", rq.method)
+        assertEquals("/target", rq.path)
+
+        // 200 OK without ETag in response
+        mockServer.enqueue(
+            MockResponse()
+                .setResponseCode(HttpURLConnection.HTTP_OK)
+                .setBody(sampleText)
+        )
+        called = false
+        dav.post(
+            body = "body".toRequestBody("application/x-test-result".toMediaType())
+        ) { response ->
+            called = true
+            assertNull(response.header("ETag"))
         }
         assertTrue(called)
     }
