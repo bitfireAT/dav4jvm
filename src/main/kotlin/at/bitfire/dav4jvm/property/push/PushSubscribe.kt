@@ -38,7 +38,7 @@ class PushSubscribe: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): PushSubscribe? {
+        override fun create(parser: XmlPullParser): PushSubscribe {
             val subscribe = PushSubscribe()
 
             val depth = parser.depth

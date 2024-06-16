@@ -32,7 +32,7 @@ data class SupportedCalendarComponentSet(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedCalendarComponentSet? {
+        override fun create(parser: XmlPullParser): SupportedCalendarComponentSet {
             /* <!ELEMENT supported-calendar-component-set (comp+)>
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>

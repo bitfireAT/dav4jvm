@@ -54,7 +54,7 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1)
 
         // construct WWW-Authenticate
-        val authScheme = Challenge("Digest", mapOf<String?, String>(
+        val authScheme = Challenge("Digest", mapOf(
                 Pair("realm", "testrealm@host.com"),
                 Pair("qop", "auth"),
                 Pair("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093"),
@@ -85,7 +85,7 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.nonceCount.set(1)
 
         // example 1
-        var authScheme = Challenge("Digest", mapOf<String?, String>(
+        var authScheme = Challenge("Digest", mapOf(
                 Pair("realm", "Group-Office"),
                 Pair("qop", "auth"),
                 Pair("nonce", "56212407212c8"),
@@ -110,7 +110,7 @@ class BasicDigestAuthHandlerTest {
 
         // example 2
         authenticator = BasicDigestAuthHandler(null, "test", "test")
-        authScheme = Challenge("digest", mapOf<String?, String>(    // lower case
+        authScheme = Challenge("digest", mapOf(    // lower case
                 Pair("nonce", "87c4c2aceed9abf30dd68c71"),
                 Pair("algorithm", "md5"),
                 Pair("opaque", "571609eb7058505d35c7bf7288fbbec4-ODdjNGMyYWNlZWQ5YWJmMzBkZDY4YzcxLDAuMC4wLjAsMTQ0NTM3NzE0Nw=="),
@@ -140,7 +140,7 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
-        val authScheme = Challenge("Digest", mapOf<String?, String>(
+        val authScheme = Challenge("Digest", mapOf(
                 Pair("realm", "MD5-sess Example"),
                 Pair("qop", "auth"),
                 Pair("algorithm", "MD5-sess"),
@@ -179,7 +179,7 @@ class BasicDigestAuthHandlerTest {
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
-        val authScheme = Challenge("Digest", mapOf<String?, String>(
+        val authScheme = Challenge("Digest", mapOf(
                 Pair("realm", "AuthInt Example"),
                 Pair("qop", "auth-int"),
                 Pair("nonce", "367sj3265s5"),
@@ -217,7 +217,7 @@ class BasicDigestAuthHandlerTest {
         val authenticator = BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife")
 
         // construct WWW-Authenticate
-        val authScheme = Challenge("Digest", mapOf<String?, String>(
+        val authScheme = Challenge("Digest", mapOf(
                 Pair("realm", "testrealm@host.com"),
                 Pair("nonce", "dcd98b7102dd2f0e8b11d0f600bfb0c093"),
                 Pair("opaque", "5ccc069c403ebaf9f0171e9517f40e41")
@@ -249,18 +249,18 @@ class BasicDigestAuthHandlerTest {
                 .url("http://www.nowhere.org/dir/index.html")
                 .build()
 
-        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf<String?, String>())))
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf())))
 
-        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf<String?, String>(
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
                 Pair("realm", "Group-Office")
         ))))
 
-        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf<String?, String>(
+        assertNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
                 Pair("realm", "Group-Office"),
                 Pair("qop", "auth")
         ))))
 
-        assertNotNull(authenticator.digestRequest(original, Challenge("Digest", mapOf<String?, String>(
+        assertNotNull(authenticator.digestRequest(original, Challenge("Digest", mapOf(
                 Pair("realm", "Group-Office"),
                 Pair("qop", "auth"),
                 Pair("nonce", "56212407212c8")
@@ -275,7 +275,7 @@ class BasicDigestAuthHandlerTest {
                 .get()
                 .url("http://example.com")
                 .build()
-        val response = Response.Builder()
+        val response = Builder()
                 .request(request)
                 .protocol(Protocol.HTTP_2)
                 .code(200).message("OK")

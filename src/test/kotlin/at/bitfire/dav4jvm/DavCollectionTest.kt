@@ -132,7 +132,7 @@ class DavCollectionTest {
             }
         }
         assertEquals(3, nrCalled)
-        assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance(SyncToken::class.java).first().token)
+        assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
     }
 
     /**
@@ -211,7 +211,7 @@ class DavCollectionTest {
                 }
             }
         }
-        assertEquals("http://example.com/ns/sync/1233", result.filterIsInstance(SyncToken::class.java).first().token)
+        assertEquals("http://example.com/ns/sync/1233", result.filterIsInstance<SyncToken>().first().token)
         assertEquals(4, nrCalled)
     }
 

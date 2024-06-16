@@ -39,7 +39,7 @@ class ResourceType: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): ResourceType? {
+        override fun create(parser: XmlPullParser): ResourceType {
             val type = ResourceType()
 
             val depth = parser.depth

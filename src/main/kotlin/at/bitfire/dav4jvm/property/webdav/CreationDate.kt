@@ -23,7 +23,7 @@ data class CreationDate(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): CreationDate? {
-            XmlUtils.readText(parser)?.let { it ->
+            XmlUtils.readText(parser)?.let {
                 return CreationDate(it)
             }
             return null

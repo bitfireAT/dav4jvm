@@ -172,7 +172,7 @@ data class Response(
             // (for clarity and resolving relative paths)
             propStat.filter { it.isSuccess() }
                 .map { it.properties }
-                .filterIsInstance(ResourceType::class.java)
+                .filterIsInstance<ResourceType>()
                 .firstOrNull()
                 ?.let { type ->
                     if (type.types.contains(ResourceType.COLLECTION))

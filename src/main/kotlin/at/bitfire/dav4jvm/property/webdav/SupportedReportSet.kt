@@ -34,7 +34,7 @@ class SupportedReportSet: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedReportSet? {
+        override fun create(parser: XmlPullParser): SupportedReportSet {
             /* <!ELEMENT supported-report-set (supported-report*)>
                <!ELEMENT supported-report report>
                <!ELEMENT report ANY>

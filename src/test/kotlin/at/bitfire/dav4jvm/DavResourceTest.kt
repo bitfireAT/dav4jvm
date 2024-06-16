@@ -602,7 +602,7 @@ class DavResourceTest {
         dav.propfind(0, ResourceType.NAME) { response, relation ->
             called = true
             assertEquals(Response.HrefRelation.SELF, relation)
-            assertTrue(response.properties.filterIsInstance(ResourceType::class.java).isEmpty())
+            assertTrue(response.properties.filterIsInstance<ResourceType>().isEmpty())
         }
         assertTrue(called)
 

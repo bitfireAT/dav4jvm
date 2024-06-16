@@ -9,7 +9,6 @@ package at.bitfire.dav4jvm
 import okhttp3.HttpUrl
 import java.net.URI
 import java.net.URISyntaxException
-import java.net.URLDecoder
 import java.util.logging.Level
 import java.util.logging.Logger
 
