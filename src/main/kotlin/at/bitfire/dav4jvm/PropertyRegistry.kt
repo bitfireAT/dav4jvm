@@ -23,6 +23,7 @@ import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.AddressbookDescription
 import at.bitfire.dav4jvm.property.carddav.AddressbookHomeSet
 import at.bitfire.dav4jvm.property.carddav.SupportedAddressData
+import at.bitfire.dav4jvm.property.push.PushMessage
 import at.bitfire.dav4jvm.property.push.PushSubscribe
 import at.bitfire.dav4jvm.property.push.PushTransports
 import at.bitfire.dav4jvm.property.push.Subscription
@@ -84,6 +85,7 @@ object PropertyRegistry {
             at.bitfire.dav4jvm.property.caldav.MaxResourceSize.Factory,
             at.bitfire.dav4jvm.property.carddav.MaxResourceSize.Factory,
             Owner.Factory,
+            PushMessage.Factory,
             PushSubscribe.Factory,
             PushTransports.Factory,
             QuotaAvailableBytes.Factory,

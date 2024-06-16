@@ -10,7 +10,7 @@
 
 # Java/Kotlin files
 *.class
-kotlin/
+.kotlin/
 
 # Generated files
 bin/
