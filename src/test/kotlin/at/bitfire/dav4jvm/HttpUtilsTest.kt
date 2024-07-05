@@ -6,11 +6,6 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import org.apache.commons.lang3.time.TimeZones
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -20,6 +15,10 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
 class HttpUtilsTest {
 
@@ -35,7 +34,7 @@ class HttpUtilsTest {
 
     @Test
     fun formatDate() {
-        val cal = Calendar.getInstance(TimeZone.getTimeZone(TimeZones.GMT_ID))
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
         cal.set(2023, 4, 11, 17, 26, 35)
         cal.timeZone = TimeZone.getTimeZone("UTC")
         assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", HttpUtils.formatDate(
