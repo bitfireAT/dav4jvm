@@ -1,5 +1,5 @@
-import org.jetbrains.dokka.gradle.DokkaTask
 import java.net.URL
+import org.jetbrains.dokka.gradle.DokkaTask
 
 repositories {
     mavenCentral()
@@ -45,7 +45,6 @@ tasks.withType<DokkaTask>().configureEach {
 
 dependencies {
     api(libs.okhttp)
-    implementation(libs.commons.lang3)
     api(libs.xpp3)
 
     testImplementation(libs.junit4)
