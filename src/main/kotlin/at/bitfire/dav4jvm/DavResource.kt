@@ -20,13 +20,6 @@ import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import java.io.EOFException
-import java.io.IOException
-import java.io.Reader
-import java.io.StringWriter
-import java.net.HttpURLConnection
-import java.util.logging.Level
-import java.util.logging.Logger
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -37,6 +30,13 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import java.io.EOFException
+import java.io.IOException
+import java.io.Reader
+import java.io.StringWriter
+import java.net.HttpURLConnection
+import java.util.logging.Level
+import java.util.logging.Logger
 import at.bitfire.dav4jvm.Response as DavResponse
 
 /**
@@ -52,12 +52,12 @@ import at.bitfire.dav4jvm.Response as DavResponse
  *
  * @param httpClient    [OkHttpClient] to access this object (must not follow redirects)
  * @param location      location of the WebDAV resource
- * @param log           will be used for logging
+ * @param logger        will be used for logging
  */
 open class DavResource @JvmOverloads constructor(
-        val httpClient: OkHttpClient,
-        location: HttpUrl,
-        val log: Logger = Dav4jvm.log
+    val httpClient: OkHttpClient,
+    location: HttpUrl,
+    val logger: Logger = Logger.getLogger(DavResource::class.java.name)
 ) {
 
     companion object {
@@ -680,7 +680,7 @@ open class DavResource @JvmOverloads constructor(
                 response.use {
                     val target = it.header("Location")?.let { location.resolve(it) }
                     if (target != null) {
-                        log.fine("Redirected, new location = $target")
+                        logger.fine("Redirected, new location = $target")
 
                         if (location.isHttps && !target.isHttps)
                             throw DavException("Received redirect from HTTPS to HTTP")
@@ -718,18 +718,18 @@ open class DavResource @JvmOverloads constructor(
                     val firstBytes = ByteArray(XML_SIGNATURE.size)
                     body.source().peek().readFully(firstBytes)
                     if (XML_SIGNATURE.contentEquals(firstBytes)) {
-                        Dav4jvm.log.warning("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
+                        logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
 
                         // response is OK, return and do not throw Exception below
                         return
                     }
                 } catch (e: Exception) {
-                    Dav4jvm.log.log(Level.WARNING, "Couldn't scan for XML signature", e)
+                    logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
                 }
 
                 throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
             }
-        } ?: log.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+        } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
     }
 
 

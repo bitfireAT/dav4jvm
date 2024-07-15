@@ -21,6 +21,7 @@ import java.util.LinkedList
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.logging.Logger
 
 /**
  * Handler to manage authentication against a given service (may be limited to one domain).
@@ -33,13 +34,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * Usage: Set as authenticator *and* as network interceptor.
  */
 class BasicDigestAuthHandler(
-        /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
-        val domain: String?,
+    /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
+    val domain: String?,
 
-        val username: String,
-        val password: String,
+    val username: String,
+    val password: String,
 
-        val insecurePreemptive: Boolean = false
+    val insecurePreemptive: Boolean = false
 ): Authenticator, Interceptor {
 
     companion object {
@@ -64,13 +65,15 @@ class BasicDigestAuthHandler(
     // cached authentication schemes
     private var basicAuth: Challenge? = null
     private var digestAuth: Challenge? = null
+    
+    private val logger = Logger.getLogger(javaClass.name)
 
 
     fun authenticateRequest(request: Request, response: Response?): Request? {
         domain?.let {
             val host = request.url.host
             if (!domain.equals(UrlUtils.hostToDomain(host), true)) {
-                Dav4jvm.log.warning("Not authenticating against $host because it doesn't belong to $domain")
+                logger.warning("Not authenticating against $host because it doesn't belong to $domain")
                 return null
             }
         }
@@ -79,7 +82,7 @@ class BasicDigestAuthHandler(
             // we're not processing a 401 response
 
             if (basicAuth == null && digestAuth == null && (request.isHttps || insecurePreemptive)) {
-                Dav4jvm.log.fine("Trying Basic auth preemptively")
+                logger.fine("Trying Basic auth preemptively")
                 basicAuth = Challenge("Basic", "")
             }
 
@@ -92,7 +95,7 @@ class BasicDigestAuthHandler(
                 when {
                     "Basic".equals(challenge.scheme, true) -> {
                         basicAuth?.let {
-                            Dav4jvm.log.warning("Basic credentials didn't work last time -> aborting")
+                            logger.warning("Basic credentials didn't work last time -> aborting")
                             basicAuth = null
                             return null
                         }
@@ -100,7 +103,7 @@ class BasicDigestAuthHandler(
                     }
                     "Digest".equals(challenge.scheme, true) -> {
                         if (digestAuth != null && !"true".equals(challenge.authParams["stale"], true)) {
-                            Dav4jvm.log.warning("Digest credentials didn't work last time and server nonce has not expired -> aborting")
+                            logger.warning("Digest credentials didn't work last time and server nonce has not expired -> aborting")
                             digestAuth = null
                             return null
                         }
@@ -115,12 +118,12 @@ class BasicDigestAuthHandler(
         // we MUST prefer Digest auth [https://tools.ietf.org/html/rfc2617#section-4.6]
         when {
             digestAuth != null -> {
-                Dav4jvm.log.fine("Adding Digest authorization request for ${request.url}")
+                logger.fine("Adding Digest authorization request for ${request.url}")
                 return digestRequest(request, digestAuth)
             }
 
             basicAuth != null -> {
-                Dav4jvm.log.fine("Adding Basic authorization header for ${request.url}")
+                logger.fine("Adding Basic authorization header for ${request.url}")
 
                 /* In RFC 2617 (obsolete), there was no encoding for credentials defined, although
                  one can interpret it as "use ISO-8859-1 encoding". This has been clarified by RFC 7617,
@@ -133,7 +136,7 @@ class BasicDigestAuthHandler(
             }
 
             response != null ->
-                Dav4jvm.log.warning("No supported authentication scheme")
+                logger.warning("No supported authentication scheme")
         }
 
         return null
@@ -158,13 +161,13 @@ class BasicDigestAuthHandler(
         if (realm != null)
             params.add("realm=${quotedString(realm)}")
         else {
-            Dav4jvm.log.warning("No realm provided, aborting Digest auth")
+            logger.warning("No realm provided, aborting Digest auth")
             return null
         }
         if (nonce != null)
             params.add("nonce=${quotedString(nonce)}")
         else {
-            Dav4jvm.log.warning("No nonce provided, aborting Digest auth")
+            logger.warning("No nonce provided, aborting Digest auth")
             return null
         }
         if (opaque != null)
@@ -193,7 +196,7 @@ class BasicDigestAuthHandler(
                 else ->
                     null
             }
-            Dav4jvm.log.finer("A1=$a1")
+            logger.finer("A1=$a1")
 
             val a2: String? = when (qop) {
                 Protection.Auth ->
@@ -203,18 +206,18 @@ class BasicDigestAuthHandler(
                         val body = request.body
                         "$method:$digestURI:" + (if (body != null) h(body) else h(""))
                     } catch(e: IOException) {
-                        Dav4jvm.log.warning("Couldn't get entity-body for hash calculation")
+                        logger.warning("Couldn't get entity-body for hash calculation")
                         null
                     }
                 }
             }
-            Dav4jvm.log.finer("A2=$a2")
+            logger.finer("A2=$a2")
 
             if (a1 != null && a2 != null)
                 response = kd(h(a1), "$nonce:$ncValue:$clientNonce:${qop.qop}:${h(a2)}")
 
         } else {
-            Dav4jvm.log.finer("Using legacy Digest auth")
+            logger.finer("Using legacy Digest auth")
 
             // legacy (backwards compatibility with RFC 2069)
             if (algorithm == Algorithm.MD5) {
@@ -235,7 +238,7 @@ class BasicDigestAuthHandler(
 
 
     private enum class Algorithm(
-            val algorithm: String
+        val algorithm: String
     ) {
         MD5("MD5"),
         MD5_SESSION("MD5-sess");
@@ -248,7 +251,8 @@ class BasicDigestAuthHandler(
                     MD5_SESSION.algorithm.equals(paramValue, true) ->
                         MD5_SESSION
                     else -> {
-                        Dav4jvm.log.warning("Ignoring unknown hash algorithm: $paramValue")
+                        val logger = Logger.getLogger(Algorithm::javaClass.name)
+                        logger.warning("Ignoring unknown hash algorithm: $paramValue")
                         null
                     }
                 }

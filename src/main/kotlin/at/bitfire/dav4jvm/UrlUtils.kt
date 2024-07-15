@@ -14,7 +14,9 @@ import java.util.logging.Logger
 
 object UrlUtils {
 
-    val logger by lazy { Logger.getLogger(javaClass.name) }
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
+
 
     /**
      * Compares two URLs in WebDAV context. If two URLs are considered *equal*, both

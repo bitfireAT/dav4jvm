@@ -29,11 +29,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.logging.Logger
 
+@Suppress("unused")
 class DavCalendar @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavCollection(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    logger: Logger = Logger.getLogger(DavCalendar::javaClass.name)
+): DavCollection(httpClient, location, logger) {
 
     companion object {
         val MIME_ICALENDAR = "text/calendar".toMediaType()

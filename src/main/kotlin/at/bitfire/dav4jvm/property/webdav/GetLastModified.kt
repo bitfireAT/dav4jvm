@@ -6,13 +6,13 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
+import java.util.logging.Logger
 
 data class GetLastModified(
     var lastModified: Instant
@@ -34,8 +34,10 @@ data class GetLastModified(
                 val date = HttpUtils.parseDate(rawDate)
                 if (date != null)
                     return GetLastModified(date)
-                else
-                    Dav4jvm.log.warning("Couldn't parse Last-Modified date")
+                else {
+                    val logger = Logger.getLogger(javaClass.name)
+                    logger.warning("Couldn't parse Last-Modified date")
+                }
             }
             return null
         }

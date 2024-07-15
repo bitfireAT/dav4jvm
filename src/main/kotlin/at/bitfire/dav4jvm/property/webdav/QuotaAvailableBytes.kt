@@ -6,12 +6,12 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
+import java.util.logging.Logger
 
 data class QuotaAvailableBytes(
         val quotaAvailableBytes: Long
@@ -29,7 +29,8 @@ data class QuotaAvailableBytes(
                 try {
                     return QuotaAvailableBytes(valueStr.toLong())
                 } catch(e: NumberFormatException) {
-                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
+                    val logger = Logger.getLogger(QuotaAvailableBytes::javaClass.name)
+                    logger.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
                 }
             }
             return null
