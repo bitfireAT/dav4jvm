@@ -23,11 +23,12 @@ import java.io.IOException
 import java.io.StringWriter
 import java.util.logging.Logger
 
+@Suppress("unused")
 class DavAddressBook @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavCollection(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    logger: Logger = Logger.getLogger(DavAddressBook::javaClass.name)
+): DavCollection(httpClient, location, logger) {
 
     companion object {
         val MIME_JCARD = "application/vcard+json".toMediaType()

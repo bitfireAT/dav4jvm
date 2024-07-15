@@ -6,12 +6,12 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
+import java.util.logging.Logger
 import java.util.regex.Pattern
 
 data class CalendarColor(
@@ -54,7 +54,8 @@ data class CalendarColor(
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {
-                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse color, ignoring", e)
+                    val logger = Logger.getLogger(javaClass.name)
+                    logger.log(Level.WARNING, "Couldn't parse color, ignoring", e)
                 }
             }
             return null

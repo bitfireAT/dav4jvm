@@ -6,7 +6,6 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.Dav4jvm.log
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
@@ -16,6 +15,7 @@ import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
 import java.net.ProtocolException
+import java.util.logging.Logger
 
 /**
  * Represents a WebDAV response XML Element.
@@ -23,6 +23,7 @@ import java.net.ProtocolException
  *     <!ELEMENT response (href, ((href*, status)|(propstat+)),
  *                         error?, responsedescription? , location?) >
  */
+@Suppress("unused")
 data class Response(
     /**
      * URL of the requested resource. For instance, if `this` is a result
@@ -110,6 +111,8 @@ data class Response(
          * that you query [ResourceType].
          */
         fun parse(parser: XmlPullParser, location: HttpUrl, callback: MultiResponseCallback) {
+            val logger = Logger.getLogger(Response::javaClass.name)
+
             val depth = parser.depth
 
             var href: HttpUrl? = null
@@ -150,7 +153,7 @@ data class Response(
                             status = try {
                                 StatusLine.parse(parser.nextText())
                             } catch(e: ProtocolException) {
-                                log.warning("Invalid status line, treating as HTTP error 500")
+                                logger.warning("Invalid status line, treating as HTTP error 500")
                                 StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                             }
                         PropStat.NAME ->
@@ -164,7 +167,7 @@ data class Response(
             }
 
             if (href == null) {
-                log.warning("Ignoring XML response element without valid href")
+                logger.warning("Ignoring XML response element without valid href")
                 return
             }
 

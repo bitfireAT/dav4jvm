@@ -6,7 +6,6 @@
 
 package at.bitfire.dav4jvm.exception
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
@@ -20,6 +19,7 @@ import java.io.IOException
 import java.io.Serializable
 import java.lang.Long.min
 import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -46,6 +46,9 @@ open class DavException @JvmOverloads constructor(
                 (type.type == "application" && type.subtype in arrayOf("html", "xml"))
 
     }
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     var request: String? = null
 
@@ -93,7 +96,7 @@ open class DavException @JvmOverloads constructor(
                     }
                 }
             } catch (e: Exception) {
-                Dav4jvm.log.log(Level.WARNING, "Couldn't read HTTP request", e)
+                logger.log(Level.WARNING, "Couldn't read HTTP request", e)
                 requestBody = "Couldn't read HTTP request: ${e.message}"
             }
 
@@ -125,14 +128,14 @@ open class DavException @JvmOverloads constructor(
                                         eventType = parser.next()
                                     }
                                 } catch (e: XmlPullParserException) {
-                                    Dav4jvm.log.log(Level.WARNING, "Couldn't parse XML response", e)
+                                    logger.log(Level.WARNING, "Couldn't parse XML response", e)
                                 }
                             }
                         }
                     }
                 }
             } catch (e: IOException) {
-                Dav4jvm.log.log(Level.WARNING, "Couldn't read HTTP response", e)
+                logger.log(Level.WARNING, "Couldn't read HTTP response", e)
                 responseBody = "Couldn't read HTTP response: ${e.message}"
             } finally {
                 httpResponse.body?.close()

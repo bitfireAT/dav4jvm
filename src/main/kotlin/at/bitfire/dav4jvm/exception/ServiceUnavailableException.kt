@@ -6,14 +6,17 @@
 
 package at.bitfire.dav4jvm.exception
 
-import at.bitfire.dav4jvm.Dav4jvm
 import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Response
 import java.net.HttpURLConnection
 import java.time.Instant
 import java.util.logging.Level
+import java.util.logging.Logger
 
 class ServiceUnavailableException: HttpException {
+
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
 
     var retryAfter: Instant? = null
 
@@ -30,7 +33,7 @@ class ServiceUnavailableException: HttpException {
                     val seconds = after.toLong()
                     Instant.now().plusSeconds(seconds)
                 } catch (e: NumberFormatException) {
-                    Dav4jvm.log.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
+                    logger.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
                     null
                 }
         }

@@ -11,21 +11,21 @@ import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import java.io.StringWriter
-import java.util.logging.Logger
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.StringWriter
+import java.util.logging.Logger
 
 /**
  * Represents a WebDAV collection.
  */
 open class DavCollection @JvmOverloads constructor(
-        httpClient: OkHttpClient,
-        location: HttpUrl,
-        log: Logger = Dav4jvm.log
-): DavResource(httpClient, location, log) {
+    httpClient: OkHttpClient,
+    location: HttpUrl,
+    logger: Logger = Logger.getLogger(DavCollection::class.java.name)
+): DavResource(httpClient, location, logger) {
 
     companion object {
         val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")

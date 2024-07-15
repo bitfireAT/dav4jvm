@@ -6,6 +6,10 @@
 
 package at.bitfire.dav4jvm
 
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -15,10 +19,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import java.util.logging.Logger
 
 class HttpUtilsTest {
 
@@ -74,7 +75,9 @@ class HttpUtilsTest {
     @Test
     fun parseDate_ANSI_C() {
         // ANSI C's asctime() format
-        Dav4jvm.log.info("Expected date: " + DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US).format(ZonedDateTime.now()))
+        val logger = Logger.getLogger(javaClass.name)
+        logger.info("Expected date: " + DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US).format(ZonedDateTime.now()))
+
         assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun Nov  6 08:49:37 1994"))
     }
 

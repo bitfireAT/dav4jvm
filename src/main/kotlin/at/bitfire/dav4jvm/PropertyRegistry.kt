@@ -48,13 +48,17 @@ import at.bitfire.dav4jvm.property.webdav.SyncToken
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
+import java.util.logging.Logger
 
 object PropertyRegistry {
 
     private val factories = mutableMapOf<Property.Name, PropertyFactory>()
+    private val logger
+        get() = Logger.getLogger(javaClass.name)
+
 
     init {
-        Dav4jvm.log.info("Registering DAV property factories")
+        logger.info("Registering DAV property factories")
         registerDefaultFactories()
     }
 
@@ -112,7 +116,7 @@ object PropertyRegistry {
      * @param factory property factory to be registered
      */
     fun register(factory: PropertyFactory) {
-        Dav4jvm.log.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
+        logger.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
         factories[factory.getName()] = factory
     }
 
@@ -129,11 +133,11 @@ object PropertyRegistry {
     }
 
     fun create(name: Property.Name, parser: XmlPullParser) =
-            try {
-                factories[name]?.create(parser)
-            } catch (e: XmlPullParserException) {
-                Dav4jvm.log.log(Level.WARNING, "Couldn't parse $name", e)
-                null
-            }
+        try {
+            factories[name]?.create(parser)
+        } catch (e: XmlPullParserException) {
+            logger.log(Level.WARNING, "Couldn't parse $name", e)
+            null
+        }
 
 }
