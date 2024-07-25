@@ -9,7 +9,10 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
+import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * Represents a `{DAV:Push}topic` property.
@@ -30,10 +33,16 @@ class Topic private constructor(
 
     object Factory: PropertyFactory {
 
+        private val logger = Logger.getLogger(javaClass.name)
+
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
+        override fun create(parser: XmlPullParser): Topic? = try {
             Topic(XmlUtils.requireReadText(parser))
+        } catch (e: InvalidPropertyException) {
+            logger.log(Level.INFO, "Invalid or missing topic property. Push is not supported", e)
+            null
+        }
 
     }
 
