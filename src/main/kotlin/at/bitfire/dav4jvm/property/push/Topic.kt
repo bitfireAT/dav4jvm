@@ -40,7 +40,7 @@ class Topic private constructor(
         override fun create(parser: XmlPullParser): Topic? = try {
             Topic(XmlUtils.requireReadText(parser))
         } catch (e: InvalidPropertyException) {
-            logger.log(Level.INFO, "Invalid or missing topic property. Push is not supported", e)
+            logger.log(Level.FINE, "Invalid or missing topic property. Push is not supported", e)
             null
         }
 
