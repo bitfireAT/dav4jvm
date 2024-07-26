@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
+import java.io.IOException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
 import org.xmlpull.v1.XmlSerializer
-import java.io.IOException
 
 object XmlUtils {
 
@@ -86,8 +86,14 @@ object XmlUtils {
     /**
      * Same as [readText], but requires a [XmlPullParser.TEXT] value.
      *
+     * **Warning: Using this function is highly not recommended.**
+     *
      * @throws InvalidPropertyException when no text could be read
      */
+    @Deprecated(
+        message = "Use readText instead. This function throws exceptions for unexpected contents.",
+        replaceWith = ReplaceWith("readText(parser)")
+    )
     @Throws(InvalidPropertyException::class, IOException::class, XmlPullParserException::class)
     fun requireReadText(parser: XmlPullParser): String =
         readText(parser) ?:
