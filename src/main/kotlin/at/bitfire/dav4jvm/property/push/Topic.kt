@@ -32,7 +32,9 @@ class Topic private constructor(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): Topic? = readText(parser)?.let { Topic(it) }
+        override fun create(parser: XmlPullParser): Topic {
+            return Topic(readText(parser) ?: "")
+        }
 
     }
 

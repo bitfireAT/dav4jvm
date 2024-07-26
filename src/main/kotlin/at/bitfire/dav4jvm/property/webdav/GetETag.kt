@@ -78,7 +78,10 @@ class GetETag(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetETag? = readText(parser)?.let { GetETag(it) }
+        override fun create(parser: XmlPullParser): GetETag {
+            return GetETag(readText(parser) ?: "")
+        }
+
 
     }
 
