@@ -32,7 +32,7 @@ class PushTransports private constructor(
     fun hasWebPush() = transports.contains(WEB_PUSH)
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<PushTransports> {
 
         override fun getName() = NAME
 

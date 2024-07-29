@@ -14,7 +14,7 @@ import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
 class ScheduleTag(
-        rawScheduleTag: String?
+    rawScheduleTag: String?
 ): Property {
 
     companion object {
@@ -33,12 +33,11 @@ class ScheduleTag(
     override fun toString() = scheduleTag ?: "(null)"
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<ScheduleTag> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                ScheduleTag(XmlUtils.readText(parser))
+        override fun create(parser: XmlPullParser) = ScheduleTag(XmlUtils.readText(parser))
 
     }
 

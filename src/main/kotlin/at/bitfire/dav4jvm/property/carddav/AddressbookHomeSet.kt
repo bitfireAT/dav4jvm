@@ -18,12 +18,11 @@ class AddressbookHomeSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<AddressbookHomeSet>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, AddressbookHomeSet())
+        override fun create(parser: XmlPullParser) = create(parser, AddressbookHomeSet())
 
     }
 

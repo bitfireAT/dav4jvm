@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class CalendarDescription(
-        val description: String?
+    val description: String?
 ): Property {
 
     companion object {
@@ -21,7 +21,7 @@ data class CalendarDescription(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<CalendarDescription> {
 
         override fun getName() = NAME
 

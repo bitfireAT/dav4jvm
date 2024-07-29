@@ -14,7 +14,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.xmlpull.v1.XmlPullParser
 
 data class GetContentType(
-        val type: MediaType?
+    val type: MediaType?
 ): Property {
 
     companion object {
@@ -23,13 +23,13 @@ data class GetContentType(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<GetContentType> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT getcontenttype (#PCDATA) >
-                GetContentType(XmlUtils.readText(parser)?.toMediaTypeOrNull())
+            // <!ELEMENT getcontenttype (#PCDATA) >
+            GetContentType(XmlUtils.readText(parser)?.toMediaTypeOrNull())
 
     }
 

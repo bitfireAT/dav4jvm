@@ -17,7 +17,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 class Subscription private constructor(
-    val webPushSubscription: WebPushSubscription
+    val webPushSubscription: WebPushSubscription?
 ): Property {
 
     companion object {
@@ -28,11 +28,11 @@ class Subscription private constructor(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<Subscription> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): Subscription? {
+        override fun create(parser: XmlPullParser): Subscription {
             // currently we only support WebPushSubscription
             var webPushSubscription: WebPushSubscription? = null
 
@@ -40,9 +40,7 @@ class Subscription private constructor(
                 webPushSubscription = WebPushSubscription.Factory.create(parser)
             }
 
-            return webPushSubscription?.let {
-                Subscription(webPushSubscription = it)
-            }
+            return Subscription(webPushSubscription)
         }
 
     }

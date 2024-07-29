@@ -30,7 +30,7 @@ class WebPushSubscription: Property {
     var pushResource: String? = null
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<WebPushSubscription> {
 
         override fun getName() = NAME
 

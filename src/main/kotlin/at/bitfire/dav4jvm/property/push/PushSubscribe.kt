@@ -11,8 +11,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.XmlUtils.readText
-import java.time.Instant
 import org.xmlpull.v1.XmlPullParser
+import java.time.Instant
 
 /**
  * Represents a `{DAV:Push}push-subscribe` property.
@@ -34,7 +34,7 @@ class PushSubscribe: Property {
     var subscription: Subscription? = null
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<PushSubscribe> {
 
         override fun getName() = NAME
 

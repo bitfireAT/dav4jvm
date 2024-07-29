@@ -6,45 +6,13 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.property.caldav.CalendarColor
-import at.bitfire.dav4jvm.property.caldav.CalendarData
-import at.bitfire.dav4jvm.property.caldav.CalendarDescription
-import at.bitfire.dav4jvm.property.caldav.CalendarHomeSet
-import at.bitfire.dav4jvm.property.caldav.CalendarProxyReadFor
-import at.bitfire.dav4jvm.property.caldav.CalendarProxyWriteFor
-import at.bitfire.dav4jvm.property.caldav.CalendarTimezone
-import at.bitfire.dav4jvm.property.caldav.CalendarUserAddressSet
-import at.bitfire.dav4jvm.property.caldav.GetCTag
-import at.bitfire.dav4jvm.property.caldav.ScheduleTag
-import at.bitfire.dav4jvm.property.caldav.Source
-import at.bitfire.dav4jvm.property.caldav.SupportedCalendarComponentSet
-import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData
+import at.bitfire.dav4jvm.property.caldav.*
 import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.AddressbookDescription
 import at.bitfire.dav4jvm.property.carddav.AddressbookHomeSet
 import at.bitfire.dav4jvm.property.carddav.SupportedAddressData
-import at.bitfire.dav4jvm.property.push.PushMessage
-import at.bitfire.dav4jvm.property.push.PushSubscribe
-import at.bitfire.dav4jvm.property.push.PushTransports
-import at.bitfire.dav4jvm.property.push.Subscription
-import at.bitfire.dav4jvm.property.push.Topic
-import at.bitfire.dav4jvm.property.push.WebPushSubscription
-import at.bitfire.dav4jvm.property.webdav.AddMember
-import at.bitfire.dav4jvm.property.webdav.CreationDate
-import at.bitfire.dav4jvm.property.webdav.CurrentUserPrincipal
-import at.bitfire.dav4jvm.property.webdav.CurrentUserPrivilegeSet
-import at.bitfire.dav4jvm.property.webdav.DisplayName
-import at.bitfire.dav4jvm.property.webdav.GetContentLength
-import at.bitfire.dav4jvm.property.webdav.GetContentType
-import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.GetLastModified
-import at.bitfire.dav4jvm.property.webdav.GroupMembership
-import at.bitfire.dav4jvm.property.webdav.Owner
-import at.bitfire.dav4jvm.property.webdav.QuotaAvailableBytes
-import at.bitfire.dav4jvm.property.webdav.QuotaUsedBytes
-import at.bitfire.dav4jvm.property.webdav.ResourceType
-import at.bitfire.dav4jvm.property.webdav.SupportedReportSet
-import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.push.*
+import at.bitfire.dav4jvm.property.webdav.*
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
@@ -52,7 +20,7 @@ import java.util.logging.Logger
 
 object PropertyRegistry {
 
-    private val factories = mutableMapOf<Property.Name, PropertyFactory>()
+    private val factories = mutableMapOf<Property.Name, PropertyFactory<*>>()
     private val logger
         get() = Logger.getLogger(javaClass.name)
 
@@ -115,7 +83,7 @@ object PropertyRegistry {
      *
      * @param factory property factory to be registered
      */
-    fun register(factory: PropertyFactory) {
+    fun register(factory: PropertyFactory<*>) {
         logger.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
         factories[factory.getName()] = factory
     }
@@ -126,7 +94,7 @@ object PropertyRegistry {
 
      * @param factories property factories to be registered
      */
-    fun register(factories: Iterable<PropertyFactory>) {
+    fun register(factories: Iterable<PropertyFactory<*>>) {
         factories.forEach {
             register(it)
         }

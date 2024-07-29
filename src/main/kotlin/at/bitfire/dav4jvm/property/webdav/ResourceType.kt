@@ -35,7 +35,7 @@ class ResourceType: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<ResourceType> {
 
         override fun getName() = NAME
 

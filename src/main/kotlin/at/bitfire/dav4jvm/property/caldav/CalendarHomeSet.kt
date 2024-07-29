@@ -18,12 +18,11 @@ class CalendarHomeSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<CalendarHomeSet>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, CalendarHomeSet())
+        override fun create(parser: XmlPullParser) = create(parser, CalendarHomeSet())
 
     }
 

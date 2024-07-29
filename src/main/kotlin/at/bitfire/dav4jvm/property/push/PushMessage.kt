@@ -28,12 +28,11 @@ class PushMessage(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<PushMessage> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-            PushMessage(XmlUtils.readTextProperty(parser, Topic.NAME))
+        override fun create(parser: XmlPullParser) = PushMessage(XmlUtils.readTextProperty(parser, Topic.NAME))
 
     }
 

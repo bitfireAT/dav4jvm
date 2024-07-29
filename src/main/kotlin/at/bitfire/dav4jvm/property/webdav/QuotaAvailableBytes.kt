@@ -8,32 +8,22 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.readLongOrNull
 import org.xmlpull.v1.XmlPullParser
-import java.util.logging.Level
-import java.util.logging.Logger
 
 data class QuotaAvailableBytes(
-        val quotaAvailableBytes: Long
+    val quotaAvailableBytes: Long?
 ) : Property {
     companion object {
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "quota-available-bytes")
     }
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<QuotaAvailableBytes> {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): QuotaAvailableBytes? {
-            XmlUtils.readText(parser)?.let { valueStr ->
-                try {
-                    return QuotaAvailableBytes(valueStr.toLong())
-                } catch(e: NumberFormatException) {
-                    val logger = Logger.getLogger(QuotaAvailableBytes::javaClass.name)
-                    logger.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
-                }
-            }
-            return null
+        override fun create(parser: XmlPullParser): QuotaAvailableBytes {
+            return QuotaAvailableBytes(readLongOrNull(parser))
         }
     }
 }

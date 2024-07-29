@@ -17,7 +17,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 class Topic private constructor(
-    val topic: String
+    val topic: String?
 ): Property {
 
     companion object {
@@ -28,12 +28,12 @@ class Topic private constructor(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<Topic> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): Topic {
-            return Topic(readText(parser) ?: "")
+            return Topic(readText(parser))
         }
 
     }

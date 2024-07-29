@@ -18,12 +18,11 @@ class CalendarProxyWriteFor: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<CalendarProxyWriteFor>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, CalendarProxyWriteFor())
+        override fun create(parser: XmlPullParser) = create(parser, CalendarProxyWriteFor())
 
     }
 

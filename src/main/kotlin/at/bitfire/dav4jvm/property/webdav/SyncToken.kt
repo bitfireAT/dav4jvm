@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class SyncToken(
-        val token: String?
+    val token: String?
 ): Property {
 
     companion object {
@@ -21,13 +21,13 @@ data class SyncToken(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<SyncToken> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT sync-token #PCDATA>
-                SyncToken(XmlUtils.readText(parser))
+            // <!ELEMENT sync-token #PCDATA>
+            SyncToken(XmlUtils.readText(parser))
 
     }
 }

@@ -36,11 +36,11 @@ class SupportedCalendarData: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<SupportedCalendarData> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedCalendarData? {
+        override fun create(parser: XmlPullParser): SupportedCalendarData {
             val supported = SupportedCalendarData()
 
             try {
@@ -54,7 +54,9 @@ class SupportedCalendarData: Property {
             } catch(e: XmlPullParserException) {
                 val logger = Logger.getLogger(javaClass.name)
                 logger.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
-                return null
+                // fixme: should we return supported or simply SupportedCalendarData?
+                //  It's possible that returning supported it contains a mid-built `types`
+                return supported
             }
 
             return supported

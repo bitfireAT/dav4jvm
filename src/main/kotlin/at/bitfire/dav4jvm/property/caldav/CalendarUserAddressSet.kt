@@ -18,12 +18,11 @@ class CalendarUserAddressSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<CalendarUserAddressSet>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, CalendarUserAddressSet())
+        override fun create(parser: XmlPullParser) = create(parser, CalendarUserAddressSet())
 
     }
 

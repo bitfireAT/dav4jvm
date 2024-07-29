@@ -12,9 +12,9 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
-        var supportsEvents: Boolean,
-        var supportsTasks: Boolean,
-        var supportsJournal: Boolean
+    var supportsEvents: Boolean,
+    var supportsTasks: Boolean,
+    var supportsJournal: Boolean
 ): Property {
 
     companion object {
@@ -28,7 +28,7 @@ data class SupportedCalendarComponentSet(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<SupportedCalendarComponentSet> {
 
         override fun getName() = NAME
 

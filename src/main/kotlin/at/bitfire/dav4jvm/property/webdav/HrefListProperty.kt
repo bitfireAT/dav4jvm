@@ -11,7 +11,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
-import java.util.LinkedList
+import java.util.*
 
 abstract class HrefListProperty: Property {
 
@@ -23,10 +23,9 @@ abstract class HrefListProperty: Property {
     override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
 
 
+    abstract class Factory<PropertyType : HrefListProperty> : PropertyFactory<PropertyType> {
 
-    abstract class Factory: PropertyFactory {
-
-        fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
+        fun create(parser: XmlPullParser, list: PropertyType): PropertyType {
             XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
             return list
         }

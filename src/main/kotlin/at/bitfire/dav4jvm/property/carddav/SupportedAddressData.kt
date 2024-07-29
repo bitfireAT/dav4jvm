@@ -37,11 +37,11 @@ class SupportedAddressData: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<SupportedAddressData> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedAddressData? {
+        override fun create(parser: XmlPullParser): SupportedAddressData {
             val supported = SupportedAddressData()
 
             try {
@@ -55,7 +55,8 @@ class SupportedAddressData: Property {
             } catch(e: XmlPullParserException) {
                 val logger = Logger.getLogger(javaClass.name)
                 logger.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
-                return null
+                // fixme: same as SupportedCalendarData
+                return supported
             }
 
             return supported

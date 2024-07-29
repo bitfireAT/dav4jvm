@@ -17,12 +17,11 @@ class Owner: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<Owner>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, Owner())
+        override fun create(parser: XmlPullParser) = create(parser, Owner())
 
     }
 

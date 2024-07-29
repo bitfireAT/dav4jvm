@@ -17,12 +17,11 @@ class GroupMembership: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory() {
+    object Factory: HrefListProperty.Factory<GroupMembership>() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, GroupMembership())
+        override fun create(parser: XmlPullParser) = create(parser, GroupMembership())
 
     }
 

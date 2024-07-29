@@ -15,7 +15,7 @@ import org.xmlpull.v1.XmlPullParser
 // see RFC 5397: WebDAV Current Principal Extension
 
 data class CurrentUserPrincipal(
-        val href: String?
+    val href: String?
 ): Property {
 
     companion object {
@@ -24,7 +24,7 @@ data class CurrentUserPrincipal(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<CurrentUserPrincipal> {
 
         override fun getName() = NAME
 

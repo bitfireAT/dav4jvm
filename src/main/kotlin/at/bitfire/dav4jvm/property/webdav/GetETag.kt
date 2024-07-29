@@ -20,7 +20,7 @@ import org.xmlpull.v1.XmlPullParser
  * header value to the constructor and then use [eTag] and [weak].
  */
 class GetETag(
-    rawETag: String
+    rawETag: String?
 ): Property {
 
     companion object {
@@ -34,7 +34,7 @@ class GetETag(
     /**
      * The parsed ETag value, excluding the weakness indicator and the quotes.
      */
-    val eTag: String
+    val eTag: String?
 
     /**
      * Whether the ETag is weak.
@@ -46,19 +46,24 @@ class GetETag(
            weak       = "W/"
            opaque-tag = quoted-string
         */
-        val tag: String
+        val tag: String?
 
-        // remove trailing "W/"
-        if (rawETag.startsWith("W/") && rawETag.length >= 2) {
-            // entity tag is weak
-            tag = rawETag.substring(2)
-            weak = true
+        if (rawETag != null) {
+            // remove trailing "W/"
+            if (rawETag.startsWith("W/") && rawETag.length >= 2) {
+                // entity tag is weak
+                tag = rawETag.substring(2)
+                weak = true
+            } else {
+                tag = rawETag
+                weak = false
+            }
         } else {
-            tag = rawETag
+            tag = null
             weak = false
         }
 
-        eTag = QuotedStringUtils.decodeQuotedString(tag)
+        eTag = tag?.let(QuotedStringUtils::decodeQuotedString)
     }
 
     override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
@@ -74,12 +79,12 @@ class GetETag(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<GetETag> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): GetETag {
-            return GetETag(readText(parser) ?: "")
+            return GetETag(readText(parser))
         }
 
 

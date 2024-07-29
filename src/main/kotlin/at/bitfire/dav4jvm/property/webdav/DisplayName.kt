@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class DisplayName(
-        val displayName: String?
+    val displayName: String?
 ): Property {
 
     companion object {
@@ -21,13 +21,13 @@ data class DisplayName(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<DisplayName> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT displayname (#PCDATA) >
-                DisplayName(XmlUtils.readText(parser))
+            // <!ELEMENT displayname (#PCDATA) >
+            DisplayName(XmlUtils.readText(parser))
 
     }
 }

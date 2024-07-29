@@ -25,13 +25,13 @@ data class AddressData(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<AddressData> {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT address-data (#PCDATA)>
-                AddressData(XmlUtils.readText(parser))
+            // <!ELEMENT address-data (#PCDATA)>
+            AddressData(XmlUtils.readText(parser))
 
     }
 

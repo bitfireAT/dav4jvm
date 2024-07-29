@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import org.xmlpull.v1.XmlPullParser
 
 data class GetCTag(
-        val cTag: String?
+    val cTag: String?
 ): Property {
 
     companion object {
@@ -21,12 +21,11 @@ data class GetCTag(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<GetCTag> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                GetCTag(XmlUtils.readText(parser))
+        override fun create(parser: XmlPullParser) = GetCTag(XmlUtils.readText(parser))
 
     }
 }

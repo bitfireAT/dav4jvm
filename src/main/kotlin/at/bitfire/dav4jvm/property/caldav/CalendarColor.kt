@@ -15,7 +15,7 @@ import java.util.logging.Logger
 import java.util.regex.Pattern
 
 data class CalendarColor(
-        val color: Int
+    val color: Int?
 ): Property {
 
     companion object {
@@ -45,11 +45,11 @@ data class CalendarColor(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory: PropertyFactory<CalendarColor> {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CalendarColor? {
+        override fun create(parser: XmlPullParser): CalendarColor {
             XmlUtils.readText(parser)?.let {
                 try {
                     return CalendarColor(parseARGBColor(it))
@@ -58,7 +58,7 @@ data class CalendarColor(
                     logger.log(Level.WARNING, "Couldn't parse color, ignoring", e)
                 }
             }
-            return null
+            return CalendarColor(null)
         }
 
     }
