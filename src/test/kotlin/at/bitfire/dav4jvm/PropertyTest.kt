@@ -7,11 +7,11 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.property.webdav.GetETag
-import java.io.StringReader
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
+import java.io.StringReader
 
 class PropertyTest {
 
@@ -32,7 +32,7 @@ class PropertyTest {
         // parse invalid DAV:getetag
         Property.parse(parser).let {
             assertEquals(1, it.size)
-            assertEquals(GetETag(""), it[0])
+            assertEquals(GetETag(null), it[0])
         }
 
         // we're now at the end of <multistatus>
