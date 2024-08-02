@@ -1,5 +1,7 @@
 package at.bitfire.dav4jvm
 
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import org.junit.Assert.*
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
@@ -126,5 +128,19 @@ class XmlReaderTest {
 
         assertNull(reader.readHttpDateOrNull())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
+    }
+
+    @Test
+    fun testReadContentTypes() {
+        val parser = XmlUtils.newPullParser()
+        parser.setInput(StringReader("<root><test content-type=\"text/plain\">text</test><test content-type=\"application/json\">{}</test></root>"))
+        parser.next()
+        val reader = XmlReader(parser)
+
+        val types = mutableListOf<MediaType>()
+        reader.readContentTypes(Property.Name("", "test"), types::add)
+        assertEquals(2, types.size)
+        assertEquals("text/plain".toMediaType(), types[0])
+        assertEquals("application/json".toMediaType(), types[1])
     }
 }
