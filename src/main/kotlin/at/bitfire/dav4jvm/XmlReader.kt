@@ -84,8 +84,7 @@ class XmlReader(
     }
 
     /**
-     * Uses [readText] to read the tag's value as String, and converts it into an [Instant] using
-     * [HttpUtils.parseDate].
+     * Uses [readText] to read the tag's value as String, and converts it into an [Instant] using [HttpUtils.parseDate].
      * If the conversion fails for any reason, null is returned, and a message is displayed in log.
      *
      * **Only intended to be used by [PropertyFactory.create]**. Do not use outside of [PropertyFactory].

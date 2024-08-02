@@ -4,6 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
+import java.time.Instant
 
 class XmlReaderTest {
     @Test
@@ -104,6 +105,26 @@ class XmlReaderTest {
         parser.next()
 
         assertNull(reader.readLongOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+    }
+
+    @Test
+    fun testReadHttpDateOrNull() {
+        val parser = XmlUtils.newPullParser()
+        parser.setInput(StringReader("<root><test>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>invalid</test></root>"))
+        parser.next()
+        parser.next()       // now on START_TAG <test>
+        val reader = XmlReader(parser)
+
+        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDateOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        parser.next()
+
+        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDateOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        parser.next()
+
+        assertNull(reader.readHttpDateOrNull())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 }
