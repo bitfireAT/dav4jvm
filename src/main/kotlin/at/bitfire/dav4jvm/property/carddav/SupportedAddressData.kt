@@ -55,7 +55,6 @@ class SupportedAddressData: Property {
             } catch(e: XmlPullParserException) {
                 val logger = Logger.getLogger(javaClass.name)
                 logger.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
-                // fixme: same as SupportedCalendarData
                 return supported
             }
 
