@@ -1,7 +1,6 @@
 package at.bitfire.dav4jvm
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
@@ -86,5 +85,25 @@ class XmlReaderTest {
         assertEquals("Test 2", entries[1])
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("test", parser.name)
+    }
+
+    @Test
+    fun testReadLongOrNull() {
+        val parser = XmlUtils.newPullParser()
+        parser.setInput(StringReader("<root><test>1</test><test><garbage/>2</test><test><garbage/>a</test></root>"))
+        parser.next()
+        parser.next()       // now on START_TAG <test>
+        val reader = XmlReader(parser)
+
+        assertEquals(1L, reader.readLongOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        parser.next()
+
+        assertEquals(2L, reader.readLongOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
+        parser.next()
+
+        assertNull(reader.readLongOrNull())
+        assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 }
