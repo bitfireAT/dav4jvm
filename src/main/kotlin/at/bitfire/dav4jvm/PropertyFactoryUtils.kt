@@ -46,7 +46,7 @@ fun PropertyFactory.readHttpDateOrNull(parser: XmlPullParser): Instant? {
             date
         else {
             val logger = Logger.getLogger(javaClass.name)
-            logger.warning("Couldn't parse Last-Modified date")
+            logger.warning("Couldn't parse ${getName()} date")
             null
         }
     }
