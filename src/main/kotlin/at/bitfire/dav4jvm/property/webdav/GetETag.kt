@@ -50,7 +50,7 @@ class GetETag(
 
         if (rawETag != null) {
             // remove trailing "W/"
-            if (rawETag.startsWith("W/") && rawETag.length >= 2) {
+            if (rawETag.startsWith("W/")) {
                 // entity tag is weak
                 tag = rawETag.substring(2)
                 weak = true
