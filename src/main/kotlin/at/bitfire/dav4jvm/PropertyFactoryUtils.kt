@@ -13,7 +13,7 @@ import java.util.logging.Logger
  *
  * @param parser The parser instance passed to [PropertyFactory.create].
  */
-fun PropertyFactory<*>.readLongOrNull(parser: XmlPullParser): Long? {
+fun PropertyFactory.readLongOrNull(parser: XmlPullParser): Long? {
     return XmlUtils.readText(parser)?.let { valueStr ->
         try {
             valueStr.toLong()
@@ -34,7 +34,7 @@ fun PropertyFactory<*>.readLongOrNull(parser: XmlPullParser): Long? {
  *
  * @param parser The parser instance passed to [PropertyFactory.create].
  */
-fun PropertyFactory<*>.readInstantOrNull(parser: XmlPullParser): Instant? {
+fun PropertyFactory.readInstantOrNull(parser: XmlPullParser): Instant? {
     return XmlUtils.readText(parser)?.let { rawDate ->
         val date = HttpUtils.parseDate(rawDate)
         if (date != null)

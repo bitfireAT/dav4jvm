@@ -20,7 +20,7 @@ import java.util.logging.Logger
 
 object PropertyRegistry {
 
-    private val factories = mutableMapOf<Property.Name, PropertyFactory<*>>()
+    private val factories = mutableMapOf<Property.Name, PropertyFactory>()
     private val logger
         get() = Logger.getLogger(javaClass.name)
 
@@ -83,7 +83,7 @@ object PropertyRegistry {
      *
      * @param factory property factory to be registered
      */
-    fun register(factory: PropertyFactory<*>) {
+    fun register(factory: PropertyFactory) {
         logger.fine("Registering ${factory::class.java.name} for ${factory.getName()}")
         factories[factory.getName()] = factory
     }
@@ -94,7 +94,7 @@ object PropertyRegistry {
 
      * @param factories property factories to be registered
      */
-    fun register(factories: Iterable<PropertyFactory<*>>) {
+    fun register(factories: Iterable<PropertyFactory>) {
         factories.forEach {
             register(it)
         }

@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 
-interface PropertyFactory<PropertyType : Property> {
+interface PropertyFactory {
 
     /**
      * Name of the Property the factory creates,
@@ -21,6 +21,6 @@ interface PropertyFactory<PropertyType : Property> {
      * Parses XML of a property and returns its data class.
      * @throws XmlPullParserException in case of parsing errors
      */
-    fun create(parser: XmlPullParser): PropertyType
+    fun create(parser: XmlPullParser): Property
 
 }

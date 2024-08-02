@@ -21,7 +21,7 @@ data class DisplayName(
     }
 
 
-    object Factory: PropertyFactory<DisplayName> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

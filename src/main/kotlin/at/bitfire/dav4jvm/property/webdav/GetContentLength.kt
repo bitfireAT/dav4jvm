@@ -19,7 +19,7 @@ data class GetContentLength(
         val NAME = Property.Name(NS_WEBDAV, "getcontentlength")
     }
 
-    object Factory: PropertyFactory<GetContentLength> {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): GetContentLength {

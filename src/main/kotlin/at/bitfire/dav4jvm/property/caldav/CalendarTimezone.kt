@@ -21,7 +21,7 @@ data class CalendarTimezone(
     }
 
 
-    object Factory: PropertyFactory<CalendarTimezone> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

@@ -23,7 +23,7 @@ data class GetContentType(
     }
 
 
-    object Factory: PropertyFactory<GetContentType> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

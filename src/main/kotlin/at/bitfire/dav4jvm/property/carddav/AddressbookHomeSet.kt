@@ -18,7 +18,7 @@ class AddressbookHomeSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<AddressbookHomeSet>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

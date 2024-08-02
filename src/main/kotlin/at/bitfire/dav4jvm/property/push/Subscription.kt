@@ -28,7 +28,7 @@ class Subscription private constructor(
     }
 
 
-    object Factory: PropertyFactory<Subscription> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

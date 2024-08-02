@@ -18,7 +18,7 @@ class CalendarUserAddressSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<CalendarUserAddressSet>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

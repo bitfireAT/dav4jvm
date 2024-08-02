@@ -18,7 +18,7 @@ class CalendarHomeSet: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<CalendarHomeSet>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

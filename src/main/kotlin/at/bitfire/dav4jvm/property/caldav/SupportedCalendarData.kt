@@ -36,7 +36,7 @@ class SupportedCalendarData: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory<SupportedCalendarData> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

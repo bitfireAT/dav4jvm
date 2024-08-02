@@ -25,13 +25,13 @@ data class CalendarData(
     }
 
 
-    object Factory: PropertyFactory<CalendarData> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT calendar-data (#PCDATA)>
-                CalendarData(XmlUtils.readText(parser))
+            // <!ELEMENT calendar-data (#PCDATA)>
+            CalendarData(XmlUtils.readText(parser))
 
     }
 

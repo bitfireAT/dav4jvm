@@ -28,7 +28,7 @@ class PushMessage(
     }
 
 
-    object Factory: PropertyFactory<PushMessage> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

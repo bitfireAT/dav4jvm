@@ -23,7 +23,7 @@ data class AddMember(
         val NAME = Property.Name(NS_WEBDAV, "add-member")
     }
 
-    object Factory: PropertyFactory<AddMember> {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) = AddMember(XmlUtils.readTextProperty(parser, DavResource.HREF))

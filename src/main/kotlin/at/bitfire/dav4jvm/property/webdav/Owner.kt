@@ -17,7 +17,7 @@ class Owner: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<Owner>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

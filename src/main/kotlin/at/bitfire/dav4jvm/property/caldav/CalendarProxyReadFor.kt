@@ -18,7 +18,7 @@ class CalendarProxyReadFor: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<CalendarProxyReadFor>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

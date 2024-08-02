@@ -23,9 +23,9 @@ abstract class HrefListProperty: Property {
     override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
 
 
-    abstract class Factory<PropertyType : HrefListProperty> : PropertyFactory<PropertyType> {
+    abstract class Factory : PropertyFactory {
 
-        fun create(parser: XmlPullParser, list: PropertyType): PropertyType {
+        fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
             XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
             return list
         }

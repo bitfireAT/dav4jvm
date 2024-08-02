@@ -19,7 +19,7 @@ data class MaxResourceSize(
         val NAME = Property.Name(NS_CARDDAV, "max-resource-size")
     }
 
-    object Factory: PropertyFactory<MaxResourceSize> {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): MaxResourceSize {

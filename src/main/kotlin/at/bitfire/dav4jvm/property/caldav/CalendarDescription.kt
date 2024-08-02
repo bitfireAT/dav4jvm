@@ -21,13 +21,13 @@ data class CalendarDescription(
     }
 
 
-    object Factory: PropertyFactory<CalendarDescription> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT calendar-description (#PCDATA)>
-                CalendarDescription(XmlUtils.readText(parser))
+            // <!ELEMENT calendar-description (#PCDATA)>
+            CalendarDescription(XmlUtils.readText(parser))
 
     }
 

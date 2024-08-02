@@ -19,7 +19,7 @@ data class CreationDate(
         val NAME = Property.Name(NS_WEBDAV, "creationdate")
     }
 
-    object Factory: PropertyFactory<CreationDate> {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): CreationDate {

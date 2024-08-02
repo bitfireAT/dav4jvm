@@ -18,7 +18,7 @@ class CalendarProxyWriteFor: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<CalendarProxyWriteFor>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

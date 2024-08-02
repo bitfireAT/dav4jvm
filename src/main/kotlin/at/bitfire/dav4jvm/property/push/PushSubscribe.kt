@@ -34,7 +34,7 @@ class PushSubscribe: Property {
     var subscription: Subscription? = null
 
 
-    object Factory: PropertyFactory<PushSubscribe> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

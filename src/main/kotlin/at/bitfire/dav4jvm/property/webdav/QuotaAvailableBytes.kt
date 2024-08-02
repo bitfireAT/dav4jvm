@@ -19,7 +19,7 @@ data class QuotaAvailableBytes(
         val NAME = Property.Name(NS_WEBDAV, "quota-available-bytes")
     }
 
-    object Factory: PropertyFactory<QuotaAvailableBytes> {
+    object Factory: PropertyFactory {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): QuotaAvailableBytes {

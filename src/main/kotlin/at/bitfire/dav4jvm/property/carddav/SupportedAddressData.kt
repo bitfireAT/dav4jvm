@@ -37,7 +37,7 @@ class SupportedAddressData: Property {
     override fun toString() = "[${types.joinToString(", ")}]"
 
 
-    object Factory: PropertyFactory<SupportedAddressData> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

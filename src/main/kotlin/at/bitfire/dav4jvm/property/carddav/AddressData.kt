@@ -25,7 +25,7 @@ data class AddressData(
     }
 
 
-    object Factory: PropertyFactory<AddressData> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

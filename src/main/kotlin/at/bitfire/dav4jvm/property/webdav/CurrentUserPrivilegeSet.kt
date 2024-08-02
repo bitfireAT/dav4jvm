@@ -39,7 +39,7 @@ data class CurrentUserPrivilegeSet(
     }
 
 
-    object Factory: PropertyFactory<CurrentUserPrivilegeSet> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

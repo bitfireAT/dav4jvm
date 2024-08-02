@@ -28,7 +28,7 @@ class Topic private constructor(
     }
 
 
-    object Factory: PropertyFactory<Topic> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

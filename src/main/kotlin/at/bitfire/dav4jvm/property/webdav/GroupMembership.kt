@@ -17,7 +17,7 @@ class GroupMembership: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<GroupMembership>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 

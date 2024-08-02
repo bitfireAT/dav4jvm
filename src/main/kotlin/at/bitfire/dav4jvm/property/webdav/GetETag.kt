@@ -79,7 +79,7 @@ class GetETag(
     }
 
 
-    object Factory: PropertyFactory<GetETag> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

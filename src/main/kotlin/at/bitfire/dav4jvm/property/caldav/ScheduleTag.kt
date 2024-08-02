@@ -33,7 +33,7 @@ class ScheduleTag(
     override fun toString() = scheduleTag ?: "(null)"
 
 
-    object Factory: PropertyFactory<ScheduleTag> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

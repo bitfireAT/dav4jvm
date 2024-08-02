@@ -21,7 +21,7 @@ data class SyncToken(
     }
 
 
-    object Factory: PropertyFactory<SyncToken> {
+    object Factory: PropertyFactory {
 
         override fun getName() = NAME
 

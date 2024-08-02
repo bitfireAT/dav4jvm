@@ -18,7 +18,7 @@ class Source: HrefListProperty() {
     }
 
 
-    object Factory: HrefListProperty.Factory<Source>() {
+    object Factory: HrefListProperty.Factory() {
 
         override fun getName() = NAME
 
