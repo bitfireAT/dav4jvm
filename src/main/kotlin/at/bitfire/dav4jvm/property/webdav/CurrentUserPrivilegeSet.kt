@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
@@ -48,7 +48,7 @@ data class CurrentUserPrivilegeSet(
             // <!ELEMENT privilege ANY>
             val privs = CurrentUserPrivilegeSet()
 
-            XmlUtils.processTag(parser, PRIVILEGE) {
+            XmlReader(parser).processTag(PRIVILEGE) {
                 val depth = parser.depth
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {

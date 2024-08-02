@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.XmlUtils.readText
+import at.bitfire.dav4jvm.XmlReader
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
@@ -83,7 +83,7 @@ class GetETag(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): GetETag {
-            return GetETag(readText(parser))
+            return GetETag(XmlReader(parser).readText())
         }
 
 

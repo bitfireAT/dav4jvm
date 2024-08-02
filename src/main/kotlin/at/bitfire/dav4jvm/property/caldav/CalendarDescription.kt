@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class CalendarDescription(
@@ -27,7 +27,7 @@ data class CalendarDescription(
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT calendar-description (#PCDATA)>
-            CalendarDescription(XmlUtils.readText(parser))
+            CalendarDescription(XmlReader(parser).readText())
 
     }
 

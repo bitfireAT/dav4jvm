@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 class SupportedReportSet: Property {
@@ -41,8 +41,8 @@ class SupportedReportSet: Property {
             */
 
             val supported = SupportedReportSet()
-            XmlUtils.processTag(parser, SUPPORTED_REPORT) {
-                XmlUtils.processTag(parser, REPORT) {
+            XmlReader(parser).processTag(SUPPORTED_REPORT) {
+                processTag(REPORT) {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
                         supported.reports += parser.text

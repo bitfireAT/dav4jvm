@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -32,7 +32,7 @@ class PushMessage(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = PushMessage(XmlUtils.readTextProperty(parser, Topic.NAME))
+        override fun create(parser: XmlPullParser) = PushMessage(XmlReader(parser).readTextProperty(Topic.NAME))
 
     }
 

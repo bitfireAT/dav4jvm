@@ -7,7 +7,6 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.DavException
-import java.io.IOException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
@@ -54,57 +53,6 @@ object XmlUtils {
 
     fun newSerializer(): XmlSerializer = standardFactory.newSerializer()
         ?: throw DavException("Couldn't create XML serializer")
-
-
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun processTag(parser: XmlPullParser, name: Property.Name, processor: () -> Unit) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
-                processor()
-            eventType = parser.next()
-        }
-    }
-
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readText(parser: XmlPullParser): String? {
-        var text: String? = null
-
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.TEXT && parser.depth == depth)
-                text = parser.text
-            eventType = parser.next()
-        }
-
-        return text
-    }
-
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextProperty(parser: XmlPullParser, name: Property.Name): String? {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        var result: String? = null
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
-                result = parser.nextText()
-            eventType = parser.next()
-        }
-        return result
-    }
-
-    @Throws(IOException::class, XmlPullParserException::class)
-    fun readTextPropertyList(parser: XmlPullParser, name: Property.Name, list: MutableCollection<String>) {
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
-                list.add(parser.nextText())
-            eventType = parser.next()
-        }
-    }
 
 
     fun XmlSerializer.insertTag(name: Property.Name, contentGenerator: XmlSerializer.() -> Unit = {}) {

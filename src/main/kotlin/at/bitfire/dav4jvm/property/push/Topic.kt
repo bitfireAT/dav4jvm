@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils.readText
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -33,7 +33,7 @@ class Topic private constructor(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): Topic {
-            return Topic(readText(parser))
+            return Topic(XmlReader(parser).readText())
         }
 
     }

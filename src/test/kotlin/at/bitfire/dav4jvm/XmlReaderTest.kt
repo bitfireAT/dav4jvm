@@ -1,9 +1,3 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
 package at.bitfire.dav4jvm
 
 import org.junit.Assert.assertEquals
@@ -12,8 +6,7 @@ import org.junit.Test
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 
-class XmlUtilsTest {
-
+class XmlReaderTest {
     @Test
     fun testProcessTagRoot() {
         val parser = XmlUtils.newPullParser()
@@ -21,7 +14,7 @@ class XmlUtilsTest {
         // now on START_DOCUMENT [0]
 
         var processed = false
-        XmlUtils.processTag(parser, Property.Name("", "test")) {
+        XmlReader(parser).processTag(Property.Name("", "test")) {
             processed = true
         }
         assertTrue(processed)
@@ -34,7 +27,7 @@ class XmlUtilsTest {
         parser.next()       // now on START_TAG <root>
 
         var processed = false
-        XmlUtils.processTag(parser, Property.Name("", "test")) {
+        XmlReader(parser).processTag(Property.Name("", "test")) {
             processed = true
         }
         assertTrue(processed)
@@ -46,12 +39,13 @@ class XmlUtilsTest {
         parser.setInput(StringReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>"))
         parser.next()
         parser.next()       // now on START_TAG <test>
+        val reader = XmlReader(parser)
 
-        assertEquals("Test 1", XmlUtils.readText(parser))
+        assertEquals("Test 1", reader.readText())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertEquals("Test 2", XmlUtils.readText(parser))
+        assertEquals("Test 2", reader.readText())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 
@@ -61,7 +55,7 @@ class XmlUtilsTest {
         parser.setInput(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>"))
         parser.next()       // now on START_TAG <test>
 
-        assertEquals("Test 1</test><test><garbage/>Test 2", XmlUtils.readText(parser))
+        assertEquals("Test 1</test><test><garbage/>Test 2", XmlReader(parser).readText())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 
@@ -72,7 +66,7 @@ class XmlUtilsTest {
         parser.next()        // now on START_TAG <root>
 
         val entries = mutableListOf<String>()
-        XmlUtils.readTextPropertyList(parser, Property.Name("", "entry"), entries)
+        XmlReader(parser).readTextPropertyList(Property.Name("", "entry"), entries)
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
 
@@ -87,11 +81,10 @@ class XmlUtilsTest {
         parser.next()       // now on START_TAG <test> [1]
 
         val entries = mutableListOf<String>()
-        XmlUtils.readTextPropertyList(parser, Property.Name("", "entry"), entries)
+        XmlReader(parser).readTextPropertyList(Property.Name("", "entry"), entries)
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("test", parser.name)
     }
-
 }

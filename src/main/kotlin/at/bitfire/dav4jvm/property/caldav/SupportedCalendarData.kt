@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readContentTypes
+import at.bitfire.dav4jvm.XmlReader
 import okhttp3.MediaType
 import org.xmlpull.v1.XmlPullParser
 
@@ -39,7 +39,7 @@ class SupportedCalendarData: Property {
         override fun create(parser: XmlPullParser): SupportedCalendarData {
             val supported = SupportedCalendarData()
 
-            readContentTypes(parser, CALENDAR_DATA_TYPE, supported.types::add)
+            XmlReader(parser).readContentTypes(CALENDAR_DATA_TYPE, supported.types::add)
 
             return supported
         }

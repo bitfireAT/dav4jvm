@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class SyncToken(
@@ -27,7 +27,7 @@ data class SyncToken(
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT sync-token #PCDATA>
-            SyncToken(XmlUtils.readText(parser))
+            SyncToken(XmlReader(parser).readText())
 
     }
 }

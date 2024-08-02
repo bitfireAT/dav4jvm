@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -50,7 +50,7 @@ data class CalendarColor(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): CalendarColor {
-            XmlUtils.readText(parser)?.let {
+            XmlReader(parser).readText()?.let {
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {

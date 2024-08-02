@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressData(
@@ -31,7 +31,7 @@ data class AddressData(
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT address-data (#PCDATA)>
-            AddressData(XmlUtils.readText(parser))
+            AddressData(XmlReader(parser).readText())
 
     }
 

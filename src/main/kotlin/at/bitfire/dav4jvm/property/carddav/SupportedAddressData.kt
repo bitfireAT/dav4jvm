@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readContentTypes
+import at.bitfire.dav4jvm.XmlReader
 import okhttp3.MediaType
 import org.xmlpull.v1.XmlPullParser
 
@@ -40,7 +40,7 @@ class SupportedAddressData: Property {
         override fun create(parser: XmlPullParser): SupportedAddressData {
             val supported = SupportedAddressData()
 
-            readContentTypes(parser, ADDRESS_DATA_TYPE, supported.types::add)
+            XmlReader(parser).readContentTypes(ADDRESS_DATA_TYPE, supported.types::add)
 
             return supported
         }

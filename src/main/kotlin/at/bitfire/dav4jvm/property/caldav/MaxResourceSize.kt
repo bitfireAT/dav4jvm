@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readLongOrNull
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class MaxResourceSize(
@@ -23,7 +23,7 @@ data class MaxResourceSize(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): MaxResourceSize {
-            return MaxResourceSize(readLongOrNull(parser))
+            return MaxResourceSize(XmlReader(parser).readLongOrNull())
         }
     }
 }

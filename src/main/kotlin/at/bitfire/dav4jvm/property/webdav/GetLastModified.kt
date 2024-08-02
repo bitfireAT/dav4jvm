@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.readHttpDateOrNull
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
 
@@ -29,7 +29,7 @@ data class GetLastModified(
         override fun create(parser: XmlPullParser): GetLastModified {
             // <!ELEMENT getlastmodified (#PCDATA) >
             return GetLastModified(
-                readHttpDateOrNull(parser)
+                XmlReader(parser).readHttpDateOrNull()
             )
         }
 
