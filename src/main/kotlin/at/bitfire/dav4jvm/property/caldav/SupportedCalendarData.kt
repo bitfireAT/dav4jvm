@@ -54,8 +54,6 @@ class SupportedCalendarData: Property {
             } catch(e: XmlPullParserException) {
                 val logger = Logger.getLogger(javaClass.name)
                 logger.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
-                // fixme: should we return supported or simply SupportedCalendarData?
-                //  It's possible that returning supported it contains a mid-built `types`
                 return supported
             }
 
