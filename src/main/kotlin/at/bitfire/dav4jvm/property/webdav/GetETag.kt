@@ -46,9 +46,9 @@ class GetETag(
            weak       = "W/"
            opaque-tag = quoted-string
         */
-        val tag: String?
 
         if (rawETag != null) {
+            val tag: String?
             // remove trailing "W/"
             if (rawETag.startsWith("W/")) {
                 // entity tag is weak
@@ -58,12 +58,11 @@ class GetETag(
                 tag = rawETag
                 weak = false
             }
+            eTag = QuotedStringUtils.decodeQuotedString(tag)
         } else {
-            tag = null
+            eTag = null
             weak = false
         }
-
-        eTag = tag?.let(QuotedStringUtils::decodeQuotedString)
     }
 
     override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
