@@ -8,13 +8,11 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
-import java.util.logging.Level
-import java.util.logging.Logger
 
 data class GetContentLength(
-        val contentLength: Long
+    val contentLength: Long?
 ) : Property {
     companion object {
         @JvmField
@@ -24,16 +22,7 @@ data class GetContentLength(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetContentLength? {
-            XmlUtils.readText(parser)?.let { valueStr ->
-                try {
-                    return GetContentLength(valueStr.toLong())
-                } catch(e: NumberFormatException) {
-                    val logger = Logger.getLogger(javaClass.name)
-                    logger.log(Level.WARNING, "Couldn't parse $NAME: $valueStr", e)
-                }
-            }
-            return null
-        }
+        override fun create(parser: XmlPullParser) =
+            GetContentLength(XmlReader(parser).readLong())
     }
 }

@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
@@ -20,7 +20,7 @@ import org.xmlpull.v1.XmlPullParser
  * header value to the constructor and then use [eTag] and [weak].
  */
 class GetETag(
-    rawETag: String
+    rawETag: String?
 ): Property {
 
     companion object {
@@ -34,7 +34,7 @@ class GetETag(
     /**
      * The parsed ETag value, excluding the weakness indicator and the quotes.
      */
-    val eTag: String
+    val eTag: String?
 
     /**
      * Whether the ETag is weak.
@@ -46,19 +46,23 @@ class GetETag(
            weak       = "W/"
            opaque-tag = quoted-string
         */
-        val tag: String
 
-        // remove trailing "W/"
-        if (rawETag.startsWith("W/") && rawETag.length >= 2) {
-            // entity tag is weak
-            tag = rawETag.substring(2)
-            weak = true
+        if (rawETag != null) {
+            val tag: String?
+            // remove trailing "W/"
+            if (rawETag.startsWith("W/")) {
+                // entity tag is weak
+                tag = rawETag.substring(2)
+                weak = true
+            } else {
+                tag = rawETag
+                weak = false
+            }
+            eTag = QuotedStringUtils.decodeQuotedString(tag)
         } else {
-            tag = rawETag
+            eTag = null
             weak = false
         }
-
-        eTag = QuotedStringUtils.decodeQuotedString(tag)
     }
 
     override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
@@ -78,8 +82,8 @@ class GetETag(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-            GetETag(XmlUtils.requireReadText(parser))
+        override fun create(parser: XmlPullParser): GetETag =
+            GetETag(XmlReader(parser).readText())
 
     }
 

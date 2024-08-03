@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -36,7 +36,7 @@ class WebPushSubscription: Property {
 
         override fun create(parser: XmlPullParser) =
             WebPushSubscription().apply {
-                pushResource = XmlUtils.readTextProperty(parser, PUSH_RESOURCE)
+                pushResource = XmlReader(parser).readTextProperty(PUSH_RESOURCE)
             }
 
     }

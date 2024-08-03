@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class CreationDate(
-        var creationDate: String
+    var creationDate: String?
 ): Property {
     companion object {
         @JvmField
@@ -22,11 +22,7 @@ data class CreationDate(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CreationDate? {
-            XmlUtils.readText(parser)?.let {
-                return CreationDate(it)
-            }
-            return null
-        }
+        override fun create(parser: XmlPullParser) =
+            CreationDate(XmlReader(parser).readText())
     }
 }

@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -17,7 +17,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 class Subscription private constructor(
-    val webPushSubscription: WebPushSubscription
+    val webPushSubscription: WebPushSubscription?
 ): Property {
 
     companion object {
@@ -32,17 +32,15 @@ class Subscription private constructor(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): Subscription? {
+        override fun create(parser: XmlPullParser): Subscription {
             // currently we only support WebPushSubscription
             var webPushSubscription: WebPushSubscription? = null
 
-            XmlUtils.processTag(parser, WebPushSubscription.NAME) {
+            XmlReader(parser).processTag(WebPushSubscription.NAME) {
                 webPushSubscription = WebPushSubscription.Factory.create(parser)
             }
 
-            return webPushSubscription?.let {
-                Subscription(webPushSubscription = it)
-            }
+            return Subscription(webPushSubscription)
         }
 
     }

@@ -8,13 +8,9 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.util.logging.Level
-import java.util.logging.Logger
 
 class SupportedAddressData: Property {
 
@@ -41,22 +37,10 @@ class SupportedAddressData: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): SupportedAddressData? {
+        override fun create(parser: XmlPullParser): SupportedAddressData {
             val supported = SupportedAddressData()
 
-            try {
-                XmlUtils.processTag(parser, ADDRESS_DATA_TYPE) {
-                    parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
-                        var type = contentType
-                        parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
-                        type.toMediaTypeOrNull()?.let { supported.types.add(it) }
-                    }
-                }
-            } catch(e: XmlPullParserException) {
-                val logger = Logger.getLogger(javaClass.name)
-                logger.log(Level.SEVERE, "Couldn't parse <resourcetype>", e)
-                return null
-            }
+            XmlReader(parser).readContentTypes(ADDRESS_DATA_TYPE, supported.types::add)
 
             return supported
         }

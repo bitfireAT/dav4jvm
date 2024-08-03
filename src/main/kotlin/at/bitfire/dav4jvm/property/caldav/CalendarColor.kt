@@ -8,14 +8,14 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.regex.Pattern
 
 data class CalendarColor(
-        val color: Int
+    val color: Int?
 ): Property {
 
     companion object {
@@ -49,8 +49,8 @@ data class CalendarColor(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CalendarColor? {
-            XmlUtils.readText(parser)?.let {
+        override fun create(parser: XmlPullParser): CalendarColor {
+            XmlReader(parser).readText()?.let {
                 try {
                     return CalendarColor(parseARGBColor(it))
                 } catch (e: IllegalArgumentException) {
@@ -58,7 +58,7 @@ data class CalendarColor(
                     logger.log(Level.WARNING, "Couldn't parse color, ignoring", e)
                 }
             }
-            return null
+            return CalendarColor(null)
         }
 
     }

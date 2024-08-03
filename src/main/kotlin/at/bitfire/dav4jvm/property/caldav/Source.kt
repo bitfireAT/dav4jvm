@@ -22,8 +22,7 @@ class Source: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, Source())
+        override fun create(parser: XmlPullParser) = create(parser, Source())
 
     }
 

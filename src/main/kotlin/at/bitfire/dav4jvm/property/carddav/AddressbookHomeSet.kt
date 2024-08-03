@@ -22,8 +22,7 @@ class AddressbookHomeSet: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, AddressbookHomeSet())
+        override fun create(parser: XmlPullParser) = create(parser, AddressbookHomeSet())
 
     }
 

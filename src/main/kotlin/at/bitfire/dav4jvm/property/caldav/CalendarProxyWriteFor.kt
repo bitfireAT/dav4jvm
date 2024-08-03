@@ -22,8 +22,7 @@ class CalendarProxyWriteFor: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, CalendarProxyWriteFor())
+        override fun create(parser: XmlPullParser) = create(parser, CalendarProxyWriteFor())
 
     }
 

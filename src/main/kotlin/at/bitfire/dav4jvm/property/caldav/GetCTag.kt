@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class GetCTag(
-        val cTag: String?
+    val cTag: String?
 ): Property {
 
     companion object {
@@ -25,8 +25,7 @@ data class GetCTag(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                GetCTag(XmlUtils.readText(parser))
+        override fun create(parser: XmlPullParser) = GetCTag(XmlReader(parser).readText())
 
     }
 }

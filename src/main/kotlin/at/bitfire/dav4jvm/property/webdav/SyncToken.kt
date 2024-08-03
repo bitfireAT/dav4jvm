@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class SyncToken(
-        val token: String?
+    val token: String?
 ): Property {
 
     companion object {
@@ -26,8 +26,8 @@ data class SyncToken(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT sync-token #PCDATA>
-                SyncToken(XmlUtils.readText(parser))
+            // <!ELEMENT sync-token #PCDATA>
+            SyncToken(XmlReader(parser).readText())
 
     }
 }

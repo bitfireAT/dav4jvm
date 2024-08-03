@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class DisplayName(
-        val displayName: String?
+    val displayName: String?
 ): Property {
 
     companion object {
@@ -26,8 +26,8 @@ data class DisplayName(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT displayname (#PCDATA) >
-                DisplayName(XmlUtils.readText(parser))
+            // <!ELEMENT displayname (#PCDATA) >
+            DisplayName(XmlReader(parser).readText())
 
     }
 }

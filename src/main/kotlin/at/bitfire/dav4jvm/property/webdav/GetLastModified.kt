@@ -6,16 +6,14 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
-import java.util.logging.Logger
 
 data class GetLastModified(
-    var lastModified: Instant
+    var lastModified: Instant?
 ): Property {
 
     companion object {
@@ -28,18 +26,11 @@ data class GetLastModified(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetLastModified? {
+        override fun create(parser: XmlPullParser): GetLastModified {
             // <!ELEMENT getlastmodified (#PCDATA) >
-            XmlUtils.readText(parser)?.let { rawDate ->
-                val date = HttpUtils.parseDate(rawDate)
-                if (date != null)
-                    return GetLastModified(date)
-                else {
-                    val logger = Logger.getLogger(javaClass.name)
-                    logger.warning("Couldn't parse Last-Modified date")
-                }
-            }
-            return null
+            return GetLastModified(
+                XmlReader(parser).readHttpDate()
+            )
         }
 
     }

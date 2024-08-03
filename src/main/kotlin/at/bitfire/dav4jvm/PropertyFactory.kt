@@ -13,14 +13,19 @@ interface PropertyFactory {
 
     /**
      * Name of the Property the factory creates,
-     * e.g. Property.Name("DAV:", "displayname") if the factory creates DisplayName objects)
+     * e.g. `Property.Name("DAV:", "displayname")` if the factory creates
+     * [at.bitfire.dav4jvm.property.webdav.DisplayName] objects)
      */
     fun getName(): Property.Name
 
     /**
      * Parses XML of a property and returns its data class.
+     *
+     * Implementations shouldn't make assumptions on which sub-properties are available
+     * or not and in doubt return an empty [Property].
+     *
      * @throws XmlPullParserException in case of parsing errors
      */
-    fun create(parser: XmlPullParser): Property?
+    fun create(parser: XmlPullParser): Property
 
 }

@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
@@ -46,10 +46,10 @@ class PushSubscribe: Property {
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
-                        EXPIRES -> {
-                            val expiresDate = XmlUtils.requireReadText(parser)
-                            subscribe.expires = HttpUtils.parseDate(expiresDate)
-                        }
+                        EXPIRES ->
+                            subscribe.expires = XmlReader(parser).readText()?.let {
+                                HttpUtils.parseDate(it)
+                            }
                         Subscription.NAME ->
                             subscribe.subscription = Subscription.Factory.create(parser)
                     }

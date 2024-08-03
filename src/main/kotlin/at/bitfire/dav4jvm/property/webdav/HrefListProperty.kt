@@ -9,9 +9,9 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
-import java.util.LinkedList
+import java.util.*
 
 abstract class HrefListProperty: Property {
 
@@ -23,11 +23,10 @@ abstract class HrefListProperty: Property {
     override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
 
 
-
-    abstract class Factory: PropertyFactory {
+    abstract class Factory : PropertyFactory {
 
         fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
-            XmlUtils.readTextPropertyList(parser, DavResource.HREF, list.hrefs)
+            XmlReader(parser).readTextPropertyList(DavResource.HREF, list.hrefs)
             return list
         }
 

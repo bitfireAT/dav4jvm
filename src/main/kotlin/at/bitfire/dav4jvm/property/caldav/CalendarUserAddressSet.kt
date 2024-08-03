@@ -22,8 +22,7 @@ class CalendarUserAddressSet: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, CalendarUserAddressSet())
+        override fun create(parser: XmlPullParser) = create(parser, CalendarUserAddressSet())
 
     }
 

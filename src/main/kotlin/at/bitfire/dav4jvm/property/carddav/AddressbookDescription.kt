@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressbookDescription(
-        var description: String? = null
+    var description: String? = null
 ): Property {
 
     companion object {
@@ -25,8 +25,8 @@ data class AddressbookDescription(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT addressbook-description (#PCDATA)>
-                AddressbookDescription(XmlUtils.readText(parser))
+            // <!ELEMENT addressbook-description (#PCDATA)>
+            AddressbookDescription(XmlReader(parser).readText())
 
     }
 

@@ -8,11 +8,11 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class CalendarTimezone(
-        val vTimeZone: String?
+    val vTimeZone: String?
 ): Property {
 
     companion object {
@@ -26,8 +26,8 @@ data class CalendarTimezone(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
-                // <!ELEMENT calendar-timezone (#PCDATA)>
-                CalendarTimezone(XmlUtils.readText(parser))
+            // <!ELEMENT calendar-timezone (#PCDATA)>
+            CalendarTimezone(XmlReader(parser).readText())
 
     }
 }

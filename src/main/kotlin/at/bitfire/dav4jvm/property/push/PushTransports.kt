@@ -8,7 +8,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
@@ -38,7 +38,7 @@ class PushTransports private constructor(
 
         override fun create(parser: XmlPullParser): PushTransports {
             val transports = mutableListOf<Property.Name>()
-            XmlUtils.processTag(parser, TRANSPORT) {
+            XmlReader(parser).processTag(TRANSPORT) {
                 val depth = parser.depth
                 var eventType = parser.eventType
                 while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {

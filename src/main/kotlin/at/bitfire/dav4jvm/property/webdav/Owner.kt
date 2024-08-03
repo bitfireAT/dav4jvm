@@ -21,8 +21,7 @@ class Owner: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-                create(parser, Owner())
+        override fun create(parser: XmlPullParser) = create(parser, Owner())
 
     }
 

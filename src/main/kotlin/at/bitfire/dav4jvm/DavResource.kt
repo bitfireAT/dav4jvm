@@ -8,24 +8,13 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.ConflictException
-import at.bitfire.dav4jvm.exception.DavException
-import at.bitfire.dav4jvm.exception.ForbiddenException
-import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.exception.NotFoundException
-import at.bitfire.dav4jvm.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.exception.ServiceUnavailableException
-import at.bitfire.dav4jvm.exception.UnauthorizedException
+import at.bitfire.dav4jvm.exception.*
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import okhttp3.Headers
-import okhttp3.HttpUrl
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -784,7 +773,7 @@ open class DavResource @JvmOverloads constructor(
                         DavResponse.RESPONSE ->
                             at.bitfire.dav4jvm.Response.parse(parser, location, callback)
                         SyncToken.NAME ->
-                            XmlUtils.readText(parser)?.let {
+                            XmlReader(parser).readText()?.let {
                                 responseProperties += SyncToken(it)
                             }
                     }
