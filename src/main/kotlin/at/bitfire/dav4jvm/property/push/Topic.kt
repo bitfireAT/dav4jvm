@@ -32,9 +32,8 @@ class Topic private constructor(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): Topic {
-            return Topic(XmlReader(parser).readText())
-        }
+        override fun create(parser: XmlPullParser): Topic =
+            Topic(XmlReader(parser).readText())
 
     }
 

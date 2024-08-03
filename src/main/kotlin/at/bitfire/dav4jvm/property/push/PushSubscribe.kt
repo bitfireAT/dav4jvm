@@ -46,10 +46,10 @@ class PushSubscribe: Property {
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
-                        EXPIRES -> {
-                            val expiresDate = XmlReader(parser).readText() ?: continue
-                            subscribe.expires = HttpUtils.parseDate(expiresDate)
-                        }
+                        EXPIRES ->
+                            subscribe.expires = XmlReader(parser).readText()?.let {
+                                HttpUtils.parseDate(it)
+                            }
                         Subscription.NAME ->
                             subscribe.subscription = Subscription.Factory.create(parser)
                     }

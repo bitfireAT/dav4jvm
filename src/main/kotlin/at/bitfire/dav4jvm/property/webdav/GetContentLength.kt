@@ -22,8 +22,7 @@ data class GetContentLength(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): GetContentLength {
-            return GetContentLength(XmlReader(parser).readLongOrNull())
-        }
+        override fun create(parser: XmlPullParser) =
+            GetContentLength(XmlReader(parser).readLong())
     }
 }

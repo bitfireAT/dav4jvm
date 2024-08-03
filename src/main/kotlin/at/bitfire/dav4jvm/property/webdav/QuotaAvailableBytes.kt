@@ -22,8 +22,7 @@ data class QuotaAvailableBytes(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): QuotaAvailableBytes {
-            return QuotaAvailableBytes(XmlReader(parser).readLongOrNull())
-        }
+        override fun create(parser: XmlPullParser) =
+            QuotaAvailableBytes(XmlReader(parser).readLong())
     }
 }

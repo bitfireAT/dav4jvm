@@ -22,8 +22,7 @@ data class CreationDate(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): CreationDate {
-            return CreationDate(XmlReader(parser).readText())
-        }
+        override fun create(parser: XmlPullParser) =
+            CreationDate(XmlReader(parser).readText())
     }
 }

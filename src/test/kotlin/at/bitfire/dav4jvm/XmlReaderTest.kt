@@ -9,8 +9,9 @@ import java.io.StringReader
 import java.time.Instant
 
 class XmlReaderTest {
+
     @Test
-    fun testProcessTagRoot() {
+    fun testProcessTag_Root() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test></test>"))
         // now on START_DOCUMENT [0]
@@ -23,7 +24,7 @@ class XmlReaderTest {
     }
 
     @Test
-    fun testProcessTagDepth1() {
+    fun testProcessTag_Depth1() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test></test></root>"))
         parser.next()       // now on START_TAG <root>
@@ -34,6 +35,7 @@ class XmlReaderTest {
         }
         assertTrue(processed)
     }
+
 
     @Test
     fun testReadText() {
@@ -52,7 +54,7 @@ class XmlReaderTest {
     }
 
     @Test
-    fun testReadTextCDATA() {
+    fun testReadText_CDATA() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>"))
         parser.next()       // now on START_TAG <test>
@@ -62,7 +64,7 @@ class XmlReaderTest {
     }
 
     @Test
-    fun testReadTextPropertyRoot() {
+    fun testReadText_PropertyRoot() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>"))
         parser.next()        // now on START_TAG <root>
@@ -76,8 +78,9 @@ class XmlReaderTest {
         assertEquals(XmlPullParser.END_DOCUMENT, parser.eventType)
     }
 
+
     @Test
-    fun testReadTextPropertyListDepth1() {
+    fun testReadTextPropertyList_Depth1() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>"))
         parser.next()       // now on START_TAG <test> [1]
@@ -90,45 +93,48 @@ class XmlReaderTest {
         assertEquals("test", parser.name)
     }
 
+
     @Test
-    fun testReadLongOrNull() {
+    fun testReadLong() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>1</test><test><garbage/>2</test><test><garbage/>a</test></root>"))
         parser.next()
         parser.next()       // now on START_TAG <test>
         val reader = XmlReader(parser)
 
-        assertEquals(1L, reader.readLongOrNull())
+        assertEquals(1L, reader.readLong())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertEquals(2L, reader.readLongOrNull())
+        assertEquals(2L, reader.readLong())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertNull(reader.readLongOrNull())
+        assertNull(reader.readLong())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 
+
     @Test
-    fun testReadHttpDateOrNull() {
+    fun testReadHttpDate() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>invalid</test></root>"))
         parser.next()
         parser.next()       // now on START_TAG <test>
         val reader = XmlReader(parser)
 
-        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDateOrNull())
+        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDate())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDateOrNull())
+        assertEquals(Instant.ofEpochSecond(784111777), reader.readHttpDate())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         parser.next()
 
-        assertNull(reader.readHttpDateOrNull())
+        assertNull(reader.readHttpDate())
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
+
 
     @Test
     fun testReadContentTypes() {
@@ -143,4 +149,5 @@ class XmlReaderTest {
         assertEquals("text/plain".toMediaType(), types[0])
         assertEquals("application/json".toMediaType(), types[1])
     }
+
 }

@@ -29,7 +29,7 @@ data class GetLastModified(
         override fun create(parser: XmlPullParser): GetLastModified {
             // <!ELEMENT getlastmodified (#PCDATA) >
             return GetLastModified(
-                XmlReader(parser).readHttpDateOrNull()
+                XmlReader(parser).readHttpDate()
             )
         }
 

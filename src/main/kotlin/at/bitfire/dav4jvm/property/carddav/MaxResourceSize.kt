@@ -22,8 +22,7 @@ data class MaxResourceSize(
     object Factory: PropertyFactory {
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): MaxResourceSize {
-            return MaxResourceSize(XmlReader(parser).readLongOrNull())
-        }
+        override fun create(parser: XmlPullParser) =
+            MaxResourceSize(XmlReader(parser).readLong())
     }
 }
