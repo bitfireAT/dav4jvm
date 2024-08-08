@@ -6,58 +6,14 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.UrlUtils.omitTrailingSlash
+import at.bitfire.dav4jvm.UrlUtils.withTrailingSlash
 import okhttp3.HttpUrl
-import java.net.URI
-import java.net.URISyntaxException
-import java.util.logging.Level
-import java.util.logging.Logger
 
 object UrlUtils {
 
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
-
-
-    /**
-     * Compares two URLs in WebDAV context. If two URLs are considered *equal*, both
-     * represent the same WebDAV resource (e.g. `http://host:80/folder1` and `http://HOST/folder1#somefragment`).
-     *
-     * It decodes %xx entities in the path, so `/my@dav` and `/my%40dav` are considered the same.
-     * This is important to process multi-status responses: some servers serve a multi-status
-     * response with href `/my@dav` when you request `/my%40dav` and vice versa.
-     *
-     * This method does not deal with trailing slashes, so if you want to compare collection URLs,
-     * make sure they both (don't) have a trailing slash before calling this method, for instance
-     * with [omitTrailingSlash] or [withTrailingSlash].
-     *
-     * @param url1 the first URL to be compared
-     * @param url2 the second URL to be compared
-     *
-     * @return whether [url1] and [url2] (usually) represent the same WebDAV resource
-     */
-    fun equals(url1: HttpUrl, url2: HttpUrl): Boolean {
-        // if okhttp thinks the two URLs are equal, they're in any case
-        // (and it's a simple String comparison)
-        if (url1 == url2)
-            return true
-
-        // convert to java.net.URI (also corrects some mistakes)
-        val uri1 = url1.toUri()
-        val uri2 = url2.toUri()
-
-        // if the URIs are the same (ignoring scheme case and fragments), they're equal for us
-        if (uri1.scheme.equals(uri2.scheme, true) && uri1.schemeSpecificPart == uri2.schemeSpecificPart)
-            return true
-
-        return try {
-            val decoded1 = URI(url1.scheme, uri1.schemeSpecificPart, null)
-            val decoded2 = URI(uri2.scheme, uri2.schemeSpecificPart, null)
-            decoded1 == decoded2
-        } catch (e: URISyntaxException) {
-            logger.log(Level.WARNING, "Couldn't decode URI for comparison, assuming inequality", e)
-            false
-        }
-    }
+    @Deprecated("Use equalsForWebDAV instead", ReplaceWith("url1.equalsForWebDAV(url2)"))
+    fun equals(url1: HttpUrl, url2: HttpUrl) = url1.equalsForWebDAV(url2)
 
     /**
      * Gets the first-level domain name (without subdomains) from a host name.
@@ -117,4 +73,37 @@ object UrlUtils {
             url.newBuilder().addPathSegment("").build()
     }
 
+}
+
+/**
+ * Compares two [HttpUrl]s in WebDAV context. If two URLs are considered *equal*, both
+ * represent the same WebDAV resource.
+ *
+ * The fragment of an URL is ignored, e.g. `http://host:80/folder1` and `http://HOST/folder1#somefragment`
+ * are considered to be equal.
+ *
+ * [HttpUrl] is less strict than [java.net.URI] and allows for instance (not encoded) square brackets in the path.
+ * So this method tries to normalize the URI by converting it to a [java.net.URI] (encodes for instance square brackets)
+ * and then comparing the scheme and scheme-specific part (without fragment).
+ *
+ * Attention: **This method does not deal with trailing slashes**, so if you want to compare collection URLs,
+ * make sure they both (don't) have a trailing slash before calling this method, for instance
+ * with [omitTrailingSlash] or [withTrailingSlash].
+ *
+ * @param other the URL to compare the current object with
+ *
+ * @return whether the URLs are considered to represent the same WebDAV resource
+ */
+fun HttpUrl.equalsForWebDAV(other: HttpUrl): Boolean {
+    // if okhttp thinks the two URLs are equal, they're in any case
+    // (and it's a simple String comparison)
+    if (this == other)
+        return true
+
+    // convert to java.net.URI (also corrects some mistakes and escapes for instance square brackets)
+    val uri1 = toUri()
+    val uri2 = other.toUri()
+
+    // if the URIs are the same (ignoring scheme case and fragments), they're equal for us
+    return uri1.scheme.equals(uri2.scheme, true) && uri1.schemeSpecificPart == uri2.schemeSpecificPart
 }
