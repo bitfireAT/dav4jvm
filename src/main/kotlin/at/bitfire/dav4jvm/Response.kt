@@ -115,7 +115,7 @@ data class Response(
 
             val depth = parser.depth
 
-            var href: HttpUrl? = null
+            var hrefOrNull: HttpUrl? = null
             var status: StatusLine? = null
             val propStat = mutableListOf<PropStat>()
             var error: List<Error>? = null
@@ -147,7 +147,7 @@ data class Response(
                                         sHref = "./$sHref"
                                 }
                             }
-                            href = location.resolve(sHref)
+                            hrefOrNull = location.resolve(sHref)
                         }
                         STATUS ->
                             status = try {
@@ -166,10 +166,11 @@ data class Response(
                 eventType = parser.next()
             }
 
-            if (href == null) {
+            if (hrefOrNull == null) {
                 logger.warning("Ignoring XML response element without valid href")
                 return
             }
+            var href: HttpUrl = hrefOrNull      // guaranteed to be not null
 
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
@@ -179,23 +180,24 @@ data class Response(
                 .firstOrNull()
                 ?.let { type ->
                     if (type.types.contains(ResourceType.COLLECTION))
-                        href = UrlUtils.withTrailingSlash(href!!)
+                        href = UrlUtils.withTrailingSlash(href)
                 }
 
             //log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
 
             // Which resource does this <response> represent?
             val relation = when {
-                UrlUtils.equals(UrlUtils.omitTrailingSlash(href!!), UrlUtils.omitTrailingSlash(location)) ->
+                UrlUtils.omitTrailingSlash(href).equalsForWebDAV(UrlUtils.omitTrailingSlash(location)) ->
                     HrefRelation.SELF
+
                 else -> {
-                    if (location.scheme == href!!.scheme && location.host == href!!.host && location.port == href!!.port) {
+                    if (location.scheme == href.scheme && location.host == href.host && location.port == href.port) {
                         val locationSegments = location.pathSegments
-                        val hrefSegments = href!!.pathSegments
+                        val hrefSegments = href.pathSegments
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size
-                        if (locationSegments[nBasePathSegments-1] == "")
+                        if (locationSegments[nBasePathSegments - 1] == "")
                             nBasePathSegments--
 
                         /* example:   locationSegments  = [ "davCollection", "" ]
@@ -217,12 +219,12 @@ data class Response(
 
             callback.onResponse(
                 Response(
-                    location,
-                    href!!,
-                    status,
-                    propStat,
-                    error,
-                    newLocation
+                    requestedUrl = location,
+                    href = href,
+                    status = status,
+                    propstat = propStat,
+                    error = error,
+                    newLocation = newLocation
                 ),
                 relation
             )
