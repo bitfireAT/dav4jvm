@@ -13,10 +13,10 @@ import at.bitfire.dav4jvm.property.carddav.AddressbookHomeSet
 import at.bitfire.dav4jvm.property.carddav.SupportedAddressData
 import at.bitfire.dav4jvm.property.push.*
 import at.bitfire.dav4jvm.property.webdav.*
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
 import java.util.logging.Level
 import java.util.logging.Logger
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
 
 object PropertyRegistry {
 
@@ -43,6 +43,7 @@ object PropertyRegistry {
             CalendarProxyReadFor.Factory,
             CalendarProxyWriteFor.Factory,
             CalendarTimezone.Factory,
+            CalendarTimezoneId.Factory,
             CalendarUserAddressSet.Factory,
             CreationDate.Factory,
             CurrentUserPrincipal.Factory,
