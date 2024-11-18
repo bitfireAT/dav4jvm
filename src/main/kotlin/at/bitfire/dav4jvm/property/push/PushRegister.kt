@@ -15,16 +15,16 @@ import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
 
 /**
- * Represents a `{DAV:Push}push-subscribe` property.
+ * Represents a `{DAV:Push}push-register` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushSubscribe: Property {
+class PushRegister: Property {
 
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-subscribe")
+        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-register")
 
         val EXPIRES = Property.Name(NS_WEBDAV_PUSH, "expires")
 
@@ -38,8 +38,8 @@ class PushSubscribe: Property {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): PushSubscribe {
-            val subscribe = PushSubscribe()
+        override fun create(parser: XmlPullParser): PushRegister {
+            val register = PushRegister()
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -47,16 +47,16 @@ class PushSubscribe: Property {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         EXPIRES ->
-                            subscribe.expires = XmlReader(parser).readText()?.let {
+                            register.expires = XmlReader(parser).readText()?.let {
                                 HttpUtils.parseDate(it)
                             }
                         Subscription.NAME ->
-                            subscribe.subscription = Subscription.Factory.create(parser)
+                            register.subscription = Subscription.Factory.create(parser)
                     }
                 eventType = parser.next()
             }
 
-            return subscribe
+            return register
         }
 
     }
