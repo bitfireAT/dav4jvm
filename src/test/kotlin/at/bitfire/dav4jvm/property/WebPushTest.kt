@@ -1,6 +1,5 @@
 package at.bitfire.dav4jvm.property
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.push.*
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.Protocol
@@ -8,7 +7,6 @@ import okhttp3.internal.http.StatusLine
 import org.junit.Assert.*
 import org.junit.Test
 import java.time.Instant
-import kotlin.math.exp
 
 class WebPushTest: PropertyTest() {
 
@@ -19,13 +17,21 @@ class WebPushTest: PropertyTest() {
             "  <subscription>" +
             "    <web-push-subscription>\n" +
             "      <push-resource>https://up.example.net/yohd4yai5Phiz1wi</push-resource>\n" +
+            "      <client-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</client-public-key>\n" +
+            "      <auth-secret>BTBZMqHH6r4Tts7J_aSIgg</auth-secret>" +
             "    </web-push-subscription>\n" +
             "  </subscription>" +
             "  <expires>Wed, 20 Dec 2023 10:03:31 GMT</expires>" +
             "</push-register>")
         val result = results.first() as PushRegister
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
-        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", result.subscription?.webPushSubscription?.pushResource?.resource)
+        val subscription = result.subscription?.webPushSubscription
+        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.resource)
+        assertEquals("BTBZMqHH6r4Tts7J_aSIgg", subscription?.authSecret?.secret)
+
+        val publicKey = subscription?.clientPublicKey
+        assertEquals("p256dh", publicKey?.type)
+        assertEquals("BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4", publicKey?.key)
     }
 
     @Test
