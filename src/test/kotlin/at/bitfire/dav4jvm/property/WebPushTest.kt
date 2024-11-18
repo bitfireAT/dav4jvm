@@ -25,7 +25,7 @@ class WebPushTest: PropertyTest() {
             "</push-register>")
         val result = results.first() as PushRegister
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
-        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", result.subscription?.webPushSubscription?.pushResource)
+        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", result.subscription?.webPushSubscription?.pushResource?.resource)
     }
 
     @Test
