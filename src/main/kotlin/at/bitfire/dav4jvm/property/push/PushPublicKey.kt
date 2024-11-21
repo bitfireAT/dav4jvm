@@ -19,8 +19,6 @@ abstract class PushPublicKey: Property {
     companion object {
         @JvmField
         val NAME = Property.Name(NS_WEBDAV_PUSH, "server-public-key")
-
-        val PROP_TYPE = Property.Name(NS_WEBDAV_PUSH, "type")
     }
 
     var type: String? = null

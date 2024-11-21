@@ -5,7 +5,7 @@ import at.bitfire.dav4jvm.PropertyFactory
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}client-public-key` property.
+ * Represents a [NS_WEBDAV_PUSH]`:client-public-key` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */

@@ -3,7 +3,7 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 
 /**
- * Represents a `{DAV:Push}server-public-key` property.
+ * Represents a [NS_WEBDAV_PUSH]`:server-public-key` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */

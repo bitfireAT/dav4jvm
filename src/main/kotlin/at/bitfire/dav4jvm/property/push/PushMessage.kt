@@ -13,7 +13,7 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}push-message` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-message` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */

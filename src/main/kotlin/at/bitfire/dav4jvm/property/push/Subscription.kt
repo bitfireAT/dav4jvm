@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}subscription` property.
+ * Represents a [NS_WEBDAV_PUSH]`:subscription` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */

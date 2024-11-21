@@ -15,7 +15,7 @@ import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
 
 /**
- * Represents a `{DAV:Push}push-register` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-register` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
