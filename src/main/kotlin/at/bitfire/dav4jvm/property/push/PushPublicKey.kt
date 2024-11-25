@@ -3,7 +3,6 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -15,11 +14,6 @@ import org.xmlpull.v1.XmlPullParser
  * @see ServerPublicKey
  */
 abstract class PushPublicKey: Property {
-
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "server-public-key")
-    }
 
     var type: String? = null
     var key: String? = null
