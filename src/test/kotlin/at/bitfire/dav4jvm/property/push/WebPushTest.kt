@@ -29,7 +29,7 @@ class WebPushTest: PropertyTest() {
         val result = results.first() as PushRegister
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
         val subscription = result.subscription?.webPushSubscription
-        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri)
+        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri?.toString())
         assertEquals("BTBZMqHH6r4Tts7J_aSIgg", subscription?.authSecret?.secret)
 
         val publicKey = subscription?.clientPublicKey
@@ -43,7 +43,7 @@ class WebPushTest: PropertyTest() {
                 "<transports xmlns=\"$NS_WEBDAV_PUSH\">" +
                 "  <something><else/></something>" +
                 "  <web-push>" +
-                "    <server-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</client-public-key>" +
+                "    <server-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</server-public-key>" +
                 "  </web-push>" +
                 "</transports>" +
                 "<topic xmlns=\"$NS_WEBDAV_PUSH\">SomeTopic</topic>")
