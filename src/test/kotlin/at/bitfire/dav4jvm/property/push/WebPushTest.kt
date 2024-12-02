@@ -29,7 +29,7 @@ class WebPushTest: PropertyTest() {
         val result = results.first() as PushRegister
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
         val subscription = result.subscription?.webPushSubscription
-        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.resource)
+        assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri)
         assertEquals("BTBZMqHH6r4Tts7J_aSIgg", subscription?.authSecret?.secret)
 
         val publicKey = subscription?.clientPublicKey

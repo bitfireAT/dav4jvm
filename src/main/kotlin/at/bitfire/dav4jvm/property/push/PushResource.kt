@@ -9,6 +9,8 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import java.net.URI
+import java.net.URISyntaxException
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -17,7 +19,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 class PushResource private constructor(
-    val resource: String?
+    val uri: URI?
 ): Property {
 
     companion object {
@@ -33,7 +35,15 @@ class PushResource private constructor(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PushResource =
-            PushResource(XmlReader(parser).readText())
+            PushResource(
+                uri = XmlReader(parser).readText()?.let { uri ->
+                    try {
+                        URI(uri)
+                    } catch (e: URISyntaxException) {
+                        null
+                    }
+                }
+            )
 
     }
 
