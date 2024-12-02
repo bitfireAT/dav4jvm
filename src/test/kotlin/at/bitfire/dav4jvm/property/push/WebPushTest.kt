@@ -42,14 +42,21 @@ class WebPushTest: PropertyTest() {
         val results = parseProperty(
                 "<transports xmlns=\"$NS_WEBDAV_PUSH\">" +
                 "  <something><else/></something>" +
-                "  <web-push/>" +
+                "  <web-push>" +
+                "    <server-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</client-public-key>" +
+                "  </web-push>" +
                 "</transports>" +
                 "<topic xmlns=\"$NS_WEBDAV_PUSH\">SomeTopic</topic>")
         val result = results.first() as PushTransports
 
         assertEquals(setOf(
             // something else is ignored because it's not a recognized transport
-            WebPush(null)
+            WebPush(
+                ServerPublicKey().apply {
+                    type = "p256dh"
+                    key = "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
+                }
+            )
         ), result.transports)
         assertTrue(result.hasWebPush())
 
