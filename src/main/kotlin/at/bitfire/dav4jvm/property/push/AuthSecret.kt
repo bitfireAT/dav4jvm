@@ -16,8 +16,8 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class AuthSecret private constructor(
-    val secret: String?
+data class AuthSecret(
+    val secret: String? = null
 ): Property {
 
     companion object {

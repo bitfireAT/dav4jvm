@@ -18,8 +18,8 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushResource private constructor(
-    val uri: URI?
+data class PushResource(
+    val uri: URI? = null
 ): Property {
 
     companion object {

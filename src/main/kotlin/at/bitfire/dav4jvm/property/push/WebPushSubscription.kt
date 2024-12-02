@@ -8,7 +8,6 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
@@ -17,7 +16,11 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class WebPushSubscription: Property {
+data class WebPushSubscription(
+    val pushResource: PushResource? = null,
+    val clientPublicKey: ClientPublicKey? = null,
+    val authSecret: AuthSecret? = null
+): Property {
 
     companion object {
 
@@ -26,26 +29,22 @@ class WebPushSubscription: Property {
 
     }
 
-    var pushResource: PushResource? = null
-    var clientPublicKey: ClientPublicKey? = null
-    var authSecret: AuthSecret? = null
-
 
     object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): WebPushSubscription {
-            val subscription = WebPushSubscription()
+            var subscription = WebPushSubscription()
 
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        PushResource.NAME -> subscription.pushResource = PushResource.Factory.create(parser)
-                        ClientPublicKey.NAME -> subscription.clientPublicKey = ClientPublicKey.Factory.create(parser)
-                        AuthSecret.NAME -> subscription.authSecret = AuthSecret.Factory.create(parser)
+                        PushResource.NAME -> subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
+                        ClientPublicKey.NAME -> subscription = subscription.copy(clientPublicKey = ClientPublicKey.Factory.create(parser))
+                        AuthSecret.NAME -> subscription = subscription.copy(authSecret = AuthSecret.Factory.create(parser))
                     }
                 }
                 eventType = parser.next()

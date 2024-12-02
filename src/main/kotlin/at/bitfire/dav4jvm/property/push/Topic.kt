@@ -16,8 +16,8 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class Topic private constructor(
-    val topic: String?
+data class Topic(
+    val topic: String? = null
 ): Property {
 
     companion object {

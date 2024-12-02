@@ -11,15 +11,18 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
+import org.xmlpull.v1.XmlPullParser
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-register` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushRegister: Property {
+data class PushRegister(
+    val expires: Instant? = null,
+    val subscription: Subscription? = null
+): Property {
 
     companion object {
 
@@ -30,16 +33,13 @@ class PushRegister: Property {
 
     }
 
-    var expires: Instant? = null
-    var subscription: Subscription? = null
-
 
     object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PushRegister {
-            val register = PushRegister()
+            var register = PushRegister()
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -47,11 +47,15 @@ class PushRegister: Property {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         EXPIRES ->
-                            register.expires = XmlReader(parser).readText()?.let {
-                                HttpUtils.parseDate(it)
-                            }
+                            register = register.copy(
+                                expires = XmlReader(parser).readText()?.let {
+                                    HttpUtils.parseDate(it)
+                                }
+                            )
                         Subscription.NAME ->
-                            register.subscription = Subscription.Factory.create(parser)
+                            register = register.copy(
+                                subscription = Subscription.Factory.create(parser)
+                            )
                     }
                 eventType = parser.next()
             }

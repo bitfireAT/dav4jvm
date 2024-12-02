@@ -10,11 +10,10 @@ import at.bitfire.dav4jvm.Property
  * @see ClientPublicKey
  * @see ServerPublicKey
  */
-abstract class PushPublicKey: Property {
-
-    var type: String? = null
-    var key: String? = null
-
+abstract class PushPublicKey(
+    open val type: String? = null,
+    open val key: String? = null
+): Property {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

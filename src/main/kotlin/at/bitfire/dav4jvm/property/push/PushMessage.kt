@@ -17,8 +17,8 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushMessage(
-    val propStat: PropStat?
+data class PushMessage(
+    val propStat: PropStat? = null
 ): Property {
 
     companion object {

@@ -10,7 +10,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class WebPush(
-    val serverPublicKey: ServerPublicKey?
+    val serverPublicKey: ServerPublicKey? = null
 ): PushTransport {
 
     companion object {

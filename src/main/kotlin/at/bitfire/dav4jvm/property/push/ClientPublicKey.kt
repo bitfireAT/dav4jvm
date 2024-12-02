@@ -10,7 +10,10 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class ClientPublicKey: PushPublicKey() {
+data class ClientPublicKey(
+    override val type: String? = null,
+    override val key: String? = null
+): PushPublicKey(type, key) {
 
     companion object {
 
@@ -25,12 +28,10 @@ class ClientPublicKey: PushPublicKey() {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): ClientPublicKey {
-            val publicKey = ClientPublicKey()
-
-            publicKey.type = parser.getAttributeValue(null, "type")
-            publicKey.key = XmlReader(parser).readText()
-
-            return publicKey
+            return ClientPublicKey(
+                type = parser.getAttributeValue(null, "type"),
+                key = XmlReader(parser).readText()
+            )
         }
 
     }
