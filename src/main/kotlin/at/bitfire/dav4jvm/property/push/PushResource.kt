@@ -10,20 +10,22 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
+import java.net.URI
+import java.net.URISyntaxException
 
 /**
- * Represents a [NS_WEBDAV_PUSH]`:topic` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-resource` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-data class Topic(
-    val topic: String? = null
+data class PushResource(
+    val uri: URI? = null
 ): Property {
 
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "topic")
+        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-resource")
 
     }
 
@@ -32,8 +34,16 @@ data class Topic(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): Topic =
-            Topic(XmlReader(parser).readText())
+        override fun create(parser: XmlPullParser): PushResource =
+            PushResource(
+                uri = XmlReader(parser).readText()?.let { uri ->
+                    try {
+                        URI(uri)
+                    } catch (_: URISyntaxException) {
+                        null
+                    }
+                }
+            )
 
     }
 

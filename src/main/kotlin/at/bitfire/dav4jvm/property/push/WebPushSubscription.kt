@@ -8,36 +8,50 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}web-push-subscription` property.
+ * Represents a [NS_WEBDAV_PUSH]`:web-push-subscription` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class WebPushSubscription: Property {
+data class WebPushSubscription(
+    val pushResource: PushResource? = null,
+    val clientPublicKey: ClientPublicKey? = null,
+    val authSecret: AuthSecret? = null
+): Property {
 
     companion object {
 
         @JvmField
         val NAME = Property.Name(NS_WEBDAV_PUSH, "web-push-subscription")
 
-        val PUSH_RESOURCE = Property.Name(NS_WEBDAV_PUSH, "push-resource")
-
     }
-
-    var pushResource: String? = null
 
 
     object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) =
-            WebPushSubscription().apply {
-                pushResource = XmlReader(parser).readTextProperty(PUSH_RESOURCE)
+        override fun create(parser: XmlPullParser): WebPushSubscription {
+            var subscription = WebPushSubscription()
+
+            val depth = parser.depth
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    when (parser.propertyName()) {
+                        PushResource.NAME -> subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
+                        ClientPublicKey.NAME -> subscription = subscription.copy(clientPublicKey = ClientPublicKey.Factory.create(parser))
+                        AuthSecret.NAME -> subscription = subscription.copy(authSecret = AuthSecret.Factory.create(parser))
+                    }
+                }
+                eventType = parser.next()
             }
+
+            return subscription
+        }
 
     }
 

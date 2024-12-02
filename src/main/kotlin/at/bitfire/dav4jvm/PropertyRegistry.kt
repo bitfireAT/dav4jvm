@@ -59,7 +59,7 @@ object PropertyRegistry {
             at.bitfire.dav4jvm.property.carddav.MaxResourceSize.Factory,
             Owner.Factory,
             PushMessage.Factory,
-            PushSubscribe.Factory,
+            PushRegister.Factory,
             PushTransports.Factory,
             QuotaAvailableBytes.Factory,
             QuotaUsedBytes.Factory,

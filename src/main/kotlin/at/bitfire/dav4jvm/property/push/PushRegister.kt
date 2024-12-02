@@ -11,35 +11,35 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
+import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}push-subscribe` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-register` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushSubscribe: Property {
+data class PushRegister(
+    val expires: Instant? = null,
+    val subscription: Subscription? = null
+): Property {
 
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-subscribe")
+        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-register")
 
         val EXPIRES = Property.Name(NS_WEBDAV_PUSH, "expires")
 
     }
-
-    var expires: Instant? = null
-    var subscription: Subscription? = null
 
 
     object Factory: PropertyFactory {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser): PushSubscribe {
-            val subscribe = PushSubscribe()
+        override fun create(parser: XmlPullParser): PushRegister {
+            var register = PushRegister()
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -47,16 +47,20 @@ class PushSubscribe: Property {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
                         EXPIRES ->
-                            subscribe.expires = XmlReader(parser).readText()?.let {
-                                HttpUtils.parseDate(it)
-                            }
+                            register = register.copy(
+                                expires = XmlReader(parser).readText()?.let {
+                                    HttpUtils.parseDate(it)
+                                }
+                            )
                         Subscription.NAME ->
-                            subscribe.subscription = Subscription.Factory.create(parser)
+                            register = register.copy(
+                                subscription = Subscription.Factory.create(parser)
+                            )
                     }
                 eventType = parser.next()
             }
 
-            return subscribe
+            return register
         }
 
     }

@@ -6,18 +6,19 @@
 
 package at.bitfire.dav4jvm.property.push
 
+import at.bitfire.dav4jvm.PropStat
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}push-message` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-message` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PushMessage(
-    val topic: String?
+data class PushMessage(
+    val propStat: PropStat? = null
 ): Property {
 
     companion object {
@@ -32,7 +33,15 @@ class PushMessage(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = PushMessage(XmlReader(parser).readTextProperty(Topic.NAME))
+        override fun create(parser: XmlPullParser): PushMessage {
+            var propStat: PropStat? = null
+
+            XmlReader(parser).processTag(PropStat.NAME) {
+                propStat = PropStat.parse(parser)
+            }
+
+            return PushMessage(propStat)
+        }
 
     }
 

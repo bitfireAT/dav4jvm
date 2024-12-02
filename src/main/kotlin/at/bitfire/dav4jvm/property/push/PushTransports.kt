@@ -8,28 +8,24 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a `{DAV:Push}push-transports` property.
+ * Represents a [NS_WEBDAV_PUSH]`:push-transports` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 class PushTransports private constructor(
-    val transports: Set<Property.Name>
+    val transports: Set<PushTransport>
 ): Property {
 
     companion object {
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-transports")
-
-        val TRANSPORT = Property.Name(NS_WEBDAV_PUSH, "transport")
-        val WEB_PUSH = Property.Name(NS_WEBDAV_PUSH, "web-push")
+        val NAME = Property.Name(NS_WEBDAV_PUSH, "transports")
     }
 
-    fun hasWebPush() = transports.contains(WEB_PUSH)
+    fun hasWebPush() = transports.any { it is WebPush }
 
 
     object Factory: PropertyFactory {
@@ -37,15 +33,16 @@ class PushTransports private constructor(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PushTransports {
-            val transports = mutableListOf<Property.Name>()
-            XmlReader(parser).processTag(TRANSPORT) {
-                val depth = parser.depth
-                var eventType = parser.eventType
-                while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                    if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                        transports += parser.propertyName()
-                    eventType = parser.next()
+            val transports = mutableListOf<PushTransport>()
+            val depth = parser.depth
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    when (parser.propertyName()) {
+                        WebPush.NAME -> transports += WebPush.Factory.create(parser)
+                    }
                 }
+                eventType = parser.next()
             }
             return PushTransports(transports.toSet())
         }

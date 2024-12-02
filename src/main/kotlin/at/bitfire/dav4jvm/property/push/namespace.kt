@@ -12,4 +12,4 @@ package at.bitfire.dav4jvm.property.push
  *
  * Experimental!
  */
-const val NS_WEBDAV_PUSH = "DAV:Push"
+const val NS_WEBDAV_PUSH = "https://bitfire.at/webdav-push"
