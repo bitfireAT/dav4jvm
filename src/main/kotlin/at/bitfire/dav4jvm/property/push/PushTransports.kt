@@ -8,7 +8,6 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
@@ -26,7 +25,7 @@ class PushTransports private constructor(
         val NAME = Property.Name(NS_WEBDAV_PUSH, "transports")
     }
 
-    fun hasWebPush() = transports.find { it is WebPush } != null
+    fun hasWebPush() = transports.any { it is WebPush }
 
 
     object Factory: PropertyFactory {
