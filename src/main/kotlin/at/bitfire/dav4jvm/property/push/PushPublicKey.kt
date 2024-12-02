@@ -1,9 +1,6 @@
 package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.Property
-import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
 
 /**
  * Represents a public key property from Push.
@@ -33,25 +30,6 @@ abstract class PushPublicKey: Property {
         var result = type?.hashCode() ?: 0
         result = 31 * result + (key?.hashCode() ?: 0)
         return result
-    }
-
-
-    abstract class Factory<KeyType: PushPublicKey>(
-        private val name: Property.Name,
-        private val constructor: () -> KeyType
-    ): PropertyFactory {
-
-        override fun getName() = name
-
-        override fun create(parser: XmlPullParser): KeyType {
-            val publicKey = constructor()
-
-            publicKey.type = parser.getAttributeValue(null, "type")
-            publicKey.key = XmlReader(parser).readText()
-
-            return publicKey
-        }
-
     }
 
 }
