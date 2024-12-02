@@ -52,10 +52,10 @@ class WebPushTest: PropertyTest() {
         assertEquals(setOf(
             // something else is ignored because it's not a recognized transport
             WebPush(
-                ServerPublicKey().apply {
-                    type = "p256dh"
+                ServerPublicKey(
+                    type = "p256dh",
                     key = "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
-                }
+                )
             )
         ), result.transports)
         assertTrue(result.hasWebPush())
