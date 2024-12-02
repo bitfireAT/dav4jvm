@@ -11,9 +11,9 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class ClientPublicKey(
-    override val type: String? = null,
-    override val key: String? = null
-): PushPublicKey(type, key) {
+    val type: String? = null,
+    val key: String? = null
+): Property {
 
     companion object {
 

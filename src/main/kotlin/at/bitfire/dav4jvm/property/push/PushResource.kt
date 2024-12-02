@@ -9,9 +9,9 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import org.xmlpull.v1.XmlPullParser
 import java.net.URI
 import java.net.URISyntaxException
-import org.xmlpull.v1.XmlPullParser
 
 /**
  * Represents a [NS_WEBDAV_PUSH]`:push-resource` property.
@@ -39,7 +39,7 @@ data class PushResource(
                 uri = XmlReader(parser).readText()?.let { uri ->
                     try {
                         URI(uri)
-                    } catch (e: URISyntaxException) {
+                    } catch (_: URISyntaxException) {
                         null
                     }
                 }
