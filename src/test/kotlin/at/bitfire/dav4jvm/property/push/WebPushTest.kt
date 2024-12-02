@@ -1,12 +1,15 @@
-package at.bitfire.dav4jvm.property
+package at.bitfire.dav4jvm.property.push
 
-import at.bitfire.dav4jvm.property.push.*
+import at.bitfire.dav4jvm.property.PropertyTest
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import java.time.Instant
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
 
 class WebPushTest: PropertyTest() {
 
