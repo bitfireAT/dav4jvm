@@ -13,9 +13,12 @@ import at.bitfire.dav4jvm.property.caldav.NS_CALENDARSERVER
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import org.xmlpull.v1.XmlPullParser
 
-class ResourceType: Property {
+class ResourceType(
+    val types: Set<Property.Name> = emptySet()
+): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "resourcetype")
 
@@ -28,11 +31,8 @@ class ResourceType: Property {
         val CALENDAR_PROXY_READ = Property.Name(NS_CALENDARSERVER, "calendar-proxy-read")      // CalDAV Proxy
         val CALENDAR_PROXY_WRITE = Property.Name(NS_CALENDARSERVER, "calendar-proxy-write")    // CalDAV Proxy
         val SUBSCRIBED = Property.Name(NS_CALENDARSERVER, "subscribed")
+
     }
-
-    val types = mutableSetOf<Property.Name>()
-
-    override fun toString() = "[${types.joinToString(", ")}]"
 
 
     object Factory: PropertyFactory {
@@ -40,7 +40,7 @@ class ResourceType: Property {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): ResourceType {
-            val type = ResourceType()
+            val types = mutableSetOf<Property.Name>()
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -57,13 +57,13 @@ class ResourceType: Property {
                         CALENDAR_PROXY_WRITE -> typeName = CALENDAR_PROXY_WRITE
                         SUBSCRIBED -> typeName = SUBSCRIBED
                     }
-                    type.types.add(typeName)
+                    types.add(typeName)
                 }
                 eventType = parser.next()
             }
             assert(parser.depth == depth)
 
-            return type
+            return ResourceType(types)
         }
 
     }

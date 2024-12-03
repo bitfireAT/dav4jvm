@@ -18,14 +18,20 @@ import org.xmlpull.v1.XmlPullParser
 data class AddMember(
     val href: String?
 ): Property {
+
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "add-member")
+
     }
 
     object Factory: PropertyFactory {
+
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(DavResource.HREF))
+
     }
+
 }

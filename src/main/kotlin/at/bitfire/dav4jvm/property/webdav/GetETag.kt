@@ -19,8 +19,8 @@ import org.xmlpull.v1.XmlPullParser
  * Can also be used to parse ETags from HTTP responses – just pass the raw ETag
  * header value to the constructor and then use [eTag] and [weak].
  */
-class GetETag(
-    rawETag: String?
+data class GetETag(
+    val rawETag: String?
 ): Property {
 
     companion object {
@@ -64,8 +64,6 @@ class GetETag(
             weak = false
         }
     }
-
-    override fun toString() = "ETag(weak=${weak}, tag=$eTag)"
 
     override fun equals(other: Any?): Boolean {
         if (other !is GetETag)

@@ -11,7 +11,9 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
-class SupportedReportSet: Property {
+data class SupportedReportSet(
+    val reports: Set<String> = emptySet()
+): Property {
 
     companion object {
 
@@ -25,10 +27,6 @@ class SupportedReportSet: Property {
 
     }
 
-    val reports = mutableSetOf<String>()
-
-    override fun toString() = "[${reports.joinToString(", ")}]"
-
 
     object Factory: PropertyFactory {
 
@@ -40,17 +38,17 @@ class SupportedReportSet: Property {
                <!ELEMENT report ANY>
             */
 
-            val supported = SupportedReportSet()
+            val reports = mutableSetOf<String>()
             XmlReader(parser).processTag(SUPPORTED_REPORT) {
                 processTag(REPORT) {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
-                        supported.reports += parser.text
+                        reports += parser.text
                     else if (parser.eventType == XmlPullParser.START_TAG)
-                        supported.reports += "${parser.namespace}${parser.name}"
+                        reports += "${parser.namespace}${parser.name}"
                 }
             }
-            return supported
+            return SupportedReportSet(reports)
         }
 
     }
