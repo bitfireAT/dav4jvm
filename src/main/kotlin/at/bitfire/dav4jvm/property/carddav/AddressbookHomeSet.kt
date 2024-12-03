@@ -8,13 +8,18 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.HrefListProperty
+import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
 
-class AddressbookHomeSet: HrefListProperty() {
+class AddressbookHomeSet(
+    override val hrefs: LinkedList<String> = LinkedList<String>()
+): HrefListProperty(hrefs) {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_CARDDAV, "addressbook-home-set")
+
     }
 
 
