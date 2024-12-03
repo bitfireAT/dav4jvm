@@ -12,9 +12,9 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 data class SupportedCalendarComponentSet(
-    var supportsEvents: Boolean,
-    var supportsTasks: Boolean,
-    var supportsJournal: Boolean
+    val supportsEvents: Boolean,
+    val supportsTasks: Boolean,
+    val supportsJournal: Boolean
 ): Property {
 
     companion object {
@@ -37,7 +37,11 @@ data class SupportedCalendarComponentSet(
                <!ELEMENT comp ((allprop | prop*), (allcomp | comp*))>
                <!ATTLIST comp name CDATA #REQUIRED>
             */
-            val components = SupportedCalendarComponentSet(false, false, false)
+            var components = SupportedCalendarComponentSet(
+                supportsEvents = false,
+                supportsTasks = false,
+                supportsJournal = false
+            )
 
             val depth = parser.depth
             var eventType = parser.eventType
@@ -45,15 +49,17 @@ data class SupportedCalendarComponentSet(
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         ALLCOMP -> {
-                            components.supportsEvents = true
-                            components.supportsTasks = true
-                            components.supportsJournal = true
+                            components = SupportedCalendarComponentSet(
+                                supportsEvents = true,
+                                supportsTasks = true,
+                                supportsJournal = true
+                            )
                         }
                         COMP ->
                             when (parser.getAttributeValue(null, "name")?.uppercase()) {
-                                "VEVENT" -> components.supportsEvents = true
-                                "VTODO" -> components.supportsTasks = true
-                                "VJOURNAL" -> components.supportsJournal = true
+                                "VEVENT" -> components = components.copy(supportsEvents = true)
+                                "VTODO" -> components = components.copy(supportsTasks = true)
+                                "VJOURNAL" -> components = components.copy(supportsJournal = true)
                             }
                     }
                 }
