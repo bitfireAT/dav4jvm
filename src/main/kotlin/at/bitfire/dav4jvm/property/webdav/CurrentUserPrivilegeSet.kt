@@ -15,11 +15,11 @@ import org.xmlpull.v1.XmlPullParser
 data class CurrentUserPrivilegeSet(
     // not all privileges from RFC 3744 are implemented by now
     // feel free to add more if you need them for your project
-    var mayRead: Boolean = false,
-    var mayWriteProperties: Boolean = false,
-    var mayWriteContent: Boolean = false,
-    var mayBind: Boolean = false,
-    var mayUnbind: Boolean = false
+    val mayRead: Boolean = false,
+    val mayWriteProperties: Boolean = false,
+    val mayWriteContent: Boolean = false,
+    val mayBind: Boolean = false,
+    val mayUnbind: Boolean = false
 ): Property {
 
     companion object {
@@ -46,7 +46,7 @@ data class CurrentUserPrivilegeSet(
         override fun create(parser: XmlPullParser): CurrentUserPrivilegeSet {
             // <!ELEMENT current-user-privilege-set (privilege*)>
             // <!ELEMENT privilege ANY>
-            val privs = CurrentUserPrivilegeSet()
+            var privs = CurrentUserPrivilegeSet()
 
             XmlReader(parser).processTag(PRIVILEGE) {
                 val depth = parser.depth
@@ -55,27 +55,27 @@ data class CurrentUserPrivilegeSet(
                     if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                         when (parser.propertyName()) {
                             READ ->
-                                privs.mayRead = true
+                                privs = privs.copy(mayRead = true)
                             WRITE -> {
-                                privs.mayBind = true
-                                privs.mayUnbind = true
-                                privs.mayWriteProperties = true
-                                privs.mayWriteContent = true
+                                privs = privs.copy(mayBind = true)
+                                privs = privs.copy(mayUnbind = true)
+                                privs = privs.copy(mayWriteProperties = true)
+                                privs = privs.copy(mayWriteContent = true)
                             }
                             WRITE_PROPERTIES ->
-                                privs.mayWriteProperties = true
+                                privs = privs.copy(mayWriteProperties = true)
                             WRITE_CONTENT ->
-                                privs.mayWriteContent = true
+                                privs = privs.copy(mayWriteContent = true)
                             BIND ->
-                                privs.mayBind = true
+                                privs = privs.copy(mayBind = true)
                             UNBIND ->
-                                privs.mayUnbind = true
+                                privs = privs.copy(mayUnbind = true)
                             ALL -> {
-                                privs.mayRead = true
-                                privs.mayBind = true
-                                privs.mayUnbind = true
-                                privs.mayWriteProperties = true
-                                privs.mayWriteContent = true
+                                privs = privs.copy(mayRead = true)
+                                privs = privs.copy(mayBind = true)
+                                privs = privs.copy(mayUnbind = true)
+                                privs = privs.copy(mayWriteProperties = true)
+                                privs = privs.copy(mayWriteContent = true)
                             }
                         }
                     eventType = parser.next()
@@ -84,5 +84,7 @@ data class CurrentUserPrivilegeSet(
 
             return privs
         }
+
     }
+
 }

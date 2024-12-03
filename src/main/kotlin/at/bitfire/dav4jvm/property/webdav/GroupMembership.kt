@@ -12,8 +12,10 @@ import org.xmlpull.v1.XmlPullParser
 class GroupMembership: HrefListProperty() {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "group-membership")
+
     }
 
 

@@ -8,9 +8,12 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.HrefListProperty
+import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
 
-class CalendarProxyReadFor: HrefListProperty() {
+data class CalendarProxyReadFor(
+    override val hrefs: LinkedList<String> = LinkedList<String>()
+): HrefListProperty(hrefs) {
 
     companion object {
         @JvmField

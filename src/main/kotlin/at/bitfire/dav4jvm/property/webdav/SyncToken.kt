@@ -16,8 +16,10 @@ data class SyncToken(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "sync-token")
+
     }
 
 
@@ -30,4 +32,5 @@ data class SyncToken(
             SyncToken(XmlReader(parser).readText())
 
     }
+
 }

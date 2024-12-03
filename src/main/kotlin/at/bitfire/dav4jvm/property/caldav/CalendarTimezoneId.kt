@@ -11,7 +11,7 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
-class CalendarTimezoneId(
+data class CalendarTimezoneId(
     val identifier: String?
 ): Property {
 

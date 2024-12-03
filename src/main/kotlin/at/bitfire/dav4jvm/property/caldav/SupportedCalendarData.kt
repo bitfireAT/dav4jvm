@@ -12,7 +12,9 @@ import at.bitfire.dav4jvm.XmlReader
 import okhttp3.MediaType
 import org.xmlpull.v1.XmlPullParser
 
-class SupportedCalendarData: Property {
+data class SupportedCalendarData(
+    val types: Set<MediaType> = emptySet()
+): Property {
 
     companion object {
 
@@ -25,11 +27,7 @@ class SupportedCalendarData: Property {
 
     }
 
-    val types = mutableSetOf<MediaType>()
-
     fun hasJCal() = types.any { "application".equals(it.type, true) && "calendar+json".equals(it.subtype, true) }
-
-    override fun toString() = "[${types.joinToString(", ")}]"
 
 
     object Factory: PropertyFactory {
@@ -37,11 +35,11 @@ class SupportedCalendarData: Property {
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): SupportedCalendarData {
-            val supported = SupportedCalendarData()
+            val supportedTypes = mutableSetOf<MediaType>()
 
-            XmlReader(parser).readContentTypes(CALENDAR_DATA_TYPE, supported.types::add)
+            XmlReader(parser).readContentTypes(CALENDAR_DATA_TYPE, supportedTypes::add)
 
-            return supported
+            return SupportedCalendarData(supportedTypes)
         }
 
     }

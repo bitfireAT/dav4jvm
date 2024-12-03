@@ -9,16 +9,18 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import org.xmlpull.v1.XmlPullParser
 import java.time.Instant
+import org.xmlpull.v1.XmlPullParser
 
 data class GetLastModified(
-    var lastModified: Instant?
+    val lastModified: Instant?
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getlastmodified")
+
     }
 
 

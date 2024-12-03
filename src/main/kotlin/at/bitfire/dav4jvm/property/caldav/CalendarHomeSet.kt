@@ -8,13 +8,18 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.HrefListProperty
+import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
 
-class CalendarHomeSet: HrefListProperty() {
+data class CalendarHomeSet(
+    override val hrefs: LinkedList<String> = LinkedList<String>()
+): HrefListProperty(hrefs) {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "calendar-home-set")
+
     }
 
 

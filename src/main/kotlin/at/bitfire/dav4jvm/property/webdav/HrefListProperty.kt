@@ -10,17 +10,19 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
-import java.util.*
 
-abstract class HrefListProperty: Property {
+/**
+ * Represents a list of hrefs.
+ *
+ * Every [HrefListProperty] must be a data class.
+ */
+abstract class HrefListProperty(
+    open val hrefs: LinkedList<String> = LinkedList<String>()
+): Property {
 
-    val hrefs = LinkedList<String>()
-
-    val href
-        get() = hrefs.firstOrNull()
-
-    override fun toString() =  "href=[" + hrefs.joinToString(", ") + "]"
+    val href get() = hrefs.firstOrNull()
 
 
     abstract class Factory : PropertyFactory {

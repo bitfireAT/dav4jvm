@@ -16,8 +16,10 @@ data class DisplayName(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "displayname")
+
     }
 
 
@@ -30,4 +32,5 @@ data class DisplayName(
             DisplayName(XmlReader(parser).readText())
 
     }
+
 }

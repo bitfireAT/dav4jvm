@@ -14,15 +14,21 @@ import org.xmlpull.v1.XmlPullParser
 data class QuotaAvailableBytes(
     val quotaAvailableBytes: Long?
 ) : Property {
+
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "quota-available-bytes")
+
     }
 
     object Factory: PropertyFactory {
+
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser) =
             QuotaAvailableBytes(XmlReader(parser).readLong())
+
     }
+
 }

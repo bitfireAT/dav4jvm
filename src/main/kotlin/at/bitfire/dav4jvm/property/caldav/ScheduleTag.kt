@@ -13,16 +13,18 @@ import at.bitfire.dav4jvm.XmlReader
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
-class ScheduleTag(
-    rawScheduleTag: String?
+data class ScheduleTag(
+    val rawScheduleTag: String?
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
         fun fromResponse(response: Response) =
                 response.header("Schedule-Tag")?.let { ScheduleTag(it) }
+
     }
 
     /* Value:  opaque-tag
