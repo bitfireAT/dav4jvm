@@ -18,8 +18,10 @@ data class GetContentType(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getcontenttype")
+
     }
 
 

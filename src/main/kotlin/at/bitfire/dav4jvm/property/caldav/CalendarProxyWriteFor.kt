@@ -10,7 +10,9 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
-class CalendarProxyWriteFor: HrefListProperty() {
+data class CalendarProxyWriteFor(
+    override val hrefs: List<String> = emptyList()
+): HrefListProperty(hrefs) {
 
     companion object {
         @JvmField
@@ -22,7 +24,7 @@ class CalendarProxyWriteFor: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = create(parser, CalendarProxyWriteFor())
+        override fun create(parser: XmlPullParser) = create(parser, ::CalendarProxyWriteFor)
 
     }
 

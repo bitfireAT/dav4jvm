@@ -7,17 +7,20 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
-import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 import java.util.LinkedList
 import java.util.logging.Level
 import java.util.logging.Logger
+import org.xmlpull.v1.XmlPullParser
 
 /**
  * Represents a WebDAV property.
  *
  * Every [Property] must define a static field (use `@JvmStatic`) called `NAME` of type [Property.Name],
  * which will be accessed by reflection.
+ *
+ * Every [Property] should be a data class in order to be able to compare it against others, and convert to a useful
+ * string for debugging.
  */
 interface Property {
 

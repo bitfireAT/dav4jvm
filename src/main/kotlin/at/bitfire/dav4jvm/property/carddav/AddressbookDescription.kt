@@ -12,7 +12,7 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressbookDescription(
-    var description: String? = null
+    val description: String? = null
 ): Property {
 
     companion object {

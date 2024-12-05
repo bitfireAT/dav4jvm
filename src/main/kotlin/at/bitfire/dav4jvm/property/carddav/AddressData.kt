@@ -12,16 +12,18 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class AddressData(
-        val card: String?
+    val card: String?
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_CARDDAV, "address-data")
 
         // attributes
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
+
     }
 
 

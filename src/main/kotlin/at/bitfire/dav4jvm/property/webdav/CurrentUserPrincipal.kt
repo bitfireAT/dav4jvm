@@ -19,8 +19,10 @@ data class CurrentUserPrincipal(
 ): Property {
 
     companion object {
+
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "current-user-principal")
+
     }
 
 
