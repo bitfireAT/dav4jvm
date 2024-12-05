@@ -57,10 +57,12 @@ data class CurrentUserPrivilegeSet(
                             READ ->
                                 privs = privs.copy(mayRead = true)
                             WRITE -> {
-                                privs = privs.copy(mayBind = true)
-                                privs = privs.copy(mayUnbind = true)
-                                privs = privs.copy(mayWriteProperties = true)
-                                privs = privs.copy(mayWriteContent = true)
+                                privs = privs.copy(
+                                    mayBind = true,
+                                    mayUnbind = true,
+                                    mayWriteProperties = true,
+                                    mayWriteContent = true
+                                )
                             }
                             WRITE_PROPERTIES ->
                                 privs = privs.copy(mayWriteProperties = true)
@@ -71,11 +73,13 @@ data class CurrentUserPrivilegeSet(
                             UNBIND ->
                                 privs = privs.copy(mayUnbind = true)
                             ALL -> {
-                                privs = privs.copy(mayRead = true)
-                                privs = privs.copy(mayBind = true)
-                                privs = privs.copy(mayUnbind = true)
-                                privs = privs.copy(mayWriteProperties = true)
-                                privs = privs.copy(mayWriteContent = true)
+                                privs = privs.copy(
+                                    mayRead = true,
+                                    mayBind = true,
+                                    mayUnbind = true,
+                                    mayWriteProperties = true,
+                                    mayWriteContent = true
+                                )
                             }
                         }
                     eventType = parser.next()
