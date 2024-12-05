@@ -10,7 +10,6 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -19,7 +18,7 @@ import org.xmlpull.v1.XmlPullParser
  * Every [HrefListProperty] must be a data class.
  */
 abstract class HrefListProperty(
-    open val hrefs: LinkedList<String> = LinkedList<String>()
+    open val hrefs: List<String>
 ): Property {
 
     val href get() = hrefs.firstOrNull()
@@ -27,9 +26,20 @@ abstract class HrefListProperty(
 
     abstract class Factory : PropertyFactory {
 
+        @Deprecated("hrefs is no longer mutable.", level = DeprecationLevel.ERROR)
         fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
-            XmlReader(parser).readTextPropertyList(DavResource.HREF, list.hrefs)
+            val hrefs = list.hrefs.toMutableList()
+            XmlReader(parser).readTextPropertyList(DavResource.HREF, hrefs)
             return list
+        }
+
+        fun <PropertyType> create(
+            parser: XmlPullParser,
+            constructor: (hrefs: List<String>
+                ) -> PropertyType): PropertyType {
+            val hrefs = mutableListOf<String>()
+            XmlReader(parser).readTextPropertyList(DavResource.HREF, hrefs)
+            return constructor(hrefs)
         }
 
     }

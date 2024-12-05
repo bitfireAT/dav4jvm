@@ -8,11 +8,10 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.HrefListProperty
-import java.util.LinkedList
 import org.xmlpull.v1.XmlPullParser
 
 class Source(
-    override val hrefs: LinkedList<String> = LinkedList<String>()
+    override val hrefs: List<String> = emptyList()
 ): HrefListProperty(hrefs) {
 
     companion object {
@@ -27,7 +26,7 @@ class Source(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = create(parser, Source())
+        override fun create(parser: XmlPullParser) = create(parser, ::Source)
 
     }
 

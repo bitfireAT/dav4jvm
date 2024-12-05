@@ -9,7 +9,7 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import org.xmlpull.v1.XmlPullParser
 
-class Owner: HrefListProperty() {
+class Owner: HrefListProperty(emptyList()) {
 
     companion object {
 
@@ -23,7 +23,7 @@ class Owner: HrefListProperty() {
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = create(parser, Owner())
+        override fun create(parser: XmlPullParser) = create(parser) { Owner() }
 
     }
 
