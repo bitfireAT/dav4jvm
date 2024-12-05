@@ -19,7 +19,8 @@ import org.xmlpull.v1.XmlPullParser
  * Every [Property] must define a static field (use `@JvmStatic`) called `NAME` of type [Property.Name],
  * which will be accessed by reflection.
  *
- * Every [Property] must be a data class.
+ * Every [Property] should be a data class in order to be able to compare it against others, and convert to a useful
+ * string for debugging.
  */
 interface Property {
 
