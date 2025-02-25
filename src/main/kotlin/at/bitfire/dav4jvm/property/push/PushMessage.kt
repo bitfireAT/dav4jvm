@@ -6,10 +6,9 @@
 
 package at.bitfire.dav4jvm.property.push
 
-import at.bitfire.dav4jvm.PropStat
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -18,7 +17,9 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class PushMessage(
-    val propStat: PropStat? = null
+    val topic: Topic? = null,
+    val contentUpdate: ContentUpdate? = null,
+    val propertyUpdate: PropertyUpdate? = null
 ): Property {
 
     companion object {
@@ -34,13 +35,22 @@ data class PushMessage(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PushMessage {
-            var propStat: PropStat? = null
-
-            XmlReader(parser).processTag(PropStat.NAME) {
-                propStat = PropStat.parse(parser)
+            var topic: Topic? = null
+            var contentUpdate: ContentUpdate? = null
+            var propertyUpdate: PropertyUpdate? = null
+            val depth = parser.depth
+            var eventType = parser.eventType
+            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                    when (parser.propertyName()) {
+                        Topic.NAME -> topic = Topic.Factory.create(parser)
+                        ContentUpdate.NAME -> contentUpdate = ContentUpdate.Factory.create(parser)
+                        PropertyUpdate.NAME -> propertyUpdate = PropertyUpdate.Factory.create(parser)
+                    }
+                }
+                eventType = parser.next()
             }
-
-            return PushMessage(propStat)
+            return PushMessage(topic, contentUpdate, propertyUpdate)
         }
 
     }
