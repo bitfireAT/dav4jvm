@@ -21,7 +21,8 @@ import org.xmlpull.v1.XmlPullParser
  */
 data class PushRegister(
     val expires: Instant? = null,
-    val subscription: Subscription? = null
+    val subscription: Subscription? = null,
+    val trigger: Trigger? = null
 ): Property {
 
     companion object {
@@ -55,6 +56,10 @@ data class PushRegister(
                         Subscription.NAME ->
                             register = register.copy(
                                 subscription = Subscription.Factory.create(parser)
+                            )
+                        Trigger.NAME ->
+                            register = register.copy(
+                                trigger = Trigger.Factory.create(parser)
                             )
                     }
                 eventType = parser.next()
