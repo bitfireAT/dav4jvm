@@ -3,6 +3,7 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.SyncLevel
 import org.xmlpull.v1.XmlPullParser
 
 /**
