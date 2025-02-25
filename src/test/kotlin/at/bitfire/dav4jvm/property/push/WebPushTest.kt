@@ -1,9 +1,7 @@
 package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.property.PropertyTest
-import at.bitfire.dav4jvm.property.webdav.SyncToken
 import java.time.Instant
-import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -68,31 +66,23 @@ class WebPushTest: PropertyTest() {
         val results = parseProperty(
             """
             <P:push-message xmlns:D="DAV:" xmlns:P="$NS_WEBDAV_PUSH">
-              <D:propstat>
-                <D:prop>
-                  <P:topic>O7M1nQ7cKkKTKsoS_j6Z3w</P:topic>
-                  <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>
-                </D:prop>
-              </D:propstat>
+              <topic>O7M1nQ7cKkKTKsoS_j6Z3w</topic>
+              <content-update>
+                <D:sync-token>http://example.com/sync/10</D:sync-token>
+              </content-update>
+              <property-update />
             </P:push-message>
             """.trimIndent()
         )
         val message = results.first() as PushMessage
 
-        val propStat = message.propStat
-        assertNotNull(propStat)
-        // Since the status line is not set, it's assumed to be OK by default
-        assertStatusEqual(StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK"), propStat?.status)
+        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", message.topic?.topic)
 
-        val properties = propStat?.properties
-        assertNotNull(properties)
-        assertEquals(2, properties?.size)
+        val syncToken = message.contentUpdate?.syncToken?.token
+        assertEquals("http://example.com/sync/10", syncToken)
 
-        val topic = properties!![0] as Topic
-        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", topic.topic)
-
-        val token = properties[1] as SyncToken
-        assertEquals("http://example.com/ns/sync/1234", token.token)
+        val propertyUpdate = message.propertyUpdate
+        assertNotNull(propertyUpdate)
     }
 
     /**

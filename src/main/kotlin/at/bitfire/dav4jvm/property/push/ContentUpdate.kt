@@ -4,6 +4,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.SyncLevel
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -12,7 +13,8 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class ContentUpdate(
-    val syncLevel: SyncLevel? = null
+    val syncLevel: SyncLevel? = null,
+    val syncToken: SyncToken? = null
 ): Property {
 
     companion object {
@@ -37,6 +39,9 @@ data class ContentUpdate(
                     when (parser.propertyName()) {
                         SyncLevel.NAME -> contentUpdate = contentUpdate.copy(
                             syncLevel = SyncLevel.Factory.create(parser)
+                        )
+                        SyncToken.NAME -> contentUpdate = contentUpdate.copy(
+                            syncToken = SyncToken.Factory.create(parser)
                         )
                     }
                 }
