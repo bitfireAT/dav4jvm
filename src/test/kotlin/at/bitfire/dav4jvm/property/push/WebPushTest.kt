@@ -2,10 +2,8 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.property.PropertyTest
 import java.time.Instant
-import okhttp3.internal.http.StatusLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -83,20 +81,6 @@ class WebPushTest: PropertyTest() {
 
         val propertyUpdate = message.propertyUpdate
         assertNotNull(propertyUpdate)
-    }
-
-    /**
-     * StatusLine doesn't have an `equals` method, so we need to compare its fields manually.
-     */
-    private fun assertStatusEqual(expected: StatusLine?, actual: StatusLine?) {
-        if (expected == null) {
-            assertNull(actual)
-            return
-        }
-        assertNotNull(actual)
-        assertEquals(expected.protocol, actual?.protocol)
-        assertEquals(expected.code, actual?.code)
-        assertEquals(expected.message, actual?.message)
     }
 
 }
