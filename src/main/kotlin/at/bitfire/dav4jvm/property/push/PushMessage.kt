@@ -35,22 +35,28 @@ data class PushMessage(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PushMessage {
-            var topic: Topic? = null
-            var contentUpdate: ContentUpdate? = null
-            var propertyUpdate: PropertyUpdate? = null
+            var message = PushMessage()
+
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        Topic.NAME -> topic = Topic.Factory.create(parser)
-                        ContentUpdate.NAME -> contentUpdate = ContentUpdate.Factory.create(parser)
-                        PropertyUpdate.NAME -> propertyUpdate = PropertyUpdate.Factory.create(parser)
+                        Topic.NAME -> message = message.copy(
+                            topic = Topic.Factory.create(parser)
+                        )
+                        ContentUpdate.NAME -> message = message.copy(
+                            contentUpdate = ContentUpdate.Factory.create(parser)
+                        )
+                        PropertyUpdate.NAME -> message = message.copy(
+                            propertyUpdate = PropertyUpdate.Factory.create(parser)
+                        )
                     }
                 }
                 eventType = parser.next()
             }
-            return PushMessage(topic, contentUpdate, propertyUpdate)
+
+            return message
         }
 
     }

@@ -11,7 +11,7 @@ import org.xmlpull.v1.XmlPullParser
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
-class PropertyUpdate(
+data class PropertyUpdate(
     val syncLevel: SyncLevel? = null,
 ): Property {
 
@@ -28,18 +28,21 @@ class PropertyUpdate(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): PropertyUpdate {
-            var syncLevel: SyncLevel? = null
+            var propertyUpdate = PropertyUpdate()
+
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        SyncLevel.NAME -> syncLevel = SyncLevel.Factory.create(parser)
+                        SyncLevel.NAME -> propertyUpdate = propertyUpdate.copy(
+                            syncLevel = SyncLevel.Factory.create(parser)
+                        )
                     }
                 }
                 eventType = parser.next()
             }
-            return PropertyUpdate(syncLevel)
+            return propertyUpdate
         }
 
     }

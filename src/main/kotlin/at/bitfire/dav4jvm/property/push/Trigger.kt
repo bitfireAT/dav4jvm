@@ -5,10 +5,10 @@ import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import org.xmlpull.v1.XmlPullParser
 
-class Trigger(
+data class Trigger(
     val contentUpdate: ContentUpdate? = null,
     val propertyUpdate: PropertyUpdate? = null
-): Property {
+) : Property {
 
     companion object {
 
@@ -18,25 +18,30 @@ class Trigger(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): Trigger {
-            var contentUpdate: ContentUpdate? = null
-            var propertyUpdate: PropertyUpdate? = null
+            var trigger = Trigger()
+
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        ContentUpdate.NAME -> contentUpdate = ContentUpdate.Factory.create(parser)
-                        PropertyUpdate.NAME -> propertyUpdate = PropertyUpdate.Factory.create(parser)
+                        ContentUpdate.NAME -> trigger = trigger.copy(
+                            contentUpdate = ContentUpdate.Factory.create(parser)
+                        )
+                        PropertyUpdate.NAME -> trigger = trigger.copy(
+                            propertyUpdate = PropertyUpdate.Factory.create(parser)
+                        )
                     }
                 }
                 eventType = parser.next()
             }
-            return Trigger(contentUpdate, propertyUpdate)
+
+            return trigger
         }
 
     }

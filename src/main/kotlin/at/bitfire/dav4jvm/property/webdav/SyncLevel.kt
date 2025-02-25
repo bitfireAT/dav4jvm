@@ -7,8 +7,6 @@ import org.xmlpull.v1.XmlPullParser
 
 /**
  * Represents a [NS_WEBDAV]`:sync-level` property.
- *
- * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class SyncLevel(
     /** May be `0`, `1` or [Int.MAX_VALUE] (infinite). */
