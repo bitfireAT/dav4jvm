@@ -64,20 +64,25 @@ class WebPushTest: PropertyTest() {
         val results = parseProperty(
             """
             <P:push-message xmlns:D="DAV:" xmlns:P="$NS_WEBDAV_PUSH">
-              <topic>O7M1nQ7cKkKTKsoS_j6Z3w</topic>
-              <content-update>
+              <P:topic>O7M1nQ7cKkKTKsoS_j6Z3w</P:topic>
+              <P:content-update>
                 <D:sync-token>http://example.com/sync/10</D:sync-token>
-              </content-update>
-              <property-update />
+              </P:content-update>
+              <P:property-update />
             </P:push-message>
             """.trimIndent()
         )
         val message = results.first() as PushMessage
 
-        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", message.topic?.topic)
+        val topic = message.topic
+        assertNotNull(topic)
+        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", topic?.topic)
 
-        val syncToken = message.contentUpdate?.syncToken?.token
-        assertEquals("http://example.com/sync/10", syncToken)
+        val contentUpdate = message.contentUpdate
+        assertNotNull(contentUpdate)
+        val syncToken = contentUpdate?.syncToken
+        assertNotNull(syncToken)
+        assertEquals("http://example.com/sync/10", syncToken?.token)
 
         val propertyUpdate = message.propertyUpdate
         assertNotNull(propertyUpdate)
