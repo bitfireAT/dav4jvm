@@ -18,6 +18,8 @@ data class Depth(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "depth")
 
+        const val INFINITY = Int.MAX_VALUE
+
     }
 
 
@@ -27,7 +29,10 @@ data class Depth(
 
         override fun create(parser: XmlPullParser): Depth {
             val text = XmlReader(parser).readText()
-            val level = if (text == "infinite") Int.MAX_VALUE else text?.toIntOrNull()
+            val level = if (text.equals("infinity", true))
+                INFINITY
+            else
+                text?.toIntOrNull()
             return Depth(level)
         }
 
