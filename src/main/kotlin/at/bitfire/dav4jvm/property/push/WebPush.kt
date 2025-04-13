@@ -10,8 +10,8 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class WebPush(
-    val serverPublicKey: ServerPublicKey? = null
-): PushTransport {
+    val vapidPublicKey: VapidPublicKey? = null
+) : PushTransport {
 
     companion object {
         @JvmField
@@ -19,24 +19,23 @@ data class WebPush(
     }
 
 
-    object Factory: PropertyFactory {
+    object Factory : PropertyFactory {
 
         override fun getName(): Property.Name = NAME
 
         override fun create(parser: XmlPullParser): WebPush {
-            var serverPublicKey: ServerPublicKey? = null
+            var vapidPublicKey: VapidPublicKey? = null
             val depth = parser.depth
             var eventType = parser.eventType
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.namespace == NS_WEBDAV_PUSH) {
                     when (parser.name) {
-                        ServerPublicKey.NAME.name
-                             -> serverPublicKey = ServerPublicKey.Factory.create(parser)
+                        VapidPublicKey.NAME.name -> vapidPublicKey = VapidPublicKey.Factory.create(parser)
                     }
                 }
                 eventType = parser.next()
             }
-            return WebPush(serverPublicKey)
+            return WebPush(vapidPublicKey)
         }
 
     }

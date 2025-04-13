@@ -16,7 +16,7 @@ class WebPushTest: PropertyTest() {
             "  <subscription>" +
             "    <web-push-subscription>\n" +
             "      <push-resource>https://up.example.net/yohd4yai5Phiz1wi</push-resource>\n" +
-            "      <client-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</client-public-key>\n" +
+            "      <subscription-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</subscription-public-key>\n" +
             "      <auth-secret>BTBZMqHH6r4Tts7J_aSIgg</auth-secret>" +
             "    </web-push-subscription>\n" +
             "  </subscription>" +
@@ -28,7 +28,7 @@ class WebPushTest: PropertyTest() {
         assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri?.toString())
         assertEquals("BTBZMqHH6r4Tts7J_aSIgg", subscription?.authSecret?.secret)
 
-        val publicKey = subscription?.clientPublicKey
+        val publicKey = subscription?.subscriptionPublicKey
         assertEquals("p256dh", publicKey?.type)
         assertEquals("BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4", publicKey?.key)
     }
@@ -39,7 +39,7 @@ class WebPushTest: PropertyTest() {
                 "<transports xmlns=\"$NS_WEBDAV_PUSH\">" +
                 "  <something><else/></something>" +
                 "  <web-push>" +
-                "    <server-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</server-public-key>" +
+                "    <vapid-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</vapid-public-key>" +
                 "  </web-push>" +
                 "</transports>" +
                 "<topic xmlns=\"$NS_WEBDAV_PUSH\">SomeTopic</topic>")
@@ -48,7 +48,7 @@ class WebPushTest: PropertyTest() {
         assertEquals(setOf(
             // something else is ignored because it's not a recognized transport
             WebPush(
-                ServerPublicKey(
+                VapidPublicKey(
                     type = "p256dh",
                     key = "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4"
                 )

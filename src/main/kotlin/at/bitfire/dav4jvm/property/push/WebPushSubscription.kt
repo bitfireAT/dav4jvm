@@ -18,7 +18,7 @@ import org.xmlpull.v1.XmlPullParser
  */
 data class WebPushSubscription(
     val pushResource: PushResource? = null,
-    val clientPublicKey: ClientPublicKey? = null,
+    val subscriptionPublicKey: SubscriptionPublicKey? = null,
     val authSecret: AuthSecret? = null
 ): Property {
 
@@ -43,7 +43,7 @@ data class WebPushSubscription(
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
                         PushResource.NAME -> subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
-                        ClientPublicKey.NAME -> subscription = subscription.copy(clientPublicKey = ClientPublicKey.Factory.create(parser))
+                        SubscriptionPublicKey.NAME -> subscription = subscription.copy(subscriptionPublicKey = SubscriptionPublicKey.Factory.create(parser))
                         AuthSecret.NAME -> subscription = subscription.copy(authSecret = AuthSecret.Factory.create(parser))
                     }
                 }
