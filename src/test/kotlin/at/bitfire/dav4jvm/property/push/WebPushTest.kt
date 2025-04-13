@@ -1,13 +1,9 @@
 package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.property.PropertyTest
-import at.bitfire.dav4jvm.property.webdav.SyncToken
 import java.time.Instant
-import okhttp3.Protocol
-import okhttp3.internal.http.StatusLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -68,45 +64,28 @@ class WebPushTest: PropertyTest() {
         val results = parseProperty(
             """
             <P:push-message xmlns:D="DAV:" xmlns:P="$NS_WEBDAV_PUSH">
-              <D:propstat>
-                <D:prop>
-                  <P:topic>O7M1nQ7cKkKTKsoS_j6Z3w</P:topic>
-                  <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>
-                </D:prop>
-              </D:propstat>
+              <P:topic>O7M1nQ7cKkKTKsoS_j6Z3w</P:topic>
+              <P:content-update>
+                <D:sync-token>http://example.com/sync/10</D:sync-token>
+              </P:content-update>
+              <P:property-update />
             </P:push-message>
             """.trimIndent()
         )
         val message = results.first() as PushMessage
 
-        val propStat = message.propStat
-        assertNotNull(propStat)
-        // Since the status line is not set, it's assumed to be OK by default
-        assertStatusEqual(StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK"), propStat?.status)
+        val topic = message.topic
+        assertNotNull(topic)
+        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", topic?.topic)
 
-        val properties = propStat?.properties
-        assertNotNull(properties)
-        assertEquals(2, properties?.size)
+        val contentUpdate = message.contentUpdate
+        assertNotNull(contentUpdate)
+        val syncToken = contentUpdate?.syncToken
+        assertNotNull(syncToken)
+        assertEquals("http://example.com/sync/10", syncToken?.token)
 
-        val topic = properties!![0] as Topic
-        assertEquals("O7M1nQ7cKkKTKsoS_j6Z3w", topic.topic)
-
-        val token = properties[1] as SyncToken
-        assertEquals("http://example.com/ns/sync/1234", token.token)
-    }
-
-    /**
-     * StatusLine doesn't have an `equals` method, so we need to compare its fields manually.
-     */
-    private fun assertStatusEqual(expected: StatusLine?, actual: StatusLine?) {
-        if (expected == null) {
-            assertNull(actual)
-            return
-        }
-        assertNotNull(actual)
-        assertEquals(expected.protocol, actual?.protocol)
-        assertEquals(expected.code, actual?.code)
-        assertEquals(expected.message, actual?.message)
+        val propertyUpdate = message.propertyUpdate
+        assertNotNull(propertyUpdate)
     }
 
 }
