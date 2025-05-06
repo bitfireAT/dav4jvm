@@ -439,6 +439,7 @@ open class DavResource @JvmOverloads constructor(
      * @param ifETag        value of `If-Match` header to set, or null to omit
      * @param ifScheduleTag value of `If-Schedule-Tag-Match` header to set, or null to omit
      * @param ifNoneMatch   indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
+     * @param headers       additional headers to send
      * @param callback      called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
@@ -446,7 +447,14 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifETag: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
+    fun put(
+        body: RequestBody,
+        ifETag: String? = null,
+        ifScheduleTag: String? = null,
+        ifNoneMatch: Boolean = false,
+        headers: Map<String, String> = emptyMap(),
+        callback: ResponseCallback
+    ) {
         followRedirects {
             val builder = Request.Builder()
                     .put(body)
@@ -461,6 +469,10 @@ open class DavResource @JvmOverloads constructor(
             if (ifNoneMatch)
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*")
+
+            // Add custom headers
+            for ((key, value) in headers)
+                builder.header(key, value)
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
@@ -477,6 +489,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @param ifETag        value of `If-Match` header to set, or null to omit
      * @param ifScheduleTag value of `If-Schedule-Tag-Match` header to set, or null to omit
+     * @param headers       additional headers to send
      * @param callback      called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
@@ -485,7 +498,12 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    fun delete(ifETag: String? = null, ifScheduleTag: String? = null, callback: ResponseCallback) {
+    fun delete(
+        ifETag: String? = null,
+        ifScheduleTag: String? = null,
+        headers: Map<String, String> = emptyMap(),
+        callback: ResponseCallback
+    ) {
         followRedirects {
             val builder = Request.Builder()
                     .delete()
@@ -494,6 +512,10 @@ open class DavResource @JvmOverloads constructor(
                 builder.header("If-Match", QuotedStringUtils.asQuotedString(ifETag))
             if (ifScheduleTag != null)
                 builder.header("If-Schedule-Tag-Match", QuotedStringUtils.asQuotedString(ifScheduleTag))
+
+            // Add custom headers
+            for ((key, value) in headers)
+                builder.header(key, value)
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
