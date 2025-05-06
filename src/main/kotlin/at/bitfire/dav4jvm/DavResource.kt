@@ -439,6 +439,7 @@ open class DavResource @JvmOverloads constructor(
      * @param ifETag        value of `If-Match` header to set, or null to omit
      * @param ifScheduleTag value of `If-Schedule-Tag-Match` header to set, or null to omit
      * @param ifNoneMatch   indicates whether `If-None-Match: *` ("don't overwrite anything existing") header shall be sent
+     * @param extraHeaders  additional headers to send
      * @param callback      called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
@@ -446,7 +447,14 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    fun put(body: RequestBody, ifETag: String? = null, ifScheduleTag: String? = null, ifNoneMatch: Boolean = false, callback: ResponseCallback) {
+    fun put(
+        body: RequestBody,
+        ifETag: String? = null,
+        ifScheduleTag: String? = null,
+        ifNoneMatch: Boolean = false,
+        extraHeaders: Map<String, String> = emptyMap(),
+        callback: ResponseCallback
+    ) {
         followRedirects {
             val builder = Request.Builder()
                     .put(body)
@@ -461,6 +469,10 @@ open class DavResource @JvmOverloads constructor(
             if (ifNoneMatch)
                 // don't overwrite anything existing
                 builder.header("If-None-Match", "*")
+
+            // Add custom headers
+            for ((key, value) in extraHeaders)
+                builder.header(key, value)
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
