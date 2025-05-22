@@ -27,7 +27,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testBasic() {
-        var authenticator = BasicDigestAuthHandler(null, "user", "password")
+        var authenticator = BasicDigestAuthHandler(null, "user", "password".toCharArray())
         val original = Request.Builder()
                         .url("http://example.com")
                         .build()
@@ -41,7 +41,7 @@ class BasicDigestAuthHandlerTest {
         assertEquals("Basic dXNlcjpwYXNzd29yZA==", request!!.header("Authorization"))
 
         // special characters: always use UTF-8 (and don't crash on RFC 7617 charset header)
-        authenticator = BasicDigestAuthHandler(null, "username", "paßword")
+        authenticator = BasicDigestAuthHandler(null, "username", "paßword".toCharArray())
         response = response.newBuilder()
                 .header("WWW-Authenticate", "Basic realm=\"WallyWorld\",charset=UTF-8")
                 .build()
@@ -52,7 +52,7 @@ class BasicDigestAuthHandlerTest {
     @Test
     fun testDigestRFCExample() {
         // use cnonce from example
-        val authenticator = BasicDigestAuthHandler(null, "Mufasa", "Circle Of Life")
+        val authenticator = BasicDigestAuthHandler(null, "Mufasa", "Circle Of Life".toCharArray())
         BasicDigestAuthHandler.clientNonce = "0a4f113b"
         BasicDigestAuthHandler.nonceCount.set(1)
 
@@ -83,7 +83,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testDigestRealWorldExamples() {
-        var authenticator = BasicDigestAuthHandler(null, "demo", "demo")
+        var authenticator = BasicDigestAuthHandler(null, "demo", "demo".toCharArray())
         BasicDigestAuthHandler.clientNonce = "MDI0ZDgxYTNmZDk4MTA1ODM0NDNjNmJjNDllYjQ1ZTI="
         BasicDigestAuthHandler.nonceCount.set(1)
 
@@ -112,7 +112,7 @@ class BasicDigestAuthHandlerTest {
         assertTrue(auth.contains("opaque=\"df58bdff8cf60599c939187d0b5c54de\""))
 
         // example 2
-        authenticator = BasicDigestAuthHandler(null, "test", "test")
+        authenticator = BasicDigestAuthHandler(null, "test", "test".toCharArray())
         authScheme = Challenge("digest", mapOf(    // lower case
                 Pair("nonce", "87c4c2aceed9abf30dd68c71"),
                 Pair("algorithm", "md5"),
@@ -139,7 +139,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testDigestMD5Sess() {
-        val authenticator = BasicDigestAuthHandler(null, "admin", "12345")
+        val authenticator = BasicDigestAuthHandler(null, "admin", "12345".toCharArray())
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
@@ -178,7 +178,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testDigestMD5AuthInt() {
-        val authenticator = BasicDigestAuthHandler(null, "admin", "12435")
+        val authenticator = BasicDigestAuthHandler(null, "admin", "12435".toCharArray())
         BasicDigestAuthHandler.clientNonce = "hxk1lu63b6c7vhk"
         BasicDigestAuthHandler.nonceCount.set(1)
 
@@ -217,7 +217,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testDigestLegacy() {
-        val authenticator = BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife")
+        val authenticator = BasicDigestAuthHandler(null, "Mufasa", "CircleOfLife".toCharArray())
 
         // construct WWW-Authenticate
         val authScheme = Challenge("Digest", mapOf(
@@ -245,7 +245,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testIncompleteAuthenticationRequests() {
-        val authenticator = BasicDigestAuthHandler(null, "demo", "demo")
+        val authenticator = BasicDigestAuthHandler(null, "demo", "demo".toCharArray())
 
         val original = Request.Builder()
                 .get()
@@ -272,7 +272,7 @@ class BasicDigestAuthHandlerTest {
 
     @Test
     fun testAuthenticateNull() {
-        val authenticator = BasicDigestAuthHandler(null, "demo", "demo")
+        val authenticator = BasicDigestAuthHandler(null, "demo", "demo".toCharArray())
         // must not crash (route may be null)
         val request = Request.Builder()
                 .get()

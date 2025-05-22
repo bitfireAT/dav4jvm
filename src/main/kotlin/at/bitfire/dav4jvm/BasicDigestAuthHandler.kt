@@ -42,7 +42,7 @@ class BasicDigestAuthHandler(
     val domain: String?,
 
     val username: String,
-    val password: String,
+    val password: CharArray,
 
     val insecurePreemptive: Boolean = false
 ): Authenticator, Interceptor {
@@ -135,7 +135,7 @@ class BasicDigestAuthHandler(
                  So, UTF-8 encoding for credentials is compatible with all RFC 7617 servers and many,
                  but not all pre-RFC 7617 servers. */
                 return request.newBuilder()
-                        .header(HEADER_AUTHORIZATION, Credentials.basic(username, password, Charsets.UTF_8))
+                        .header(HEADER_AUTHORIZATION, Credentials.basic(username, password.concatToString(), Charsets.UTF_8))
                         .build()
             }
 
@@ -194,9 +194,9 @@ class BasicDigestAuthHandler(
 
             val a1: String? = when (algorithm) {
                 Algorithm.MD5 ->
-                    "$username:$realm:$password"
+                    "$username:$realm:${password.concatToString()}"
                 Algorithm.MD5_SESSION ->
-                    h("$username:$realm:$password") + ":$nonce:$clientNonce"
+                    h("$username:$realm:${password.concatToString()}") + ":$nonce:$clientNonce"
                 else ->
                     null
             }
@@ -225,7 +225,7 @@ class BasicDigestAuthHandler(
 
             // legacy (backwards compatibility with RFC 2069)
             if (algorithm == Algorithm.MD5) {
-                val a1 = "$username:$realm:$password"
+                val a1 = "$username:$realm:${password.concatToString()}"
                 val a2 = "$method:$digestURI"
                 response = kd(h(a1), nonce + ":" + h(a2))
             }
