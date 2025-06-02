@@ -200,7 +200,8 @@ class BasicDigestAuthHandler(
                 else ->
                     null
             }
-            logger.finer("A1=$a1")
+            // Contains password! Only uncomment for debugging:
+            // logger.finer("A1=$a1")
 
             val a2: String? = when (qop) {
                 Protection.Auth ->
@@ -215,7 +216,7 @@ class BasicDigestAuthHandler(
                     }
                 }
             }
-            logger.finer("A2=$a2")
+            // logger.finer("A2=$a2")
 
             if (a1 != null && a2 != null)
                 response = kd(h(a1), "$nonce:$ncValue:$clientNonce:${qop.qop}:${h(a2)}")
