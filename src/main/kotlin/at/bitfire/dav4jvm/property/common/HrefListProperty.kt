@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package at.bitfire.dav4jvm.property.webdav
+package at.bitfire.dav4jvm.property.common
 
 import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
@@ -25,15 +25,12 @@ abstract class HrefListProperty(
     open val hrefs: List<String>
 ): Property {
 
-    val href get() = hrefs.firstOrNull()
-
-
     abstract class Factory : PropertyFactory {
 
         @Deprecated("hrefs is no longer mutable.", level = DeprecationLevel.ERROR)
         fun create(parser: XmlPullParser, list: HrefListProperty): HrefListProperty {
             val hrefs = list.hrefs.toMutableList()
-            XmlReader(parser).readTextPropertyList(DavResource.HREF, hrefs)
+            XmlReader(parser).readTextPropertyList(DavResource.Companion.HREF, hrefs)
             return list
         }
 
@@ -42,7 +39,7 @@ abstract class HrefListProperty(
             constructor: (hrefs: List<String>
                 ) -> PropertyType): PropertyType {
             val hrefs = mutableListOf<String>()
-            XmlReader(parser).readTextPropertyList(DavResource.HREF, hrefs)
+            XmlReader(parser).readTextPropertyList(DavResource.Companion.HREF, hrefs)
             return constructor(hrefs)
         }
 

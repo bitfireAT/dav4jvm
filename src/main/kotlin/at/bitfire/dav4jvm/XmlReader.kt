@@ -90,7 +90,7 @@ class XmlReader(
         val depth = parser.depth
         var eventType = parser.eventType
         while (!((eventType == XmlPullParser.END_TAG || eventType == XmlPullParser.END_DOCUMENT) && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name)
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1 && parser.propertyName() == name && result == null)
                 result = parser.nextText()
             eventType = parser.next()
         }
