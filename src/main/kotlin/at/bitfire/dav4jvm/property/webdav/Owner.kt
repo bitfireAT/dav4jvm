@@ -10,12 +10,15 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
+import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
 data class Owner(
-    override val hrefs: List<String>
-): HrefListProperty(hrefs) {
+    val href: String?
+): Property {
 
     companion object {
 
@@ -29,7 +32,8 @@ data class Owner(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = create(parser, ::Owner)
+        override fun create(parser: XmlPullParser): Owner =
+            Owner(XmlReader(parser).readTextProperty(DavResource.Companion.HREF))
 
     }
 

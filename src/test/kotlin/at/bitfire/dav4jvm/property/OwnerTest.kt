@@ -13,9 +13,16 @@ package at.bitfire.dav4jvm.property
 import at.bitfire.dav4jvm.property.webdav.Owner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class OwnerTest: PropertyTest() {
+
+    @Test
+    fun testOwner_Empty() {
+        val results = parseProperty("<owner></owner>")
+        assertTrue(results.isEmpty())
+    }
 
     @Test
     fun testOwner_PlainText() {
@@ -36,6 +43,22 @@ class OwnerTest: PropertyTest() {
         val results = parseProperty("<owner xmlns=\"DAV:\"><href>https://example.com</href></owner>")
         val owner = results.first() as Owner
         assertEquals("https://example.com", owner.href)
+    }
+
+    @Test
+    fun testOwner_TwoHrefs() {
+        val results = parseProperty("<owner xmlns=\"DAV:\">" +
+                "<href>https://example.com/owner1</href>" +
+                "<href>https://example.com/owner2</href>" +
+                "</owner>")
+        val owner = results.first() as Owner
+        assertEquals("https://example.com/owner1", owner.href)
+    }
+
+    @Test
+    fun testOwner_WithoutHref() {
+        val results = parseProperty("<owner>invalid</owner>")
+        assertTrue(results.isEmpty())
     }
 
 }

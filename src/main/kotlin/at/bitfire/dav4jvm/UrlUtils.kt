@@ -16,9 +16,6 @@ import okhttp3.HttpUrl
 
 object UrlUtils {
 
-    @Deprecated("Use equalsForWebDAV instead", ReplaceWith("url1.equalsForWebDAV(url2)"))
-    fun equals(url1: HttpUrl, url2: HttpUrl) = url1.equalsForWebDAV(url2)
-
     /**
      * Gets the first-level domain name (without subdomains) from a host name.
      * Also removes trailing dots.
