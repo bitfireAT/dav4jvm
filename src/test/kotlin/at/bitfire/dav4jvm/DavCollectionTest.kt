@@ -14,16 +14,13 @@ import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import java.net.HttpURLConnection
@@ -42,7 +39,7 @@ class DavCollectionTest {
     fun startServer() = mockServer.start()
 
     @After
-    fun stopServer() = mockServer.shutdown()
+    fun stopServer() = mockServer.close()
 
 
     /**
@@ -53,58 +50,62 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(207)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                        "   <D:multistatus xmlns:D=\"DAV:\">\n" +
-                        "     <D:response>\n" +
-                        "       <D:href\n" +
-                        "   >${sampleUrl()}test.doc</D:href>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <D:getetag>\"00001-abcd1\"</D:getetag>\n" +
-                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\">\n" +
-                        "             <R:BoxType>Box type A</R:BoxType>\n" +
-                        "           </R:bigbox>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "     </D:response>\n" +
-                        "     <D:response>\n" +
-                        "       <D:href\n" +
-                        "   >${sampleUrl()}vcard.vcf</D:href>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <D:getetag>\"00002-abcd1\"</D:getetag>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "     </D:response>\n" +
-                        "     <D:response>\n" +
-                        "       <D:href\n" +
-                        "   >${sampleUrl()}calendar.ics</D:href>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <D:getetag>\"00003-abcd1\"</D:getetag>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "     </D:response>\n" +
-                        "     <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>\n" +
-                        "   </D:multistatus>")
+                .body(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                            "   <D:multistatus xmlns:D=\"DAV:\">\n" +
+                            "     <D:response>\n" +
+                            "       <D:href\n" +
+                            "   >${sampleUrl()}test.doc</D:href>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <D:getetag>\"00001-abcd1\"</D:getetag>\n" +
+                            "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\">\n" +
+                            "             <R:BoxType>Box type A</R:BoxType>\n" +
+                            "           </R:bigbox>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "     </D:response>\n" +
+                            "     <D:response>\n" +
+                            "       <D:href\n" +
+                            "   >${sampleUrl()}vcard.vcf</D:href>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <D:getetag>\"00002-abcd1\"</D:getetag>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "     </D:response>\n" +
+                            "     <D:response>\n" +
+                            "       <D:href\n" +
+                            "   >${sampleUrl()}calendar.ics</D:href>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <D:getetag>\"00003-abcd1\"</D:getetag>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <R:bigbox xmlns:R=\"urn:ns.example.com:boxschema\"/>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "     </D:response>\n" +
+                            "     <D:sync-token>http://example.com/ns/sync/1234</D:sync-token>\n" +
+                            "   </D:multistatus>"
+                )
+                .build()
         )
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
@@ -147,40 +148,44 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(207)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                        "   <D:multistatus xmlns:D=\"DAV:\">\n" +
-                        "     <D:response>\n" +
-                        "       <D:href>${sampleUrl()}test.doc</D:href>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <D:getetag>\"00001-abcd1\"</D:getetag>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "     </D:response>\n" +
-                        "     <D:response>\n" +
-                        "       <D:href>${sampleUrl()}vcard.vcf</D:href>\n" +
-                        "       <D:propstat>\n" +
-                        "         <D:prop>\n" +
-                        "           <D:getetag>\"00002-abcd1\"</D:getetag>\n" +
-                        "         </D:prop>\n" +
-                        "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
-                        "       </D:propstat>\n" +
-                        "     </D:response>\n" +
-                        "     <D:response>\n" +
-                        "       <D:href>${sampleUrl()}removed.txt</D:href>\n" +
-                        "       <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
-                        "     </D:response>" +
-                        "     <D:response>\n" +
-                        "       <D:href>${sampleUrl()}</D:href>\n" +
-                        "       <D:status>HTTP/1.1 507 Insufficient Storage</D:status>\n" +
-                        "       <D:error><D:number-of-matches-within-limits/></D:error>\n" +
-                        "     </D:response>" +
-                        "     <D:sync-token>http://example.com/ns/sync/1233</D:sync-token>\n" +
-                        "   </D:multistatus>")
+                .body(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                            "   <D:multistatus xmlns:D=\"DAV:\">\n" +
+                            "     <D:response>\n" +
+                            "       <D:href>${sampleUrl()}test.doc</D:href>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <D:getetag>\"00001-abcd1\"</D:getetag>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "     </D:response>\n" +
+                            "     <D:response>\n" +
+                            "       <D:href>${sampleUrl()}vcard.vcf</D:href>\n" +
+                            "       <D:propstat>\n" +
+                            "         <D:prop>\n" +
+                            "           <D:getetag>\"00002-abcd1\"</D:getetag>\n" +
+                            "         </D:prop>\n" +
+                            "         <D:status>HTTP/1.1 200 OK</D:status>\n" +
+                            "       </D:propstat>\n" +
+                            "     </D:response>\n" +
+                            "     <D:response>\n" +
+                            "       <D:href>${sampleUrl()}removed.txt</D:href>\n" +
+                            "       <D:status>HTTP/1.1 404 Not Found</D:status>\n" +
+                            "     </D:response>" +
+                            "     <D:response>\n" +
+                            "       <D:href>${sampleUrl()}</D:href>\n" +
+                            "       <D:status>HTTP/1.1 507 Insufficient Storage</D:status>\n" +
+                            "       <D:error><D:number-of-matches-within-limits/></D:error>\n" +
+                            "     </D:response>" +
+                            "     <D:sync-token>http://example.com/ns/sync/1233</D:sync-token>\n" +
+                            "   </D:multistatus>"
+                )
+                .build()
         )
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
@@ -227,13 +232,17 @@ class DavCollectionTest {
         val url = sampleUrl()
         val collection = DavCollection(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(507)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(507)
                 .setHeader("Content-Type", "text/xml; charset=\"utf-8\"")
-                .setBody("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                        "   <D:error xmlns:D=\"DAV:\">\n" +
-                        "     <D:number-of-matches-within-limits/>\n" +
-                        "   </D:error>")
+                .body(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                            "   <D:error xmlns:D=\"DAV:\">\n" +
+                            "     <D:number-of-matches-within-limits/>\n" +
+                            "   </D:error>"
+                )
+                .build()
         )
 
         try {
@@ -252,7 +261,7 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, url)
 
         // 201 Created
-        mockServer.enqueue(MockResponse().setResponseCode(HttpURLConnection.HTTP_CREATED))
+        mockServer.enqueue(MockResponse.Builder().code(HttpURLConnection.HTTP_CREATED).build())
         var called = false
         dav.post(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             assertEquals("POST", mockServer.takeRequest().method)

@@ -13,24 +13,13 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.ConflictException
-import at.bitfire.dav4jvm.exception.DavException
-import at.bitfire.dav4jvm.exception.ForbiddenException
-import at.bitfire.dav4jvm.exception.HttpException
-import at.bitfire.dav4jvm.exception.NotFoundException
-import at.bitfire.dav4jvm.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.exception.ServiceUnavailableException
-import at.bitfire.dav4jvm.exception.UnauthorizedException
+import at.bitfire.dav4jvm.exception.*
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import okhttp3.Headers
-import okhttp3.HttpUrl
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -729,34 +718,41 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws DavException if the response is not a Multi-Status response
      */
-    fun assertMultiStatus(response: Response) {
+    inline fun assertMultiStatus(response: Response, handleBody: (ResponseBody) -> Unit = {}) {
         if (response.code != HTTP_MULTISTATUS)
             throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
 
-        val body = response.body ?:
-            throw DavException("Received 207 Multi-Status without body", httpResponse = response)
-
-        body.contentType()?.let { mimeType ->
-            if (((mimeType.type != "application" && mimeType.type != "text")) || mimeType.subtype != "xml") {
-                /* Content-Type is not application/xml or text/xml although that is expected here.
-                   Some broken servers return an XML response with some other MIME type. So we try to see
-                   whether the response is maybe XML although the Content-Type is something else. */
-                try {
-                    val firstBytes = ByteArray(XML_SIGNATURE.size)
-                    body.source().peek().readFully(firstBytes)
-                    if (XML_SIGNATURE.contentEquals(firstBytes)) {
-                        logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
-
-                        // response is OK, return and do not throw Exception below
-                        return
-                    }
-                } catch (e: Exception) {
-                    logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
-                }
-
-                throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
+        response.body.use { body ->
+            if (body.contentLength() <= 0 && body.contentType() == null) {
+                // if content length is 0 or less, and no Content-Type is set,
+                // we assume body was not given, but we expect a body for Multi-Status
+                throw DavException("Received 207 Multi-Status without body", httpResponse = response)
             }
-        } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+            println("Content type: ${body.contentType()}")
+            body.contentType()?.let { mimeType ->
+                if (((mimeType.type != "application" && mimeType.type != "text")) || mimeType.subtype != "xml") {
+                    /* Content-Type is not application/xml or text/xml although that is expected here.
+                       Some broken servers return an XML response with some other MIME type. So we try to see
+                       whether the response is maybe XML although the Content-Type is something else. */
+                    try {
+                        val firstBytes = ByteArray(XML_SIGNATURE.size)
+                        body.source().peek().readFully(firstBytes)
+                        if (XML_SIGNATURE.contentEquals(firstBytes)) {
+                            logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
+
+                            // response is OK, return and do not throw Exception below
+                            return
+                        }
+                    } catch (e: Exception) {
+                        logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
+                    }
+
+                    throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
+                }
+            } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+
+            handleBody(body)
+        }
     }
 
 
@@ -777,10 +773,10 @@ open class DavResource @JvmOverloads constructor(
      */
     protected fun processMultiStatus(response: Response, callback: MultiResponseCallback): List<Property> {
         checkStatus(response)
-        assertMultiStatus(response)
-        response.body!!.use {
+        assertMultiStatus(response) {
             return processMultiStatus(it.charStream(), callback)
         }
+        return emptyList()
     }
 
     /**
