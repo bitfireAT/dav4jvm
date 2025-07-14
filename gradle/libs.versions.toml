@@ -2,7 +2,7 @@
 dokka = "1.9.20"
 junit4 = "4.13.2"
 kotlin = "2.2.0"
-okhttpVersion = "4.12.0"
+okhttpVersion = "5.1.0"
 xpp3Version = "1.1.6"
 
 [libraries]
