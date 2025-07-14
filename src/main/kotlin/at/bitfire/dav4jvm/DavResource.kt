@@ -728,7 +728,6 @@ open class DavResource @JvmOverloads constructor(
                 // we assume body was not given, but we expect a body for Multi-Status
                 throw DavException("Received 207 Multi-Status without body", httpResponse = response)
             }
-            println("Content type: ${body.contentType()}")
             body.contentType()?.let { mimeType ->
                 if (((mimeType.type != "application" && mimeType.type != "text")) || mimeType.subtype != "xml") {
                     /* Content-Type is not application/xml or text/xml although that is expected here.
