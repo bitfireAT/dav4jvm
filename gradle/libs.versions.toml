@@ -1,5 +1,5 @@
 [versions]
-dokka = "1.9.20"
+dokka = "2.0.0"
 junit4 = "4.13.2"
 kotlin = "2.2.0"
 okhttpVersion = "4.12.0"
