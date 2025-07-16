@@ -736,7 +736,7 @@ open class DavResource @JvmOverloads constructor(
         // if content length is 0, and content type is not set, we assume no body was given
         if (body.contentLength() == 0L && body.contentType() == null) return false
         // if content length is -1, and Transfer-Encoding is not chunked, we assume no body is present
-        if (body.contentLength() == -1L && !response.header("Transfer-Encoding").equals("chunked", true)) return false
+        if (body.contentLength() == -1L && response.header("Transfer-Encoding")?.equals("chunked", true) != true) return false
         return true
     }
 
