@@ -737,9 +737,9 @@ open class DavResource @JvmOverloads constructor(
 
         val body = response.body
 
-        if (body.contentLength() == 0L && body.contentType() == null || body.contentLength() == -1L) {
+        if ((body.contentLength() == 0L && body.contentType() == null) || (body.contentLength() == -1L && !response.header("Transfer-Encoding").equals("chunked", true))) {
             // if content length is 0, and content type is not set, we assume no body was given
-            // if content length is -1, its associated header was not given, and as such, body is not present
+            // if content length is -1, and Transfer-Encoding is not chunked, we assume no body is present
             throw DavException("Received 207 Multi-Status without body", httpResponse = response)
         }
         body.contentType()?.let { mimeType ->
