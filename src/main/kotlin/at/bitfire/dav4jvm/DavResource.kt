@@ -723,6 +723,24 @@ open class DavResource @JvmOverloads constructor(
     }
 
     /**
+     * Checks whether the body of a [response] is set or not. This is done by checking the `Content-Length` header.
+     * - If it's `0`, and no `Content-Type` is set, no body is given.
+     * - If it's `-1` (not set), and `Transfer-Encoding` is not `chunked`, no body is given.
+     * Note that this last condition is necessary because chunked body requests doesn't have a `Content-Length`.
+     *
+     * This request will call [Response.body], but won't close it. It's responsibility of the caller to properly close it.
+     * @return `true` if [response] has a valid body, `false` otherwise.
+     */
+    private fun isEmptyResponseBody(response: Response): Boolean {
+        val body = response.body
+        // if content length is 0, and content type is not set, we assume no body was given
+        if (body.contentLength() == 0L && body.contentType() == null) return false
+        // if content length is -1, and Transfer-Encoding is not chunked, we assume no body is present
+        if (body.contentLength() == -1L && !response.header("Transfer-Encoding").equals("chunked", true)) return false
+        return true
+    }
+
+    /**
      * Validates a 207 Multi-Status response.
      *
      * This function fetches [response]'s [Response.body], and doesn't close it.
@@ -737,11 +755,10 @@ open class DavResource @JvmOverloads constructor(
 
         val body = response.body
 
-        if ((body.contentLength() == 0L && body.contentType() == null) || (body.contentLength() == -1L && !response.header("Transfer-Encoding").equals("chunked", true))) {
-            // if content length is 0, and content type is not set, we assume no body was given
-            // if content length is -1, and Transfer-Encoding is not chunked, we assume no body is present
+        if (isEmptyResponseBody(response)) {
             throw DavException("Received 207 Multi-Status without body", httpResponse = response)
         }
+
         body.contentType()?.let { mimeType ->
             if (((mimeType.type != "application" && mimeType.type != "text")) || mimeType.subtype != "xml") {
                 /* Content-Type is not application/xml or text/xml although that is expected here.
