@@ -517,51 +517,6 @@ class DavResourceTest {
     }
 
     @Test
-    fun testDetectWebDav() {
-        val url = sampleUrl()
-        val dav = DavResource(httpClient, url)
-
-        // Without WebDAV
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", "  0 ,, 4,5,6, hyperactive-access")
-        )
-        assertNull(dav.detectWebDav())
-
-        // With WebDAV
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", " 1 ") // Class 1
-        )
-        assertEquals(url.encodedPath, dav.detectWebDav()?.encodedPath)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", "1, 2") // Class 2
-        )
-        assertEquals(url.encodedPath, dav.detectWebDav()?.encodedPath)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", " 1, 3 ") // Class 3
-        )
-        assertEquals(url.encodedPath, dav.detectWebDav()?.encodedPath)
-
-        // Follows redirects
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
-            .setHeader("Location", "/moved")
-        )
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
-            .setHeader("Location", "/redirected")
-        )
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", "2")
-        )
-        assertEquals("/redirected", dav.detectWebDav()?.encodedPath)
-    }
-
-    @Test
     fun testPropfindAndMultiStatus() {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
