@@ -68,8 +68,6 @@ open class DavResource @JvmOverloads constructor(
     companion object {
         const val MAX_REDIRECTS = 5
 
-        const val WEBDAV_VERSIONS = "1, 2, 3" // valid WebDAV versions
-
         const val HTTP_MULTISTATUS = 207
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
@@ -175,39 +173,6 @@ open class DavResource @JvmOverloads constructor(
                 response
             )
         }
-    }
-
-    /**
-     * Finds WebDAV capable location by sending OPTIONS request to this resource without HTTP
-     * compression (because some servers have broken compression for OPTIONS). Follows up
-     * to [MAX_REDIRECTS] redirects.
-     *
-     * @return the location of the WebDAV resource if it supports WebDAV, `null` otherwise
-     *
-     * @throws IOException on I/O error
-     * @throws HttpException on HTTP error
-     * @throws DavException on HTTPS -> HTTP redirect
-     */
-    @Throws(IOException::class, HttpException::class, DavException::class)
-    fun detectWebDav(): HttpUrl? = followRedirects {
-        httpClient.newCall(
-            Request.Builder()
-                .method("OPTIONS", null)
-                .header("Content-Length", "0")
-                .url(location)
-                .header("Accept-Encoding", "identity")      // disable compression
-                .build()
-        ).execute()
-    }.use { response ->
-        checkStatus(response)
-
-        // check whether WebDAV is supported
-        val davCapabilities = HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet()
-        val supportsWebDav = davCapabilities.any { it in WEBDAV_VERSIONS }
-        return if (supportsWebDav)
-            location
-        else
-            null
     }
 
     /**
