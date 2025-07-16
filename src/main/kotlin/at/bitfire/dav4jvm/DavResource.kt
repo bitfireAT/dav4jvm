@@ -755,7 +755,7 @@ open class DavResource @JvmOverloads constructor(
 
         val body = response.body
 
-        if (isEmptyResponseBody(response)) {
+        if (!isEmptyResponseBody(response)) {
             throw DavException("Received 207 Multi-Status without body", httpResponse = response)
         }
 
