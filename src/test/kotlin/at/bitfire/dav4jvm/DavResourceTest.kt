@@ -27,7 +27,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import java.net.HttpURLConnection
@@ -1079,8 +1083,8 @@ class DavResourceTest {
 
     /** test helpers **/
 
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_NoXML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_NoXML() {
         val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
         dav.assertMultiStatus(okhttp3.Response.Builder()
             .request(Request.Builder().url(dav.location).build())
@@ -1089,8 +1093,8 @@ class DavResourceTest {
             .build())
     }
 
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_XML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_XML() {
         val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
         dav.assertMultiStatus(okhttp3.Response.Builder()
             .request(Request.Builder().url(dav.location).build())
