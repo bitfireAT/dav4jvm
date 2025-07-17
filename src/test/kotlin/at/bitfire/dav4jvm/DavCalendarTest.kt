@@ -10,9 +10,9 @@
 
 package at.bitfire.dav4jvm
 
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -33,14 +33,14 @@ class DavCalendarTest {
 
     @After
     fun stopServer() {
-        mockServer.shutdown()
+        mockServer.close()
     }
 
 
     @Test
     fun calendarQuery_formatStartEnd() {
         val cal = DavCalendar(httpClient, mockServer.url("/"))
-        mockServer.enqueue(MockResponse().setResponseCode(207).setBody("<multistatus xmlns=\"DAV:\"/>"))
+        mockServer.enqueue(MockResponse.Builder().code(207).body("<multistatus xmlns=\"DAV:\"/>").build())
         cal.calendarQuery("VEVENT",
             start = Instant.ofEpochSecond(784111777),
             end = Instant.ofEpochSecond(1689324577)) { _, _ -> }
@@ -57,7 +57,7 @@ class DavCalendarTest {
                             "</CAL:comp-filter>" +
                         "</CAL:comp-filter>" +
                     "</CAL:filter>" +
-                "</CAL:calendar-query>", rq.body.readUtf8())
+                "</CAL:calendar-query>", rq.body?.utf8())
     }
 
 }

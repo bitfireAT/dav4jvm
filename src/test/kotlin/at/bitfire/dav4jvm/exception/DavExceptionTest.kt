@@ -14,19 +14,16 @@ import at.bitfire.dav4jvm.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -46,7 +43,7 @@ class DavExceptionTest {
     fun startServer() = mockServer.start()
 
     @After
-    fun stopServer() = mockServer.shutdown()
+    fun stopServer() = mockServer.close()
 
 
     /**
@@ -92,10 +89,13 @@ class DavExceptionTest {
         builder.append("\u03C0")    // Pi
         val body = builder.toString()
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(404)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(404)
                 .setHeader("Content-Type", "text/html")
-                .setBody(body))
+                .body(body)
+                .build()
+        )
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
@@ -114,10 +114,13 @@ class DavExceptionTest {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(403)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(403)
                 .setHeader("Content-Type", "application/octet-stream")
-                .setBody("12345"))
+                .body("12345")
+                .build()
+        )
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")
@@ -133,10 +136,13 @@ class DavExceptionTest {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(500)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(500)
                 .setHeader("Content-Type", "text/plain")
-                .setBody("12345"))
+                .body("12345")
+                .build()
+        )
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected DavException")
@@ -166,10 +172,13 @@ class DavExceptionTest {
                 "    <D:href>/workspace/webdav/</D:href>\n" +
                 "  </D:lock-token-submitted>\n" +
                 "</D:error>\n"
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(423)
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(423)
                 .setHeader("Content-Type", "application/xml; charset=\"utf-8\"")
-                .setBody(body))
+                .body(body)
+                .build()
+        )
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> }
             fail("Expected HttpException")

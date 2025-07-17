@@ -17,6 +17,8 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -24,8 +26,6 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -53,7 +53,7 @@ class DavResourceTest {
 
     @After
     fun stopServer() {
-        mockServer.shutdown()
+        mockServer.close()
     }
 
     private fun sampleUrl() = mockServer.url("/dav/")
@@ -67,8 +67,9 @@ class DavResourceTest {
         /* POSITIVE TEST CASES */
 
         // no preconditions, 201 Created, resulted in the creation of a new resource
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_CREATED))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_CREATED)
+            .build())
         var called = false
         DavResource(httpClient, url).let { dav ->
             dav.copy(destination, false) {
@@ -79,14 +80,15 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("COPY", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("F", rq.getHeader("Overwrite"))
+        assertEquals(url, rq.url)
+        assertEquals(destination.toString(), rq.headers["Destination"])
+        assertEquals("F", rq.headers["Overwrite"])
 
         // no preconditions, 204 No content, resource successfully copied to a preexisting
         // destination resource
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_NO_CONTENT)
+            .build())
         called = false
         DavResource(httpClient, url).let { dav ->
             dav.copy(destination, true) {
@@ -97,24 +99,25 @@ class DavResourceTest {
 
         rq = mockServer.takeRequest()
         assertEquals("COPY", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertNull(rq.getHeader("Overwrite"))
+        assertEquals(url, rq.url)
+        assertEquals(destination.toString(), rq.headers["Destination"])
+        assertNull(rq.headers["Overwrite"])
 
         /* NEGATIVE TEST CASES */
 
         // 207 multi-status (e.g. errors on some of resources affected by
         // the COPY prevented the operation from taking place)
 
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(207)
+            .build())
         try {
             called = false
             DavResource(httpClient, url).let { dav ->
                 dav.copy(destination, false) { called = true }
                 fail("Expected HttpException")
             }
-        } catch(e: HttpException) {
+        } catch(_: HttpException) {
             assertFalse(called)
         }
     }
@@ -127,8 +130,9 @@ class DavResourceTest {
         /* POSITIVE TEST CASES */
 
         // no preconditions, 204 No Content
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_NO_CONTENT)
+            .build())
         var called = false
         dav.delete {
             called = true
@@ -137,13 +141,14 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("DELETE", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertNull(rq.getHeader("If-Match"))
+        assertEquals(url, rq.url)
+        assertNull(rq.headers["If-Match"])
 
         // precondition: If-Match / If-Schedule-Tag-Match, 200 OK
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody("Resource has been deleted."))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_OK)
+            .body("Resource has been deleted.")
+            .build())
         called = false
         dav.delete("DeleteOnlyThisETag", "DeleteOnlyThisScheduleTag") {
             called = true
@@ -151,16 +156,18 @@ class DavResourceTest {
         assertTrue(called)
 
         rq = mockServer.takeRequest()
-        assertEquals("\"DeleteOnlyThisETag\"", rq.getHeader("If-Match"))
-        assertEquals("\"DeleteOnlyThisScheduleTag\"", rq.getHeader("If-Schedule-Tag-Match"))
+        assertEquals("\"DeleteOnlyThisETag\"", rq.headers["If-Match"])
+        assertEquals("\"DeleteOnlyThisScheduleTag\"", rq.headers["If-Schedule-Tag-Match"])
 
         // 302 Moved Temporarily
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_MOVED_TEMP)
             .setHeader("Location", "/new-location")
+            .build()
         )
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_OK)
+            .build())
         called = false
         dav.delete(null) {
             called = true
@@ -170,13 +177,14 @@ class DavResourceTest {
         /* NEGATIVE TEST CASES */
 
         // 207 multi-status (e.g. single resource couldn't be deleted when DELETEing a collection)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(207)
+            .build())
         try {
             called = false
             dav.delete(null) { called = true }
             fail("Expected HttpException")
-        } catch(e: HttpException) {
+        } catch(_: HttpException) {
             assertFalse(called)
         }
     }
@@ -241,41 +249,44 @@ class DavResourceTest {
         /* POSITIVE TEST CASES */
 
         // 200 OK
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_OK)
             .setHeader("ETag", "W/\"My Weak ETag\"")
             .setHeader("Content-Type", "application/x-test-result")
-            .setBody(sampleText))
+            .body(sampleText)
+            .build())
         var called = false
         dav.get("*/*", null) { response ->
             called = true
-            assertEquals(sampleText, response.body!!.string())
+            assertEquals(sampleText, response.body.string())
 
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
+            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
         }
         assertTrue(called)
 
         var rq = mockServer.takeRequest()
         assertEquals("GET", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals("*/*", rq.getHeader("Accept"))
+        assertEquals(url, rq.url)
+        assertEquals("*/*", rq.headers["Accept"])
 
         // 302 Moved Temporarily + 200 OK
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_MOVED_TEMP)
             .setHeader("Location", "/target")
-            .setBody("This resource was moved."))
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
+            .body("This resource was moved.")
+            .build())
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_OK)
             .setHeader("ETag", "\"StrongETag\"")
-            .setBody(sampleText))
+            .body(sampleText)
+            .build())
         called = false
         dav.get("*/*", null) { response ->
             called = true
-            assertEquals(sampleText, response.body!!.string())
+            assertEquals(sampleText, response.body.string())
             val eTag = GetETag(response.header("ETag")!!)
             assertEquals("StrongETag", eTag.eTag)
             assertFalse(eTag.weak)
@@ -285,12 +296,13 @@ class DavResourceTest {
         mockServer.takeRequest()
         rq = mockServer.takeRequest()
         assertEquals("GET", rq.method)
-        assertEquals("/target", rq.path)
+        assertEquals("/target", rq.url.encodedPath)
 
         // 200 OK without ETag in response
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setBody(sampleText))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_OK)
+            .body(sampleText)
+            .build())
         called = false
         dav.get("*/*", null) { response ->
             called = true
@@ -304,8 +316,9 @@ class DavResourceTest {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_PARTIAL))
+        mockServer.enqueue(MockResponse.Builder()
+            .code(HttpURLConnection.HTTP_PARTIAL)
+            .build())
         var called = false
         dav.getRange("*/*", 100, 342) { response ->
             assertEquals("bytes=100-441", response.request.header("Range"))
@@ -323,51 +336,54 @@ class DavResourceTest {
 
         // 200 OK
         mockServer.enqueue(
-            MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_OK)
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
                 .setHeader("ETag", "W/\"My Weak ETag\"")
                 .setHeader("Content-Type", "application/x-test-result")
-                .setBody(sampleText)
+                .body(sampleText)
+                .build()
         )
         var called = false
         dav.post(
             body = "body".toRequestBody("application/x-test-result".toMediaType())
         ) { response ->
             called = true
-            assertEquals(sampleText, response.body!!.string())
+            assertEquals(sampleText, response.body.string())
 
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body!!.contentType()!!).type)
+            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
         }
         assertTrue(called)
 
         var rq = mockServer.takeRequest()
         assertEquals("POST", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertTrue(rq.getHeader("Content-Type")?.contains("application/x-test-result") == true)
-        assertEquals("body", rq.body.readUtf8())
+        assertEquals(url, rq.url)
+        assertTrue(rq.headers["Content-Type"]?.contains("application/x-test-result") == true)
+        assertEquals("body", rq.body?.utf8())
 
         // 302 Moved Temporarily + 200 OK
         mockServer.enqueue(
-            MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_MOVED_TEMP)
                 .setHeader("Location", "/target")
-                .setBody("This resource was moved.")
+                .body("This resource was moved.")
+                .build()
         )
         mockServer.enqueue(
-            MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_OK)
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
                 .setHeader("ETag", "\"StrongETag\"")
-                .setBody(sampleText)
+                .body(sampleText)
+                .build()
         )
         called = false
         dav.post(
             body = "body".toRequestBody("application/x-test-result".toMediaType())
         ) { response ->
             called = true
-            assertEquals(sampleText, response.body!!.string())
+            assertEquals(sampleText, response.body.string())
             val eTag = GetETag(response.header("ETag")!!)
             assertEquals("StrongETag", eTag.eTag)
             assertFalse(eTag.weak)
@@ -377,13 +393,14 @@ class DavResourceTest {
         mockServer.takeRequest()
         rq = mockServer.takeRequest()
         assertEquals("POST", rq.method)
-        assertEquals("/target", rq.path)
+        assertEquals("/target", rq.url.encodedPath)
 
         // 200 OK without ETag in response
         mockServer.enqueue(
-            MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_OK)
-                .setBody(sampleText)
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .body(sampleText)
+                .build()
         )
         called = false
         dav.post(
@@ -403,8 +420,11 @@ class DavResourceTest {
         /* POSITIVE TEST CASES */
 
         // no preconditions, 201 Created, new URL mapping at the destination
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_CREATED))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_CREATED)
+                .build()
+        )
         var called = false
         DavResource(httpClient, url).let { dav ->
             dav.move(destination, false) {
@@ -416,13 +436,16 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertEquals("F", rq.getHeader("Overwrite"))
+        assertEquals(url, rq.url)
+        assertEquals(destination.toString(), rq.headers["Destination"])
+        assertEquals("F", rq.headers["Overwrite"])
 
         // no preconditions, 204 No content, URL already mapped, overwrite
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_NO_CONTENT)
+                .build()
+        )
         called = false
         DavResource(httpClient, url).let { dav ->
             dav.move(destination, true) {
@@ -434,24 +457,27 @@ class DavResourceTest {
 
         rq = mockServer.takeRequest()
         assertEquals("MOVE", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals(destination.toString(), rq.getHeader("Destination"))
-        assertNull(rq.getHeader("Overwrite"))
+        assertEquals(url, rq.url)
+        assertEquals(destination.toString(), rq.headers["Destination"])
+        assertNull(rq.headers["Overwrite"])
 
         /* NEGATIVE TEST CASES */
 
         // 207 multi-status (e.g. errors on some of resources affected by
         // the MOVE prevented the operation from taking place)
 
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(207))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .build()
+        )
         try {
             called = false
             DavResource(httpClient, url).let { dav ->
                 dav.move(destination, false) { called = true }
                 fail("Expected HttpException")
             }
-        } catch(e: HttpException) {
+        } catch(_: HttpException) {
             assertFalse(called)
         }
     }
@@ -461,9 +487,12 @@ class DavResourceTest {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK)
-            .setHeader("DAV", "  1,  2 ,3,hyperactive-access"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .setHeader("DAV", "  1,  2 ,3,hyperactive-access")
+                .build()
+        )
         var called = false
         dav.options { davCapabilities, _ ->
             called = true
@@ -474,8 +503,11 @@ class DavResourceTest {
         }
         assertTrue(called)
 
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(HttpURLConnection.HTTP_OK))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .build()
+        )
         called = false
         dav.options { davCapabilities, _ ->
             called = true
@@ -493,74 +525,96 @@ class DavResourceTest {
 
         // test for non-multi-status responses:
         // * 500 Internal Server Error
-        mockServer.enqueue(MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_INTERNAL_ERROR)
+                .build()
+        )
         var called = false
         try {
             dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
             fail("Expected HttpException")
-        } catch(e: HttpException) {
+        } catch(_: HttpException) {
             assertFalse(called)
         }
         // * 200 OK (instead of 207 Multi-Status)
-        mockServer.enqueue(MockResponse().setResponseCode(HttpURLConnection.HTTP_OK))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_OK)
+                .build()
+        )
         try {
             called = false
             dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
             fail("Expected DavException")
-        } catch(e: DavException) {
+        } catch(_: DavException) {
             assertFalse(called)
         }
 
         // test for invalid multi-status responses:
         // * non-XML response
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "text/html")
-            .setBody("<html></html>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "text/html")
+                .body("<html></html>")
+                .build()
+        )
         try {
             called = false
             dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
             fail("Expected DavException")
-        } catch(e: DavException) {
+        } catch(_: DavException) {
             assertFalse(called)
         }
 
         // * malformed XML response
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<malformed-xml>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body("<malformed-xml>")
+                .build()
+        )
         try {
             called = false
             dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
             fail("Expected DavException")
-        } catch(e: DavException) {
+        } catch(_: DavException) {
             assertFalse(called)
         }
 
         // * response without <multistatus> root element
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<test></test>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body("<test></test>")
+                .build()
+        )
         try {
             called = false
             dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
             fail("Expected DavException")
-        } catch(e: DavException) {
+        } catch(_: DavException) {
             assertFalse(called)
         }
 
         // * multi-status response with invalid <status> in <response>
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <status>Invalid Status Line</status>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <status>Invalid Status Line</status>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME) { response, relation ->
             assertEquals(Response.HrefRelation.SELF, relation)
@@ -570,15 +624,20 @@ class DavResourceTest {
         assertTrue(called)
 
         // * multi-status response with <response>/<status> element indicating failure
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <status>HTTP/1.1 403 Forbidden</status>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <status>HTTP/1.1 403 Forbidden</status>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME) { response, relation ->
             assertEquals(Response.HrefRelation.SELF, relation)
@@ -588,20 +647,25 @@ class DavResourceTest {
         assertTrue(called)
 
         // * multi-status response with invalid <status> in <propstat>
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype><collection/></resourcetype>" +
-                    "      </prop>" +
-                    "      <status>Invalid Status Line</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <resourcetype><collection/></resourcetype>" +
+                            "      </prop>" +
+                            "      <status>Invalid Status Line</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME) { response, relation ->
             called = true
@@ -614,24 +678,31 @@ class DavResourceTest {
         /*** POSITIVE TESTS ***/
 
         // multi-status response without <response> elements
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'></multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body("<multistatus xmlns='DAV:'></multistatus>").build()
+        )
         dav.propfind(0, ResourceType.NAME) { _, _ ->
             fail("Shouldn't be called")
         }
 
         // multi-status response with <response>/<status> element indicating success
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <status>HTTP/1.1 200 OK</status>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <status>HTTP/1.1 200 OK</status>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME) { response, relation ->
             called = true
@@ -642,21 +713,26 @@ class DavResourceTest {
         assertTrue(called)
 
         // multi-status response with <response>/<propstat> element
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "         <resourcetype></resourcetype>" +
-                    "        <displayname>My DAV Collection</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "         <resourcetype></resourcetype>" +
+                            "        <displayname>My DAV Collection</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME) { response, relation ->
             called = true
@@ -667,67 +743,71 @@ class DavResourceTest {
         assertTrue(called)
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>" + url.toString() + "</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype><collection/></resourcetype>" +
-                    "        <displayname>My DAV Collection</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "  <response>" +
-                    "    <href>/dav/subcollection</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype><collection/></resourcetype>" +
-                    "        <displayname>A Subfolder</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "  <response>" +
-                    "    <href>/dav/uid@host:file</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Absolute path with @ and :</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "  <response>" +
-                    "    <href>relative-uid@host.file</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Relative path with @</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "  <response>" +
-                    "    <href>relative:colon.vcf</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Relative path with colon</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "  <response>" +
-                    "    <href>/something-very/else</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Not requested</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>" + url.toString() + "</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <resourcetype><collection/></resourcetype>" +
+                            "        <displayname>My DAV Collection</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "  <response>" +
+                            "    <href>/dav/subcollection</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <resourcetype><collection/></resourcetype>" +
+                            "        <displayname>A Subfolder</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "  <response>" +
+                            "    <href>/dav/uid@host:file</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Absolute path with @ and :</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "  <response>" +
+                            "    <href>relative-uid@host.file</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Relative path with @</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "  <response>" +
+                            "    <href>relative:colon.vcf</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Relative path with colon</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "  <response>" +
+                            "    <href>/something-very/else</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Not requested</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                ).build()
+        )
         var nrCalled = 0
         dav.propfind(1, ResourceType.NAME, DisplayName.NAME) { response, relation ->
             when (response.href) {
@@ -771,27 +851,31 @@ class DavResourceTest {
         /*** SPECIAL CASES ***/
 
         // same property is sent as 200 OK and 404 Not Found in same <response> (seen in iCloud)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>" + url.toString() + "</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype><collection/></resourcetype>" +
-                    "        <displayname>My DAV Collection</displayname>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype/>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 404 Not Found</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>" + url.toString() + "</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <resourcetype><collection/></resourcetype>" +
+                            "        <displayname>My DAV Collection</displayname>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <resourcetype/>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 404 Not Found</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                ).build()
+        )
         called = false
         dav.propfind(0, ResourceType.NAME, DisplayName.NAME) { response, relation ->
             called = true
@@ -804,19 +888,23 @@ class DavResourceTest {
         assertTrue(called)
 
         // multi-status response with <propstat> that doesn't contain <status> (=> assume 200 OK)
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Without Status</displayname>" +
-                    "      </prop>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Without Status</displayname>" +
+                            "      </prop>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                ).build()
+        )
         called = false
         dav.propfind(0, DisplayName.NAME) { response, _ ->
             called = true
@@ -832,26 +920,31 @@ class DavResourceTest {
         val dav = DavResource(httpClient, url)
 
         // multi-status response with <response>/<propstat> elements
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:' xmlns:s='sample'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "         <s:setThis>Some Value</s:setThis>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 200 OK</status>" +
-                    "    </propstat>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "         <s:removeThis/>" +
-                    "      </prop>" +
-                    "      <status>HTTP/1.1 404 Not Found</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "         <s:setThis>Some Value</s:setThis>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 200 OK</status>" +
+                            "    </propstat>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "         <s:removeThis/>" +
+                            "      </prop>" +
+                            "      <status>HTTP/1.1 404 Not Found</status>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                )
+                .build()
+        )
 
         var called = false
         dav.proppatch(
@@ -885,9 +978,12 @@ class DavResourceTest {
         /* POSITIVE TEST CASES */
 
         // no preconditions, 201 Created
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_CREATED)
-                .setHeader("ETag", "W/\"Weak PUT ETag\""))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_CREATED)
+                .setHeader("ETag", "W/\"Weak PUT ETag\"")
+                .build()
+        )
         var called = false
         dav.put(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             called = true
@@ -900,16 +996,20 @@ class DavResourceTest {
 
         var rq = mockServer.takeRequest()
         assertEquals("PUT", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertNull(rq.getHeader("If-Match"))
-        assertNull(rq.getHeader("If-None-Match"))
+        assertEquals(url, rq.url)
+        assertNull(rq.headers["If-Match"])
+        assertNull(rq.headers["If-None-Match"])
 
         // precondition: If-None-Match, 301 Moved Permanently + 204 No Content, no ETag in response
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_MOVED_PERM)
-                .setHeader("Location", "/target"))
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_NO_CONTENT))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_MOVED_PERM)
+                .setHeader("Location", "/target").build()
+        )
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_NO_CONTENT).build()
+        )
         called = false
         dav.put(sampleText.toRequestBody("text/plain".toMediaType()), ifNoneMatch = true) { response ->
             called = true
@@ -923,11 +1023,14 @@ class DavResourceTest {
         mockServer.takeRequest()
         rq = mockServer.takeRequest()
         assertEquals("PUT", rq.method)
-        assertEquals("*", rq.getHeader("If-None-Match"))
+        assertEquals("*", rq.headers["If-None-Match"])
 
         // precondition: If-Match, 412 Precondition Failed
-        mockServer.enqueue(MockResponse()
-                .setResponseCode(HttpURLConnection.HTTP_PRECON_FAILED))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(HttpURLConnection.HTTP_PRECON_FAILED)
+                .build()
+        )
         called = false
         try {
             dav.put(sampleText.toRequestBody("text/plain".toMediaType()), "ExistingETag") {
@@ -937,8 +1040,8 @@ class DavResourceTest {
         } catch(_: PreconditionFailedException) {}
         assertFalse(called)
         rq = mockServer.takeRequest()
-        assertEquals("\"ExistingETag\"", rq.getHeader("If-Match"))
-        assertNull(rq.getHeader("If-None-Match"))
+        assertEquals("\"ExistingETag\"", rq.headers["If-Match"])
+        assertNull(rq.headers["If-None-Match"])
     }
 
     @Test
@@ -946,19 +1049,23 @@ class DavResourceTest {
         val url = sampleUrl()
         val dav = DavResource(httpClient, url)
 
-        mockServer.enqueue(MockResponse()
-            .setResponseCode(207)
-            .setHeader("Content-Type", "application/xml; charset=utf-8")
-            .setBody("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <displayname>Found something</displayname>" +
-                    "      </prop>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>"))
+        mockServer.enqueue(
+            MockResponse.Builder()
+                .code(207)
+                .setHeader("Content-Type", "application/xml; charset=utf-8")
+                .body(
+                    "<multistatus xmlns='DAV:'>" +
+                            "  <response>" +
+                            "    <href>/dav</href>" +
+                            "    <propstat>" +
+                            "      <prop>" +
+                            "        <displayname>Found something</displayname>" +
+                            "      </prop>" +
+                            "    </propstat>" +
+                            "  </response>" +
+                            "</multistatus>"
+                ).build()
+        )
         var called = false
         dav.search("<TEST/>") { response, hrefRelation ->
             assertEquals(Response.HrefRelation.SELF, hrefRelation)
@@ -969,15 +1076,15 @@ class DavResourceTest {
 
         val rq = mockServer.takeRequest()
         assertEquals("SEARCH", rq.method)
-        assertEquals(url.encodedPath, rq.path)
-        assertEquals("<TEST/>", rq.body.readString(Charsets.UTF_8))
+        assertEquals(url, rq.url)
+        assertEquals("<TEST/>", rq.body?.utf8())
     }
 
 
     /** test helpers **/
 
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_NoXML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_NoXML() {
         val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
         dav.assertMultiStatus(okhttp3.Response.Builder()
             .request(Request.Builder().url(dav.location).build())
@@ -986,8 +1093,8 @@ class DavResourceTest {
             .build())
     }
 
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_XML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_XML() {
         val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
         dav.assertMultiStatus(okhttp3.Response.Builder()
             .request(Request.Builder().url(dav.location).build())
@@ -1040,8 +1147,7 @@ class DavResourceTest {
             .request(Request.Builder().url(dav.location).build())
             .protocol(Protocol.HTTP_1_1)
             .code(207).message("Multi-Status")
-            .addHeader("Content-Type", "application/xml")
-            .body("".toResponseBody())
+            .body("".toResponseBody("application/xml".toMediaType()))
             .build())
     }
 
@@ -1052,8 +1158,7 @@ class DavResourceTest {
             .request(Request.Builder().url(dav.location).build())
             .protocol(Protocol.HTTP_1_1)
             .code(207).message("Multi-Status")
-            .addHeader("Content-Type", "text/xml")
-            .body("".toResponseBody())
+            .body("".toResponseBody("text/xml".toMediaType()))
             .build())
     }
 
