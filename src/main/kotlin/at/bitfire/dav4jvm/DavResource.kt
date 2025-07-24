@@ -162,7 +162,7 @@ open class DavResource @JvmOverloads constructor(
      */
     @Throws(IOException::class, HttpException::class)
     fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
-        val callBlock = {
+        val requestOptions = {
             httpClient.newCall(Request.Builder()
                 .method("OPTIONS", null)
                 .header("Content-Length", "0")
@@ -171,9 +171,9 @@ open class DavResource @JvmOverloads constructor(
                 .build()).execute()
         }
         val response = if (followRedirects)
-            followRedirects(callBlock)
+            followRedirects(requestOptions)
         else
-            callBlock()
+            requestOptions()
         response.use {
             checkStatus(response)
             callback.onCapabilities(
