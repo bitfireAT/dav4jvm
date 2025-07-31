@@ -13,8 +13,7 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.CONTENT_TYPE
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.VERSION
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -160,15 +159,15 @@ class XmlReader(
      * attribute with [onNewType].
      *
      * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
-     * @param onNewType Called every time a new [MediaType] is found.
+     * @param onNewType Called every time a new [ContentType] is found.
      */
-    fun readContentTypes(tagName: Property.Name, onNewType: (MediaType) -> Unit) {
+    fun readContentTypes(tagName: Property.Name, onNewType: (ContentType) -> Unit) {
         try {
             processTag(tagName) {
                 parser.getAttributeValue(null, CONTENT_TYPE)?.let { contentType ->
                     var type = contentType
                     parser.getAttributeValue(null, VERSION)?.let { version -> type += "; version=$version" }
-                    type.toMediaTypeOrNull()?.let(onNewType)
+                    ContentType.parse(type).let(onNewType)  // TODO: Check with Ricki how to properly catch the exception for content type parsing. Throw the same exception as below?
                 }
             }
         } catch(e: XmlPullParserException) {

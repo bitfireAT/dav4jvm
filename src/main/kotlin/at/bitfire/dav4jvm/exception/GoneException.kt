@@ -10,12 +10,12 @@
 
 package at.bitfire.dav4jvm.exception
 
-import okhttp3.Response
-import java.net.HttpURLConnection
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpStatusCode
 
 class GoneException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_GONE, message)
+    constructor(response: HttpResponse): super(response)
+    constructor(message: String?): super(HttpStatusCode.Gone, message)
 
 }

@@ -13,12 +13,11 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 
 data class GetContentType(
-    val type: MediaType?
+    val type: ContentType?
 ): Property {
 
     companion object {
@@ -35,7 +34,9 @@ data class GetContentType(
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT getcontenttype (#PCDATA) >
-            GetContentType(XmlReader(parser).readText()?.toMediaTypeOrNull())
+            GetContentType(XmlReader(parser).readText()?.let {
+                ContentType.parse(it)   // TODO: Check with Ricki how to properly catch the exception for content type parsing
+            })
 
     }
 

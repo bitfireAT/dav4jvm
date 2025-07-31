@@ -12,7 +12,8 @@ package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.UrlUtils.omitTrailingSlash
 import at.bitfire.dav4jvm.UrlUtils.withTrailingSlash
-import okhttp3.HttpUrl
+import io.ktor.http.URLBuilder
+import io.ktor.http.Url
 
 object UrlUtils {
 
@@ -47,12 +48,11 @@ object UrlUtils {
      *
      * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
      */
-    fun omitTrailingSlash(url: HttpUrl): HttpUrl {
-        val idxLast = url.pathSize - 1
-        val hasTrailingSlash = url.pathSegments[idxLast] == ""
+    fun omitTrailingSlash(url: Url): Url {
+        val hasTrailingSlash = url.rawSegments.last() == ""
 
         return if (hasTrailingSlash)
-            url.newBuilder().removePathSegment(idxLast).build()
+            URLBuilder(url).apply { pathSegments = pathSegments.dropLast(1) }.build()
         else
             url
     }
@@ -64,28 +64,27 @@ object UrlUtils {
      *
      * @return URL with trailing slash, e.g. `http://host/test1/`
      */
-    fun withTrailingSlash(url: HttpUrl): HttpUrl {
-        val idxLast = url.pathSize - 1
-        val hasTrailingSlash = url.pathSegments[idxLast] == ""
+    fun withTrailingSlash(url: Url): Url {
+        val hasTrailingSlash = url.rawSegments.last() == ""
 
         return if (hasTrailingSlash)
             url
         else
-            url.newBuilder().addPathSegment("").build()
+            URLBuilder(url).apply { pathSegments += "" }.build()
     }
 
 }
 
 /**
- * Compares two [HttpUrl]s in WebDAV context. If two URLs are considered *equal*, both
+ * Compares two [Url]s in WebDAV context. If two URLs are considered *equal*, both
  * represent the same WebDAV resource.
  *
  * The fragment of an URL is ignored, e.g. `http://host:80/folder1` and `http://HOST/folder1#somefragment`
  * are considered to be equal.
  *
- * [HttpUrl] is less strict than [java.net.URI] and allows for instance (not encoded) square brackets in the path.
- * So this method tries to normalize the URI by converting it to a [java.net.URI] (encodes for instance square brackets)
- * and then comparing the scheme and scheme-specific part (without fragment).
+ * [Url] is less strict than [java.net.URI] and allows for instance (not encoded) square brackets in the path.
+ * So this method compares the protocol, host (case insensitive), port and rawSegments
+ * and and returns true if all are the same.
  *
  * Attention: **This method does not deal with trailing slashes**, so if you want to compare collection URLs,
  * make sure they both (don't) have a trailing slash before calling this method, for instance
@@ -95,16 +94,15 @@ object UrlUtils {
  *
  * @return whether the URLs are considered to represent the same WebDAV resource
  */
-fun HttpUrl.equalsForWebDAV(other: HttpUrl): Boolean {
-    // if okhttp thinks the two URLs are equal, they're in any case
+fun Url.equalsForWebDAV(other: Url): Boolean {
+    // if Ktor thinks the two URLs are equal, they're in any case
     // (and it's a simple String comparison)
     if (this == other)
         return true
 
-    // convert to java.net.URI (also corrects some mistakes and escapes for instance square brackets)
-    val uri1 = toUri()
-    val uri2 = other.toUri()
-
-    // if the URIs are the same (ignoring scheme case and fragments), they're equal for us
-    return uri1.scheme.equals(uri2.scheme, true) && uri1.schemeSpecificPart == uri2.schemeSpecificPart
+    //TODO: Check with Ricki if this is ok like that, update description
+    return this.protocol == other.protocol
+            && this.host.lowercase() == other.host.lowercase()
+            && this.port == other.port
+            && this.rawSegments == other.rawSegments
 }

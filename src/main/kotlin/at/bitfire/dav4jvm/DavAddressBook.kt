@@ -18,26 +18,30 @@ import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import okhttp3.HttpUrl
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import io.ktor.client.HttpClient
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+import io.ktor.util.logging.Logger
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.StringWriter
-import java.util.logging.Logger
 
 @Suppress("unused")
 class DavAddressBook @JvmOverloads constructor(
-    httpClient: OkHttpClient,
-    location: HttpUrl,
-    logger: Logger = Logger.getLogger(DavAddressBook::javaClass.name)
+    httpClient: HttpClient,
+    location: Url,
+    logger: Logger = LoggerFactory.getLogger(DavAddressBook::javaClass.name)
 ): DavCollection(httpClient, location, logger) {
 
     companion object {
-        val MIME_JCARD = "application/vcard+json".toMediaType()
-        val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
-        val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
+        val MIME_JCARD = ContentType.parse("application/vcard+json")
+        val MIME_VCARD3_UTF8 = ContentType.parse("text/vcard;charset=utf-8")
+        val MIME_VCARD4 = ContentType.parse("text/vcard;version=4.0")
 
         val ADDRESSBOOK_QUERY = Property.Name(NS_CARDDAV, "addressbook-query")
         val ADDRESSBOOK_MULTIGET = Property.Name(NS_CARDDAV, "addressbook-multiget")
@@ -56,7 +60,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun addressbookQuery(callback: MultiResponseCallback): List<Property> {
+    suspend fun addressbookQuery(callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -77,12 +81,14 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .header("Depth", "1")
-                    .build()).execute()
-        }.use { response ->
+            httpClient.prepareRequest {
+                url(location)
+                method = HttpMethod.parse("REPORT")
+                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                setBody(writer.toString())
+                headers.append(HttpHeaders.Depth, "1")
+            }.execute()
+        }.let { response ->
             return processMultiStatus(response, callback)
         }
     }
@@ -104,7 +110,7 @@ class DavAddressBook @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
+    suspend fun multiget(urls: List<Url>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -135,13 +141,15 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .header("Depth", "0")       // "The request MUST include a Depth: 0 header [...]"
-                    .build()).execute()
-        }.use {
-            return processMultiStatus(it, callback)
+            httpClient.prepareRequest {
+                url(location)
+                method = HttpMethod.parse("REPORT")
+                setBody(writer.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.Depth, "0")
+            }.execute()
+        }.let { response ->
+            return processMultiStatus(response, callback)
         }
     }
 

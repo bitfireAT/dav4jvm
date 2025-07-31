@@ -19,11 +19,16 @@ import at.bitfire.dav4jvm.property.caldav.ScheduleTag
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import okhttp3.HttpUrl
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import io.ktor.client.HttpClient
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+import io.ktor.util.logging.Logger
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.io.StringWriter
 import java.time.Instant
@@ -31,18 +36,17 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.logging.Logger
 
 @Suppress("unused")
 class DavCalendar @JvmOverloads constructor(
-    httpClient: OkHttpClient,
-    location: HttpUrl,
-    logger: Logger = Logger.getLogger(DavCalendar::javaClass.name)
+    httpClient: HttpClient,
+    location: Url,
+    logger: Logger = LoggerFactory.getLogger(DavCalendar::javaClass.name)
 ): DavCollection(httpClient, location, logger) {
 
     companion object {
-        val MIME_ICALENDAR = "text/calendar".toMediaType()
-        val MIME_ICALENDAR_UTF8 = "text/calendar;charset=utf-8".toMediaType()
+        val MIME_ICALENDAR = ContentType.parse("text/calendar")
+        val MIME_ICALENDAR_UTF8 = ContentType.parse("text/calendar;charset=utf-8")
 
         val CALENDAR_QUERY = Property.Name(NS_CALDAV, "calendar-query")
         val CALENDAR_MULTIGET = Property.Name(NS_CALDAV, "calendar-multiget")
@@ -73,7 +77,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun calendarQuery(component: String, start: Instant?, end: Instant?, callback: MultiResponseCallback): List<Property> {
+    suspend fun calendarQuery(component: String, start: Instant?, end: Instant?, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -119,13 +123,15 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .header("Depth", "1")
-                    .build()).execute()
-        }.use {
-            return processMultiStatus(it, callback)
+            httpClient.prepareRequest {
+                url(location)
+                method = HttpMethod.parse("REPORT")
+                setBody(writer.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.Depth, "1")
+            }.execute()
+        }.let { response ->
+            return processMultiStatus(response, callback)
         }
     }
 
@@ -146,7 +152,7 @@ class DavCalendar @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun multiget(urls: List<HttpUrl>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
+    suspend fun multiget(urls: List<Url>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -177,12 +183,14 @@ class DavCalendar @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .build()).execute()
-        }.use {
-            return processMultiStatus(it, callback)
+            httpClient.prepareRequest {
+                url(location)
+                method = HttpMethod.parse("REPORT")
+                setBody(writer.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+            }.execute()
+        }.let { response ->
+            return processMultiStatus(response, callback)
         }
     }
 

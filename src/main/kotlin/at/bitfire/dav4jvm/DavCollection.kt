@@ -15,20 +15,25 @@ import at.bitfire.dav4jvm.exception.DavException
 import at.bitfire.dav4jvm.exception.HttpException
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+import io.ktor.util.logging.Logger
+import org.slf4j.LoggerFactory
 import java.io.StringWriter
-import java.util.logging.Logger
 
 /**
  * Represents a WebDAV collection.
  */
 open class DavCollection @JvmOverloads constructor(
-    httpClient: OkHttpClient,
-    location: HttpUrl,
-    logger: Logger = Logger.getLogger(DavCollection::class.java.name)
+    httpClient: HttpClient,
+    location: Url,
+    logger: Logger = LoggerFactory.getLogger(DavCollection::class.java.name)
 ): DavResource(httpClient, location, logger) {
 
     companion object {
@@ -54,7 +59,7 @@ open class DavCollection @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error
      */
-    fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: MultiResponseCallback): List<Property> {
+    suspend fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: MultiResponseCallback): List<Property> {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -92,14 +97,15 @@ open class DavCollection @JvmOverloads constructor(
         serializer.endDocument()
 
         followRedirects {
-            httpClient.newCall(Request.Builder()
-                    .url(location)
-                    .method("REPORT", writer.toString().toRequestBody(MIME_XML))
-                    .header("Depth", "0")
-                    .build()).execute()
-        }.use {
-            return processMultiStatus(it, callback)
+            httpClient.prepareRequest {
+                url(location)
+                method = HttpMethod.parse("REPORT")
+                setBody(writer.toString())
+                header(HttpHeaders.ContentType, MIME_XML)
+                header(HttpHeaders.Depth, "0")
+            }.execute()
+        }.let { response ->
+            return processMultiStatus(response, callback)
         }
     }
-
 }

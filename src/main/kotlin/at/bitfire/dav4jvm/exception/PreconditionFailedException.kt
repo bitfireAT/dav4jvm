@@ -10,12 +10,12 @@
 
 package at.bitfire.dav4jvm.exception
 
-import okhttp3.Response
-import java.net.HttpURLConnection
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpStatusCode
 
 class PreconditionFailedException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_PRECON_FAILED, message)
+    constructor(response: HttpResponse): super(response)
+    constructor(message: String?): super(HttpStatusCode.PreconditionFailed, message)
 
 }

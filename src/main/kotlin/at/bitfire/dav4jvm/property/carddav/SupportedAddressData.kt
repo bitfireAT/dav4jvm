@@ -13,11 +13,11 @@ package at.bitfire.dav4jvm.property.carddav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import okhttp3.MediaType
+import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 
 class SupportedAddressData(
-    val types: Set<MediaType> = emptySet()
+    val types: Set<ContentType> = emptySet()
 ): Property {
 
     companion object {
@@ -32,7 +32,7 @@ class SupportedAddressData(
     }
 
     fun hasVCard4() = types.any { "text/vcard; version=4.0".equals(it.toString(), true) }
-    fun hasJCard() = types.any { "application".equals(it.type, true) && "vcard+json".equals(it.subtype, true) }
+    fun hasJCard() = types.any { ContentType.Application.contains(it) && "vcard+json".equals(it.contentSubtype, true) }
 
     override fun toString() = "[${types.joinToString(", ")}]"
 
@@ -42,7 +42,7 @@ class SupportedAddressData(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): SupportedAddressData {
-            val supportedTypes = mutableSetOf<MediaType>()
+            val supportedTypes = mutableSetOf<ContentType>()
 
             XmlReader(parser).readContentTypes(ADDRESS_DATA_TYPE, supportedTypes::add)
 

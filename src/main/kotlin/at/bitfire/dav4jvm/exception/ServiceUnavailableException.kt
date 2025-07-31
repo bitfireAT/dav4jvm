@@ -14,8 +14,9 @@ import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_DEFAULT
 import at.bitfire.dav4jvm.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
-import okhttp3.Response
-import java.net.HttpURLConnection
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -27,16 +28,16 @@ class ServiceUnavailableException : HttpException {
 
     val retryAfter: Instant?
 
-    constructor(message: String?) : super(HttpURLConnection.HTTP_UNAVAILABLE, message) {
+    constructor(message: String?) : super(HttpStatusCode.ServiceUnavailable, message) {
         retryAfter = null
     }
 
-    constructor(response: Response) : super(response) {
+    constructor(response: HttpResponse) : super(response) {
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
         var retryAfterValue: Instant? = null
-        response.header("Retry-After")?.let { after ->
+        response.headers[HttpHeaders.RetryAfter]?.let { after ->
             retryAfterValue = HttpUtils.parseDate(after) ?:
                 // not a HTTP-date, must be delta-seconds
                 try {
