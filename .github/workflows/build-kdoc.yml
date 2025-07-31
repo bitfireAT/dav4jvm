@@ -22,7 +22,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Build KDoc
-        run: ./gradlew --no-daemon dokkaHtml
+        run: ./gradlew --no-daemon dokkaGenerate
 
       - uses: actions/upload-pages-artifact@v3
         with:

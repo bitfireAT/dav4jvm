@@ -1,5 +1,15 @@
-import java.net.URL
+/*
+ * Copyright © All Contributors. See LICENSE and AUTHORS in the root directory for details.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 import org.jetbrains.dokka.gradle.DokkaTask
+import java.net.URI
 
 repositories {
     mavenCentral()
@@ -36,7 +46,7 @@ tasks.withType<DokkaTask>().configureEach {
             moduleName.set("dav4jvm")
             sourceLink {
                 localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(URL("https://github.com/bitfireAT/dav4jvm/tree/main/src/main/kotlin/"))
+                remoteUrl.set(URI("https://github.com/bitfireAT/dav4jvm/tree/main/src/main/kotlin/").toURL())
                 remoteLineSuffix.set("#L")
             }
         }

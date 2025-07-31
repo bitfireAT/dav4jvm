@@ -30,8 +30,6 @@ class DavCalendarTest {
 
     @Test
     fun calendarQuery_formatStartEnd() {
-
-
         val mockEngine = MockEngine { request ->
             respond(
                 content = "<multistatus xmlns=\"DAV:\"/>",
@@ -39,7 +37,7 @@ class DavCalendarTest {
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.UTF_8).toString())
             )
         }
-        val httpClient = HttpClient(mockEngine)
+        val httpClient = HttpClient(mockEngine) { followRedirects = false }
         val cal = DavCalendar(httpClient, Url("/"))
 
         runBlocking {
@@ -62,7 +60,8 @@ class DavCalendarTest {
                         "</CAL:comp-filter>" +
                         "</CAL:comp-filter>" +
                         "</CAL:filter>" +
-                        "</CAL:calendar-query>", mockEngine.requestHistory.last().body.toByteArray().toString(Charsets.UTF_8)
+                        "</CAL:calendar-query>",
+                mockEngine.requestHistory.last().body.toByteArray().toString(Charsets.UTF_8)
             )
         }
     }

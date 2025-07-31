@@ -175,8 +175,9 @@ open class DavResource @JvmOverloads constructor(
 
     /**
      * Sends an OPTIONS request to this resource without HTTP compression (because some servers have
-     * broken compression for OPTIONS). Doesn't follow redirects.
+     * broken compression for OPTIONS). Follows up to [MAX_REDIRECTS] redirects when set.
      *
+     * @param followRedirects whether redirects should be followed (default: *false*)
      * @param callback called with server response unless an exception is thrown
      *
      * @throws IOException on I/O error
@@ -184,19 +185,24 @@ open class DavResource @JvmOverloads constructor(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     @Throws(IOException::class, HttpException::class)
-    suspend fun options(callback: CapabilitiesCallback) {
-        httpClient.prepareRequest {
+    suspend fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
+        val request = httpClient.prepareRequest {
             url(location)
             method = HttpMethod.Options
             headers.append(HttpHeaders.ContentLength, "0")
             headers.append(HttpHeaders.AcceptEncoding, "identity")
-        }.execute { response ->
-            checkStatus(response)
-            callback.onCapabilities(
-                HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
-                response
-            )
         }
+        val response = if (followRedirects)
+            followRedirects { request.execute() }
+        else
+            request.execute()
+
+        checkStatus(response)
+        callback.onCapabilities(
+            HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
+            response
+        )
+
     }
 
     /**
