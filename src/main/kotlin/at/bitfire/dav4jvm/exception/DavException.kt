@@ -122,9 +122,6 @@ open class DavException @JvmOverloads constructor(
             }
 
             try {
-                // --- Response Body Handling ---
-                // Ktor response bodies are typically consumed on read.
-                // To get an excerpt and parse XML, you might need to read it once.
                 val responseBytes = runBlocking { httpResponse.readRawBytes() } // Read the whole body
 
                 httpResponse.contentType()?.let { mimeType ->
@@ -165,8 +162,6 @@ open class DavException @JvmOverloads constructor(
                 logger.log(Level.WARNING, "Couldn't read Ktor HTTP response", e)
                 responseBody = "Couldn't read Ktor HTTP response: ${e.message}"
             }
-            // Ktor's HttpResponse body is typically managed by its scope,
-            // no explicit close needed here like OkHttp's response.body.close()
         } else {
             response = null
         }
