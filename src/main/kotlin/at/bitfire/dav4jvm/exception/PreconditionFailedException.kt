@@ -16,6 +16,6 @@ import io.ktor.http.HttpStatusCode
 class PreconditionFailedException: HttpException {
 
     constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.PreconditionFailed, message)
+    constructor(message: String?): super(HttpStatusCode.PreconditionFailed.value, message)
 
 }

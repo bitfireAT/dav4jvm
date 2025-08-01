@@ -256,7 +256,7 @@ class DavCollectionTest {
                 collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME) { _, _ -> }
                 fail("Expected HttpException")
             } catch (e: HttpException) {
-                assertEquals(HttpStatusCode.InsufficientStorage, e.code)
+                assertEquals(HttpStatusCode.InsufficientStorage.value, e.code)
                 assertTrue(e.errors.any { it.name == Property.Name(NS_WEBDAV, "number-of-matches-within-limits") })
                 assertEquals(1, e.errors.size)
             }

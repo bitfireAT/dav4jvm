@@ -16,6 +16,6 @@ import io.ktor.http.HttpStatusCode
 class UnauthorizedException: HttpException {
 
     constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Unauthorized, message)
+    constructor(message: String?): super(HttpStatusCode.Unauthorized.value, message)
 
 }

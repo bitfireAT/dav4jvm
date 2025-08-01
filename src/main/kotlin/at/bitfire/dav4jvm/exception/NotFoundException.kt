@@ -16,6 +16,6 @@ import io.ktor.http.HttpStatusCode
 class NotFoundException: HttpException {
 
     constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.NotFound, message)
+    constructor(message: String?): super(HttpStatusCode.NotFound.value, message)
 
 }

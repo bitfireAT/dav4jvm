@@ -109,7 +109,7 @@ class DavExceptionTest {
                 dav.propfind(0, ResourceType.NAME) { _, _ -> }
                 fail("Expected HttpException")
             } catch (e: HttpException) {
-                assertEquals(e.code, HttpStatusCode.NotFound)
+                assertEquals(HttpStatusCode.NotFound.value, e.code)
                 assertTrue(e.errors.isEmpty())
                 assertEquals(
                     body.substring(0, DavException.MAX_EXCERPT_SIZE - 1),
@@ -141,7 +141,7 @@ class DavExceptionTest {
                 dav.propfind(0, ResourceType.NAME) { _, _ -> }
                 fail("Expected HttpException")
             } catch (e: HttpException) {
-                assertEquals(e.code, HttpStatusCode.Forbidden)
+                assertEquals(HttpStatusCode.Forbidden.value, e.code)
                 assertTrue(e.errors.isEmpty())
                 assertNull(e.responseBody)
             }
@@ -177,7 +177,7 @@ class DavExceptionTest {
 
                 val ois = ObjectInputStream(ByteArrayInputStream(baos.toByteArray()))
                 val e2 = ois.readObject() as HttpException
-                assertEquals(HttpStatusCode.InternalServerError, e2.code)
+                assertEquals(HttpStatusCode.InternalServerError.value, e2.code)
                 assertTrue(e2.responseBody!!.contains("12345"))
             }
         }
@@ -214,7 +214,7 @@ class DavExceptionTest {
                 dav.propfind(0, ResourceType.NAME) { _, _ -> }
                 fail("Expected HttpException")
             } catch (e: HttpException) {
-                assertEquals(e.code, HttpStatusCode.Locked)
+                assertEquals(HttpStatusCode.Locked.value, e.code)
                 assertTrue(e.errors.any { it.name == Property.Name(NS_WEBDAV, "lock-token-submitted") })
                 assertEquals(body, e.responseBody)
             }

@@ -16,6 +16,6 @@ import io.ktor.http.HttpStatusCode
 class GoneException: HttpException {
 
     constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Gone, message)
+    constructor(message: String?): super(HttpStatusCode.Gone.value, message)
 
 }

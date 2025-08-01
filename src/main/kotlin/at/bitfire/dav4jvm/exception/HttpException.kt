@@ -11,23 +11,22 @@
 package at.bitfire.dav4jvm.exception
 
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.HttpStatusCode
 
 /**
  * Signals that a HTTP error was sent by the server.
  */
 open class HttpException: DavException {
 
-    var code: HttpStatusCode
+    var code: Int
 
     constructor(response: HttpResponse): super(
-            "HTTP ${response.status.value} ${response.status.description}",    // TODO: originally message instead of description, is this the same?
+            "HTTP ${response.status.value} ${response.status.description}",
             httpResponse = response
     ) {
-        code = response.status
+        code = response.status.value
     }
 
-    constructor(code: HttpStatusCode, message: String?): super("HTTP $code $message") {
+    constructor(code: Int, message: String?): super("HTTP $code $message") {
         this.code = code
     }
 

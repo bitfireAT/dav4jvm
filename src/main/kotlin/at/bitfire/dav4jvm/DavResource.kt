@@ -707,7 +707,7 @@ open class DavResource @JvmOverloads constructor(
             HttpStatusCode.ServiceUnavailable ->
                 if (response != null) ServiceUnavailableException(response) else ServiceUnavailableException(message)
             else ->
-                if (response != null) HttpException(response) else HttpException(httpStatusCode, message)
+                if (response != null) HttpException(response) else HttpException(httpStatusCode.value, message)
         }
     }
 

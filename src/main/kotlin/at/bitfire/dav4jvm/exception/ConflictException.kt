@@ -16,6 +16,6 @@ import io.ktor.http.HttpStatusCode
 class ConflictException: HttpException {
 
     constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Conflict, message)
+    constructor(message: String?): super(HttpStatusCode.Conflict.value, message)
 
 }

@@ -28,7 +28,7 @@ class ServiceUnavailableException : HttpException {
 
     val retryAfter: Instant?
 
-    constructor(message: String?) : super(HttpStatusCode.ServiceUnavailable, message) {
+    constructor(message: String?) : super(HttpStatusCode.ServiceUnavailable.value, message) {
         retryAfter = null
     }
 

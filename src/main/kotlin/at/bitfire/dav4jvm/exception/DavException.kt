@@ -14,15 +14,10 @@ import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.exception.DavException.Companion.MAX_EXCERPT_SIZE
-import io.ktor.client.request.HttpRequest
-import io.ktor.client.request.HttpRequestData
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readRawBytes
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.Url
 import io.ktor.http.charset
 import io.ktor.http.content.ByteArrayContent
 import io.ktor.http.content.TextContent
@@ -114,7 +109,7 @@ open class DavException @JvmOverloads constructor(
             try {
                 request = httpResponse.request.toString()
 
-                httpResponse.request?.content?.let { body ->
+                httpResponse.request.content.let { body ->
                     body.contentType?.let { type ->
                         if (isPlainText(type)) {
                             val requestBodyBytes = when (body) {
