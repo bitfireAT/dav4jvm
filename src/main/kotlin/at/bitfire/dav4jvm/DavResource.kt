@@ -260,7 +260,7 @@ open class DavResource @JvmOverloads constructor(
         followRedirects {
             httpClient.prepareRequest {
                 url(location)
-                method = HttpMethod.parse("COPY")   //TODO: Check further, originally .method("COPY", null)
+                method = HttpMethod.parse("COPY")
                 headers.append(HttpHeaders.ContentLength, "0")
                 headers.append(HttpHeaders.Destination, destination.toString())
                 if (!overwrite)      // RFC 4918 9.9.3 and 10.6, default value: T
