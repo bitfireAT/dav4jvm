@@ -149,8 +149,6 @@ class DavExceptionTest {
     }
 
 
-    // TODO: @Ricki, let's have a look a this together how to solve this
-    // The problem seems to be that the HttpResponse is not Serializable
     @Test
     fun testSerialization() {
 

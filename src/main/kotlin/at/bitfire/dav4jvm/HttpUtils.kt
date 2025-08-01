@@ -46,8 +46,9 @@ object HttpUtils {
      */
     fun fileName(url: Url): String = url.segments.lastOrNull() ?: ""  // segments excludes empty segments
 
-    fun listHeader(response: HttpResponse, name: String): Array<String> {  //TODO Better double-check with Ricki
-        return response.headers.getAll(name)?.toTypedArray() ?: emptyArray()
+    fun listHeader(response: HttpResponse, name: String): Array<String> {
+        val value = response.headers.getAll(name)?.joinToString(",")
+        return value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toTypedArray() ?: emptyArray()
     }
 
 

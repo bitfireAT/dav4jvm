@@ -22,7 +22,6 @@ class QuotedStringUtilsTest {
         assertEquals("\"\\\\\"", QuotedStringUtils.asQuotedString("\\"))
     }
 
-    //TODO: @Ricki, was this disabled on purpose? Reactivated it for now
     @Test
     fun testDecodeQuotedString() {
         assertEquals("\"", QuotedStringUtils.decodeQuotedString("\""))

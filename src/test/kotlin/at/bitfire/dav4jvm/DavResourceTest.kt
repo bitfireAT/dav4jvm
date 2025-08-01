@@ -183,7 +183,7 @@ class DavResourceTest {
                 called = false
                 dav.delete(null) { called = true }
                 fail("Expected HttpException")
-            } catch(e: HttpException) {
+            } catch(_: HttpException) {
                 assertFalse(called)
             }
         }
@@ -1023,8 +1023,8 @@ class DavResourceTest {
 
     /** test helpers **/
 
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_NoXML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_NoXML() {
         val mockEngine = MockEngine { request ->
             respond(
                 content = "",
@@ -1039,9 +1039,8 @@ class DavResourceTest {
         }
     }
 
-
-    @Test(expected = DavException::class)
-    fun testAssertMultiStatus_NoBody_XML() {
+    @Test
+    fun testAssertMultiStatus_EmptyBody_XML() {
         val mockEngine = MockEngine { request ->
             respond(
                 content = "",
@@ -1074,7 +1073,7 @@ class DavResourceTest {
         }
     }
 
-    @Test
+    @Test(expected = DavException::class)
     fun testAssertMultiStatus_NonXML_ReallyNotXML() {
         val mockEngine = MockEngine { request ->
             respond(
@@ -1088,7 +1087,6 @@ class DavResourceTest {
         runBlocking {
             val dav = DavResource(httpClient, Url("https://from.com"))
             dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
-            //TODO: @Ricki, I'm not sure if I misunderstand something here, but the assertion should fail anyway, shouldn't we expect the exception instead?
         }
 
     }
@@ -1098,7 +1096,7 @@ class DavResourceTest {
 
         val mockEngine = MockEngine { request ->
             respond(
-                content = " ",    //TODO: @Ricki, added a space here to make the test work, please review
+                content = "",
                 status = HttpStatusCode(403, "Multi-Status"),  // 207 Multi-Status
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
             )
@@ -1117,7 +1115,7 @@ class DavResourceTest {
 
         val mockEngine = MockEngine { request ->
             respond(
-                content = " ",    //TODO: @Ricki, added a space here to make the test work, please review
+                content = "",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
             )
@@ -1135,7 +1133,7 @@ class DavResourceTest {
 
         val mockEngine = MockEngine { request ->
             respond(
-                content = " ",    //TODO: @Ricki, added a space here to make the test work, please review
+                content = "",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.toString())
             )

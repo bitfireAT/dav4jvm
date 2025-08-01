@@ -133,6 +133,7 @@ data class Response(
                     when (parser.propertyName()) {
                         DavResource.HREF -> {
                             var sHref = parser.nextText()
+                            var hierarchical = false
                             if (!sHref.startsWith("/")) {
                                 /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
                                    URLs. However, some servers reply with relative paths. */
@@ -142,7 +143,6 @@ data class Response(
                                        which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
                                        For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
                                        with "./" to allow resolving by HttpUrl. */
-                                    var hierarchical = false
                                     try {
                                         if (sHref.substring(firstColon, firstColon + 3) == "://")
                                             hierarchical = true
@@ -151,9 +151,18 @@ data class Response(
                                     }
                                     if (!hierarchical)
                                         sHref = "./$sHref"
+
                                 }
                             }
-                            hrefOrNull = URLBuilder(location).takeFrom(sHref).build()
+
+
+                            if(!hierarchical) {
+                                val urlBuilder = URLBuilder(location).takeFrom(sHref)
+                                urlBuilder.pathSegments = urlBuilder.pathSegments.filterNot { it == "." } // Drop segments that are "./"
+                                hrefOrNull = urlBuilder.build()
+                            } else {
+                                hrefOrNull = URLBuilder(location).takeFrom(sHref).build()
+                            }
                         }
                         STATUS ->
                             status = try {
@@ -161,7 +170,6 @@ data class Response(
                                 HttpStatusCode(statusLine.code, statusLine.message)
                             } catch (e: IllegalStateException) {
                                 logger.warning("Invalid status line, treating as HTTP error 500")
-                                //StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                                 HttpStatusCode(500, "Invalid status line")
                             } catch (_: ProtocolException) {
                                 logger.warning("Invalid status line, treating as HTTP error 500")

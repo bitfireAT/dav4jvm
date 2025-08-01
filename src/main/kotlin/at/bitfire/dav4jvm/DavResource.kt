@@ -222,7 +222,7 @@ open class DavResource @JvmOverloads constructor(
         followRedirects {
             httpClient.prepareRequest {
                 url(location)
-                method = HttpMethod.parse("MOVE")   //TODO: Check further, originally .method("MOVE", null)
+                method = HttpMethod.parse("MOVE")
                 headers.append(HttpHeaders.ContentLength, "0")
                 headers.append(HttpHeaders.Destination, destination.toString())
                 if (!overwrite)      // RFC 4918 9.9.3 and 10.6, default value: T
@@ -768,9 +768,6 @@ open class DavResource @JvmOverloads constructor(
             throw DavException("Expected 207 Multi-Status, got ${response.status.value} ${response.status.description}", httpResponse = response)
 
         val bodyChannel = response.bodyAsChannel()
-        if (response.contentLength() == 0L || response.readRawBytes().isEmpty()) {        // TODO: Doublecheck if this is ok here here (bodyAsText())
-            throw DavException("Received 207 Multi-Status without body", httpResponse = response)
-        }
 
         response.contentType()?.let { mimeType ->          // is response.contentType() ok here? Or must it be the content type of the body?
             if (((!ContentType.Application.contains(mimeType) && !ContentType.Text.contains(mimeType))) || mimeType.contentSubtype != "xml") {
