@@ -357,7 +357,7 @@ open class DavResource @JvmOverloads constructor(
      * @param accept   value of `Accept` header (always sent for clarity; use *&#47;* if you don't care)
      * @param headers  additional headers to send with the request
      *
-     * @return okhttp Response – **caller is responsible for closing it!**
+     * @return HttpResponse
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error

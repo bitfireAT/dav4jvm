@@ -73,7 +73,7 @@ data class Response(
      */
     val properties: List<Property> by lazy {
         if (isSuccess())
-            propstat.filter { it.isSuccess() }.map { it.properties }.flatten()
+            propstat.filter { it.status.isSuccess() }.map { it.properties }.flatten()
         else
             emptyList()
     }
@@ -193,7 +193,7 @@ data class Response(
 
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
-            propStat.filter { it.isSuccess() }
+            propStat.filter { it.status.isSuccess() }
                 .map { it.properties }
                 .filterIsInstance<ResourceType>()
                 .firstOrNull()

@@ -838,7 +838,7 @@ class DavResourceTest {
           called = false
           dav.propfind(0, DisplayName.NAME) { response, _ ->
               called = true
-              assertEquals(200, response.propstat.first().status.code)
+              assertEquals(200, response.propstat.first().status.value)
               assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
           }
           assertTrue(called)

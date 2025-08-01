@@ -13,7 +13,7 @@ package at.bitfire.dav4jvm
 import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import okhttp3.Protocol
+import io.ktor.http.HttpStatusCode
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
 import java.net.ProtocolException
@@ -26,7 +26,7 @@ import java.util.LinkedList
  */
 data class PropStat(
         val properties: List<Property>,
-        val status: StatusLine,
+        val status: HttpStatusCode,
         val error: List<Error>? = null
 ) {
 
@@ -35,13 +35,13 @@ data class PropStat(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "propstat")
 
-        private val ASSUMING_OK = StatusLine(Protocol.HTTP_1_1, 200, "Assuming OK")
-        private val INVALID_STATUS = StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
+        private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
+        private val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
         fun parse(parser: XmlPullParser): PropStat {
             val depth = parser.depth
 
-            var status: StatusLine? = null
+            var status: HttpStatusCode? = null
             val prop = LinkedList<Property>()
 
             var eventType = parser.eventType
@@ -52,7 +52,9 @@ data class PropStat(
                             prop.addAll(Property.parse(parser))
                         STATUS ->
                             status = try {
-                                StatusLine.parse(parser.nextText())
+                                //TODO: Replace OKHttp Status lines with something different
+                                val okHttpStatusLine = StatusLine.parse(parser.nextText())
+                                HttpStatusCode(okHttpStatusLine.code, okHttpStatusLine.message)
                             } catch (e: ProtocolException) {
                                 // invalid status line, treat as 500 Internal Server Error
                                 INVALID_STATUS
@@ -65,8 +67,4 @@ data class PropStat(
         }
 
     }
-
-
-    fun isSuccess() = status.code/100 == 2
-
 }
