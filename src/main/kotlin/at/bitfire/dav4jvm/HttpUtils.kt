@@ -11,8 +11,8 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.HttpUtils.httpDateFormat
-import okhttp3.HttpUrl
-import okhttp3.Response
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.Url
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -44,14 +44,10 @@ object HttpUtils {
      *
      * @return resource name
      */
-    fun fileName(url: HttpUrl): String {
-        val pathSegments = url.pathSegments.dropLastWhile { it == "" }
-        return pathSegments.lastOrNull() ?: ""
-    }
+    fun fileName(url: Url): String = url.segments.lastOrNull() ?: ""  // segments excludes empty segments
 
-    fun listHeader(response: Response, name: String): Array<String> {
-        val value = response.headers(name).joinToString(",")
-        return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
+    fun listHeader(response: HttpResponse, name: String): Array<String> {  //TODO Better double-check with Ricki
+        return response.headers.getAll(name)?.toTypedArray() ?: emptyArray()
     }
 
 

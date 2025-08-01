@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import io.ktor.http.Url
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -29,12 +29,12 @@ class HttpUtilsTest {
 
     @Test
     fun fileName() {
-        assertEquals("", HttpUtils.fileName("https://example.com".toHttpUrl()))
-        assertEquals("", HttpUtils.fileName("https://example.com/".toHttpUrl()))
-        assertEquals("file1", HttpUtils.fileName("https://example.com/file1".toHttpUrl()))
-        assertEquals("dir1", HttpUtils.fileName("https://example.com/dir1/".toHttpUrl()))
-        assertEquals("file2", HttpUtils.fileName("https://example.com/dir1/file2".toHttpUrl()))
-        assertEquals("dir2", HttpUtils.fileName("https://example.com/dir1/dir2/".toHttpUrl()))
+        assertEquals("", HttpUtils.fileName(Url("https://example.com")))
+        assertEquals("", HttpUtils.fileName(Url("https://example.com/")))
+        assertEquals("file1", HttpUtils.fileName(Url("https://example.com/file1")))
+        assertEquals("dir1", HttpUtils.fileName(Url("https://example.com/dir1/")))
+        assertEquals("file2", HttpUtils.fileName(Url("https://example.com/dir1/file2")))
+        assertEquals("dir2", HttpUtils.fileName(Url("https://example.com/dir1/dir2/")))
     }
 
     @Test

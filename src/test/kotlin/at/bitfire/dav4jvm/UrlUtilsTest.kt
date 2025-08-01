@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import io.ktor.http.Url
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -37,31 +37,31 @@ class UrlUtilsTest {
 
     @Test
     fun testOmitTrailingSlash() {
-        assertEquals("http://host/resource".toHttpUrl(), UrlUtils.omitTrailingSlash("http://host/resource".toHttpUrl()))
-        assertEquals("http://host/resource".toHttpUrl(), UrlUtils.omitTrailingSlash("http://host/resource/".toHttpUrl()))
+        assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource")))
+        assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource/")))
     }
 
     @Test
     fun testWithTrailingSlash() {
-        assertEquals("http://host/resource/".toHttpUrl(), UrlUtils.withTrailingSlash("http://host/resource".toHttpUrl()))
-        assertEquals("http://host/resource/".toHttpUrl(), UrlUtils.withTrailingSlash("http://host/resource/".toHttpUrl()))
+        assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource")))
+        assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource/")))
     }
 
 
     @Test
     fun testHttpUrl_EqualsForWebDAV() {
-        assertTrue("http://host/resource".toHttpUrl().equalsForWebDAV("http://host/resource".toHttpUrl()))
-        assertTrue("http://host:80/resource".toHttpUrl().equalsForWebDAV("http://host/resource".toHttpUrl()))
-        assertTrue("https://HOST:443/resource".toHttpUrl().equalsForWebDAV("https://host/resource".toHttpUrl()))
-        assertTrue("https://host:443/my@dav/".toHttpUrl().equalsForWebDAV("https://host/my%40dav/".toHttpUrl()))
-        assertTrue("http://host/resource".toHttpUrl().equalsForWebDAV("http://host/resource#frag1".toHttpUrl()))
+        assertTrue(Url("http://host/resource").equalsForWebDAV(Url("http://host/resource")))
+        assertTrue(Url("http://host:80/resource").equalsForWebDAV(Url("http://host/resource")))
+        assertTrue(Url("https://HOST:443/resource").equalsForWebDAV(Url("https://host/resource")))
+        assertTrue(Url("https://host:443/my@dav/").equalsForWebDAV(Url("https://host/my%40dav/")))
+        assertTrue(Url("http://host/resource").equalsForWebDAV(Url("http://host/resource#frag1")))
 
-        assertFalse("http://host/resource".toHttpUrl().equalsForWebDAV("http://host/resource/".toHttpUrl()))
-        assertFalse("http://host/resource".toHttpUrl().equalsForWebDAV("http://host:81/resource".toHttpUrl()))
+        assertFalse(Url("http://host/resource").equalsForWebDAV(Url("http://host/resource/")))
+        assertFalse(Url("http://host/resource").equalsForWebDAV(Url("http://host:81/resource")))
 
-        assertTrue("https://www.example.com/folder/[X]Y!.txt".toHttpUrl().equalsForWebDAV("https://www.example.com/folder/[X]Y!.txt".toHttpUrl()))
-        assertTrue("https://www.example.com/folder/%5BX%5DY!.txt".toHttpUrl().equalsForWebDAV("https://www.example.com/folder/[X]Y!.txt".toHttpUrl()))
-        assertTrue("https://www.example.com/folder/%5bX%5dY%21.txt".toHttpUrl().equalsForWebDAV("https://www.example.com/folder/[X]Y!.txt".toHttpUrl()))
+        assertTrue(Url("https://www.example.com/folder/[X]Y!.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
+        assertTrue(Url("https://www.example.com/folder/%5BX%5DY!.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
+        assertTrue(Url("https://www.example.com/folder/%5bX%5dY%21.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
     }
 
 }

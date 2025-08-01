@@ -11,11 +11,10 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.exception.InvalidPropertyException
+import org.slf4j.LoggerFactory
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 import java.util.LinkedList
-import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
  * Represents a WebDAV property.
@@ -40,7 +39,7 @@ interface Property {
     companion object {
 
         fun parse(parser: XmlPullParser): List<Property> {
-            val logger = Logger.getLogger(Property::javaClass.name)
+            val logger = LoggerFactory.getLogger(Property::javaClass.name)
 
             // <!ELEMENT prop ANY >
             val depth = parser.depth
@@ -59,9 +58,9 @@ interface Property {
                         if (property != null) {
                             properties.add(property)
                         } else
-                            logger.fine("Ignoring unknown property $name")
+                            logger.info("Ignoring unknown property $name")
                     } catch (e: InvalidPropertyException) {
-                        logger.log(Level.WARNING, "Ignoring invalid property", e)
+                        logger.warn("Ignoring invalid property", e)
                     }
                 }
 
