@@ -95,17 +95,6 @@ open class DavException @JvmOverloads constructor(
         if (httpResponse != null) {
             response = httpResponse.toString() // Or a more custom string representation
 
-            // TODO: Review AI Info and general implementation with Ricki
-            //--- Request Body Handling (More Complex with Ktor from Response) ---
-            // Ktor's HttpResponse doesn't directly hold a reference to the full original
-            // request body in the same way OkHttp's Response can link back to its Request.
-            // You'd typically capture the request body *before* sending the request
-            // and pass it to this exception if needed.
-            // For simplicity, I'm omitting the direct Ktor equivalent here,
-            // assuming you might pass `requestBodyContent` to the constructor.
-            // If you need to reconstruct parts of the request from httpResponse.request,
-            // that's possible but limited.
-
             try {
                 request = httpResponse.request.toString()
 
@@ -123,7 +112,7 @@ open class DavException @JvmOverloads constructor(
                             val baos = ByteArrayOutputStream()
                             buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
 
-                            requestBody = baos.toString()
+                            requestBody = baos.toString((type.charset()?: Charsets.UTF_8).name())
                         }
                     }
                 }
@@ -136,7 +125,6 @@ open class DavException @JvmOverloads constructor(
                 // --- Response Body Handling ---
                 // Ktor response bodies are typically consumed on read.
                 // To get an excerpt and parse XML, you might need to read it once.
-                // Be mindful of large responses.
                 val responseBytes = runBlocking { httpResponse.readRawBytes() } // Read the whole body
 
                 httpResponse.contentType()?.let { mimeType ->
