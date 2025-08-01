@@ -1116,15 +1116,14 @@ class DavResourceTest {
             .build())
     }
 
-    @Test
+    @Test(expected = DavException::class)
     fun testAssertMultiStatus_NonXML_ReallyNotXML() {
         val dav = DavResource(httpClient, "https://from.com".toHttpUrl())
         dav.assertMultiStatus(okhttp3.Response.Builder()
             .request(Request.Builder().url(dav.location).build())
             .protocol(Protocol.HTTP_1_1)
             .code(207).message("Multi-Status")
-            .addHeader("Content-Type", "text/plain")
-            .body("Some error occurred".toResponseBody())
+            .body("Some error occurred".toResponseBody("text/plain".toMediaType()))
             .build())
     }
 
