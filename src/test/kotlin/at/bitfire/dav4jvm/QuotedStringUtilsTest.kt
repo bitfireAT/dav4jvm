@@ -22,6 +22,7 @@ class QuotedStringUtilsTest {
         assertEquals("\"\\\\\"", QuotedStringUtils.asQuotedString("\\"))
     }
 
+    @Test
     fun testDecodeQuotedString() {
         assertEquals("\"", QuotedStringUtils.decodeQuotedString("\""))
         assertEquals("\\", QuotedStringUtils.decodeQuotedString("\"\\\""))
