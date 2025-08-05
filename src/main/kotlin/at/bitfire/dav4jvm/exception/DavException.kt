@@ -33,22 +33,17 @@ import java.util.logging.Logger
  * received, but also an explicit HTTP error.
  */
 open class DavException @JvmOverloads constructor(
-        message: String,
-        ex: Throwable? = null,
-
-        /**
-         * An associated HTTP [Response]. Will be closed after evaluation.
-         */
-        httpResponse: Response? = null
-): Exception(message, ex), Serializable {
+    message: String,
+    ex: Throwable? = null,
+) : Exception(message, ex), Serializable {
 
     companion object {
 
-        const val MAX_EXCERPT_SIZE = 10*1024   // don't dump more than 20 kB
+        const val MAX_EXCERPT_SIZE = 10 * 1024   // don't dump more than 20 kB
 
         fun isPlainText(type: MediaType) =
-                type.type == "text" ||
-                (type.type == "application" && type.subtype in arrayOf("html", "xml"))
+            type.type == "text" ||
+                    (type.type == "application" && type.subtype in arrayOf("html", "xml"))
 
     }
 
@@ -56,6 +51,7 @@ open class DavException @JvmOverloads constructor(
         get() = Logger.getLogger(javaClass.name)
 
     var request: String? = null
+        private set
 
     /**
      * Body excerpt of [request] (up to [MAX_EXCERPT_SIZE] characters). Only available
@@ -64,7 +60,8 @@ open class DavException @JvmOverloads constructor(
     var requestBody: String? = null
         private set
 
-    val response: String?
+    var response: String? = null
+        private set
 
     /**
      * Body excerpt of [response] (up to [MAX_EXCERPT_SIZE] characters). Only available
@@ -80,7 +77,7 @@ open class DavException @JvmOverloads constructor(
         private set
 
 
-    init {
+    fun populateHttpResponse(httpResponse: Response?): DavException {
         if (httpResponse != null) {
             response = httpResponse.toString()
 
@@ -106,35 +103,30 @@ open class DavException @JvmOverloads constructor(
             }
 
             try {
-                // save response body excerpt
-                if (httpResponse.body?.source() != null) {
-                    // response body has a source
-
-                    httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
-                        body.contentType()?.let { mimeType ->
-                            if (isPlainText(mimeType))
-                                responseBody = body.string()
-                        }
+                httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
+                    body.contentType()?.let { mimeType ->
+                        if (isPlainText(mimeType))
+                            responseBody = body.string()
                     }
+                }
 
-                    httpResponse.body?.use { body ->
-                        body.contentType()?.let {
-                            if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
-                                // look for precondition/postcondition XML elements
-                                try {
-                                    val parser = XmlUtils.newPullParser()
-                                    parser.setInput(body.charStream())
+                httpResponse.body.use { body ->
+                    body.contentType()?.let {
+                        if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
+                            // look for precondition/postcondition XML elements
+                            try {
+                                val parser = XmlUtils.newPullParser()
+                                parser.setInput(body.charStream())
 
-                                    var eventType = parser.eventType
-                                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                                            if (parser.propertyName() == Error.NAME)
-                                                errors = Error.parseError(parser)
-                                        eventType = parser.next()
-                                    }
-                                } catch (e: XmlPullParserException) {
-                                    logger.log(Level.WARNING, "Couldn't parse XML response", e)
+                                var eventType = parser.eventType
+                                while (eventType != XmlPullParser.END_DOCUMENT) {
+                                    if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+                                        if (parser.propertyName() == Error.NAME)
+                                            errors = Error.parseError(parser)
+                                    eventType = parser.next()
                                 }
+                            } catch (e: XmlPullParserException) {
+                                logger.log(Level.WARNING, "Couldn't parse XML response", e)
                             }
                         }
                     }
@@ -143,10 +135,13 @@ open class DavException @JvmOverloads constructor(
                 logger.log(Level.WARNING, "Couldn't read HTTP response", e)
                 responseBody = "Couldn't read HTTP response: ${e.message}"
             } finally {
-                httpResponse.body?.close()
+                httpResponse.body.close()
             }
-        } else
+        } else {
             response = null
+        }
+
+        return this
     }
 
 }

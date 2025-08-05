@@ -58,15 +58,18 @@ class DavExceptionTest {
         builder.append(CharArray(DavException.MAX_EXCERPT_SIZE+100) { '*' })
         val body = builder.toString()
 
-        val e = DavException("Error with large request body", null, Response.Builder()
-            .request(Request.Builder()
-                .url("http://example.com")
-                .post(body.toRequestBody("text/plain".toMediaType()))
-                .build())
-            .protocol(Protocol.HTTP_1_1)
-            .code(204)
-            .message("No Content")
-            .build())
+        val e = DavException("Error with large request body", null)
+            .populateHttpResponse(
+                Response.Builder()
+                    .request(Request.Builder()
+                        .url("http://example.com")
+                        .post(body.toRequestBody("text/plain".toMediaType()))
+                        .build())
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(204)
+                    .message("No Content")
+                    .build()
+            )
 
         assertTrue(e.errors.isEmpty())
         assertEquals(
