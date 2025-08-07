@@ -739,7 +739,7 @@ open class DavResource @JvmOverloads constructor(
      */
     fun assertMultiStatus(response: Response) {
         if (response.code != HTTP_MULTISTATUS)
-            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
+            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}").populateHttpResponse(response)
 
         response.peekBody(XML_SIGNATURE.size.toLong()).use { body ->
             body.contentType()?.let { mimeType ->
@@ -760,7 +760,7 @@ open class DavResource @JvmOverloads constructor(
                         logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
                     }
 
-                    throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
+                    throw DavException("Received non-XML 207 Multi-Status").populateHttpResponse(response)
                 }
             } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
         }

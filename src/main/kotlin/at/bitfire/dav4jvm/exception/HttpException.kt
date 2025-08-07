@@ -20,8 +20,8 @@ open class HttpException: DavException {
     var code: Int
 
     constructor(response: Response): super(
-            "HTTP ${response.code} ${response.message}",
-            httpResponse = response
+        "HTTP ${response.code} ${response.message}",
+        httpResponse = response
     ) {
         code = response.code
     }
