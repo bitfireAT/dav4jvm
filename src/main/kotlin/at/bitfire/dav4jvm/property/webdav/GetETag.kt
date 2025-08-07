@@ -14,7 +14,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
-import okhttp3.Response
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -31,8 +32,8 @@ data class GetETag(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getetag")
 
-        fun fromResponse(response: Response) =
-            response.header("ETag")?.let { GetETag(it) }
+        fun fromResponse(response: HttpResponse) =
+            response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
     }
 
     /**

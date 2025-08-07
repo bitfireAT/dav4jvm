@@ -10,12 +10,15 @@
 
 package at.bitfire.dav4jvm.exception
 
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Protocol
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -25,23 +28,26 @@ class HttpExceptionTest {
 
     @Test
     fun testHttpFormatting() {
-        val request = Request.Builder()
-                .post("REQUEST\nBODY".toRequestBody("text/something".toMediaType()))
-                .url("http://example.com")
-                .build()
 
-        val response = Response.Builder()
-                .request(request)
-                .protocol(Protocol.HTTP_1_1)
-                .code(500)
-                .message(responseMessage)
-                .body("SERVER\r\nRESPONSE".toResponseBody("text/something-other".toMediaType()))
-                .build()
-        val e = HttpException(response)
-        assertTrue(e.message!!.contains("500"))
-        assertTrue(e.message!!.contains(responseMessage))
-        assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
-        assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
+        val mockEngine = MockEngine { request ->
+            respond(
+                content = "SERVER\r\nRESPONSE",
+                status = HttpStatusCode(500, responseMessage),
+                headers = headersOf(HttpHeaders.ContentType, "text/something")
+            )
+        }
+        val httpClient = HttpClient(mockEngine)
+
+        runBlocking {
+            httpClient.prepareRequest("http://example.com") {
+                setBody("REQUEST\nBODY")
+            }.execute { response ->
+                val e = HttpException(response)
+                assertTrue(e.message!!.contains("500"))
+                assertTrue(e.message!!.contains(responseMessage))
+                assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
+                assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
+            }
+        }
     }
-
 }

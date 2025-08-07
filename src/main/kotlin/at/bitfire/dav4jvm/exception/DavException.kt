@@ -14,13 +14,23 @@ import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.exception.DavException.Companion.MAX_EXCERPT_SIZE
-import okhttp3.MediaType
-import okhttp3.Response
-import okio.Buffer
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.readRawBytes
+import io.ktor.client.statement.request
+import io.ktor.http.ContentType
+import io.ktor.http.charset
+import io.ktor.http.content.ByteArrayContent
+import io.ktor.http.content.TextContent
+import io.ktor.http.contentType
+import kotlinx.coroutines.runBlocking
+import kotlinx.io.Buffer
+import kotlinx.io.readByteArray
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStreamReader
 import java.io.Serializable
 import java.lang.Long.min
 import java.util.logging.Level
@@ -37,18 +47,19 @@ open class DavException @JvmOverloads constructor(
         ex: Throwable? = null,
 
         /**
-         * An associated HTTP [Response]. Will be closed after evaluation.
+         * An associated HTTP [HttpResponse]. Will be closed after evaluation.
          */
-        httpResponse: Response? = null
+        httpResponse: HttpResponse? = null
 ): Exception(message, ex), Serializable {
 
     companion object {
 
         const val MAX_EXCERPT_SIZE = 10*1024   // don't dump more than 20 kB
 
-        fun isPlainText(type: MediaType) =
-                type.type == "text" ||
-                (type.type == "application" && type.subtype in arrayOf("html", "xml"))
+        fun isPlainText(type: ContentType) =
+                type.match(ContentType.Text.Any)
+                        || type.match(ContentType.Application.Xml)
+                        || (type.contentType == ContentType.Application.TYPE && type.contentSubtype == ContentType.Text.Html.contentSubtype)  // not sure if this is a valid case. TODO: Review with Ricki
 
     }
 
@@ -76,27 +87,35 @@ open class DavException @JvmOverloads constructor(
     /**
      * Precondition/postcondition XML elements which have been found in the XML response.
      */
+    @Transient
     var errors: List<Error> = listOf()
         private set
 
 
     init {
         if (httpResponse != null) {
-            response = httpResponse.toString()
+            response = httpResponse.toString() // Or a more custom string representation
 
             try {
                 request = httpResponse.request.toString()
 
-                httpResponse.request.body?.let { body ->
-                    body.contentType()?.let { type ->
+                httpResponse.request.content.let { body ->
+                    body.contentType?.let { type ->
                         if (isPlainText(type)) {
+                            val requestBodyBytes = when (body) {
+                                is TextContent -> body.text.toByteArray(type.charset() ?: Charsets.UTF_8)
+                                is ByteArrayContent -> body.bytes()
+                                else -> body.toString().toByteArray(type.charset() ?: Charsets.UTF_8) // Fallback, may not be ideal
+                            }
                             val buffer = Buffer()
-                            body.writeTo(buffer)
+                            buffer.write(requestBodyBytes)
 
+                            val bytesToRead = min(buffer.size, MAX_EXCERPT_SIZE.toLong()).toInt()
+                            val excerptBytes = buffer.readByteArray(bytesToRead)
                             val baos = ByteArrayOutputStream()
-                            buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
+                            baos.write(excerptBytes)
 
-                            requestBody = baos.toString(type.charset(Charsets.UTF_8)!!.name())
+                            requestBody = baos.toString((type.charset()?: Charsets.UTF_8).name())
                         }
                     }
                 }
@@ -106,47 +125,49 @@ open class DavException @JvmOverloads constructor(
             }
 
             try {
-                // save response body excerpt
-                if (httpResponse.body?.source() != null) {
-                    // response body has a source
+                val responseBytes = runBlocking { httpResponse.readRawBytes() } // Read the whole body
 
-                    httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
-                        body.contentType()?.let { mimeType ->
-                            if (isPlainText(mimeType))
-                                responseBody = body.string()
-                        }
+                httpResponse.contentType()?.let { mimeType ->
+                    if (isPlainText(mimeType)) {
+                        val charset = mimeType.charset() ?: Charsets.UTF_8
+                        responseBody = String(
+                            responseBytes,
+                            0,
+                            min(responseBytes.size.toLong(), MAX_EXCERPT_SIZE.toLong()).toInt(),
+                            charset
+                        )
                     }
 
-                    httpResponse.body?.use { body ->
-                        body.contentType()?.let {
-                            if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
-                                // look for precondition/postcondition XML elements
-                                try {
-                                    val parser = XmlUtils.newPullParser()
-                                    parser.setInput(body.charStream())
+                    if (mimeType.contentType == "application" && mimeType.contentSubtype == "xml" ||
+                        mimeType.contentType == "text" && mimeType.contentSubtype == "xml") {
+                        try {
+                            val parser = XmlUtils.newPullParser()
+                            // Use the already read bytes
+                            parser.setInput(InputStreamReader(ByteArrayInputStream(responseBytes), mimeType.charset() ?: Charsets.UTF_8))
 
-                                    var eventType = parser.eventType
-                                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                                            if (parser.propertyName() == Error.NAME)
-                                                errors = Error.parseError(parser)
-                                        eventType = parser.next()
+                            var eventType = parser.eventType
+                            while (eventType != XmlPullParser.END_DOCUMENT) {
+                                if (eventType == XmlPullParser.START_TAG && parser.depth == 1) {
+                                    if (parser.propertyName() == Error.NAME) {
+                                        errors = Error.parseError(parser)
                                     }
-                                } catch (e: XmlPullParserException) {
-                                    logger.log(Level.WARNING, "Couldn't parse XML response", e)
                                 }
+                                eventType = parser.next()
                             }
+                        } catch (e: XmlPullParserException) {
+                            logger.log(Level.WARNING, "Couldn't parse XML response", e)
+                        } catch (e: IOException) { // Catch IOException from parser.setInput
+                            logger.log(Level.WARNING, "Couldn't set input for XML parser", e)
                         }
                     }
                 }
-            } catch (e: IOException) {
-                logger.log(Level.WARNING, "Couldn't read HTTP response", e)
-                responseBody = "Couldn't read HTTP response: ${e.message}"
-            } finally {
-                httpResponse.body?.close()
+            } catch (e: Exception) { // Broader catch for Ktor's body reading/statement exceptions
+                logger.log(Level.WARNING, "Couldn't read Ktor HTTP response", e)
+                responseBody = "Couldn't read Ktor HTTP response: ${e.message}"
             }
-        } else
+        } else {
             response = null
+        }
     }
 
 }

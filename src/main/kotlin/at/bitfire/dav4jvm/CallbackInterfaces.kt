@@ -10,11 +10,13 @@
 
 package at.bitfire.dav4jvm
 
+import io.ktor.client.statement.HttpResponse
+
 /**
  * Callback for the OPTIONS request.
  */
 fun interface CapabilitiesCallback {
-    fun onCapabilities(davCapabilities: Set<String>, response: okhttp3.Response)
+    fun onCapabilities(davCapabilities: Set<String>, response: HttpResponse)
 }
 
 /**
@@ -42,5 +44,5 @@ fun interface ResponseCallback {
      * Called for a HTTP response. Typically this is only called for successful/redirect
      * responses because HTTP errors throw an exception before this callback is called.
      */
-    fun onResponse(response: okhttp3.Response)
+    fun onResponse(response: HttpResponse)
 }

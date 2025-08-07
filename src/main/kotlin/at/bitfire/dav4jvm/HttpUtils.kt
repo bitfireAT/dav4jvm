@@ -11,8 +11,9 @@
 package at.bitfire.dav4jvm
 
 import at.bitfire.dav4jvm.HttpUtils.httpDateFormat
-import okhttp3.HttpUrl
-import okhttp3.Response
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Url
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -30,6 +31,9 @@ object HttpUtils {
     private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
     private val httpDateFormat = DateTimeFormatter.ofPattern(httpDateFormatStr, Locale.US)
 
+    val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
+
+
     private val logger
         get() = Logger.getLogger(javaClass.name)
 
@@ -44,10 +48,7 @@ object HttpUtils {
      *
      * @return resource name
      */
-    fun fileName(url: HttpUrl): String {
-        val pathSegments = url.pathSegments.dropLastWhile { it == "" }
-        return pathSegments.lastOrNull() ?: ""
-    }
+    fun fileName(url: Url): String = url.segments.lastOrNull() ?: ""  // segments excludes empty segments
 
     /**
      * Gets all values of a header that is defined as a list [RFC 9110 5.6.1],
@@ -73,9 +74,9 @@ object HttpUtils {
      *
      * @return all values for the given header name
      */
-    fun listHeader(response: Response, name: String): Array<String> {
-        val value = response.headers(name).joinToString(",")
-        return value.split(',').filter { it.isNotEmpty() }.toTypedArray()
+    fun listHeader(response: HttpResponse, name: String): Array<String> {
+        val value = response.headers.getAll(name)?.joinToString(",")
+        return value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toTypedArray() ?: emptyArray()
     }
 
 
@@ -127,6 +128,43 @@ object HttpUtils {
         // no success in parsing
         logger.warning("Couldn't parse HTTP date: $dateStr, ignoring")
         return null
+    }
+
+    /**
+     * Parses an HTTP status line.
+     *
+     * It supports both full status lines like "HTTP/1.1 200 OK"
+     * and partial ones like "200 OK" or just "200".
+     *
+     * If the status line cannot be parsed, an [HttpStatusCode] object
+     * with the value 500 "Invalid status line" is returned.
+     *
+     * @param statusText the status line to parse.
+     * @return an [HttpStatusCode] object representing the parsed status.
+     */
+    fun parseStatusLine(statusText: String): HttpStatusCode {
+
+
+        val parts = statusText.split(" ", limit = 3)
+        return if (parts.size >= 2 && parts[0].startsWith("HTTP/")) { // Full status line like "HTTP/1.1 200 OK"
+            val statusCode = parts[1].toIntOrNull()
+            val description = if (parts.size > 2) parts[2] else ""
+            if (statusCode != null && statusCode in 1..999) {
+                HttpStatusCode(statusCode, description)
+            } else {
+                INVALID_STATUS
+            }
+        } else if (parts.isNotEmpty()) { // Potentially just "200 OK" or "200"
+            val statusCode = parts[0].toIntOrNull()
+            val description = if (parts.size > 1) parts.drop(1).joinToString(" ") else HttpStatusCode.allStatusCodes.find { it.value == statusCode }?.description ?: ""
+            if (statusCode != null && statusCode in 1..999) {
+                HttpStatusCode(statusCode, description)
+            } else {
+                INVALID_STATUS
+            }
+        } else {
+            INVALID_STATUS
+        }
     }
 
 }
