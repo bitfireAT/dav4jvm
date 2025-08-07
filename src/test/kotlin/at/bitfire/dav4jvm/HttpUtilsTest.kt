@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.HttpUtils.INVALID_STATUS
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -213,4 +214,111 @@ class HttpUtilsTest {
     }
 
 
+    @Test
+    fun `Full status line with HTTP 1 1  200 code  and description`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("HTTP/1.1 200 OK"))
+
+    @Test
+    fun `Full status line with HTTP 1 0  404 code  and description`() =
+        assertEquals(HttpStatusCode.NotFound, HttpUtils.parseStatusLine("HTTP/1.0 404 Not Found"))
+
+    @Test
+    fun `Full status line with HTTP 2  503 code  and multi word description`() =
+        assertEquals(HttpStatusCode.ServiceUnavailable, HttpUtils.parseStatusLine("HTTP/2 503 Service Unavailable"))
+
+    @Test
+    fun `Full status line with HTTP 1 1  200 code  and no description`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("HTTP/1.1 200"))
+
+    @Test
+    fun `Partial status line with code and description`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("HTTP/1.1 200 OK"))
+
+    @Test
+    fun `Partial status line with code and multi word description`() =
+        assertEquals(HttpStatusCode.NotFound, HttpUtils.parseStatusLine("404 Not Found"))
+
+    @Test
+    fun `Partial status line with only code  200`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("200"))
+
+
+    @Test
+    fun `Partial status line with only code 404`() =
+        assertEquals(HttpStatusCode.NotFound, HttpUtils.parseStatusLine("404"))
+
+
+    @Test
+    fun `Partial status line with only a known code not having a default description`() =
+        assertEquals(HttpStatusCode(303, ""), HttpUtils.parseStatusLine("303"))
+
+    @Test
+    fun `Partial status line with only an unknown code`() =
+        assertEquals(HttpStatusCode(999, ""), HttpUtils.parseStatusLine("999"))
+
+    @Test
+    fun `Invalid status line   empty string`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine(""))
+
+
+    @Test
+    fun `Invalid status line   just HTTP version`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("HTTP/1.1"))
+
+    @Test
+    fun `Invalid status line   HTTP version and non numeric code`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("HTTP/1.1 ABC OK"))
+
+    @Test
+    fun `Invalid status line   partial with non numeric code`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("ABC OK"))
+
+    @Test
+    fun `Invalid status line   just non numeric text`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("Invalid"))
+
+
+    @Test
+    fun `Invalid status line   HTTP version malformed`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("HTTP1.1 200 OK"))
+    // Test a status line with a malformed HTTP version: 'HTTP1.1 200 OK'. Expects INVALID_STATUS (as it will be treated as parts.size == 3 but parts[0] doesn't start with 'HTTP/').
+
+    @Test
+    fun `Invalid status line   status code with leading trailing spaces`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("HTTP/1.1  200  OK"))
+
+    @Test
+    fun `Invalid status line   partial code with leading trailing spaces`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine(" 200 "))
+
+    @Test
+    fun `Status line with extra spaces between code and description`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("HTTP/1.1 200   OK"))
+
+
+    @Test
+    fun `Partial status line with extra spaces between code and description`() =
+        assertEquals(HttpStatusCode.OK, HttpUtils.parseStatusLine("200   OK"))
+
+    @Test
+    fun `Full status line with negative status code`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("HTTP/1.1 -100 Error"))
+
+
+    @Test
+    fun `Partial status line with negative status code`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("-100"))
+
+    @Test
+    fun `Status line with only spaces`() =
+        assertEquals(INVALID_STATUS, HttpUtils.parseStatusLine("        "))
+
+
+    @Test
+    fun `Status line with special characters in description`() =
+        assertEquals(HttpStatusCode(200, "Description with !@#\$%^&*()"), HttpUtils.parseStatusLine("HTTP/1.1 200 Description with !@#\$%^&*()"))
+
+    @Test
+    fun `Status line with numeric description only  partial case `() =
+        assertEquals(HttpStatusCode(200, "404"), HttpUtils.parseStatusLine("HTTP/1.1 200 404"))
 }

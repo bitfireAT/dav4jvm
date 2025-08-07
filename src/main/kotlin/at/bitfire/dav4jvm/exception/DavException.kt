@@ -23,7 +23,8 @@ import io.ktor.http.content.ByteArrayContent
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
-import okio.Buffer
+import kotlinx.io.Buffer
+import kotlinx.io.readByteArray
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.ByteArrayInputStream
@@ -109,8 +110,10 @@ open class DavException @JvmOverloads constructor(
                             val buffer = Buffer()
                             buffer.write(requestBodyBytes)
 
+                            val bytesToRead = min(buffer.size, MAX_EXCERPT_SIZE.toLong()).toInt()
+                            val excerptBytes = buffer.readByteArray(bytesToRead)
                             val baos = ByteArrayOutputStream()
-                            buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
+                            baos.write(excerptBytes)
 
                             requestBody = baos.toString((type.charset()?: Charsets.UTF_8).name())
                         }

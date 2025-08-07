@@ -18,9 +18,7 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
-import java.net.ProtocolException
 import java.util.logging.Logger
 
 /**
@@ -165,16 +163,7 @@ data class Response(
                             }
                         }
                         STATUS ->
-                            status = try {
-                                val statusLine = StatusLine.parse(parser.nextText())
-                                HttpStatusCode(statusLine.code, statusLine.message)
-                            } catch (e: IllegalStateException) {
-                                logger.warning("Invalid status line, treating as HTTP error 500")
-                                HttpStatusCode(500, "Invalid status line")
-                            } catch (_: ProtocolException) {
-                                logger.warning("Invalid status line, treating as HTTP error 500")
-                                HttpStatusCode(500, "Invalid status line")
-                            }
+                            status = HttpUtils.parseStatusLine(parser.nextText())
                         PropStat.NAME ->
                             PropStat.parse(parser).let { propStat += it }
                         Error.NAME ->

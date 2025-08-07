@@ -14,9 +14,7 @@ import at.bitfire.dav4jvm.Response.Companion.STATUS
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import io.ktor.http.HttpStatusCode
-import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
-import java.net.ProtocolException
 import java.util.LinkedList
 
 /**
@@ -36,7 +34,6 @@ data class PropStat(
         val NAME = Property.Name(NS_WEBDAV, "propstat")
 
         private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
-        private val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
         fun parse(parser: XmlPullParser): PropStat {
             val depth = parser.depth
@@ -50,16 +47,7 @@ data class PropStat(
                     when (parser.propertyName()) {
                         DavResource.PROP ->
                             prop.addAll(Property.parse(parser))
-                        STATUS ->
-                            status = try {
-                                //TODO: Replace OKHttp Status lines with something different
-                                val okHttpStatusLine = StatusLine.parse(parser.nextText())
-                                HttpStatusCode(okHttpStatusLine.code, okHttpStatusLine.message)
-                            } catch (e: ProtocolException) {
-                                // invalid status line, treat as 500 Internal Server Error
-                                INVALID_STATUS
-                            }
-                    }
+                        STATUS -> status = HttpUtils.parseStatusLine(parser.nextText())                    }
                 eventType = parser.next()
             }
 
