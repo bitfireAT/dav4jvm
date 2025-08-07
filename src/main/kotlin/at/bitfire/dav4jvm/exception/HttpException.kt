@@ -20,10 +20,10 @@ open class HttpException: DavException {
     var code: Int
 
     constructor(response: Response): super(
-            "HTTP ${response.code} ${response.message}"
+        "HTTP ${response.code} ${response.message}",
+        httpResponse = response
     ) {
         code = response.code
-        populateHttpResponse(response)
     }
 
     constructor(code: Int, message: String?): super("HTTP $code $message") {

@@ -76,8 +76,21 @@ open class DavException @JvmOverloads constructor(
     var errors: List<Error> = listOf()
         private set
 
+    /**
+     * Initializes the [DavException] and populates [request], [requestBody], [response], [responseBody] and [errors] with the contents of [httpResponse].
+     *
+     * The whole response body may be loaded, so this function should be called in blocking-sensitive contexts.
+     */
+    constructor(message: String, httpResponse: Response?, ex: Throwable? = null): this(message, ex) {
+        populateHttpResponse(httpResponse)
+    }
 
-    fun populateHttpResponse(httpResponse: Response?): DavException {
+    /**
+     * Fills [request], [requestBody], [response], [responseBody] and [errors] according to the given [httpResponse].
+     *
+     * The whole response body may be loaded, so this function should be called in blocking-sensitive contexts.
+     */
+    private fun populateHttpResponse(httpResponse: Response?): DavException {
         if (httpResponse != null) {
             response = httpResponse.toString()
 
