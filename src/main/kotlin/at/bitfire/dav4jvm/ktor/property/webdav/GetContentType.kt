@@ -13,6 +13,7 @@ package at.bitfire.dav4jvm.ktor.property.webdav
 import at.bitfire.dav4jvm.ktor.Property
 import at.bitfire.dav4jvm.ktor.PropertyFactory
 import at.bitfire.dav4jvm.ktor.XmlReader
+import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 
@@ -35,7 +36,11 @@ data class GetContentType(
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT getcontenttype (#PCDATA) >
             GetContentType(XmlReader(parser).readText()?.let {
-                ContentType.parse(it)   // TODO: Check with Ricki how to properly catch the exception for content type parsing
+                try {
+                    ContentType.parse(it)
+                } catch (_: BadContentTypeFormatException) {
+                    null
+                }
             })
 
     }

@@ -73,6 +73,8 @@ import kotlin.collections.plusAssign
  * To cancel a request, interrupt the thread. This will cause the requests to
  * throw `InterruptedException` or `InterruptedIOException`.
  *
+ * ATTENTION: dav4jvm handles redirects itself. Make sure followRedirects is set to FALSE for the httpClient.
+ *
  * @param httpClient    [HttpClient] to access this object (must not follow redirects)
  * @param location      location of the WebDAV resource
  * @param logger        will be used for logging
@@ -150,11 +152,6 @@ open class DavResource @JvmOverloads constructor(
         private set             // allow internal modification only (for redirects)
 
     init {
-        // Don't follow redirects (only useful for GET/POST).
-        // This means we have to handle 30x responses ourselves.
-
-        //TODO: Restore  the require(!httpClient.followRedirects) part here somehow!
-        //require(!httpClient.followRedirects) { "httpClient must not follow redirects automatically" }
         this.location = location
     }
 
@@ -675,7 +672,7 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException in case of an HTTP error
      */
     protected fun checkStatus(response: HttpResponse) =
-        checkStatus(response.status, response.status.description, response)   // TODO not sure if response.status.description still makes sense here. If no, the whole method can be removed. TODO: Check with Ricki
+        checkStatus(response.status, response.status.description, response)
 
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.

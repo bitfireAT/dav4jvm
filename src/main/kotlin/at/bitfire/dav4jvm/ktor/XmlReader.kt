@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.property.caldav.SupportedCalendarData
+import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -166,10 +167,13 @@ class XmlReader(
                 parser.getAttributeValue(null, SupportedCalendarData.Companion.CONTENT_TYPE)?.let { contentType ->
                     var type = contentType
                     parser.getAttributeValue(null, SupportedCalendarData.Companion.VERSION)?.let { version -> type += "; version=$version" }
-                    ContentType.parse(type).let(onNewType)  // TODO: Check with Ricki how to properly catch the exception for content type parsing. Throw the same exception as below?
+                    ContentType.parse(type).let(onNewType)
                 }
             }
         } catch(e: XmlPullParserException) {
+            val logger = Logger.getLogger(javaClass.name)
+            logger.log(Level.SEVERE, "Couldn't parse content types", e)
+        } catch (e: BadContentTypeFormatException) {
             val logger = Logger.getLogger(javaClass.name)
             logger.log(Level.SEVERE, "Couldn't parse content types", e)
         }

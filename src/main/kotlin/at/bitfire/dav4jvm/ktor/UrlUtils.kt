@@ -100,7 +100,6 @@ fun Url.equalsForWebDAV(other: Url): Boolean {
     if (this == other)
         return true
 
-    //TODO: Check with Ricki if this is ok like that, update description
     return this.protocol == other.protocol
             && this.host.lowercase() == other.host.lowercase()
             && this.port == other.port
