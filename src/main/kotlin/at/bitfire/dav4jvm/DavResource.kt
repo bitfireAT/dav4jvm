@@ -215,7 +215,7 @@ open class DavResource @JvmOverloads constructor(
                 /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
-                throw HttpException(response)
+                throw HttpException.fromHttpResponse(response)
 
             // update location
             location.resolve(response.header("Location") ?: destination.toString())?.let {
@@ -258,7 +258,7 @@ open class DavResource @JvmOverloads constructor(
                 /* Multiple resources were to be affected by the COPY, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
-                throw HttpException(response)
+                throw HttpException.fromHttpResponse(response)
 
             callback.onResponse(response)
         }
@@ -549,7 +549,7 @@ open class DavResource @JvmOverloads constructor(
                 /* If an error occurs deleting a member resource (a resource other than
                    the resource identified in the Request-URI), then the response can be
                    a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
-                throw HttpException(response)
+                throw HttpException.fromHttpResponse(response)
 
             callback.onResponse(response)
         }
@@ -680,20 +680,15 @@ open class DavResource @JvmOverloads constructor(
             return
 
         throw when (code) {
-            HttpURLConnection.HTTP_UNAUTHORIZED ->
-                if (response != null) UnauthorizedException(response) else UnauthorizedException(message)
-            HttpURLConnection.HTTP_FORBIDDEN ->
-                if (response != null) ForbiddenException(response) else ForbiddenException(message)
-            HttpURLConnection.HTTP_NOT_FOUND ->
-                if (response != null) NotFoundException(response) else NotFoundException(message)
-            HttpURLConnection.HTTP_CONFLICT ->
-                if (response != null) ConflictException(response) else ConflictException(message)
-            HttpURLConnection.HTTP_PRECON_FAILED ->
-                if (response != null) PreconditionFailedException(response) else PreconditionFailedException(message)
-            HttpURLConnection.HTTP_UNAVAILABLE ->
-                if (response != null) ServiceUnavailableException(response) else ServiceUnavailableException(message)
-            else ->
-                if (response != null) HttpException(response) else HttpException(code, message)
+            HttpURLConnection.HTTP_UNAUTHORIZED -> UnauthorizedException
+            HttpURLConnection.HTTP_FORBIDDEN -> ForbiddenException
+            HttpURLConnection.HTTP_NOT_FOUND -> NotFoundException
+            HttpURLConnection.HTTP_CONFLICT -> ConflictException
+            HttpURLConnection.HTTP_PRECON_FAILED -> PreconditionFailedException
+            HttpURLConnection.HTTP_UNAVAILABLE -> ServiceUnavailableException
+            else -> HttpException
+        }.let { exceptionClass ->
+            if (response != null) exceptionClass.fromHttpResponse(response) else exceptionClass.fromMessage(message)
         }
     }
 
@@ -739,7 +734,7 @@ open class DavResource @JvmOverloads constructor(
      */
     fun assertMultiStatus(response: Response) {
         if (response.code != HTTP_MULTISTATUS)
-            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}").populateHttpResponse(response)
+            throw DavException.fromHttpResponse("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
 
         response.peekBody(XML_SIGNATURE.size.toLong()).use { body ->
             body.contentType()?.let { mimeType ->
@@ -760,7 +755,7 @@ open class DavResource @JvmOverloads constructor(
                         logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
                     }
 
-                    throw DavException("Received non-XML 207 Multi-Status").populateHttpResponse(response)
+                    throw DavException.fromHttpResponse("Received non-XML 207 Multi-Status", httpResponse = response)
                 }
             } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
         }

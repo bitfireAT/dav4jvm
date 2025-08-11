@@ -33,7 +33,7 @@ class ServiceUnavailableExceptionTest {
 
     @Test
     fun testRetryAfter_NoTime() {
-        val e = ServiceUnavailableException(response503)
+        val e = ServiceUnavailableException.fromHttpResponse(response503)
         assertNull(e.retryAfter)
     }
 
@@ -42,7 +42,7 @@ class ServiceUnavailableExceptionTest {
         val response = response503.newBuilder()
                 .header("Retry-After", "120")
                 .build()
-        val e = ServiceUnavailableException(response)
+        val e = ServiceUnavailableException.fromHttpResponse(response)
         assertNotNull(e.retryAfter)
         assertTrue(withinTimeRange(e.retryAfter!!, 120))
     }
@@ -53,7 +53,7 @@ class ServiceUnavailableExceptionTest {
         val response = response503.newBuilder()
                 .header("Retry-After", HttpUtils.formatDate(after30min))
                 .build()
-        val e = ServiceUnavailableException(response)
+        val e = ServiceUnavailableException.fromHttpResponse(response)
         assertNotNull(e.retryAfter)
         assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
     }

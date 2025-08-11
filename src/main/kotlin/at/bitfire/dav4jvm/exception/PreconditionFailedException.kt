@@ -15,7 +15,10 @@ import java.net.HttpURLConnection
 
 class PreconditionFailedException: HttpException {
 
-    constructor(response: Response): super(response)
+    companion object: DavExceptionCompanion<PreconditionFailedException> {
+        override fun constructor(message: String?): PreconditionFailedException = PreconditionFailedException(message)
+    }
+
     constructor(message: String?): super(HttpURLConnection.HTTP_PRECON_FAILED, message)
 
 }

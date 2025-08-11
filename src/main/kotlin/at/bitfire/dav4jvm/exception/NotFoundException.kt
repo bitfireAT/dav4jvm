@@ -15,7 +15,10 @@ import java.net.HttpURLConnection
 
 class NotFoundException: HttpException {
 
-    constructor(response: Response): super(response)
+    companion object: DavExceptionCompanion<NotFoundException> {
+        override fun constructor(message: String?): NotFoundException = NotFoundException(message)
+    }
+
     constructor(message: String?): super(HttpURLConnection.HTTP_NOT_FOUND, message)
 
 }

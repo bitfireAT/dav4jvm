@@ -15,7 +15,10 @@ import java.net.HttpURLConnection
 
 class ConflictException: HttpException {
 
-    constructor(response: Response): super(response)
+    companion object: DavExceptionCompanion<ConflictException> {
+        override fun constructor(message: String?): ConflictException = ConflictException(message)
+    }
+
     constructor(message: String?): super(HttpURLConnection.HTTP_CONFLICT, message)
 
 }

@@ -17,14 +17,15 @@ import okhttp3.Response
  */
 open class HttpException: DavException {
 
-    var code: Int
+    companion object: DavExceptionCompanion<HttpException> {
+        override fun constructor(message: String?): HttpException = HttpException(-1, message)
 
-    constructor(response: Response): super(
-        "HTTP ${response.code} ${response.message}",
-        httpResponse = response
-    ) {
-        code = response.code
+        override fun fromHttpResponse(httpResponse: Response): HttpException {
+            return HttpException(httpResponse.code, httpResponse.message).apply { populateHttpResponse(httpResponse) }
+        }
     }
+
+    var code: Int
 
     constructor(code: Int, message: String?): super("HTTP $code $message") {
         this.code = code

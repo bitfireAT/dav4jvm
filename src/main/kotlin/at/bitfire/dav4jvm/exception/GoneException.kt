@@ -15,7 +15,10 @@ import java.net.HttpURLConnection
 
 class GoneException: HttpException {
 
-    constructor(response: Response): super(response)
+    companion object: DavExceptionCompanion<GoneException> {
+        override fun constructor(message: String?): GoneException = GoneException(message)
+    }
+
     constructor(message: String?): super(HttpURLConnection.HTTP_GONE, message)
 
 }

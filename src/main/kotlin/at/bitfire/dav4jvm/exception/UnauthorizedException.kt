@@ -15,7 +15,10 @@ import java.net.HttpURLConnection
 
 class UnauthorizedException: HttpException {
 
-    constructor(response: Response): super(response)
+    companion object: DavExceptionCompanion<UnauthorizedException> {
+        override fun constructor(message: String?): UnauthorizedException = UnauthorizedException(message)
+    }
+
     constructor(message: String?): super(HttpURLConnection.HTTP_UNAUTHORIZED, message)
 
 }

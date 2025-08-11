@@ -11,14 +11,13 @@
 package at.bitfire.dav4jvm.exception
 
 import okhttp3.Response
-import java.net.HttpURLConnection
 
-class ForbiddenException: HttpException {
+interface DavExceptionCompanion<CL: DavException> {
+    fun constructor(message: String?): CL
 
-    companion object: DavExceptionCompanion<ForbiddenException> {
-        override fun constructor(message: String?): ForbiddenException = ForbiddenException(message)
+    fun fromHttpResponse(httpResponse: Response): CL {
+        return constructor(httpResponse.message).apply { populateHttpResponse(httpResponse) }
     }
 
-    constructor(message: String?): super(HttpURLConnection.HTTP_FORBIDDEN, message)
-
+    fun fromMessage(message: String?): CL = constructor(message)
 }

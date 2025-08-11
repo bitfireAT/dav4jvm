@@ -37,7 +37,7 @@ class HttpExceptionTest {
                 .message(responseMessage)
                 .body("SERVER\r\nRESPONSE".toResponseBody("text/something-other".toMediaType()))
                 .build()
-        val e = HttpException(response)
+        val e = HttpException.fromHttpResponse(response)
         assertTrue(e.message!!.contains("500"))
         assertTrue(e.message!!.contains(responseMessage))
         assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
