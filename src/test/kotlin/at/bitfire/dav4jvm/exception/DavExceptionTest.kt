@@ -23,6 +23,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 class DavExceptionTest {
 
@@ -173,6 +177,39 @@ class DavExceptionTest {
                 ),
                 result.errors
             )
+        }
+    }
+
+    @Test
+    fun `is Java-serializable`() {
+        val davException = DavException(
+            message = "Some Error",
+            statusCode = 500,
+            requestExcerpt = "Request Body",
+            responseExcerpt = "Response Body",
+            errors = listOf(
+                Error(Property.Name("Serialized", "Name"))
+            )
+        )
+
+        // serialize (Java-style as in Serializable interface, not Kotlin serialization)
+        val blob = ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos ->
+                oos.writeObject(davException)
+            }
+            baos.toByteArray()
+        }
+
+        // deserialize
+        ByteArrayInputStream(blob).use { bais ->
+            ObjectInputStream(bais).use { ois ->
+                val actual = ois.readObject() as DavException
+                assertEquals(davException.message, actual.message)
+                assertEquals(davException.statusCode, actual.statusCode)
+                assertEquals(davException.requestExcerpt, actual.requestExcerpt)
+                assertEquals(davException.responseExcerpt, actual.responseExcerpt)
+                assertEquals(davException.errors, actual.errors)
+            }
         }
     }
 

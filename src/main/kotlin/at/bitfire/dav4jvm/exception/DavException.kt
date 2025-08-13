@@ -35,6 +35,8 @@ import javax.annotation.WillNotClose
  * So, if possible and useful, a size-limited excerpt of the associated HTTP request and response can be
  * attached and subsequently included in application-level debug info or shown to the user.
  *
+ * Note: [Exception] is serializable, so objects of this class must contain only serializable objects.
+ *
  * @param statusCode        status code of associated HTTP response
  * @param requestExcerpt    cached excerpt of associated HTTP request body
  * @param responseExcerpt   cached excerpt of associated HTTP response body
@@ -60,7 +62,6 @@ open class DavException @JvmOverloads constructor(
 
     var errors: List<Error> = errors
         private set
-
 
     /**
      * Takes the request, response and errors from a given HTTP response.
