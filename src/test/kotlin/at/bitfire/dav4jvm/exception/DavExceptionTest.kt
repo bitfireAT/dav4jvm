@@ -15,6 +15,7 @@ import at.bitfire.dav4jvm.Property
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.Headers
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -59,7 +60,7 @@ class DavExceptionTest {
     }
 
     @Test
-    fun requestExcerpt() {
+    fun `requestExcerpt (binary blob)`() {
         mockServer.enqueue(MockResponse(
             code = 404,
             body = "Page not found"
@@ -67,11 +68,29 @@ class DavExceptionTest {
         val url = mockServer.url("/")
         client.newCall(Request.Builder()
             .url(url)
-            .post("Some Body".toRequestBody())
+            .post("Sample".toRequestBody("application/test".toMediaType()))
             .build()
         ).execute().use { response ->
             val result = DavException("Test", response)
-            assertEquals("POST $url\n\nSome Body", result.requestExcerpt)
+            assertEquals("POST $url\n\n<request body>", result.requestExcerpt)
+        }
+    }
+
+    @Test
+    fun `requestExcerpt (large CSS text)`() {
+        mockServer.enqueue(MockResponse(
+            code = 404,
+            body = "Page not found"
+        ))
+        val url = mockServer.url("/")
+        client.newCall(Request.Builder()
+            .url(url)
+            .post("*".repeat(DavException.MAX_EXCERPT_SIZE * 2).toRequestBody("text/css".toMediaType()))
+            .build()
+        ).execute().use { response ->
+            val result = DavException("Test", response)
+            val truncatedText = "*".repeat(DavException.MAX_EXCERPT_SIZE)
+            assertEquals("POST $url\n\n$truncatedText", result.requestExcerpt)
         }
     }
 

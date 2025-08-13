@@ -21,6 +21,7 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.ByteArrayOutputStream
 import java.io.StringReader
 import javax.annotation.WillNotClose
+import kotlin.math.min
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -78,23 +79,33 @@ open class DavException @JvmOverloads constructor(
         // extract status code
         statusCode = response.code
 
-        // extract request body
+        // extract request body if it's text
         val request = response.request
+        val requestExcerptBuilder = StringBuilder(
+            "${request.method} ${request.url}"
+        )
         request.body?.let { requestBody ->
-            // Unfortunately doesn't have a size limit.
-            // However large bodies are usually streaming/one-shot away.
-            val buffer = Buffer()
-            requestBody.writeTo(buffer)
+            if (requestBody.contentType()?.isText() == true) {
+                // Unfortunately Buffer doesn't have a size limit.
+                // However large bodies are usually streaming/one-shot away.
+                val buffer = Buffer()
+                requestBody.writeTo(buffer)
 
-            val baos = ByteArrayOutputStream()
-            buffer.writeTo(baos)
-            requestExcerpt = "${request.method} ${request.url}\n\n$baos"
+                ByteArrayOutputStream().use { baos ->
+                    buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
+                    requestExcerptBuilder
+                        .append("\n\n")
+                        .append(baos.toString())
+                }
+            } else
+                requestExcerptBuilder.append("\n\n<request body>")
         }
+        requestExcerpt = requestExcerptBuilder.toString()
 
-        // extract response body if response is plain text
+        // extract response body if it's text
         val mimeType = response.body.contentType()
         val responseBody =
-            if (mimeType?.isPlainText() == true)
+            if (mimeType?.isText() == true)
                 try {
                     response.peekBody(MAX_EXCERPT_SIZE.toLong()).string()
                 } catch (_: Exception) {
@@ -137,7 +148,7 @@ open class DavException @JvmOverloads constructor(
          */
         const val MAX_EXCERPT_SIZE = 20*1024
 
-        private fun MediaType.isPlainText() =
+        private fun MediaType.isText() =
             type == "text" ||
             (type == "application" && subtype in arrayOf("html", "xml"))
 
