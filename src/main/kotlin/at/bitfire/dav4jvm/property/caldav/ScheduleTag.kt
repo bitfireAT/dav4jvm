@@ -14,7 +14,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
-import okhttp3.Response
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import org.xmlpull.v1.XmlPullParser
 
 data class ScheduleTag(
@@ -26,8 +27,8 @@ data class ScheduleTag(
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
-        fun fromResponse(response: Response) =
-                response.header("Schedule-Tag")?.let { ScheduleTag(it) }
+        fun fromResponse(response: HttpResponse) =
+                response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
     }
 

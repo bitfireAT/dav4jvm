@@ -10,8 +10,7 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
+import io.ktor.http.ContentType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -155,11 +154,11 @@ class XmlReaderTest {
         parser.next()
         val reader = XmlReader(parser)
 
-        val types = mutableListOf<MediaType>()
+        val types = mutableListOf<ContentType>()
         reader.readContentTypes(Property.Name("", "test"), types::add)
         assertEquals(2, types.size)
-        assertEquals("text/plain".toMediaType(), types[0])
-        assertEquals("application/json".toMediaType(), types[1])
+        assertEquals(ContentType.Text.Plain, types[0])
+        assertEquals(ContentType.Application.Json, types[1])
     }
 
 }
