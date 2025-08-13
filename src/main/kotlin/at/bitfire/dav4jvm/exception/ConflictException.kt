@@ -16,7 +16,7 @@ class ConflictException: HttpException {
 
     constructor(response: Response) : super(response) {
         if (response.code != 409)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 409")
     }
 
 }

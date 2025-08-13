@@ -28,7 +28,7 @@ class ServiceUnavailableException(response: Response) : HttpException(response) 
 
     init {
         if (response.code != 503)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 503")
 
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date

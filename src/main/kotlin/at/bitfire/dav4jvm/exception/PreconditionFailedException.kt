@@ -17,7 +17,7 @@ class PreconditionFailedException: HttpException {
 
     constructor(response: Response) : super(response) {
         if (response.code != 412)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 412")
     }
 
 }

@@ -17,7 +17,7 @@ class ForbiddenException: HttpException {
 
     constructor(response: Response) : super(response) {
         if (response.code != 403)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 403")
     }
 
 }

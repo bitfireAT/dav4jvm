@@ -16,7 +16,7 @@ class UnauthorizedException: HttpException {
 
     constructor(response: Response) : super(response) {
         if (response.code != 401)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 401")
     }
 
 }

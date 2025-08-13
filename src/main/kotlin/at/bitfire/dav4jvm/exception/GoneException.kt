@@ -16,7 +16,7 @@ class GoneException: HttpException {
 
     constructor(response: Response) : super(response) {
         if (response.code != 410)
-            throw IllegalArgumentException()
+            throw IllegalArgumentException("Status code must be 410")
     }
 
 }
