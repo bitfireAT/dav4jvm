@@ -15,4 +15,4 @@ package at.bitfire.dav4jvm.exception
  * when parsing something like `<multistatus>...<getetag><novalue/></getetag>`
  * because a text value would be expected.
  */
-class InvalidPropertyException(message: String): Exception(message)
+class InvalidPropertyException(message: String): DavException(message)

@@ -11,11 +11,12 @@
 package at.bitfire.dav4jvm.exception
 
 import okhttp3.Response
-import java.net.HttpURLConnection
 
-class NotFoundException: HttpException {
+class NotFoundException : HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_NOT_FOUND, message)
+    constructor(response: Response) : super(response) {
+        if (response.code != 404)
+            throw IllegalArgumentException("Status code must be 404")
+    }
 
 }

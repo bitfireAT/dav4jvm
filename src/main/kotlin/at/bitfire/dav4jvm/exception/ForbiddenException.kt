@@ -15,7 +15,9 @@ import java.net.HttpURLConnection
 
 class ForbiddenException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_FORBIDDEN, message)
+    constructor(response: Response) : super(response) {
+        if (response.code != 403)
+            throw IllegalArgumentException("Status code must be 403")
+    }
 
 }
