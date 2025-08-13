@@ -20,8 +20,8 @@ import java.io.Serializable
  *
  * At the moment, there is no logic for subclassing errors.
  */
-class Error(
-        val name: Property.Name
+data class Error(
+    val name: Property.Name
 ): Serializable {
 
     companion object {

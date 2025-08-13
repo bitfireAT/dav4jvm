@@ -40,8 +40,8 @@ class HttpExceptionTest {
         val e = HttpException(response)
         assertTrue(e.message!!.contains("500"))
         assertTrue(e.message!!.contains(responseMessage))
-        assertTrue(e.requestBody!!.contains("REQUEST\nBODY"))
-        assertTrue(e.responseBody!!.contains("SERVER\r\nRESPONSE"))
+        assertTrue(e.requestExcerpt!!.contains("REQUEST\nBODY"))
+        assertTrue(e.responseExcerpt!!.contains("SERVER\r\nRESPONSE"))
     }
 
 }

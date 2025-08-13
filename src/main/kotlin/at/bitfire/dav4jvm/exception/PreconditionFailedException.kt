@@ -15,7 +15,9 @@ import java.net.HttpURLConnection
 
 class PreconditionFailedException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_PRECON_FAILED, message)
+    constructor(response: Response) : super(response) {
+        if (response.code != 412)
+            throw IllegalArgumentException()
+    }
 
 }
