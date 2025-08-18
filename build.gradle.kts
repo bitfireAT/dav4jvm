@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.server.http.redirect)
     implementation(libs.slf4j)
-    //api(libs.okhttp)
+    api(libs.okhttp)
     api(libs.xpp3)
 
     testImplementation(libs.junit4)

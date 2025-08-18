@@ -8,21 +8,14 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package at.bitfire.dav4jvm
+package at.bitfire.dav4jvm.okhttp.exception
 
-import org.junit.Assert.assertNotNull
-import org.junit.Test
+import okhttp3.Response
+import java.net.HttpURLConnection
 
-class XmlUtilsTest {
+class ForbiddenException: HttpException {
 
-    @Test
-    fun newPullParser() {
-        assertNotNull(XmlUtils.newPullParser())
-    }
-
-    @Test
-    fun newSerializer() {
-        assertNotNull(XmlUtils.newSerializer())
-    }
+    constructor(response: Response): super(response)
+    constructor(message: String?): super(HttpURLConnection.HTTP_FORBIDDEN, message)
 
 }
