@@ -13,140 +13,148 @@ package at.bitfire.dav4jvm.exception
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.exception.DavException.Companion.MAX_EXCERPT_SIZE
 import okhttp3.MediaType
 import okhttp3.Response
 import okio.Buffer
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.io.Serializable
-import java.lang.Long.min
-import java.util.logging.Level
-import java.util.logging.Logger
+import java.io.StringReader
+import javax.annotation.WillNotClose
+import kotlin.math.min
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
  *
- * This could be a logical error like when a required ETag has not been
- * received, but also an explicit HTTP error.
+ * This could be a logical error like when a required ETag has not been received, but also an explicit HTTP error
+ * (usually with a subclass of [HttpException], which in turn extends this class).
+ *
+ * Often, HTTP response bodies contain valuable information about the error in text format (for instance, a HTML page
+ * that contains details about the error) and/or as `<DAV:error>` XML elements. However, such response bodies
+ * are sometimes very large.
+ *
+ * So, if possible and useful, a size-limited excerpt of the associated HTTP request and response can be
+ * attached and subsequently included in application-level debug info or shown to the user.
+ *
+ * Note: [Exception] is serializable, so objects of this class must contain only serializable objects.
+ *
+ * @param statusCode        status code of associated HTTP response
+ * @param requestExcerpt    cached excerpt of associated HTTP request body
+ * @param responseExcerpt   cached excerpt of associated HTTP response body
+ * @param errors            precondition/postcondition XML elements which have been found in the XML response
  */
 open class DavException @JvmOverloads constructor(
-        message: String,
-        ex: Throwable? = null,
+    message: String? = null,
+    cause: Throwable? = null,
+    statusCode: Int? = null,
+    requestExcerpt: String? = null,
+    responseExcerpt: String? = null,
+    errors: List<Error> = emptyList()
+): Exception(message, cause) {
 
-        /**
-         * An associated HTTP [Response]. Will be closed after evaluation.
-         */
-        httpResponse: Response? = null
-): Exception(message, ex), Serializable {
+    var statusCode: Int? = statusCode
+        private set
+
+    var requestExcerpt: String? = requestExcerpt
+        private set
+
+    var responseExcerpt: String? = responseExcerpt
+        private set
+
+    var errors: List<Error> = errors
+        private set
+
+    /**
+     * Takes the request, response and errors from a given HTTP response.
+     *
+     * @param response  response to extract status code and request/response excerpt from (if possible)
+     * @param message   optional exception message
+     * @param cause     optional exception cause
+     */
+    constructor(
+        message: String?,
+        @WillNotClose response: Response,
+        cause: Throwable? = null
+    ) : this(message, cause) {
+        // extract status code
+        statusCode = response.code
+
+        // extract request body if it's text
+        val request = response.request
+        val requestExcerptBuilder = StringBuilder(
+            "${request.method} ${request.url}"
+        )
+        request.body?.let { requestBody ->
+            if (requestBody.contentType()?.isText() == true) {
+                // Unfortunately Buffer doesn't have a size limit.
+                // However large bodies are usually streaming/one-shot away.
+                val buffer = Buffer()
+                requestBody.writeTo(buffer)
+
+                ByteArrayOutputStream().use { baos ->
+                    buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
+                    requestExcerptBuilder
+                        .append("\n\n")
+                        .append(baos.toString())
+                }
+            } else
+                requestExcerptBuilder.append("\n\n<request body>")
+        }
+        requestExcerpt = requestExcerptBuilder.toString()
+
+        // extract response body if it's text
+        val mimeType = response.body.contentType()
+        val responseBody =
+            if (mimeType?.isText() == true)
+                try {
+                    response.peekBody(MAX_EXCERPT_SIZE.toLong()).string()
+                } catch (_: Exception) {
+                    // response body not available anymore, probably already consumed / closed
+                    null
+                }
+            else
+                null
+        responseExcerpt = responseBody
+
+        // get XML errors from request body excerpt
+        if (mimeType?.isXml() == true && responseBody != null)
+            errors = extractErrors(responseBody)
+    }
+
+    private fun extractErrors(xml: String): List<Error> {
+        try {
+            val parser = XmlUtils.newPullParser()
+            parser.setInput(StringReader(xml))
+
+            var eventType = parser.eventType
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+                    if (parser.propertyName() == Error.NAME)
+                        return Error.parseError(parser)
+                eventType = parser.next()
+            }
+        } catch (_: XmlPullParserException) {
+            // Couldn't parse XML, either invalid or maybe it wasn't even XML
+        }
+
+        return emptyList()
+    }
+
 
     companion object {
 
-        const val MAX_EXCERPT_SIZE = 10*1024   // don't dump more than 20 kB
+        /**
+         * maximum size of extracted response body
+         */
+        const val MAX_EXCERPT_SIZE = 20*1024
 
-        fun isPlainText(type: MediaType) =
-                type.type == "text" ||
-                (type.type == "application" && type.subtype in arrayOf("html", "xml"))
+        private fun MediaType.isText() =
+            type == "text" ||
+            (type == "application" && subtype in arrayOf("html", "xml"))
 
-    }
+        private fun MediaType.isXml() =
+            type in arrayOf("application", "text") && subtype == "xml"
 
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
-
-    var request: String? = null
-
-    /**
-     * Body excerpt of [request] (up to [MAX_EXCERPT_SIZE] characters). Only available
-     * if the HTTP request body was textual content and could be read again.
-     */
-    var requestBody: String? = null
-        private set
-
-    val response: String?
-
-    /**
-     * Body excerpt of [response] (up to [MAX_EXCERPT_SIZE] characters). Only available
-     * if the HTTP response body was textual content.
-     */
-    var responseBody: String? = null
-        private set
-
-    /**
-     * Precondition/postcondition XML elements which have been found in the XML response.
-     */
-    var errors: List<Error> = listOf()
-        private set
-
-
-    init {
-        if (httpResponse != null) {
-            response = httpResponse.toString()
-
-            try {
-                request = httpResponse.request.toString()
-
-                httpResponse.request.body?.let { body ->
-                    body.contentType()?.let { type ->
-                        if (isPlainText(type)) {
-                            val buffer = Buffer()
-                            body.writeTo(buffer)
-
-                            val baos = ByteArrayOutputStream()
-                            buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
-
-                            requestBody = baos.toString(type.charset(Charsets.UTF_8)!!.name())
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.log(Level.WARNING, "Couldn't read HTTP request", e)
-                requestBody = "Couldn't read HTTP request: ${e.message}"
-            }
-
-            try {
-                // save response body excerpt
-                if (httpResponse.body?.source() != null) {
-                    // response body has a source
-
-                    httpResponse.peekBody(MAX_EXCERPT_SIZE.toLong()).let { body ->
-                        body.contentType()?.let { mimeType ->
-                            if (isPlainText(mimeType))
-                                responseBody = body.string()
-                        }
-                    }
-
-                    httpResponse.body?.use { body ->
-                        body.contentType()?.let {
-                            if (it.type in arrayOf("application", "text") && it.subtype == "xml") {
-                                // look for precondition/postcondition XML elements
-                                try {
-                                    val parser = XmlUtils.newPullParser()
-                                    parser.setInput(body.charStream())
-
-                                    var eventType = parser.eventType
-                                    while (eventType != XmlPullParser.END_DOCUMENT) {
-                                        if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                                            if (parser.propertyName() == Error.NAME)
-                                                errors = Error.parseError(parser)
-                                        eventType = parser.next()
-                                    }
-                                } catch (e: XmlPullParserException) {
-                                    logger.log(Level.WARNING, "Couldn't parse XML response", e)
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e: IOException) {
-                logger.log(Level.WARNING, "Couldn't read HTTP response", e)
-                responseBody = "Couldn't read HTTP response: ${e.message}"
-            } finally {
-                httpResponse.body?.close()
-            }
-        } else
-            response = null
     }
 
 }
