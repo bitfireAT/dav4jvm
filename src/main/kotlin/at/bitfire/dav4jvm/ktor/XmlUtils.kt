@@ -11,7 +11,6 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.ktor.XmlUtils.FEATURE_RELAXED
-import at.bitfire.dav4jvm.ktor.exception.DavException
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import org.xmlpull.v1.XmlPullParserFactory
@@ -45,6 +44,8 @@ object XmlUtils {
      *
      * First tries to create a namespace-aware parser that supports [FEATURE_RELAXED]. If that
      * fails, it falls back to a namespace-aware parser without relaxed parsing.
+     *
+     * @throws XmlPullParserException when no parser could be created
      */
     fun newPullParser(): XmlPullParser =
         try {
@@ -54,10 +55,8 @@ object XmlUtils {
             null
         }
         ?: standardFactory.newPullParser()
-        ?: throw DavException("Couldn't create XML parser")
 
     fun newSerializer(): XmlSerializer = standardFactory.newSerializer()
-        ?: throw DavException("Couldn't create XML serializer")
 
 
     fun XmlSerializer.insertTag(name: Property.Name, contentGenerator: XmlSerializer.() -> Unit = {}) {
