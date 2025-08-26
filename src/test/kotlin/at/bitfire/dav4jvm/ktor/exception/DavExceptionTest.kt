@@ -10,27 +10,22 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.DavResource
+import at.bitfire.dav4jvm.ktor.Error
 import at.bitfire.dav4jvm.ktor.Property
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.ResourceType
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.request.prepareRequest
+import io.ktor.client.engine.mock.respondError
+import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.headersOf
-import io.ktor.http.withCharset
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -41,180 +36,220 @@ class DavExceptionTest {
 
     val sampleUrl = Url("https://127.0.0.1/dav/")
 
-
-    /**
-     * Test truncation of a too large plain text request in [DavException].
-     */
     @Test
-    fun testRequestLargeTextError() {
+    fun `Construct from closed response`() {
         val mockEngine = MockEngine { request ->
-            respond(
-                content = "",
-                status = HttpStatusCode.NoContent,  // 204 No content
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
-        }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
-        val builder = StringBuilder()
-        builder.append(CharArray(DavException.MAX_EXCERPT_SIZE+100) { '*' })
-        val body = builder.toString()
-
-        runBlocking {
-            httpClient.prepareRequest(sampleUrl) {
-                method = HttpMethod.Post
-                headers.append(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-                setBody(body)
-            }.execute { response ->
-                val e = DavException("Error with large request body", null, response)
-                assertTrue(e.errors.isEmpty())
-                assertEquals(
-                    body.substring(0, DavException.MAX_EXCERPT_SIZE),
-                    e.requestBody
-                )
-            }
-        }
-    }
-
-
-    /**
-     * Test a large HTML response which has a multi-octet UTF-8 character
-     * exactly at the cut-off position.
-     */
-    @Test
-    fun testResponseLargeTextError() {
-
-        val builder = StringBuilder()
-        builder.append(CharArray(DavException.MAX_EXCERPT_SIZE-1) { '*' })
-        builder.append("\u03C0")    // Pi
-        val body = builder.toString()
-
-        val mockEngine = MockEngine { request ->
-            respond(
-                content = body,
+            respondError(
+                content = "Page not found",
                 status = HttpStatusCode.NotFound,  // 404
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
             )
         }
         val httpClient = HttpClient(mockEngine) {
             followRedirects = false
         }
 
-        val dav = DavResource(httpClient, sampleUrl)
-
         runBlocking {
-            try {
-                dav.propfind(0, ResourceType.NAME) { _, _ -> }
-                fail("Expected HttpException")
-            } catch (e: HttpException) {
-                assertEquals(HttpStatusCode.NotFound.value, e.code)
-                assertTrue(e.errors.isEmpty())
-                assertEquals(
-                    body.substring(0, DavException.MAX_EXCERPT_SIZE - 1),
-                    e.responseBody!!.substring(0, DavException.MAX_EXCERPT_SIZE - 1)
-                )
-            }
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertNull(result.responseExcerpt)
         }
     }
 
-
     @Test
-    fun testResponseNonTextError() {
-
+    fun `requestExcerpt (binary blob)`() {
         val mockEngine = MockEngine { request ->
-            respond(
-                content = "12345",
-                status = HttpStatusCode.Forbidden,  // 404
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.OctetStream.toString())
+            respondError(
+                content = "Page not found",
+                status = HttpStatusCode.NotFound,  // 404
             )
         }
         val httpClient = HttpClient(mockEngine) {
             followRedirects = false
         }
 
-        val dav = DavResource(httpClient, sampleUrl)
-
         runBlocking {
-            try {
-                dav.propfind(0, ResourceType.NAME) { _, _ -> }
-                fail("Expected HttpException")
-            } catch (e: HttpException) {
-                assertEquals(HttpStatusCode.Forbidden.value, e.code)
-                assertTrue(e.errors.isEmpty())
-                assertNull(e.responseBody)
+            val response = httpClient.post(sampleUrl) {
+                setBody("Sample")
+                headers.append(HttpHeaders.ContentType, "application/test")
             }
+            val result = DavException("Test", response)
+            assertEquals("POST $sampleUrl\n\n<request body>", result.requestExcerpt)
         }
     }
 
-
     @Test
-    fun testSerialization() {
-
+    fun `requestExcerpt (large CSS text)`() {
         val mockEngine = MockEngine { request ->
-            respond(
-                content = "12345",
-                status = HttpStatusCode.InternalServerError,  // 500
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+            respondError(
+                content = "Page not found",
+                status = HttpStatusCode.NotFound,  // 404
             )
         }
         val httpClient = HttpClient(mockEngine) {
             followRedirects = false
         }
-        val dav = DavResource(httpClient, sampleUrl)
 
         runBlocking {
-            try {
-                dav.propfind(0, ResourceType.NAME) { _, _ -> }
-                fail("Expected DavException")
-            } catch (e: DavException) {
-                val baos = ByteArrayOutputStream()
-                val oos = ObjectOutputStream(baos)
-                oos.writeObject(e)
-
-                val ois = ObjectInputStream(ByteArrayInputStream(baos.toByteArray()))
-                val e2 = ois.readObject() as HttpException
-                assertEquals(HttpStatusCode.InternalServerError.value, e2.code)
-                assertTrue(e2.responseBody!!.contains("12345"))
+            val response = httpClient.post(sampleUrl) {
+                setBody("*".repeat(DavException.MAX_EXCERPT_SIZE * 2))
+                headers.append(HttpHeaders.ContentType,  ContentType.Text.CSS.toString())
             }
+            val result = DavException("Test", response)
+            val truncatedText = "*".repeat(DavException.MAX_EXCERPT_SIZE)
+            assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
         }
     }
 
-
-    /**
-     * Test precondition XML element (sample from RFC 4918 16)
-     */
     @Test
-    fun testXmlError() {
-
-        val body = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                "<D:error xmlns:D=\"DAV:\">\n" +
-                "  <D:lock-token-submitted>\n" +
-                "    <D:href>/workspace/webdav/</D:href>\n" +
-                "  </D:lock-token-submitted>\n" +
-                "</D:error>\n"
+    fun `responseExcerpt (binary blob)`() {
 
         val mockEngine = MockEngine { request ->
-            respond(
-                content = body,
-                status = HttpStatusCode.Locked,  // 423
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8) .toString())
+            respondError(
+                content = "Evil binary data",
+                status = HttpStatusCode.NotFound,  // 404
+                headers = headersOf("Content-Type", ContentType.Application.OctetStream.toString())
             )
         }
         val httpClient = HttpClient(mockEngine) {
             followRedirects = false
         }
-        val dav = DavResource(httpClient, sampleUrl)
 
         runBlocking {
-            try {
-                dav.propfind(0, ResourceType.NAME) { _, _ -> }
-                fail("Expected HttpException")
-            } catch (e: HttpException) {
-                assertEquals(HttpStatusCode.Locked.value, e.code)
-                assertTrue(e.errors.any { it.name == Property.Name(NS_WEBDAV, "lock-token-submitted") })
-                assertEquals(body, e.responseBody)
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertNull(result.responseExcerpt)
+        }
+    }
+
+    @Test
+    fun `responseExcerpt (HTML)`() {
+
+        val mockEngine = MockEngine { request ->
+            respondError(
+                content = "Interesting details about error",
+                status = HttpStatusCode.NotFound,  // 404
+                headers = headersOf("Content-Type", ContentType.Text.Html.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            followRedirects = false
+        }
+
+        runBlocking {
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertEquals("Interesting details about error", result.responseExcerpt)
+        }
+
+    }
+
+    @Test
+    fun `responseExcerpt (large HTML)`() {
+
+        val mockEngine = MockEngine { request ->
+            respondError(
+                content = "0123456789".repeat(3*1024), // 30 kB
+                status = HttpStatusCode.NotFound,  // 404
+                headers = headersOf("Content-Type", ContentType.Text.Html.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            followRedirects = false
+        }
+
+        runBlocking {
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertEquals(
+                "0123456789".repeat(2*1024),    // limited to 20 kB
+                result.responseExcerpt
+            )
+        }
+    }
+
+    @Test
+    fun `responseExcerpt (no Content-Type)`() {
+
+        val mockEngine = MockEngine { request ->
+            respondError(
+                content = "Maybe evil binary data",
+                status = HttpStatusCode.NotFound,  // 404
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            followRedirects = false
+        }
+
+        runBlocking {
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertNull(result.responseExcerpt)
+        }
+    }
+
+    @Test
+    fun `responseExcerpt (XML with error elements)`() {
+        val xml = """
+            <?xml version="1.0" encoding="utf-8" ?>
+            <D:error xmlns:D="DAV:">
+                <D:lock-token-submitted>
+                    <D:href>/locked/</D:href>
+                </D:lock-token-submitted>
+            </D:error>""".trimIndent()
+
+
+        val mockEngine = MockEngine { request ->
+            respondError(
+                content = xml,
+                status = HttpStatusCode.NotFound,  // 404
+                headers = headersOf("Content-Type", ContentType.Application.Xml.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            followRedirects = false
+        }
+
+        runBlocking {
+            val response = httpClient.get(sampleUrl)
+            val result = DavException("Test", response)
+            assertEquals(xml, result.responseExcerpt)
+            assertEquals(listOf(
+                Error(Property.Name("DAV:", "lock-token-submitted"))
+                ),
+                result.errors
+            )
+        }
+    }
+
+    @Test
+    fun `is Java-serializable`() {
+        val davException = DavException(
+            message = "Some Error",
+            statusCode = 500,
+            requestExcerpt = "Request Body",
+            responseExcerpt = "Response Body",
+            errors = listOf(
+                Error(Property.Name("Serialized", "Name"))
+            )
+        )
+
+        // serialize (Java-style as in Serializable interface, not Kotlin serialization)
+        val blob = ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos ->
+                oos.writeObject(davException)
+            }
+            baos.toByteArray()
+        }
+
+        // deserialize
+        ByteArrayInputStream(blob).use { bais ->
+            ObjectInputStream(bais).use { ois ->
+                val actual = ois.readObject() as DavException
+                assertEquals(davException.message, actual.message)
+                assertEquals(davException.statusCode, actual.statusCode)
+                assertEquals(davException.requestExcerpt, actual.requestExcerpt)
+                assertEquals(davException.responseExcerpt, actual.responseExcerpt)
+                assertEquals(davException.errors, actual.errors)
             }
         }
     }

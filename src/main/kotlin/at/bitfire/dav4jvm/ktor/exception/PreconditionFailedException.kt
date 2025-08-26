@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class PreconditionFailedException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.PreconditionFailed.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.PreconditionFailed.value)
+            throw IllegalArgumentException("Status code must be 412")
+    }
 }

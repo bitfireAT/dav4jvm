@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class ForbiddenException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Forbidden.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.Forbidden.value)
+            throw IllegalArgumentException("Status code must be 403")
+    }
 }

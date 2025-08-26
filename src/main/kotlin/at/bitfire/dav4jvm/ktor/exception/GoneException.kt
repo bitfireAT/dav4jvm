@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class GoneException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Gone.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.Gone.value)
+            throw IllegalArgumentException("Status code must be 410")
+    }
 }

@@ -17,6 +17,7 @@ import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.exception.ConflictException
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
+import at.bitfire.dav4jvm.ktor.exception.GoneException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
 import at.bitfire.dav4jvm.ktor.exception.NotFoundException
 import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
@@ -45,6 +46,7 @@ import io.ktor.http.Url
 import io.ktor.http.append
 import io.ktor.http.contentType
 import io.ktor.http.isSecure
+import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
 import io.ktor.util.appendAll
@@ -666,39 +668,26 @@ open class DavResource @JvmOverloads constructor(
 
     // status handling
 
+
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
      *
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: HttpResponse) =
-        checkStatus(response.status, response.status.description, response)
-
-    /**
-     * Checks the status from an HTTP response and throws an exception in case of an error.
-     *
-     * @throws HttpException (with XML error names, if available) in case of an HTTP error
-     */
-    private fun checkStatus(httpStatusCode: HttpStatusCode, message: String?, response: HttpResponse?) {
-        if (httpStatusCode.value / 100 == 2)
+    protected fun checkStatus(response: HttpResponse) {
+        if (response.status.isSuccess())
         // everything OK
             return
 
-        throw when (httpStatusCode) {
-            HttpStatusCode.Unauthorized ->
-                if (response != null) UnauthorizedException(response) else UnauthorizedException(message)
-            HttpStatusCode.Forbidden ->
-                if (response != null) ForbiddenException(response) else ForbiddenException(message)
-            HttpStatusCode.NotFound ->
-                if (response != null) NotFoundException(response) else NotFoundException(message)
-            HttpStatusCode.Conflict ->
-                if (response != null) ConflictException(response) else ConflictException(message)
-            HttpStatusCode.PreconditionFailed ->
-                if (response != null) PreconditionFailedException(response) else PreconditionFailedException(message)
-            HttpStatusCode.ServiceUnavailable ->
-                if (response != null) ServiceUnavailableException(response) else ServiceUnavailableException(message)
-            else ->
-                if (response != null) HttpException(response) else HttpException(httpStatusCode.value, message)
+        throw when (response.status.value) {
+            401 -> UnauthorizedException(response)
+            403 -> ForbiddenException(response)
+            404 -> NotFoundException(response)
+            409 -> ConflictException(response)
+            410 -> GoneException(response)
+            412 -> PreconditionFailedException(response)
+            503 -> ServiceUnavailableException(response)
+            else -> HttpException(response)
         }
     }
 
@@ -756,7 +745,7 @@ open class DavResource @JvmOverloads constructor(
         val response = httpResponse
 
         if (response.status != HttpStatusCode.MultiStatus)
-            throw DavException("Expected 207 Multi-Status, got ${response.status.value} ${response.status.description}", httpResponse = response)
+            throw DavException("Expected 207 Multi-Status, got ${response.status.value} ${response.status.description}", response = response)
 
         val bodyChannel = response.bodyAsChannel()
 
@@ -778,7 +767,7 @@ open class DavResource @JvmOverloads constructor(
                     logger.warn("Couldn't scan for XML signature", e)
                 }
 
-                throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
+                throw DavException("Received non-XML 207 Multi-Status", response = response)
             }
         } ?: logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
     }

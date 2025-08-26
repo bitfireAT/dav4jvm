@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class ConflictException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Conflict.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.Conflict.value)
+            throw IllegalArgumentException("Status code must be 409")
+    }
 }

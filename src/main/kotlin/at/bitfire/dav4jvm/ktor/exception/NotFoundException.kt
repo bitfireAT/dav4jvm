@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class NotFoundException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.NotFound.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.NotFound.value)
+            throw IllegalArgumentException("Status code must be 404")
+    }
 }

@@ -15,7 +15,8 @@ import io.ktor.http.HttpStatusCode
 
 class UnauthorizedException: HttpException {
 
-    constructor(response: HttpResponse): super(response)
-    constructor(message: String?): super(HttpStatusCode.Unauthorized.value, message)
-
+    constructor(response: HttpResponse) : super(response) {
+        if (response.status.value != HttpStatusCode.Unauthorized.value)
+            throw IllegalArgumentException("Status code must be 401")
+    }
 }

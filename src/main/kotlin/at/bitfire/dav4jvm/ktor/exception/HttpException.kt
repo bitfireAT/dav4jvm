@@ -12,22 +12,15 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import io.ktor.client.statement.HttpResponse
 
+
 /**
- * Signals that a HTTP error was sent by the server.
+ * Signals that a HTTP error was sent by the server in the context of a WebDAV operation.
  */
 open class HttpException: DavException {
 
-    var code: Int
-
-    constructor(response: HttpResponse): super(
-            "HTTP ${response.status.value} ${response.status.description}",
-            httpResponse = response
-    ) {
-        code = response.status.value
-    }
-
-    constructor(code: Int, message: String?): super("HTTP $code $message") {
-        this.code = code
-    }
+    constructor(response: HttpResponse) : super(
+        message = "HTTP ${response.status.value} ${response.status.description}",
+        response = response
+    )
 
 }

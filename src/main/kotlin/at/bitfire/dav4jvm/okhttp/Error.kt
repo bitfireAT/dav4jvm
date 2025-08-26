@@ -10,19 +10,21 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+
 import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
-import kotlin.collections.plusAssign
 
 /**
  * Represents an XML precondition/postcondition error. Every error has a name, which is the XML element
  * name. Subclassed errors may have more specific information available.
  *
  * At the moment, there is no logic for subclassing errors.
+ *
+ * @param name  property name for the XML error element
  */
-class Error(
-        val name: Property.Name
+data class Error(
+    val name: Property.Name
 ): Serializable {
 
     companion object {
@@ -52,7 +54,7 @@ class Error(
     }
 
     override fun equals(other: Any?) =
-            (other is Error) && other.name == name
+        (other is Error) && other.name == name
 
     override fun hashCode() = name.hashCode()
 

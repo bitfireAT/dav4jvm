@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor
 
+
 import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
@@ -53,7 +54,7 @@ data class Error(
     }
 
     override fun equals(other: Any?) =
-            (other is Error) && other.name == name
+        (other is Error) && other.name == name
 
     override fun hashCode() = name.hashCode()
 

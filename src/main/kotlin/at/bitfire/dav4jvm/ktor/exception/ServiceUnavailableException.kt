@@ -10,43 +10,41 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.HttpUtils
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_DEFAULT
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class ServiceUnavailableException : HttpException {
+
+class ServiceUnavailableException(response: HttpResponse) : HttpException(response) {
 
     private val logger
         get() = Logger.getLogger(javaClass.name)
 
     val retryAfter: Instant?
 
-    constructor(message: String?) : super(HttpStatusCode.ServiceUnavailable.value, message) {
-        retryAfter = null
-    }
+    init {
+        if (response.status.value != HttpStatusCode.ServiceUnavailable.value)
+            throw IllegalArgumentException("Status code must be 503")
 
-    constructor(response: HttpResponse) : super(response) {
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
         var retryAfterValue: Instant? = null
-        response.headers[HttpHeaders.RetryAfter]?.let { after ->
-            retryAfterValue = HttpUtils.parseDate(after) ?:
-                // not a HTTP-date, must be delta-seconds
-                try {
-                    val seconds = after.toLong()
-                    Instant.now().plusSeconds(seconds)
-                } catch (e: NumberFormatException) {
-                    logger.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
-                    null
-                }
+        response.headers["Retry-After"]?.let { after ->
+            retryAfterValue = at.bitfire.dav4jvm.okhttp.HttpUtils.parseDate(after) ?:
+                    // not a HTTP-date, must be delta-seconds
+                    try {
+                        val seconds = after.toLong()
+                        Instant.now().plusSeconds(seconds)
+                    } catch (e: NumberFormatException) {
+                        logger.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
+                        null
+                    }
         }
 
         retryAfter = retryAfterValue
