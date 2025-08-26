@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.ktor.server.http.redirect)
     implementation(libs.slf4j)
     api(libs.okhttp)
+    api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
     testImplementation(libs.junit4)

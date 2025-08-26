@@ -11,11 +11,12 @@
 package at.bitfire.dav4jvm.okhttp.exception
 
 import okhttp3.Response
-import java.net.HttpURLConnection
 
 class UnauthorizedException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_UNAUTHORIZED, message)
+    constructor(response: Response) : super(response) {
+        if (response.code != 401)
+            throw IllegalArgumentException("Status code must be 401")
+    }
 
 }

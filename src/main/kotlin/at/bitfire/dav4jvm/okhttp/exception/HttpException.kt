@@ -13,21 +13,13 @@ package at.bitfire.dav4jvm.okhttp.exception
 import okhttp3.Response
 
 /**
- * Signals that a HTTP error was sent by the server.
+ * Signals that a HTTP error was sent by the server in the context of a WebDAV operation.
  */
 open class HttpException: DavException {
 
-    var code: Int
-
-    constructor(response: Response): super(
-            "HTTP ${response.code} ${response.message}",
-            httpResponse = response
-    ) {
-        code = response.code
-    }
-
-    constructor(code: Int, message: String?): super("HTTP $code $message") {
-        this.code = code
-    }
+    constructor(response: Response) : super(
+        message = "HTTP ${response.code} ${response.message}",
+        response = response
+    )
 
 }

@@ -11,11 +11,12 @@
 package at.bitfire.dav4jvm.okhttp.exception
 
 import okhttp3.Response
-import java.net.HttpURLConnection
 
 class GoneException: HttpException {
 
-    constructor(response: Response): super(response)
-    constructor(message: String?): super(HttpURLConnection.HTTP_GONE, message)
+    constructor(response: Response) : super(response) {
+        if (response.code != 410)
+            throw IllegalArgumentException("Status code must be 410")
+    }
 
 }

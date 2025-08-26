@@ -16,6 +16,7 @@ import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
 import at.bitfire.dav4jvm.okhttp.exception.ConflictException
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.ForbiddenException
+import at.bitfire.dav4jvm.okhttp.exception.GoneException
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
 import at.bitfire.dav4jvm.okhttp.exception.NotFoundException
 import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
@@ -39,7 +40,6 @@ import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
 import java.io.StringWriter
-import java.net.HttpURLConnection
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.collections.iterator
@@ -667,34 +667,20 @@ open class DavResource @JvmOverloads constructor(
      *
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: Response) =
-            checkStatus(response.code, response.message, response)
-
-    /**
-     * Checks the status from an HTTP response and throws an exception in case of an error.
-     *
-     * @throws HttpException (with XML error names, if available) in case of an HTTP error
-     */
-    private fun checkStatus(code: Int, message: String?, response: Response?) {
-        if (code / 100 == 2)
+    protected fun checkStatus(response: Response) {
+        if (response.code / 100 == 2)
             // everything OK
             return
 
-        throw when (code) {
-            HttpURLConnection.HTTP_UNAUTHORIZED ->
-                if (response != null) UnauthorizedException(response) else UnauthorizedException(message)
-            HttpURLConnection.HTTP_FORBIDDEN ->
-                if (response != null) ForbiddenException(response) else ForbiddenException(message)
-            HttpURLConnection.HTTP_NOT_FOUND ->
-                if (response != null) NotFoundException(response) else NotFoundException(message)
-            HttpURLConnection.HTTP_CONFLICT ->
-                if (response != null) ConflictException(response) else ConflictException(message)
-            HttpURLConnection.HTTP_PRECON_FAILED ->
-                if (response != null) PreconditionFailedException(response) else PreconditionFailedException(message)
-            HttpURLConnection.HTTP_UNAVAILABLE ->
-                if (response != null) ServiceUnavailableException(response) else ServiceUnavailableException(message)
-            else ->
-                if (response != null) HttpException(response) else HttpException(code, message)
+        throw when (response.code) {
+            401 -> UnauthorizedException(response)
+            403 -> ForbiddenException(response)
+            404 -> NotFoundException(response)
+            409 -> ConflictException(response)
+            410 -> GoneException(response)
+            412 -> PreconditionFailedException(response)
+            503 -> ServiceUnavailableException(response)
+            else -> HttpException(response)
         }
     }
 
@@ -740,7 +726,7 @@ open class DavResource @JvmOverloads constructor(
      */
     fun assertMultiStatus(response: Response) {
         if (response.code != HTTP_MULTISTATUS)
-            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", httpResponse = response)
+            throw DavException("Expected 207 Multi-Status, got ${response.code} ${response.message}", response = response)
 
         response.peekBody(XML_SIGNATURE.size.toLong()).use { body ->
             body.contentType()?.let { mimeType ->
@@ -761,7 +747,7 @@ open class DavResource @JvmOverloads constructor(
                         logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
                     }
 
-                    throw DavException("Received non-XML 207 Multi-Status", httpResponse = response)
+                    throw DavException("Received non-XML 207 Multi-Status", response = response)
                 }
             } ?: logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
         }

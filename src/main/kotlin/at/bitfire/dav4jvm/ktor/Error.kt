@@ -19,9 +19,11 @@ import java.io.Serializable
  * name. Subclassed errors may have more specific information available.
  *
  * At the moment, there is no logic for subclassing errors.
+ *
+ * @param name  property name for the XML error element
  */
-class Error(
-        val name: Property.Name
+data class Error(
+    val name: Property.Name
 ): Serializable {
 
     companion object {

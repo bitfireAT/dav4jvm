@@ -15,23 +15,21 @@ import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
 import okhttp3.Response
-import java.net.HttpURLConnection
 import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
 
-class ServiceUnavailableException : HttpException {
+class ServiceUnavailableException(response: Response) : HttpException(response) {
 
     private val logger
         get() = Logger.getLogger(javaClass.name)
 
     val retryAfter: Instant?
 
-    constructor(message: String?) : super(HttpURLConnection.HTTP_UNAVAILABLE, message) {
-        retryAfter = null
-    }
+    init {
+        if (response.code != 503)
+            throw IllegalArgumentException("Status code must be 503")
 
-    constructor(response: Response) : super(response) {
         // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
         // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
 
