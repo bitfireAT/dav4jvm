@@ -1,7 +1,7 @@
 [versions]
 dokka = "2.0.0"
 junit4 = "4.13.2"
-kotlin = "2.2.0"
+kotlin = "2.2.10"
 okhttpVersion = "5.1.0"
 spotbugs = "4.9.4"
 xpp3Version = "1.1.6"
