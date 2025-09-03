@@ -55,7 +55,7 @@ class DavExceptionTest {
             .build()).execute()
         response.close()
 
-        val result = DavException("Test", response)
+        val result = DavException("Test", response = response)
         assertNull(result.responseExcerpt)
     }
 
@@ -71,7 +71,7 @@ class DavExceptionTest {
             .post("Sample".toRequestBody("application/test".toMediaType()))
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertEquals("POST $url\n\n<request body>", result.requestExcerpt)
         }
     }
@@ -88,7 +88,7 @@ class DavExceptionTest {
             .post("*".repeat(DavException.MAX_EXCERPT_SIZE * 2).toRequestBody("text/css".toMediaType()))
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             val truncatedText = "*".repeat(DavException.MAX_EXCERPT_SIZE)
             assertEquals("POST $url\n\n$truncatedText", result.requestExcerpt)
         }
@@ -107,7 +107,7 @@ class DavExceptionTest {
             .get()
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertNull(result.responseExcerpt)
         }
     }
@@ -125,7 +125,7 @@ class DavExceptionTest {
             .get()
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertEquals("Interesting details about error", result.responseExcerpt)
         }
     }
@@ -143,7 +143,7 @@ class DavExceptionTest {
             .get()
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertEquals(
                 "0123456789".repeat(2*1024),    // limited to 20 kB
                 result.responseExcerpt
@@ -163,7 +163,7 @@ class DavExceptionTest {
             .get()
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertNull(result.responseExcerpt)
         }
     }
@@ -188,7 +188,7 @@ class DavExceptionTest {
             .get()
             .build()
         ).execute().use { response ->
-            val result = DavException("Test", response)
+            val result = DavException("Test", response = response)
             assertEquals(xml, result.responseExcerpt)
             assertEquals(
                 listOf(
