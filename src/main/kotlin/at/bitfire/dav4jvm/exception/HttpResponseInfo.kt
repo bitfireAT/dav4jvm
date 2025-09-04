@@ -53,7 +53,7 @@ internal class HttpResponseInfo private constructor(
                             .append(baos.toString())
                     }
                 } else
-                    requestExcerptBuilder.append("\n\n<request body>")
+                    requestExcerptBuilder.append("\n\n<request body (${requestBody.contentLength()} bytes)>")
             }
 
             // extract response body if it's text

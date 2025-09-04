@@ -45,19 +45,6 @@ open class DavException(
 
     // constructor from Response
 
-    internal constructor(
-        message: String?,
-        cause: Throwable? = null,
-        httpResponseInfo: HttpResponseInfo
-    ): this(
-        message = message,
-        cause = cause,
-        statusCode = httpResponseInfo.statusCode,
-        requestExcerpt = httpResponseInfo.requestExcerpt,
-        responseExcerpt = httpResponseInfo.responseExcerpt,
-        errors = httpResponseInfo.errors
-    )
-
     /**
      * Takes the request, response and errors from a given HTTP response.
      *
@@ -69,10 +56,19 @@ open class DavException(
         message: String,
         cause: Throwable? = null,
         @WillNotClose response: Response
-    ) : this(
+    ) : this(message, cause, HttpResponseInfo.fromResponse(response))
+
+    private constructor(
+        message: String?,
+        cause: Throwable? = null,
+        httpResponseInfo: HttpResponseInfo
+    ): this(
         message = message,
         cause = cause,
-        httpResponseInfo = HttpResponseInfo.fromResponse(response)
+        statusCode = httpResponseInfo.statusCode,
+        requestExcerpt = httpResponseInfo.requestExcerpt,
+        responseExcerpt = httpResponseInfo.responseExcerpt,
+        errors = httpResponseInfo.errors
     )
 
 

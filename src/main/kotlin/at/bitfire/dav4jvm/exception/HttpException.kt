@@ -28,7 +28,20 @@ open class HttpException(
 
     // constructor from Response
 
-    internal constructor(
+    /**
+     * Takes the request, response and errors from a given HTTP response.
+     *
+     * @param response  response to extract status code and request/response excerpt from (if possible)
+     * @param message   optional exception message
+     * @param cause     optional exception cause
+     */
+    constructor(
+        @WillNotClose response: Response,
+        message: String = "HTTP ${response.code} ${response.message}",
+        cause: Throwable? = null
+    ) : this(HttpResponseInfo.fromResponse(response), message, cause)
+
+    private constructor(
         httpResponseInfo: HttpResponseInfo,
         message: String?,
         cause: Throwable? = null
@@ -41,22 +54,19 @@ open class HttpException(
         errors = httpResponseInfo.errors
     )
 
-    /**
-     * Takes the request, response and errors from a given HTTP response.
-     *
-     * @param response  response to extract status code and request/response excerpt from (if possible)
-     * @param message   optional exception message
-     * @param cause     optional exception cause
-     */
-    constructor(
-        @WillNotClose response: Response,
-        message: String = "HTTP ${response.code} ${response.message}",
-        cause: Throwable? = null
-    ) : this(
-        message = message,
-        cause = cause,
-        httpResponseInfo = HttpResponseInfo.fromResponse(response)
-    )
 
+    // status code classes
+
+    /** Whether the [statusCode] is 3xx and thus indicates a redirection. */
+    val isRedirect
+        get() = statusCode / 100 == 3
+
+    /** Whether the [statusCode] is 3xx and thus indicates a client error. */
+    val isClientError
+        get() = statusCode / 100 == 4
+
+    /** Whether the [statusCode] is 3xx and thus indicates a server error. */
+    val isServerError
+        get() = statusCode / 100 == 5
 
 }
