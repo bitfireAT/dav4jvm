@@ -61,11 +61,11 @@ open class HttpException(
     val isRedirect
         get() = statusCode / 100 == 3
 
-    /** Whether the [statusCode] is 3xx and thus indicates a client error. */
+    /** Whether the [statusCode] is 4xx and thus indicates a client error. */
     val isClientError
         get() = statusCode / 100 == 4
 
-    /** Whether the [statusCode] is 3xx and thus indicates a server error. */
+    /** Whether the [statusCode] is 5xx and thus indicates a server error. */
     val isServerError
         get() = statusCode / 100 == 5
 
