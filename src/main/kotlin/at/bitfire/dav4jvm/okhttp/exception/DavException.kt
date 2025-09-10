@@ -11,17 +11,8 @@
 package at.bitfire.dav4jvm.okhttp.exception
 
 import at.bitfire.dav4jvm.okhttp.Error
-import at.bitfire.dav4jvm.okhttp.XmlUtils
-import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
-import okhttp3.MediaType
 import okhttp3.Response
-import okio.Buffer
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
-import java.io.ByteArrayOutputStream
-import java.io.StringReader
 import javax.annotation.WillNotClose
-import kotlin.math.min
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -43,102 +34,42 @@ import kotlin.math.min
  * @param responseExcerpt   cached excerpt of associated HTTP response body
  * @param errors            precondition/postcondition XML elements which have been found in the XML response
  */
-open class DavException @JvmOverloads constructor(
+open class DavException(
     message: String? = null,
     cause: Throwable? = null,
-    statusCode: Int? = null,
-    requestExcerpt: String? = null,
-    responseExcerpt: String? = null,
-    errors: List<Error> = emptyList()
+    open val statusCode: Int? = null,
+    val requestExcerpt: String? = null,
+    val responseExcerpt: String? = null,
+    val errors: List<Error> = emptyList()
 ): Exception(message, cause) {
 
-    var statusCode: Int? = statusCode
-        private set
-
-    var requestExcerpt: String? = requestExcerpt
-        private set
-
-    var responseExcerpt: String? = responseExcerpt
-        private set
-
-    var errors: List<Error> = errors
-        private set
+    // constructor from Response
 
     /**
      * Takes the request, response and errors from a given HTTP response.
      *
-     * @param response  response to extract status code and request/response excerpt from (if possible)
      * @param message   optional exception message
      * @param cause     optional exception cause
+     * @param response  response to extract status code and request/response excerpt from (if possible)
      */
     constructor(
+        message: String,
+        cause: Throwable? = null,
+        @WillNotClose response: Response
+    ) : this(message, cause, HttpResponseInfo.fromResponse(response))
+
+    private constructor(
         message: String?,
-        @WillNotClose response: Response,
-        cause: Throwable? = null
-    ) : this(message, cause) {
-        // extract status code
-        statusCode = response.code
-
-        // extract request body if it's text
-        val request = response.request
-        val requestExcerptBuilder = StringBuilder(
-            "${request.method} ${request.url}"
-        )
-        request.body?.let { requestBody ->
-            if (requestBody.contentType()?.isText() == true) {
-                // Unfortunately Buffer doesn't have a size limit.
-                // However large bodies are usually streaming/one-shot away.
-                val buffer = Buffer()
-                requestBody.writeTo(buffer)
-
-                ByteArrayOutputStream().use { baos ->
-                    buffer.writeTo(baos, min(buffer.size, MAX_EXCERPT_SIZE.toLong()))
-                    requestExcerptBuilder
-                        .append("\n\n")
-                        .append(baos.toString())
-                }
-            } else
-                requestExcerptBuilder.append("\n\n<request body>")
-        }
-        requestExcerpt = requestExcerptBuilder.toString()
-
-        // extract response body if it's text
-        val mimeType = response.body.contentType()
-        val responseBody =
-            if (mimeType?.isText() == true)
-                try {
-                    response.peekBody(MAX_EXCERPT_SIZE.toLong()).string()
-                } catch (_: Exception) {
-                    // response body not available anymore, probably already consumed / closed
-                    null
-                }
-            else
-                null
-        responseExcerpt = responseBody
-
-        // get XML errors from request body excerpt
-        if (mimeType?.isXml() == true && responseBody != null)
-            errors = extractErrors(responseBody)
-    }
-
-    private fun extractErrors(xml: String): List<Error> {
-        try {
-            val parser = XmlUtils.newPullParser()
-            parser.setInput(StringReader(xml))
-
-            var eventType = parser.eventType
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                    if (parser.propertyName() == Error.NAME)
-                        return Error.parseError(parser)
-                eventType = parser.next()
-            }
-        } catch (_: XmlPullParserException) {
-            // Couldn't parse XML, either invalid or maybe it wasn't even XML
-        }
-
-        return emptyList()
-    }
+        cause: Throwable? = null,
+        httpResponseInfo: HttpResponseInfo
+    ): this(
+        message = message,
+        cause = cause,
+        statusCode = httpResponseInfo.statusCode,
+        requestExcerpt = httpResponseInfo.requestExcerpt,
+        responseExcerpt = httpResponseInfo.responseExcerpt,
+        errors = httpResponseInfo.errors
+    )
 
 
     companion object {
@@ -147,13 +78,6 @@ open class DavException @JvmOverloads constructor(
          * maximum size of extracted response body
          */
         const val MAX_EXCERPT_SIZE = 20*1024
-
-        private fun MediaType.isText() =
-            type == "text" ||
-            (type == "application" && subtype in arrayOf("html", "xml"))
-
-        private fun MediaType.isXml() =
-            type in arrayOf("application", "text") && subtype == "xml"
 
     }
 

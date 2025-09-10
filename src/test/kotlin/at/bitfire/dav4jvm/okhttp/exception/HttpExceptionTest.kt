@@ -12,12 +12,11 @@ package at.bitfire.dav4jvm.okhttp.exception
 
 import at.bitfire.dav4jvm.okhttp.Error
 import at.bitfire.dav4jvm.okhttp.Property
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -26,36 +25,71 @@ import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-class DavExceptionTest {
+class HttpExceptionTest {
 
     @Test
-    fun fromResponse() {
+    fun isRedirect() {
         val request = Request.Builder()
             .get()
             .url("https://example.com")
             .build()
-        val cause = Exception()
         val result = Response.Builder()
             .request(request)
             .protocol(Protocol.HTTP_1_1)
-            .code(200)
-            .message("OK")
-            .body("Your Information".toResponseBody("text/plain".toMediaType()))
+            .code(302)
+            .message("Found")
             .build()
             .use { response ->
-                DavException("Message", cause, response)
+                HttpException(response, "Message")
             }
-        assertEquals("Message", result.message)
-        assertEquals(cause, result.cause)
-        assertEquals(200, result.statusCode)
-        assertEquals("GET https://example.com/", result.requestExcerpt)
-        assertEquals("Your Information", result.responseExcerpt)
-        assertTrue(result.errors.isEmpty())
+        assertTrue(result.isRedirect)
+        assertFalse(result.isClientError)
+        assertFalse(result.isServerError)
+    }
+
+    @Test
+    fun isClientError() {
+        val request = Request.Builder()
+            .get()
+            .url("https://example.com")
+            .build()
+        val result = Response.Builder()
+            .request(request)
+            .protocol(Protocol.HTTP_1_1)
+            .code(404)
+            .message("Not Found")
+            .build()
+            .use { response ->
+                HttpException(response, "Message")
+            }
+        assertFalse(result.isRedirect)
+        assertTrue(result.isClientError)
+        assertFalse(result.isServerError)
+    }
+
+    @Test
+    fun isServerError() {
+        val request = Request.Builder()
+            .get()
+            .url("https://example.com")
+            .build()
+        val result = Response.Builder()
+            .request(request)
+            .protocol(Protocol.HTTP_1_1)
+            .code(500)
+            .message("Internal Server Error")
+            .build()
+            .use { response ->
+                HttpException(response, "Message")
+            }
+        assertFalse(result.isRedirect)
+        assertFalse(result.isClientError)
+        assertTrue(result.isServerError)
     }
 
     @Test
     fun `is Java-serializable`() {
-        val ex = DavException(
+        val ex = HttpException(
             message = "Some Error",
             statusCode = 500,
             requestExcerpt = "Request Body",
@@ -77,7 +111,7 @@ class DavExceptionTest {
         // deserialize
         ByteArrayInputStream(blob).use { bais ->
             ObjectInputStream(bais).use { ois ->
-                val actual = ois.readObject() as DavException
+                val actual = ois.readObject() as HttpException
                 assertEquals(ex.message, actual.message)
                 assertEquals(ex.statusCode, actual.statusCode)
                 assertEquals(ex.requestExcerpt, actual.requestExcerpt)
