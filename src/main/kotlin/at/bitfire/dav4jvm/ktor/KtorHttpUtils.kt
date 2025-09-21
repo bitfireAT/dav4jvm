@@ -13,17 +13,10 @@ package at.bitfire.dav4jvm.ktor
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.logging.Logger
 
 object KtorHttpUtils {
 
-    /**
-     * Preferred HTTP date/time format, see RFC 7231 7.1.1.1 IMF-fixdate
-     */
-    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
-    private val httpDateFormat = DateTimeFormatter.ofPattern(httpDateFormatStr, Locale.US)
 
     val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
@@ -87,7 +80,6 @@ object KtorHttpUtils {
      * @return an [HttpStatusCode] object representing the parsed status.
      */
     fun parseStatusLine(statusText: String): HttpStatusCode {
-
 
         val parts = statusText.split(" ", limit = 3)
         return if (parts.size >= 2 && parts[0].startsWith("HTTP/")) { // Full status line like "HTTP/1.1 200 OK"
