@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp.exception
 
-import at.bitfire.dav4jvm.okhttp.HttpUtils
+import at.bitfire.dav4jvm.HttpUtils
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response

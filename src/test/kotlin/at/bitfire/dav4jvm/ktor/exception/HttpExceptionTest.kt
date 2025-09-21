@@ -10,8 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.Error
-import at.bitfire.dav4jvm.ktor.Property
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Property
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

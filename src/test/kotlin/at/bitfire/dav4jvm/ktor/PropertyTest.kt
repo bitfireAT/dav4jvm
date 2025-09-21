@@ -10,7 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.ktor.property.webdav.GetETag
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.property.webdav.GetETag
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.xmlpull.v1.XmlPullParser

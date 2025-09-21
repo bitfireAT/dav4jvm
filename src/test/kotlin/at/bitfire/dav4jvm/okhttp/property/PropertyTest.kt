@@ -10,8 +10,8 @@
 
 package at.bitfire.dav4jvm.okhttp.property
 
-import at.bitfire.dav4jvm.okhttp.Property
-import at.bitfire.dav4jvm.okhttp.XmlUtils
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils
 import java.io.StringReader
 
 open class PropertyTest {

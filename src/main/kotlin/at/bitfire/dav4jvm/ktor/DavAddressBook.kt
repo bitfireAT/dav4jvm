@@ -10,12 +10,14 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.ktor.XmlUtils.insertTag
-import at.bitfire.dav4jvm.ktor.property.carddav.AddressData
-import at.bitfire.dav4jvm.ktor.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.GetContentType
-import at.bitfire.dav4jvm.ktor.property.webdav.GetETag
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.property.carddav.AddressData
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody

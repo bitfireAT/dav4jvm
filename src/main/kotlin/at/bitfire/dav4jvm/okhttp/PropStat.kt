@@ -10,8 +10,9 @@
 
 package at.bitfire.dav4jvm.okhttp
 
-import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.Protocol
 import okhttp3.internal.http.StatusLine
 import org.xmlpull.v1.XmlPullParser
@@ -24,9 +25,9 @@ import java.util.LinkedList
  *     <!ELEMENT propstat (prop, status, error?, responsedescription?) >
  */
 data class PropStat(
-        val properties: List<Property>,
-        val status: StatusLine,
-        val error: List<Error>? = null
+    val properties: List<Property>,
+    val status: StatusLine,
+    val error: List<Error>? = null
 ) {
 
     companion object {

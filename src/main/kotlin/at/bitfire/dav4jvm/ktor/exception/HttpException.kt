@@ -10,9 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.Error
-import at.bitfire.dav4jvm.ktor.exception.DavException
-import at.bitfire.dav4jvm.ktor.exception.HttpResponseInfo
+import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
 import javax.annotation.WillNotClose
 

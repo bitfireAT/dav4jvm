@@ -10,9 +10,9 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.Error
-import at.bitfire.dav4jvm.ktor.XmlUtils
-import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.exception.DavException.Companion.MAX_EXCERPT_SIZE
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
@@ -116,8 +116,8 @@ internal class HttpResponseInfo private constructor(
                 var eventType = parser.eventType
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                        if (parser.propertyName() == at.bitfire.dav4jvm.ktor.Error.NAME)
-                            return at.bitfire.dav4jvm.ktor.Error.parseError(parser)
+                        if (parser.propertyName() == Error.NAME)
+                            return Error.parseError(parser)
                     eventType = parser.next()
                 }
             } catch (_: XmlPullParserException) {

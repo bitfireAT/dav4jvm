@@ -10,12 +10,13 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
 import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.ktor.property.webdav.DisplayName
-import at.bitfire.dav4jvm.ktor.property.webdav.GetETag
-import at.bitfire.dav4jvm.ktor.property.webdav.ResourceType
+import at.bitfire.dav4jvm.property.webdav.DisplayName
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -285,7 +286,7 @@ class DavResourceTest {
                 called = true
                 runBlocking { assertEquals(sampleText, response.bodyAsText()) }
 
-                val eTag = GetETag.fromResponse(response)
+                val eTag = GetETag.fromKtorResponse(response)
                 assertEquals("My Weak ETag", eTag!!.eTag)
                 assertTrue(eTag.weak)
                 assertEquals(ContentType.parse("application/x-test-result"), response.contentType())
@@ -396,7 +397,7 @@ class DavResourceTest {
                 called = true
                 runBlocking { assertEquals(sampleText, response.bodyAsText()) }
 
-                val eTag = GetETag.fromResponse(response)
+                val eTag = GetETag.fromKtorResponse(response)
                 assertEquals("My Weak ETag", eTag!!.eTag)
                 assertTrue(eTag.weak)
                 assertEquals(ContentType.parse("application/x-test-result"), response.contentType())
@@ -1153,7 +1154,7 @@ class DavResourceTest {
             headers = HeadersBuilder().apply { append(HttpHeaders.ContentType, "text/plain") }.build()
         ) { response ->
             called = true
-            val eTag = GetETag.fromResponse(response)!!
+            val eTag = GetETag.fromKtorResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
             assertTrue(eTag.weak)
             assertEquals(response.request.url, dav.location)
@@ -1191,7 +1192,7 @@ class DavResourceTest {
         dav.put(sampleText, headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()), ifNoneMatch = true) { response ->
             called = true
             assertEquals(URLBuilder(sampleUrl).takeFrom("/target").build(), response.request.url)
-            val eTag = GetETag.fromResponse(response)
+            val eTag = GetETag.fromKtorResponse(response)
             assertNull("Weak PUT ETag", eTag?.eTag)
             assertNull(eTag?.weak)
         }

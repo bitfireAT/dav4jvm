@@ -10,9 +10,13 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.QuotedStringUtils
+import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.okhttp.DavResource.Companion.MAX_REDIRECTS
-import at.bitfire.dav4jvm.okhttp.XmlUtils.insertTag
-import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.okhttp.exception.ConflictException
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.ForbiddenException
@@ -22,10 +26,10 @@ import at.bitfire.dav4jvm.okhttp.exception.NotFoundException
 import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.okhttp.exception.UnauthorizedException
-import at.bitfire.dav4jvm.okhttp.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.okhttp.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -145,9 +149,9 @@ open class DavResource @JvmOverloads constructor(
 
 
     /**
-     * Gets the file name of this resource. See [HttpUtils.fileName] for details.
+     * Gets the file name of this resource. See [at.bitfire.dav4jvm.HttpUtils.fileName] for details.
      */
-    fun fileName() = HttpUtils.fileName(location)
+    fun fileName() = OkHttpUtils.fileName(location)
 
 
     /**
@@ -178,7 +182,7 @@ open class DavResource @JvmOverloads constructor(
         response.use {
             checkStatus(response)
             callback.onCapabilities(
-                HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
+                OkHttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
                 response
             )
         }

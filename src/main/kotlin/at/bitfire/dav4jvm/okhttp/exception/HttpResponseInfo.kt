@@ -11,8 +11,8 @@
 package at.bitfire.dav4jvm.okhttp.exception
 
 import at.bitfire.dav4jvm.okhttp.Error
-import at.bitfire.dav4jvm.okhttp.XmlUtils
-import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.okhttp.exception.DavException.Companion.MAX_EXCERPT_SIZE
 import okhttp3.MediaType
 import okhttp3.Response

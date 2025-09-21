@@ -10,9 +10,11 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.ResourceType
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
@@ -93,7 +95,7 @@ data class Response(
     /**
      * Returns the name (last path segment) of the resource.
      */
-    fun hrefName() = HttpUtils.fileName(href)
+    fun hrefName() = KtorHttpUtils.fileName(href)
 
 
     companion object {
@@ -163,7 +165,7 @@ data class Response(
                             }
                         }
                         STATUS ->
-                            status = HttpUtils.parseStatusLine(parser.nextText())
+                            status = KtorHttpUtils.parseStatusLine(parser.nextText())
                         PropStat.Companion.NAME ->
                             PropStat.Companion.parse(parser).let { propStat += it }
                         Error.NAME ->

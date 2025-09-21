@@ -10,7 +10,8 @@
 
 package at.bitfire.dav4jvm.okhttp
 
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 

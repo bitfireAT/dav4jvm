@@ -10,10 +10,11 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetETag
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.MediaType.Companion.toMediaType

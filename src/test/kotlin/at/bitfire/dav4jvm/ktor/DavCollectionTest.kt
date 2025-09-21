@@ -10,10 +10,11 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.ktor.property.webdav.GetETag
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

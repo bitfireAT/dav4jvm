@@ -10,6 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Property
 import org.junit.Assert.assertTrue
 import org.junit.Test
 

@@ -10,13 +10,15 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.ktor.XmlUtils.insertTag
-import at.bitfire.dav4jvm.ktor.property.caldav.CalendarData
-import at.bitfire.dav4jvm.ktor.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.ktor.property.caldav.ScheduleTag
-import at.bitfire.dav4jvm.ktor.property.webdav.GetContentType
-import at.bitfire.dav4jvm.ktor.property.webdav.GetETag
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.property.caldav.CalendarData
+import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.caldav.ScheduleTag
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody

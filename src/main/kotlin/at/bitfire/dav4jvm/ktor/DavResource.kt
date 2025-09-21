@@ -10,10 +10,14 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.QuotedStringUtils
+import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
 import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
-import at.bitfire.dav4jvm.ktor.XmlUtils.insertTag
-import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.exception.ConflictException
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
@@ -23,10 +27,10 @@ import at.bitfire.dav4jvm.ktor.exception.NotFoundException
 import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.ktor.exception.UnauthorizedException
-import at.bitfire.dav4jvm.ktor.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.ktor.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.ktor.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -161,9 +165,9 @@ open class DavResource @JvmOverloads constructor(
 
 
     /**
-     * Gets the file name of this resource. See [HttpUtils.fileName] for details.
+     * Gets the file name of this resource. See [KtorHttpUtils.fileName] for details.
      */
-    fun fileName() = HttpUtils.fileName(location)
+    fun fileName() = KtorHttpUtils.fileName(location)
 
 
     /**
@@ -192,7 +196,7 @@ open class DavResource @JvmOverloads constructor(
 
         checkStatus(response)
         callback.onCapabilities(
-            HttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
+            KtorHttpUtils.listHeader(response, "DAV").map { it.trim() }.toSet(),
             response
         )
 
@@ -278,7 +282,7 @@ open class DavResource @JvmOverloads constructor(
      *
      * @param xmlBody optional request body (used for MKCALENDAR or Extended MKCOL)
      * @param method HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
-     * @param headers additional headers to send with the request
+     * @param headersOptional additional headers to send with the request
      * @param callback called for the response
      *
      * @throws IOException on I/O error
@@ -737,7 +741,7 @@ open class DavResource @JvmOverloads constructor(
     /**
      * Validates a 207 Multi-Status response.
      *
-     * @param response will be checked for Multi-Status response
+     * @param httpResponse will be checked for Multi-Status response
      *
      * @throws DavException if the response is not a Multi-Status response
      */

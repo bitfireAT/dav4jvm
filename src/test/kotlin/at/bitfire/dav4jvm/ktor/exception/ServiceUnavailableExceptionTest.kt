@@ -10,8 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import at.bitfire.dav4jvm.ktor.HttpUtils
-import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.HttpUtils
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond

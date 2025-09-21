@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
+import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_DEFAULT
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
@@ -36,7 +37,7 @@ class ServiceUnavailableException(response: HttpResponse) : HttpException(respon
 
         var retryAfterValue: Instant? = null
         response.headers["Retry-After"]?.let { after ->
-            retryAfterValue = at.bitfire.dav4jvm.okhttp.HttpUtils.parseDate(after) ?:
+            retryAfterValue = HttpUtils.parseDate(after) ?:
                     // not a HTTP-date, must be delta-seconds
                     try {
                         val seconds = after.toLong()

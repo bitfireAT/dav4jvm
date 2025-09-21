@@ -10,9 +10,11 @@
 
 package at.bitfire.dav4jvm.ktor
 
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.Response.Companion.STATUS
-import at.bitfire.dav4jvm.ktor.XmlUtils.propertyName
-import at.bitfire.dav4jvm.ktor.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import io.ktor.http.HttpStatusCode
 import org.xmlpull.v1.XmlPullParser
 import java.util.LinkedList
@@ -47,7 +49,7 @@ data class PropStat(
                     when (parser.propertyName()) {
                         DavResource.Companion.PROP ->
                             prop.addAll(Property.parse(parser))
-                        STATUS -> status = HttpUtils.parseStatusLine(parser.nextText())                    }
+                        STATUS -> status = KtorHttpUtils.parseStatusLine(parser.nextText())                    }
                 eventType = parser.next()
             }
 

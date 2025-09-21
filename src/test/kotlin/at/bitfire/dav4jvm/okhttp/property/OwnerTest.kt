@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp.property
 
-import at.bitfire.dav4jvm.okhttp.property.webdav.Owner
+import at.bitfire.dav4jvm.property.webdav.Owner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
