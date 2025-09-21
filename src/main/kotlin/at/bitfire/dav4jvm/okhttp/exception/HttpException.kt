@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.okhttp.exception
 
-import at.bitfire.dav4jvm.okhttp.Error
 import okhttp3.Response
 import javax.annotation.WillNotClose
 
@@ -23,7 +22,7 @@ open class HttpException(
     override val statusCode: Int,
     requestExcerpt: String?,
     responseExcerpt: String?,
-    errors: List<Error> = emptyList()
+    errors: List<at.bitfire.dav4jvm.Error> = emptyList()
 ): DavException(message, cause, statusCode, requestExcerpt, responseExcerpt, errors) {
 
     // constructor from Response

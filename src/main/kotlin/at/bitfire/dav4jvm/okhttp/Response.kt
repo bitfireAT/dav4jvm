@@ -55,7 +55,7 @@ data class Response(
     /**
      * list of precondition/postcondition elements (`error` XML elements)
      */
-    val error: List<Error>? = null,
+    val error: List<at.bitfire.dav4jvm.Error>? = null,
 
     /**
      * new location of this response (`location` XML element), used for redirects
@@ -123,7 +123,7 @@ data class Response(
             var hrefOrNull: HttpUrl? = null
             var status: StatusLine? = null
             val propStat = mutableListOf<PropStat>()
-            var error: List<Error>? = null
+            var error: List<at.bitfire.dav4jvm.Error>? = null
             var newLocation: HttpUrl? = null
 
             var eventType = parser.eventType
@@ -163,8 +163,8 @@ data class Response(
                             }
                         PropStat.NAME ->
                             PropStat.parse(parser).let { propStat += it }
-                        Error.NAME ->
-                            error = Error.parseError(parser)
+                        at.bitfire.dav4jvm.Error.NAME ->
+                            error = at.bitfire.dav4jvm.Error.parseError(parser)
                         LOCATION ->
                             newLocation = parser.nextText().toHttpUrlOrNull()
                         }

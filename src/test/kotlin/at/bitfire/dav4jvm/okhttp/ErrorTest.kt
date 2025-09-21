@@ -18,8 +18,8 @@ class ErrorTest {
 
     @Test
     fun testEquals() {
-        val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
-        assertTrue(errors.contains(Error.Companion.VALID_SYNC_TOKEN))
+        val errors = listOf(at.bitfire.dav4jvm.Error(Property.Name("DAV:", "valid-sync-token")))
+        assertTrue(errors.contains(at.bitfire.dav4jvm.Error.Companion.VALID_SYNC_TOKEN))
     }
 
 }

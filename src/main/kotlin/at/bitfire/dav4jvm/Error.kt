@@ -10,11 +10,9 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
-import kotlin.collections.plusAssign
 
 /**
  * Represents an XML precondition/postcondition error. Every error has a name, which is the XML element
