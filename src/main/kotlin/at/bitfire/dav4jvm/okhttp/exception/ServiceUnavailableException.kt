@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp.exception
 
-import at.bitfire.dav4jvm.okhttp.HttpUtils
+import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_DEFAULT
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN

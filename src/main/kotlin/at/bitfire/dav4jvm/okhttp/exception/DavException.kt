@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp.exception
 
-import at.bitfire.dav4jvm.okhttp.Error
+import at.bitfire.dav4jvm.Error
 import okhttp3.Response
 import javax.annotation.WillNotClose
 

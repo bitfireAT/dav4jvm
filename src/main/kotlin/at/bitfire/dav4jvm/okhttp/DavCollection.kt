@@ -10,11 +10,13 @@
 
 package at.bitfire.dav4jvm.okhttp
 
-import at.bitfire.dav4jvm.okhttp.XmlUtils.insertTag
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.SyncToken
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request

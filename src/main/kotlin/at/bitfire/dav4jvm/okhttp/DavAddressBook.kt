@@ -10,12 +10,14 @@
 
 package at.bitfire.dav4jvm.okhttp
 
-import at.bitfire.dav4jvm.okhttp.XmlUtils.insertTag
-import at.bitfire.dav4jvm.okhttp.property.carddav.AddressData
-import at.bitfire.dav4jvm.okhttp.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetContentType
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetETag
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils
+import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.property.carddav.AddressData
+import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

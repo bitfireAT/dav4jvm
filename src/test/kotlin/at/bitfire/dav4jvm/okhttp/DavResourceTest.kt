@@ -10,13 +10,14 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
 import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.okhttp.property.webdav.DisplayName
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetContentType
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetETag
-import at.bitfire.dav4jvm.okhttp.property.webdav.ResourceType
+import at.bitfire.dav4jvm.property.webdav.DisplayName
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -261,10 +262,10 @@ class DavResourceTest {
             called = true
             assertEquals(sampleText, response.body.string())
 
-            val eTag = GetETag.fromResponse(response)
+            val eTag = GetETag.fromOkhttpResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
+            assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
         }
         assertTrue(called)
 
@@ -351,10 +352,10 @@ class DavResourceTest {
             called = true
             assertEquals(sampleText, response.body.string())
 
-            val eTag = GetETag.fromResponse(response)
+            val eTag = GetETag.fromOkhttpResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
+            assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
         }
         assertTrue(called)
 
@@ -988,7 +989,7 @@ class DavResourceTest {
         var called = false
         dav.put(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             called = true
-            val eTag = GetETag.fromResponse(response)!!
+            val eTag = GetETag.fromOkhttpResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
             assertTrue(eTag.weak)
             assertEquals(response.request.url, dav.location)
@@ -1015,7 +1016,7 @@ class DavResourceTest {
         dav.put(sampleText.toRequestBody("text/plain".toMediaType()), ifNoneMatch = true) { response ->
             called = true
             assertEquals(url.resolve("/target"), response.request.url)
-            val eTag = GetETag.fromResponse(response)
+            val eTag = GetETag.fromOkhttpResponse(response)
             assertNull("Weak PUT ETag", eTag?.eTag)
             assertNull(eTag?.weak)
         }
