@@ -59,9 +59,6 @@ dependencies {
     api(libs.xpp3)
 
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.server.http.redirect)
-    implementation(libs.slf4j)
 
     testImplementation(libs.junit4)
     testImplementation(libs.ktor.client.mock)
