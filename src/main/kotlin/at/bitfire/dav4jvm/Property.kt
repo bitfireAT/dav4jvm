@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.okhttp.exception.InvalidPropertyException
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 import java.util.LinkedList
@@ -60,7 +59,7 @@ interface Property {
                             properties.add(property)
                         } else
                             logger.fine("Ignoring unknown property $name")
-                    } catch (e: InvalidPropertyException) {
+                    } catch (e: Exception) {     // catching here generic exception in order to avoid dependency on specific okhttp or ktor Exception
                         logger.log(Level.WARNING, "Ignoring invalid property", e)
                     }
                 }

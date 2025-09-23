@@ -14,12 +14,9 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.CONTENT_TYPE
 import at.bitfire.dav4jvm.property.caldav.SupportedCalendarData.Companion.VERSION
 import io.ktor.http.ContentType
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
-import java.lang.Exception
 import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -162,7 +159,7 @@ class XmlReader(
      * attribute with [onNewType].
      *
      * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
-     * @param onNewType Called every time a new [MediaType] is found.
+     * @param onNewType Called every time a new [ContentType] is found.
      */
     fun readContentTypes(tagName: Property.Name, onNewType: (String) -> Unit) {
         try {

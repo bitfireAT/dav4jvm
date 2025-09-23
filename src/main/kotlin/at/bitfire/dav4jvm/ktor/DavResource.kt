@@ -14,10 +14,11 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils
-import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
-import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
+import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
+import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
 import at.bitfire.dav4jvm.ktor.exception.ConflictException
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
@@ -64,8 +65,6 @@ import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
 import java.io.StringWriter
-import kotlin.collections.iterator
-import kotlin.collections.plusAssign
 
 
 /**
@@ -716,7 +715,7 @@ open class DavResource @JvmOverloads constructor(
                     HttpStatusCode.MovedPermanently,
                     HttpStatusCode.Found,
                     HttpStatusCode.SeeOther)
-            )     //if is redirect, based on okhttp3/Response.kt: HTTP_PERM_REDIRECT, HTTP_TEMP_REDIRECT, HTTP_MULT_CHOICE, HTTP_MOVED_PERM, HTTP_MOVED_TEMP, HTTP_SEE_OTHER
+            )     //if is redirect
             // handle 3xx Redirection
                 response.let {
                     val target = it.headers[HttpHeaders.Location]?.let { newLocation ->
