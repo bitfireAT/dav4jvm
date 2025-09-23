@@ -13,17 +13,11 @@ package at.bitfire.dav4jvm.ktor
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
-import java.util.logging.Logger
 
 object KtorHttpUtils {
 
 
     val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
-
-
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
-
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.

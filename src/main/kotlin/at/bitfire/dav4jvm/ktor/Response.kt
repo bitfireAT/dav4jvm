@@ -109,12 +109,12 @@ data class Response(
          * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
          * The arguments of the [MultiResponseCallback.onResponse] are set accordingly.
          *
-         * If the [at.bitfire.dav4jvm.ktor.property.webdav.ResourceType] of the queried resource is known (= was queried and returned by the server)
-         * and it contains [at.bitfire.dav4jvm.ktor.property.webdav.ResourceType.Companion.COLLECTION], the `href` property of the callback will automatically
+         * If the [at.bitfire.dav4jvm.property.webdav.ResourceType] of the queried resource is known (= was queried and returned by the server)
+         * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` property of the callback will automatically
          * have a trailing slash.
          *
          * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
-         * that you query [at.bitfire.dav4jvm.ktor.property.webdav.ResourceType].
+         * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
          */
         fun parse(parser: XmlPullParser, location: Url, callback: MultiResponseCallback) {
             val logger = Logger.getLogger(Response::javaClass.name)

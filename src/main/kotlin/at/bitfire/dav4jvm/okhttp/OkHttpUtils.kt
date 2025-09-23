@@ -12,21 +12,8 @@ package at.bitfire.dav4jvm.okhttp
 
 import okhttp3.HttpUrl
 import okhttp3.Response
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import java.util.logging.Logger
 
 object OkHttpUtils {
-
-    /**
-     * Preferred HTTP date/time format, see RFC 7231 7.1.1.1 IMF-fixdate
-     */
-    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
-    private val httpDateFormat = DateTimeFormatter.ofPattern(httpDateFormatStr, Locale.US)
-
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
-
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.

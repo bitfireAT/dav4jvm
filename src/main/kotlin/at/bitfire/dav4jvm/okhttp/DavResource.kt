@@ -14,9 +14,9 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils
-import at.bitfire.dav4jvm.okhttp.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.okhttp.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.okhttp.exception.ConflictException
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.ForbiddenException
@@ -46,7 +46,6 @@ import java.io.Reader
 import java.io.StringWriter
 import java.util.logging.Level
 import java.util.logging.Logger
-import kotlin.collections.iterator
 import at.bitfire.dav4jvm.okhttp.Response as DavResponse
 
 /**
@@ -149,7 +148,7 @@ open class DavResource @JvmOverloads constructor(
 
 
     /**
-     * Gets the file name of this resource. See [at.bitfire.dav4jvm.HttpUtils.fileName] for details.
+     * Gets the file name of this resource. See [at.bitfire.dav4jvm.okhttp.OkHttpUtils.fileName] for details.
      */
     fun fileName() = OkHttpUtils.fileName(location)
 

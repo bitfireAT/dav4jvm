@@ -10,8 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import okhttp3.MediaType
-import okhttp3.MediaType.Companion.toMediaType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

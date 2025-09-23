@@ -53,7 +53,7 @@ open class DavCollection @JvmOverloads constructor(
      * @param callback      called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements (like `sync-token` which is returned as [at.bitfire.dav4jvm.ktor.property.webdav.SyncToken])
+     * are not part of response XML elements (like `sync-token` which is returned as [at.bitfire.dav4jvm.property.webdav.SyncToken])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
