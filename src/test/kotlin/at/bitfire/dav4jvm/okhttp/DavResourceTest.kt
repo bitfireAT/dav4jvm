@@ -262,7 +262,7 @@ class DavResourceTest {
             called = true
             assertEquals(sampleText, response.body.string())
 
-            val eTag = GetETag.fromOkhttpResponse(response)
+            val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
             assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
@@ -352,7 +352,7 @@ class DavResourceTest {
             called = true
             assertEquals(sampleText, response.body.string())
 
-            val eTag = GetETag.fromOkhttpResponse(response)
+            val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
             assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
@@ -989,7 +989,7 @@ class DavResourceTest {
         var called = false
         dav.put(sampleText.toRequestBody("text/plain".toMediaType())) { response ->
             called = true
-            val eTag = GetETag.fromOkhttpResponse(response)!!
+            val eTag = GetETag.fromResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
             assertTrue(eTag.weak)
             assertEquals(response.request.url, dav.location)
@@ -1016,7 +1016,7 @@ class DavResourceTest {
         dav.put(sampleText.toRequestBody("text/plain".toMediaType()), ifNoneMatch = true) { response ->
             called = true
             assertEquals(url.resolve("/target"), response.request.url)
-            val eTag = GetETag.fromOkhttpResponse(response)
+            val eTag = GetETag.fromResponse(response)
             assertNull("Weak PUT ETag", eTag?.eTag)
             assertNull(eTag?.weak)
         }
