@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
@@ -55,7 +56,7 @@ data class Response(
     /**
      * list of precondition/postcondition elements (`error` XML elements)
      */
-    val error: List<at.bitfire.dav4jvm.Error>? = null,
+    val error: List<Error>? = null,
 
     /**
      * new location of this response (`location` XML element), used for redirects
@@ -123,7 +124,7 @@ data class Response(
             var hrefOrNull: HttpUrl? = null
             var status: StatusLine? = null
             val propStat = mutableListOf<PropStat>()
-            var error: List<at.bitfire.dav4jvm.Error>? = null
+            var error: List<Error>? = null
             var newLocation: HttpUrl? = null
 
             var eventType = parser.eventType
@@ -163,8 +164,8 @@ data class Response(
                             }
                         PropStat.NAME ->
                             PropStat.parse(parser).let { propStat += it }
-                        at.bitfire.dav4jvm.Error.NAME ->
-                            error = at.bitfire.dav4jvm.Error.parseError(parser)
+                        Error.NAME ->
+                            error = Error.parseError(parser)
                         LOCATION ->
                             newLocation = parser.nextText().toHttpUrlOrNull()
                         }

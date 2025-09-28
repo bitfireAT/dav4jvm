@@ -29,10 +29,10 @@ data class ScheduleTag(
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
-        fun fromKtorResponse(response: HttpResponse) =
+        fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
-        fun fromOkhttpResponse(response: Response) =
+        fun fromResponse(response: Response) =
             response.header(HttpHeaders.ScheduleTag)?.let { GetETag(it) }
 
     }

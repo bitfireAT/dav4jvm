@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,8 +19,8 @@ class ErrorTest {
 
     @Test
     fun testEquals() {
-        val errors = listOf(at.bitfire.dav4jvm.Error(Property.Name("DAV:", "valid-sync-token")))
-        assertTrue(errors.contains(at.bitfire.dav4jvm.Error.Companion.VALID_SYNC_TOKEN))
+        val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
+        assertTrue(errors.contains(Error.Companion.VALID_SYNC_TOKEN))
     }
 
 }
