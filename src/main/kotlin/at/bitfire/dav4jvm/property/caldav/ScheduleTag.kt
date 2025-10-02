@@ -33,7 +33,7 @@ data class ScheduleTag(
             response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
         fun fromResponse(response: Response) =
-            response.header(HttpHeaders.ScheduleTag)?.let { GetETag(it) }
+            response.header(HttpHeaders.ScheduleTag)?.let { ScheduleTag(it) }
 
     }
 
