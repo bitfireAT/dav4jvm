@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
 
 data class GetContentType(
@@ -33,12 +32,6 @@ data class GetContentType(
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT getcontenttype (#PCDATA) >
-            GetContentType(XmlReader(parser).readText()?.let {
-                try {
-                    ContentType.parse(it).toString()
-                } catch (_: Exception) {
-                    null
-                }
-            })
+            GetContentType(XmlReader(parser).readText())
     }
 }
