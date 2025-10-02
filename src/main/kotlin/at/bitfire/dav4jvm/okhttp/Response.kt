@@ -10,9 +10,11 @@
 
 package at.bitfire.dav4jvm.okhttp
 
-import at.bitfire.dav4jvm.okhttp.XmlUtils.propertyName
-import at.bitfire.dav4jvm.okhttp.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.okhttp.property.webdav.ResourceType
+import at.bitfire.dav4jvm.Error
+import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
@@ -93,7 +95,7 @@ data class Response(
     /**
      * Returns the name (last path segment) of the resource.
      */
-    fun hrefName() = HttpUtils.fileName(href)
+    fun hrefName() = OkHttpUtils.fileName(href)
 
 
     companion object {

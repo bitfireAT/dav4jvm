@@ -10,13 +10,14 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
 import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.okhttp.property.webdav.DisplayName
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetContentType
-import at.bitfire.dav4jvm.okhttp.property.webdav.GetETag
-import at.bitfire.dav4jvm.okhttp.property.webdav.ResourceType
+import at.bitfire.dav4jvm.property.webdav.DisplayName
+import at.bitfire.dav4jvm.property.webdav.GetContentType
+import at.bitfire.dav4jvm.property.webdav.GetETag
+import at.bitfire.dav4jvm.property.webdav.ResourceType
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -264,7 +265,7 @@ class DavResourceTest {
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
+            assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
         }
         assertTrue(called)
 
@@ -354,7 +355,7 @@ class DavResourceTest {
             val eTag = GetETag.fromResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
-            assertEquals("application/x-test-result".toMediaType(), GetContentType(response.body.contentType()!!).type)
+            assertEquals("application/x-test-result", GetContentType(response.body.contentType()?.toString()).type)
         }
         assertTrue(called)
 

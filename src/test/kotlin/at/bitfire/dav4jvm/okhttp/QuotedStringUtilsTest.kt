@@ -10,6 +10,7 @@
 
 package at.bitfire.dav4jvm.okhttp
 
+import at.bitfire.dav4jvm.QuotedStringUtils
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
