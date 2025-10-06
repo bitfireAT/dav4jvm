@@ -5,7 +5,7 @@ kotlin = "2.2.20"
 okhttpVersion = "5.1.0"
 spotbugs = "4.9.6"
 xpp3Version = "1.1.6"
-ktor = "3.2.1"
+ktor = "3.3.0"
 
 [libraries]
 junit4 = { module = "junit:junit", version.ref = "junit4" }
