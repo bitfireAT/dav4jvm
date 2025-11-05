@@ -39,7 +39,7 @@ abstract class HrefListProperty(
             constructor: (hrefs: List<String>
                 ) -> PropertyType): PropertyType {
             val hrefs = mutableListOf<String>()
-            XmlReader(parser).readTextPropertyList(HREF, hrefs)
+            XmlReader(parser).readTextPropertyList(HrefListProperty.HREF, hrefs)
             return constructor(hrefs)
         }
 
