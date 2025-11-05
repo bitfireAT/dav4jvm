@@ -13,6 +13,7 @@ package at.bitfire.dav4jvm.okhttp
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import okhttp3.HttpUrl
@@ -131,7 +132,7 @@ data class Response(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
                     when (parser.propertyName()) {
-                        DavResource.HREF -> {
+                        HrefListProperty.HREF -> {
                             var sHref = parser.nextText()
                             if (!sHref.startsWith("/")) {
                                 /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative

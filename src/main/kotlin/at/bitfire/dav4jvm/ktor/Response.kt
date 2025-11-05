@@ -13,13 +13,10 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
-import io.ktor.http.Url
-import io.ktor.http.isSuccess
-import io.ktor.http.takeFrom
+import io.ktor.http.*
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Logger
 
@@ -131,7 +128,7 @@ data class Response(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
                     when (parser.propertyName()) {
-                        DavResource.Companion.HREF -> {
+                        HrefListProperty.HREF -> {
                             var sHref = parser.nextText()
                             var hierarchical = false
                             if (!sHref.startsWith("/")) {

@@ -15,18 +15,14 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import io.ktor.client.HttpClient
-import io.ktor.client.request.prepareRequest
-import io.ktor.client.request.setBody
-import io.ktor.client.request.url
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.Url
-import io.ktor.util.logging.Logger
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.util.logging.*
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
 
@@ -133,7 +129,7 @@ class DavAddressBook @JvmOverloads constructor(
                 }
             }
             for (url in urls)
-                insertTag(HREF) {
+                insertTag(HrefListProperty.HREF) {
                     text(url.encodedPath)
                 }
         }
