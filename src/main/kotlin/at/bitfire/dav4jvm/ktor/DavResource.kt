@@ -19,19 +19,45 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
 import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
-import at.bitfire.dav4jvm.ktor.exception.*
+import at.bitfire.dav4jvm.ktor.exception.ConflictException
+import at.bitfire.dav4jvm.ktor.exception.DavException
+import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
+import at.bitfire.dav4jvm.ktor.exception.GoneException
+import at.bitfire.dav4jvm.ktor.exception.HttpException
+import at.bitfire.dav4jvm.ktor.exception.NotFoundException
+import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.ktor.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.util.*
-import io.ktor.util.logging.*
-import io.ktor.utils.io.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.client.request.url
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import io.ktor.http.HeadersBuilder
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.Url
+import io.ktor.http.append
+import io.ktor.http.contentType
+import io.ktor.http.isSecure
+import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
+import io.ktor.http.withCharset
+import io.ktor.util.appendAll
+import io.ktor.util.logging.Logger
 import io.ktor.utils.io.core.readFully
+import io.ktor.utils.io.readBuffer
 import org.slf4j.LoggerFactory
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -39,9 +65,6 @@ import java.io.EOFException
 import java.io.IOException
 import java.io.Reader
 import java.io.StringWriter
-import kotlin.text.Charsets
-import kotlin.text.toByteArray
-import kotlin.text.trim
 
 
 /**
@@ -77,9 +100,6 @@ open class DavResource @JvmOverloads constructor(
         val SET = Property.Name(NS_WEBDAV, "set")
         val REMOVE = Property.Name(NS_WEBDAV, "remove")
         val PROP = Property.Name(NS_WEBDAV, "prop")
-
-        @Deprecated("Use HrefListProperty.HREF", ReplaceWith("HrefListProperty.HREF", "at.bitfire.dav4jvm.property.common.HrefListProperty"))
-        val HREF = Property.Name(NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
 

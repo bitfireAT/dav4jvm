@@ -17,13 +17,25 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.okhttp.DavResource.Companion.MAX_REDIRECTS
-import at.bitfire.dav4jvm.okhttp.exception.*
+import at.bitfire.dav4jvm.okhttp.exception.ConflictException
+import at.bitfire.dav4jvm.okhttp.exception.DavException
+import at.bitfire.dav4jvm.okhttp.exception.ForbiddenException
+import at.bitfire.dav4jvm.okhttp.exception.GoneException
+import at.bitfire.dav4jvm.okhttp.exception.HttpException
+import at.bitfire.dav4jvm.okhttp.exception.NotFoundException
+import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
+import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException
+import at.bitfire.dav4jvm.okhttp.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
@@ -68,9 +80,6 @@ open class DavResource @JvmOverloads constructor(
         val SET = Property.Name(NS_WEBDAV, "set")
         val REMOVE = Property.Name(NS_WEBDAV, "remove")
         val PROP = Property.Name(NS_WEBDAV, "prop")
-
-        @Deprecated("Use HrefListProperty.HREF", ReplaceWith("HrefListProperty.HREF", "at.bitfire.dav4jvm.property.common.HrefListProperty"))
-        val HREF = Property.Name(NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
 
