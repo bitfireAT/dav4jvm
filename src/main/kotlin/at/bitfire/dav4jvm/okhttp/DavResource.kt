@@ -80,7 +80,6 @@ open class DavResource @JvmOverloads constructor(
         val SET = Property.Name(NS_WEBDAV, "set")
         val REMOVE = Property.Name(NS_WEBDAV, "remove")
         val PROP = Property.Name(NS_WEBDAV, "prop")
-        val HREF = Property.Name(NS_WEBDAV, "href")
 
         val XML_SIGNATURE = "<?xml".toByteArray()
 

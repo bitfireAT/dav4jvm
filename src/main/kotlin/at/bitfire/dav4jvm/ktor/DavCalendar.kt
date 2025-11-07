@@ -16,25 +16,21 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.caldav.ScheduleTag
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import io.ktor.client.HttpClient
-import io.ktor.client.request.prepareRequest
-import io.ktor.client.request.setBody
-import io.ktor.client.request.url
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.Url
-import io.ktor.util.logging.Logger
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.util.logging.*
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 
 @Suppress("unused")
 class DavCalendar @JvmOverloads constructor(
@@ -175,7 +171,7 @@ class DavCalendar @JvmOverloads constructor(
                 }
             }
             for (url in urls)
-                insertTag(HREF) {
+                insertTag(HrefListProperty.HREF) {
                     serializer.text(url.encodedPath)
                 }
         }

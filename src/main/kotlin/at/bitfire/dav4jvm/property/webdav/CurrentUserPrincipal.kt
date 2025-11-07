@@ -10,10 +10,10 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.ktor.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
 // see RFC 5397: WebDAV Current Principal Extension
@@ -37,7 +37,7 @@ data class CurrentUserPrincipal(
         override fun create(parser: XmlPullParser): CurrentUserPrincipal {
             // <!ELEMENT current-user-principal (unauthenticated | href)>
             var href: String? = null
-            XmlReader(parser).processTag(DavResource.HREF) {
+            XmlReader(parser).processTag(HrefListProperty.HREF) {
                 href = readText()
             }
             return CurrentUserPrincipal(href)

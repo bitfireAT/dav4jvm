@@ -10,10 +10,10 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.ktor.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -34,7 +34,7 @@ data class AddMember(
 
         override fun getName() = NAME
 
-        override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(DavResource.HREF))
+        override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(HrefListProperty.HREF))
 
     }
 

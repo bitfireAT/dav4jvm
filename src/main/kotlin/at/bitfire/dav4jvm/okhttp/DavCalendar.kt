@@ -18,6 +18,7 @@ import at.bitfire.dav4jvm.okhttp.exception.HttpException
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.caldav.ScheduleTag
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
@@ -32,7 +33,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.*
 import java.util.logging.Logger
 
 @Suppress("unused")
@@ -172,7 +173,7 @@ class DavCalendar @JvmOverloads constructor(
                 }
             }
             for (url in urls)
-                insertTag(HREF) {
+                insertTag(HrefListProperty.HREF) {
                     serializer.text(url.encodedPath)
                 }
         }

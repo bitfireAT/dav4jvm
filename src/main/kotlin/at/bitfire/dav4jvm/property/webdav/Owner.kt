@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.ktor.DavResource
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.property.common.HrefListProperty
@@ -33,7 +32,7 @@ data class Owner(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): Owner =
-            Owner(XmlReader(parser).readTextProperty(DavResource.Companion.HREF))
+            Owner(XmlReader(parser).readTextProperty(HrefListProperty.HREF))
 
     }
 

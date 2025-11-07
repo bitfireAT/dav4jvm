@@ -15,6 +15,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
@@ -128,7 +129,7 @@ class DavAddressBook @JvmOverloads constructor(
                 }
             }
             for (url in urls)
-                insertTag(HREF) {
+                insertTag(HrefListProperty.HREF) {
                     text(url.encodedPath)
                 }
         }
