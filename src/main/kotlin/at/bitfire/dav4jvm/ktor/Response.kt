@@ -199,8 +199,8 @@ data class Response(
 
                 else -> {
                     if (location.protocol.name == href.protocol.name && location.host == href.host && location.port == href.port) {
-                        val locationSegments = location.segments
-                        val hrefSegments = href.segments
+                        val locationSegments = location.rawSegments
+                        val hrefSegments = href.rawSegments
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size
