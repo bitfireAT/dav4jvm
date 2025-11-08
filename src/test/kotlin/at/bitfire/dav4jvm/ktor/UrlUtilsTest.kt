@@ -39,12 +39,17 @@ class UrlUtilsTest {
     fun testOmitTrailingSlash() {
         assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource")))
         assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource/")))
+        assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host")))
+        assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host/")))
+
     }
 
     @Test
     fun testWithTrailingSlash() {
         assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource")))
         assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource/")))
+        assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host")))
+        assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host/")))
     }
 
 
