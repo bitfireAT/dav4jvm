@@ -204,7 +204,7 @@ data class Response(
 
                         // don't compare trailing slash segment ("")
                         var nBasePathSegments = locationSegments.size
-                        if (locationSegments[nBasePathSegments - 1] == "")   // TODO: Ricki, Not sure if this is still needed
+                        if (locationSegments.lastOrNull() == "")
                             nBasePathSegments--
 
                         /* example:   locationSegments  = [ "davCollection", "" ]
