@@ -161,6 +161,7 @@ class XmlReader(
      * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
      * @param onNewType Called every time a new [ContentType] is found.
      */
+    @UsesKtor
     fun readContentTypes(tagName: Property.Name, onNewType: (String) -> Unit) {
         try {
             processTag(tagName) {

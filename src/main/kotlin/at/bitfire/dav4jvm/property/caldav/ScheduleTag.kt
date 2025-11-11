@@ -10,13 +10,13 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
+import at.bitfire.dav4jvm.HttpHeaders
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
+import at.bitfire.dav4jvm.UsesKtor
 import at.bitfire.dav4jvm.XmlReader
-import at.bitfire.dav4jvm.property.webdav.GetETag
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.HttpHeaders
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
@@ -29,6 +29,7 @@ data class ScheduleTag(
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
+        @UsesKtor
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
