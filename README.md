@@ -18,7 +18,7 @@ For questions, suggestions etc. use [Github discussions](https://github.com/bitf
 We're happy about contributions, but please let us know in the discussions before. Then make the changes
 in your own repository and send a pull request.
 
-> [!INFO]
+> [!NOTE]
 > dav4jvm is currently being rewritten to use ktor instead of OkHttp to allow Kotlin Multiplatform support, and other engines.
 > 
 > In the mean time, there are two packages available:
