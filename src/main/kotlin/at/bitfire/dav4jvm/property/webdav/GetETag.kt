@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
-import at.bitfire.dav4jvm.HttpHeaders
+import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
@@ -36,10 +36,10 @@ data class GetETag(
 
         @UsesKtor
         fun fromHttpResponse(response: HttpResponse) =
-            response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
+            response.headers[HttpHeaderNames.ETag]?.let { GetETag(it) }
 
         fun fromResponse(response: Response) =
-            response.header(HttpHeaders.ETag)?.let { GetETag(it) }
+            response.header(HttpHeaderNames.ETag)?.let { GetETag(it) }
     }
 
     /**

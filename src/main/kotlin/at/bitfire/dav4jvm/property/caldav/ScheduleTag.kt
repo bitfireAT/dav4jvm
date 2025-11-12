@@ -10,7 +10,7 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
-import at.bitfire.dav4jvm.HttpHeaders
+import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
@@ -31,10 +31,10 @@ data class ScheduleTag(
 
         @UsesKtor
         fun fromHttpResponse(response: HttpResponse) =
-            response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
+            response.headers[HttpHeaderNames.ScheduleTag]?.let { ScheduleTag(it) }
 
         fun fromResponse(response: Response) =
-            response.header(HttpHeaders.ScheduleTag)?.let { ScheduleTag(it) }
+            response.header(HttpHeaderNames.ScheduleTag)?.let { ScheduleTag(it) }
 
     }
 
