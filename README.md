@@ -23,7 +23,7 @@ in your own repository and send a pull request.
 > 
 > In the mean time, there are two packages available:
 > - `at.bitfire.dav4jvm.okhttp` (the current one, using OkHttp, JVM only)
-> - `io.github.mcdjuady.ktor` (new package, uses ktor, supports Kotlin Multiplatform)
+> - `at.bitfire.dav4jvm.ktor` (new package, uses ktor, supports Kotlin Multiplatform)
 > 
 > There's some common code shared between both packages, **and we cannot guarantee** that all of it is excluded from cross-dependencies (generic code using ktor-specific functions).
 > The usages are most likely indicated in the kdoc, but something might be missing.
