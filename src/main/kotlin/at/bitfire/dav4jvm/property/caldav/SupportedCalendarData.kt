@@ -12,7 +12,6 @@ package at.bitfire.dav4jvm.property.caldav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.UsesKtor
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
@@ -32,7 +31,11 @@ data class SupportedCalendarData(
 
     }
 
-    @UsesKtor
+    /**
+     * Checks whether the supported calendar data includes JCal (application/calendar+json).
+     *
+     * **Requires Ktor.**
+     */
     fun hasJCal() = types
         .map { ContentType.parse(it) }
         .any { ContentType.Application.contains(it) && "calendar+json".equals(it.contentSubtype, true) }

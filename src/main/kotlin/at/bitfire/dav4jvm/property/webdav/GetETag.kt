@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.UsesKtor
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.client.statement.HttpResponse
 import okhttp3.Response
@@ -34,7 +33,11 @@ data class GetETag(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getetag")
 
-        @UsesKtor
+        /**
+         * Creates a [GetETag] from an HTTP response's `ETag` header.
+         *
+         * **Requires Ktor.**
+         */
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaderNames.ETag]?.let { GetETag(it) }
 

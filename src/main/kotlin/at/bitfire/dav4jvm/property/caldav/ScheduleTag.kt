@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
-import at.bitfire.dav4jvm.UsesKtor
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.client.statement.HttpResponse
 import okhttp3.Response
@@ -29,7 +28,11 @@ data class ScheduleTag(
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
-        @UsesKtor
+        /**
+         * Creates a [ScheduleTag] from an HTTP response's `Schedule-Tag` header.
+         *
+         * **Requires Ktor.**
+         */
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaderNames.ScheduleTag]?.let { ScheduleTag(it) }
 

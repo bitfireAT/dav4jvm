@@ -12,7 +12,6 @@ package at.bitfire.dav4jvm.property.carddav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.UsesKtor
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.http.ContentType
 import org.xmlpull.v1.XmlPullParser
@@ -32,11 +31,20 @@ class SupportedAddressData(
 
     }
 
-    @UsesKtor
+    /**
+     * Checks whether the supported address data includes vCard 4.0 (`text/vcard; version=4.0`).
+     *
+     * **Requires Ktor.**
+     */
     fun hasVCard4() = types
         .map { try { ContentType.parse(it) } catch (_: Exception) { ContentType.Any } }
         .any { "text/vcard; version=4.0".equals(it.toString(), true) }
-    @UsesKtor
+
+    /**
+     * Checks whether the supported address data includes JCard (`application/vcard+json`).
+     *
+     * **Requires Ktor.**
+     */
     fun hasJCard() = types
         .map { try { ContentType.parse(it) } catch (_: Exception) { ContentType.Any } }
         .any { ContentType.Application.contains(it) && "vcard+json".equals(it.contentSubtype, true) }
