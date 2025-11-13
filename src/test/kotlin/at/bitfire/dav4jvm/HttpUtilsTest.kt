@@ -10,6 +10,10 @@
 
 package at.bitfire.dav4jvm
 
+import at.bitfire.dav4jvm.HttpUtils.toHttpUrl
+import at.bitfire.dav4jvm.HttpUtils.toKtorUrl
+import io.ktor.http.Url
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -72,6 +76,17 @@ class HttpUtilsTest {
         logger.info("Expected date: " + DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US).format(ZonedDateTime.now()))
 
         assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun Nov  6 08:49:37 1994"))
+    }
+
+
+    @Test
+    fun testHttpUrl_toKtorUrl() {
+        assertEquals(Url("https://example.com:123/path"), "https://example.com:123/path".toHttpUrl().toKtorUrl())
+    }
+
+    @Test
+    fun testUrl_ToHttpUrl() {
+        assertEquals("https://example.com:123/path".toHttpUrl(), Url("https://example.com:123/path").toHttpUrl())
     }
 
 }
