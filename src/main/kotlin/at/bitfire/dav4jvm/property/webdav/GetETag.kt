@@ -10,12 +10,12 @@
 
 package at.bitfire.dav4jvm.property.webdav
 
+import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.HttpHeaders
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
@@ -33,11 +33,16 @@ data class GetETag(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getetag")
 
+        /**
+         * Creates a [GetETag] from an HTTP response's `ETag` header.
+         *
+         * **Requires Ktor.**
+         */
         fun fromHttpResponse(response: HttpResponse) =
-            response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
+            response.headers[HttpHeaderNames.ETag]?.let { GetETag(it) }
 
         fun fromResponse(response: Response) =
-            response.header("ETag")?.let { GetETag(it) }
+            response.header(HttpHeaderNames.ETag)?.let { GetETag(it) }
     }
 
     /**

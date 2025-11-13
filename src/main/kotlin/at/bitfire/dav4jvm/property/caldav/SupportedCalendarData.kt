@@ -31,6 +31,11 @@ data class SupportedCalendarData(
 
     }
 
+    /**
+     * Checks whether the supported calendar data includes JCal (application/calendar+json).
+     *
+     * **Requires Ktor.**
+     */
     fun hasJCal() = types
         .map { ContentType.parse(it) }
         .any { ContentType.Application.contains(it) && "calendar+json".equals(it.contentSubtype, true) }
