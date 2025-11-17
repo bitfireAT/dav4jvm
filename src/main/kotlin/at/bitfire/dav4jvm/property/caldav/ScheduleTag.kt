@@ -10,12 +10,12 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
-import at.bitfire.dav4jvm.HttpHeaderNames
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpHeaders
 import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
@@ -34,10 +34,10 @@ data class ScheduleTag(
          * **Requires Ktor.**
          */
         fun fromHttpResponse(response: HttpResponse) =
-            response.headers[HttpHeaderNames.ScheduleTag]?.let { ScheduleTag(it) }
+            response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
         fun fromResponse(response: Response) =
-            response.header(HttpHeaderNames.ScheduleTag)?.let { ScheduleTag(it) }
+            response.header(HttpHeaders.ScheduleTag)?.let { ScheduleTag(it) }
 
     }
 
