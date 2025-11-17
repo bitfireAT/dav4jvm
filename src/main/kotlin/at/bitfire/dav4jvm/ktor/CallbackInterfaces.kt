@@ -16,7 +16,7 @@ import io.ktor.client.statement.HttpResponse
  * Callback for the OPTIONS request.
  */
 fun interface CapabilitiesCallback {
-    fun onCapabilities(davCapabilities: Set<String>, response: HttpResponse)
+    suspend fun onCapabilities(davCapabilities: Set<String>, response: HttpResponse)
 }
 
 /**
@@ -33,7 +33,7 @@ fun interface MultiResponseCallback {
      * @param response   the parsed response (including URL)
      * @param relation   relation of the response to the called resource
      */
-    fun onResponse(response: Response, relation: Response.HrefRelation)
+    suspend fun onResponse(response: Response, relation: Response.HrefRelation)
 }
 
 /**
@@ -44,5 +44,5 @@ fun interface ResponseCallback {
      * Called for a HTTP response. Typically this is only called for successful/redirect
      * responses because HTTP errors throw an exception before this callback is called.
      */
-    fun onResponse(response: HttpResponse)
+    suspend fun onResponse(response: HttpResponse)
 }
