@@ -11,11 +11,13 @@
 package at.bitfire.dav4jvm.ktor
 
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.BadContentTypeFormatException
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLParserException
 import io.ktor.http.Url
 
 object KtorHttpUtils {
-
 
     val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
@@ -60,7 +62,6 @@ object KtorHttpUtils {
         return value?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.toTypedArray() ?: emptyArray()
     }
 
-
     /**
      * Parses an HTTP status line.
      *
@@ -74,7 +75,6 @@ object KtorHttpUtils {
      * @return an [HttpStatusCode] object representing the parsed status.
      */
     fun parseStatusLine(statusText: String): HttpStatusCode {
-
         val parts = statusText.split(" ", limit = 3)
         return if (parts.size >= 2 && parts[0].startsWith("HTTP/")) { // Full status line like "HTTP/1.1 200 OK"
             val statusCode = parts[1].toIntOrNull()
@@ -96,5 +96,29 @@ object KtorHttpUtils {
             INVALID_STATUS
         }
     }
+}
 
+
+// extension methods
+
+fun String?.toContentTypeOrNull(): ContentType? {
+    if (this == null)
+        return null
+
+    return try {
+        ContentType.parse(this)
+    } catch (_: BadContentTypeFormatException) {
+        null
+    }
+}
+
+fun String?.toUrlOrNull(): Url? {
+    if (this == null)
+        return null
+
+    return try {
+        Url(this)
+    } catch (_: URLParserException) {
+        null
+    }
 }
