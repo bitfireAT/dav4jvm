@@ -16,7 +16,11 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
-import io.ktor.http.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.Url
+import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Logger
 
@@ -113,7 +117,7 @@ data class Response(
          * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
          * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
          */
-        fun parse(parser: XmlPullParser, location: Url, callback: MultiResponseCallback) {
+        suspend fun parse(parser: XmlPullParser, location: Url, callback: MultiResponseCallback) {
             val logger = Logger.getLogger(Response::javaClass.name)
 
             val depth = parser.depth
