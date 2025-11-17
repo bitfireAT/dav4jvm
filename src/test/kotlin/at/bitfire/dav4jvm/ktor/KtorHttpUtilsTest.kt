@@ -267,7 +267,7 @@ class KtorHttpUtilsTest {
 
 
     @Test
-    fun `toContentType with correct MIME type`() {
+    fun `toContentTypeOrNull with correct MIME type`() {
         assertEquals(
             ContentType.parse("text/x-example"),
             "text/x-example".toContentTypeOrNull()
@@ -275,8 +275,30 @@ class KtorHttpUtilsTest {
     }
 
     @Test
-    fun `toContentType with invalid MIME type`() {
+    fun `toContentTypeOrNull with invalid MIME type`() {
         assertNull("INVALID".toContentTypeOrNull())
+    }
+
+
+    @Test
+    fun `toUrlOrNull with invalid mailto URL`() {
+        assertNull("mailto:invalid".toUrlOrNull())
+    }
+
+    @Test
+    fun `toUrlOrNull with valid HTTPS URL`() {
+        assertEquals(
+            Url("https://example.com"),
+            "https://example.com".toUrlOrNull()
+        )
+    }
+
+    @Test
+    fun `toUrlOrNull with valid relative URL`() {
+        assertEquals(
+            Url("relative"),
+            "relative".toUrlOrNull()
+        )
     }
 
 }

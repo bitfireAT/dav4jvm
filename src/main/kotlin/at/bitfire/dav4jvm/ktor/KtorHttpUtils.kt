@@ -118,7 +118,7 @@ fun String?.toUrlOrNull(): Url? {
 
     return try {
         Url(this)
-    } catch (e: URLParserException) {
+    } catch (_: URLParserException) {
         null
     }
 }
