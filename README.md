@@ -18,6 +18,15 @@ For questions, suggestions etc. use [Github discussions](https://github.com/bitf
 We're happy about contributions, but please let us know in the discussions before. Then make the changes
 in your own repository and send a pull request.
 
+> [!NOTE]
+> dav4jvm is currently being rewritten to use ktor instead of OkHttp to allow Kotlin Multiplatform support, and other engines.
+> 
+> In the mean time, there are two packages available:
+> - `at.bitfire.dav4jvm.okhttp` (the current one, using OkHttp, JVM only)
+> - `at.bitfire.dav4jvm.ktor` (new package, uses ktor, supports Kotlin Multiplatform)
+> 
+> There's some common code shared between both packages. This code may contain references to ktor, so do not exclude the dependency, even if you are only using okhttp.
+
 
 ## Installation
 

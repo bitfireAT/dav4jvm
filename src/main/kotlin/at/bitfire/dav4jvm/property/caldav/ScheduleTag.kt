@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
-import at.bitfire.dav4jvm.property.webdav.GetETag
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
 import okhttp3.Response

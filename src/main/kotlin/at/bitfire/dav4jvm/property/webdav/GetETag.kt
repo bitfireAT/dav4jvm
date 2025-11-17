@@ -37,7 +37,7 @@ data class GetETag(
             response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
 
         fun fromResponse(response: Response) =
-            response.header("ETag")?.let { GetETag(it) }
+            response.header(HttpHeaders.ETag)?.let { GetETag(it) }
     }
 
     /**
