@@ -15,11 +15,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.get
+import io.ktor.http.ContentType
 import io.ktor.http.HeadersBuilder
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class KtorHttpUtilsTest {
@@ -262,4 +264,19 @@ class KtorHttpUtilsTest {
     @Test
     fun `Status line with numeric description only  partial case `() =
         assertEquals(HttpStatusCode(200, "404"), KtorHttpUtils.parseStatusLine("HTTP/1.1 200 404"))
+
+
+    @Test
+    fun `toContentType with correct MIME type`() {
+        assertEquals(
+            ContentType.parse("text/x-example"),
+            "text/x-example".toContentTypeOrNull()
+        )
+    }
+
+    @Test
+    fun `toContentType with invalid MIME type`() {
+        assertNull("INVALID".toContentTypeOrNull())
+    }
+
 }
