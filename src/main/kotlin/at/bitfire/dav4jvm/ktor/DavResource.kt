@@ -809,11 +809,11 @@ open class DavResource @JvmOverloads constructor(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like an invalid XML response)
      */
-    protected fun processMultiStatus(reader: Reader, callback: MultiResponseCallback): List<Property> {
+    protected suspend fun processMultiStatus(reader: Reader, callback: MultiResponseCallback): List<Property> {
         val responseProperties = mutableListOf<Property>()
         val parser = XmlUtils.newPullParser()
 
-        fun parseMultiStatus(): List<Property> {
+        suspend fun parseMultiStatus(): List<Property> {
             // <!ELEMENT multistatus (response*, responsedescription?,
             //                        sync-token?) >
             val depth = parser.depth
