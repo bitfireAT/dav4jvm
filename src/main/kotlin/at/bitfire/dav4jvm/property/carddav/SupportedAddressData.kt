@@ -31,20 +31,9 @@ class SupportedAddressData(
 
     }
 
-    /**
-     * Checks whether the supported address data includes vCard 4.0 (`text/vcard; version=4.0`).
-     *
-     * **Requires Ktor.**
-     */
     fun hasVCard4() = types
         .map { try { ContentType.parse(it) } catch (_: Exception) { ContentType.Any } }
         .any { "text/vcard; version=4.0".equals(it.toString(), true) }
-
-    /**
-     * Checks whether the supported address data includes JCard (`application/vcard+json`).
-     *
-     * **Requires Ktor.**
-     */
     fun hasJCard() = types
         .map { try { ContentType.parse(it) } catch (_: Exception) { ContentType.Any } }
         .any { ContentType.Application.contains(it) && "vcard+json".equals(it.contentSubtype, true) }

@@ -33,11 +33,6 @@ data class GetETag(
         @JvmField
         val NAME = Property.Name(NS_WEBDAV, "getetag")
 
-        /**
-         * Creates a [GetETag] from an HTTP response's `ETag` header.
-         *
-         * **Requires Ktor.**
-         */
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
 

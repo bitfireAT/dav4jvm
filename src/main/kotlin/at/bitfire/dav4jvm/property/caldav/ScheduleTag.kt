@@ -28,11 +28,6 @@ data class ScheduleTag(
         @JvmField
         val NAME = Property.Name(NS_CALDAV, "schedule-tag")
 
-        /**
-         * Creates a [ScheduleTag] from an HTTP response's `Schedule-Tag` header.
-         *
-         * **Requires Ktor.**
-         */
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 

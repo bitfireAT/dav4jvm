@@ -158,8 +158,6 @@ class XmlReader(
      * Processes all the tags named [tagName], and sends every tag that has the [CONTENT_TYPE]
      * attribute with [onNewType].
      *
-     * **Requires Ktor.**
-     *
      * @param tagName The name of the tag that contains the [CONTENT_TYPE] attribute value.
      * @param onNewType Called every time a new [ContentType] is found.
      */
