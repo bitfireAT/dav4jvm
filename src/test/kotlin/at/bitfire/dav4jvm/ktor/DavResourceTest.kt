@@ -392,7 +392,7 @@ class DavResourceTest {
             var called = false
             dav.post(
                 body = "body",
-                headers = HeadersBuilder().apply { append(HttpHeaders.ContentType, "application/x-test-result") }.build()
+                additionalHeaders = HeadersBuilder().apply { append(HttpHeaders.ContentType, "application/x-test-result") }.build()
             ) { response ->
                 called = true
                 runBlocking { assertEquals(sampleText, response.bodyAsText()) }
@@ -460,7 +460,7 @@ class DavResourceTest {
             var called = false
             dav.post(
                 body = "body",
-                headers = HeadersBuilder().apply { append(HttpHeaders.ContentType, ContentType.parse("application/x-test-result").toString()) }.build()
+                additionalHeaders = HeadersBuilder().apply { append(HttpHeaders.ContentType, ContentType.parse("application/x-test-result").toString()) }.build()
             ) { response ->
                 called = true
                 runBlocking { assertEquals(sampleText, response.bodyAsText()) }
@@ -1151,7 +1151,7 @@ class DavResourceTest {
         runBlocking {
         dav.put(
             body = sampleText,
-            headers = HeadersBuilder().apply { append(HttpHeaders.ContentType, "text/plain") }.build()
+            additionalHeaders = HeadersBuilder().apply { append(HttpHeaders.ContentType, "text/plain") }.build()
         ) { response ->
             called = true
             val eTag = GetETag.fromHttpResponse(response)!!
