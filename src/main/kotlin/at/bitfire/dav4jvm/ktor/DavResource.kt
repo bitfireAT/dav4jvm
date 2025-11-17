@@ -34,6 +34,7 @@ import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.head
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.prepareRequest
@@ -318,28 +319,11 @@ open class DavResource @JvmOverloads constructor(
      */
     suspend fun head(callback: ResponseCallback) {
         followRedirects {
-            httpClient.prepareRequest {
-                method = HttpMethod.Head
-                url(location)
-            }.execute()
+            httpClient.head(location)
         }.let { response ->
             checkStatus(response)
             callback.onResponse(response)
         }
-
-        /*  TODO @ricki, second call omitted, not sure if this was done like that on purpose?
-        followRedirects {
-            httpClient.newCall(
-                Request.Builder()
-                    .head()
-                    .url(location)
-                    .build()
-            ).execute()
-        }.use { response ->
-            checkStatus(response)
-            callback.onResponse(response)
-        }
-         */
     }
 
     /**
@@ -367,7 +351,6 @@ open class DavResource @JvmOverloads constructor(
                 header(HttpHeaders.Accept, accept)
             }.execute()
         }
-
 
     /**
      * Sends a GET request to the resource. Sends `Accept-Encoding: identity` to disable
