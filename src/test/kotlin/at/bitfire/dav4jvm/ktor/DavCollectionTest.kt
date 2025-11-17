@@ -28,6 +28,7 @@ import io.ktor.http.Url
 import io.ktor.http.headersOf
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
+import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -46,7 +47,6 @@ class DavCollectionTest {
      */
     @Test
     fun testInitialSyncCollectionReport() {
-
         val mockEngine = MockEngine { request ->
             respond(
                 content =
@@ -109,38 +109,39 @@ class DavCollectionTest {
         val collection = DavCollection(httpClient, url)
 
         runBlocking {
+            var nrCalled = 0
+            val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
+                when (response.href) {
+                    URLBuilder(url).takeFrom("/dav/test.doc").build() -> {
+                        assertTrue(response.isSuccess())
+                        assertEquals(Response.HrefRelation.MEMBER, relation)
+                        val eTag = response[GetETag::class.java]
+                        assertEquals("00001-abcd1", eTag!!.eTag)
+                        assertFalse(eTag.weak)
+                        nrCalled++
+                    }
 
-        var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
-            when (response.href) {
-                URLBuilder(url).takeFrom("/dav/test.doc").build() -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00001-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
-                }
-                URLBuilder(url).takeFrom("/dav/vcard.vcf").build() -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00002-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
-                }
-                URLBuilder(url).takeFrom("/dav/calendar.ics").build() -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00003-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
+                    URLBuilder(url).takeFrom("/dav/vcard.vcf").build() -> {
+                        assertTrue(response.isSuccess())
+                        assertEquals(Response.HrefRelation.MEMBER, relation)
+                        val eTag = response[GetETag::class.java]
+                        assertEquals("00002-abcd1", eTag!!.eTag)
+                        assertFalse(eTag.weak)
+                        nrCalled++
+                    }
+
+                    URLBuilder(url).takeFrom("/dav/calendar.ics").build() -> {
+                        assertTrue(response.isSuccess())
+                        assertEquals(Response.HrefRelation.MEMBER, relation)
+                        val eTag = response[GetETag::class.java]
+                        assertEquals("00003-abcd1", eTag!!.eTag)
+                        assertFalse(eTag.weak)
+                        nrCalled++
+                    }
                 }
             }
-        }
-        assertEquals(3, nrCalled)
-        assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
+            assertEquals(3, nrCalled)
+            assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
         }
     }
 
@@ -149,7 +150,6 @@ class DavCollectionTest {
      */
     @Test
     fun testInitialSyncCollectionReportWithTruncation() {
-
         val mockEngine = MockEngine { request ->
             respond(
                 content = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -238,7 +238,6 @@ class DavCollectionTest {
      */
     @Test
     fun testSyncCollectionReportWithUnsupportedLimit() {
-
         val mockEngine = MockEngine { request ->
             respond(
                 content = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -266,8 +265,7 @@ class DavCollectionTest {
 
     @Test
     fun testPost() {
-
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 content = sampleText,
                 status = HttpStatusCode.Created,  // 201 Created
@@ -279,7 +277,7 @@ class DavCollectionTest {
 
         var called = false
         runBlocking {
-            dav.post(sampleText) { response ->
+            dav.post(ByteReadChannel(sampleText), ContentType.Text.Plain) { response ->
                 assertEquals(HttpMethod.Post, response.request.method)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(response.request.url, dav.location)

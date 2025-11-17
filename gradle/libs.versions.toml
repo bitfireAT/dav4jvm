@@ -2,6 +2,7 @@
 dokka = "2.1.0"
 junit4 = "4.13.2"
 kotlin = "2.2.21"
+kotlin-coroutines = "1.10.2"
 okhttpVersion = "5.3.1"
 spotbugs = "4.9.8"
 xpp3Version = "1.1.6"
@@ -9,6 +10,7 @@ ktor = "3.3.2"
 
 [libraries]
 junit4 = { module = "junit:junit", version.ref = "junit4" }
+kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttpVersion" }
