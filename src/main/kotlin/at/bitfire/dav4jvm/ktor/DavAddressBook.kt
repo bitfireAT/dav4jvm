@@ -79,7 +79,7 @@ class DavAddressBook @JvmOverloads constructor(
             httpClient.prepareRequest {
                 url(location)
                 method = HttpMethod.Companion.parse("REPORT")
-                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
                 setBody(writer.toString())
                 headers.append(HttpHeaders.Depth, "1")
             }.execute()
@@ -140,7 +140,7 @@ class DavAddressBook @JvmOverloads constructor(
                 url(location)
                 method = HttpMethod.Companion.parse("REPORT")
                 setBody(writer.toString())
-                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
                 headers.append(HttpHeaders.Depth, "0")
             }.execute()
         }.let { response ->

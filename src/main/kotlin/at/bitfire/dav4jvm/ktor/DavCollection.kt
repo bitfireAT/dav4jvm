@@ -101,7 +101,7 @@ open class DavCollection @JvmOverloads constructor(
                 url(location)
                 method = HttpMethod.Companion.parse("REPORT")
                 setBody(writer.toString())
-                header(HttpHeaders.ContentType, MIME_XML)
+                header(HttpHeaders.ContentType, MIME_XML_UTF8)
                 header(HttpHeaders.Depth, "0")
             }.execute()
         }.let { response ->
