@@ -20,7 +20,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -36,8 +36,7 @@ class HttpExceptionTest {
     private val sampleUrl = "https://example.com"
 
     @Test
-    fun isRedirect() {
-
+    fun isRedirect() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 status = HttpStatusCode.Found,
@@ -49,19 +48,16 @@ class HttpExceptionTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val response = httpClient.get(sampleUrl)
-            val result = HttpException(response, "Message")
+        val response = httpClient.get(sampleUrl)
+        val result = HttpException(response, "Message")
 
-            assertTrue(result.isRedirect)
-            assertFalse(result.isClientError)
-            assertFalse(result.isServerError)
-        }
+        assertTrue(result.isRedirect)
+        assertFalse(result.isClientError)
+        assertFalse(result.isServerError)
     }
 
     @Test
-    fun isClientError() {
-
+    fun isClientError() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 status = HttpStatusCode.NotFound,
@@ -73,19 +69,16 @@ class HttpExceptionTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val response = httpClient.get(sampleUrl)
-            val result = HttpException(response, "Message")
+        val response = httpClient.get(sampleUrl)
+        val result = HttpException(response, "Message")
 
-            assertFalse(result.isRedirect)
-            assertTrue(result.isClientError)
-            assertFalse(result.isServerError)
-        }
+        assertFalse(result.isRedirect)
+        assertTrue(result.isClientError)
+        assertFalse(result.isServerError)
     }
 
     @Test
-    fun isServerError() {
-
+    fun isServerError() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 status = HttpStatusCode.InternalServerError,
@@ -97,14 +90,12 @@ class HttpExceptionTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val response = httpClient.get(sampleUrl)
-            val result = HttpException(response, "Message")
+        val response = httpClient.get(sampleUrl)
+        val result = HttpException(response, "Message")
 
-            assertFalse(result.isRedirect)
-            assertFalse(result.isClientError)
-            assertTrue(result.isServerError)
-        }
+        assertFalse(result.isRedirect)
+        assertFalse(result.isClientError)
+        assertTrue(result.isServerError)
     }
 
     @Test

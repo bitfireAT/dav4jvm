@@ -21,7 +21,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,10 +35,8 @@ class DavExceptionTest {
 
     val sampleUrl = Url("https://127.0.0.1/dav/")
 
-
     @Test
-    fun fromResponse() {
-
+    fun fromResponse() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 status = HttpStatusCode.OK,
@@ -51,18 +49,15 @@ class DavExceptionTest {
         }
         val cause = Exception()
 
+        val response = httpClient.get(sampleUrl)
+        val result = DavException("Message",  cause, response)
 
-        runBlocking {
-            val response = httpClient.get(sampleUrl)
-            val result = DavException("Message",  cause, response)
-
-            assertEquals("Message", result.message)
-            assertEquals(cause, result.cause)
-            assertEquals(200, result.statusCode)
-            assertEquals("GET $sampleUrl", result.requestExcerpt)
-            assertEquals("Your Information", result.responseExcerpt)
-            assertTrue(result.errors.isEmpty())
-        }
+        assertEquals("Message", result.message)
+        assertEquals(cause, result.cause)
+        assertEquals(200, result.statusCode)
+        assertEquals("GET $sampleUrl", result.requestExcerpt)
+        assertEquals("Your Information", result.responseExcerpt)
+        assertTrue(result.errors.isEmpty())
     }
 
     @Test
@@ -100,11 +95,4 @@ class DavExceptionTest {
         }
     }
 
-
-
-
 }
-
-
-
-

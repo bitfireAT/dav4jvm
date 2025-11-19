@@ -20,7 +20,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -32,21 +32,18 @@ class ServiceUnavailableExceptionTest {
     val mockUrl = Url("http://www.example.com")
 
     @Test
-    fun testRetryAfter_NoTime() {
-
+    fun testRetryAfter_NoTime() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(HttpStatusCode.ServiceUnavailable)  // 503
         }
         val httpClient = HttpClient(mockEngine)
 
-        runBlocking {
-                val e = ServiceUnavailableException(httpClient.get(mockUrl))
-                assertNull(e.retryAfter)
-        }
+        val e = ServiceUnavailableException(httpClient.get(mockUrl))
+        assertNull(e.retryAfter)
     }
 
     @Test
-    fun testRetryAfter_Seconds() {
+    fun testRetryAfter_Seconds() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 content = "",
@@ -56,17 +53,14 @@ class ServiceUnavailableExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
 
-        runBlocking {
-            val response = httpClient.get(mockUrl)
-            val e = ServiceUnavailableException(response)
-            assertNotNull(e.retryAfter)
-            assertTrue(withinTimeRange(e.retryAfter!!, 120))
-        }
+        val response = httpClient.get(mockUrl)
+        val e = ServiceUnavailableException(response)
+        assertNotNull(e.retryAfter)
+        assertTrue(withinTimeRange(e.retryAfter!!, 120))
     }
 
     @Test
-    fun testRetryAfter_Date() {
-
+    fun testRetryAfter_Date() = runTest {
         val after30min = Instant.now().plusSeconds(30*60)
         val mockEngine = MockEngine { request ->
             respondError(
@@ -76,12 +70,10 @@ class ServiceUnavailableExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
 
-        runBlocking {
-            val response = httpClient.get(mockUrl)
-            val e = ServiceUnavailableException(response)
-            assertNotNull(e.retryAfter)
-            assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
-        }
+        val response = httpClient.get(mockUrl)
+        val e = ServiceUnavailableException(response)
+        assertNotNull(e.retryAfter)
+        assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
     }
 
 
