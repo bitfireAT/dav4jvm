@@ -60,7 +60,6 @@ import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
 import io.ktor.util.IdentityEncoder
-import io.ktor.util.appendAll
 import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.core.readFully
@@ -516,7 +515,7 @@ open class DavResource(
                     header(HttpHeaders.IfScheduleTagMatch, QuotedStringUtils.asQuotedString(ifScheduleTag))
 
                 if (additionalHeaders != null)
-                    headers.appendAll(headers)
+                    headers.appendAll(additionalHeaders)
             }
         }.let { response ->
             checkStatus(response)
