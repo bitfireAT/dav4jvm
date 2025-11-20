@@ -51,6 +51,17 @@ class HttpResponseInfoTest {
     }
 
     @Test
+    fun `requestExcerpt (no body)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.InternalServerError)
+        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpException(response, "Message")
+        assertEquals("GET $sampleUrl", result.requestExcerpt)
+    }
+
+    @Test
     fun `requestExcerpt (text as ByteArrayContent)`() = runTest {
         val mockEngine = MockEngine {
             respondError(HttpStatusCode.InternalServerError)
@@ -65,7 +76,7 @@ class HttpResponseInfoTest {
     }
 
     @Test
-    fun `requestExcerpt (large CSS text as TextContent)`() = runTest {
+    fun `requestExcerpt (text as large TextContent)`() = runTest {
         val mockEngine = MockEngine {
             respondError(HttpStatusCode.InternalServerError)
         }

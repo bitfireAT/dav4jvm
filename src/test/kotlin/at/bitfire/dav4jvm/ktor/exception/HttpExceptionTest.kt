@@ -37,17 +37,14 @@ class HttpExceptionTest {
 
     @Test
     fun isRedirect() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.Found,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
         val result = HttpException(response, "Message")
 
@@ -58,17 +55,14 @@ class HttpExceptionTest {
 
     @Test
     fun isClientError() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.NotFound,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
         val result = HttpException(response, "Message")
 
@@ -79,17 +73,14 @@ class HttpExceptionTest {
 
     @Test
     fun isServerError() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.InternalServerError,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
         val result = HttpException(response, "Message")
 

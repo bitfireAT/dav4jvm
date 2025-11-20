@@ -42,35 +42,31 @@ internal class HttpResponseInfo private constructor(
 
         suspend fun fromResponse(response: HttpResponse, responseBodyChannel: ByteReadChannel? = null): HttpResponseInfo {
             val request = response.request
-            val requestExcerptBuilder = StringBuilder(
-                "${request.method} ${request.url}\n\n"
-            )
+            val requestExcerptBuilder = StringBuilder("${request.method} ${request.url}")
 
             val requestContent = request.content
             val requestContentType = requestContent.contentType
+            val requestContentLength = requestContent.contentLength
 
             // extract request body if it's consumable text
             if (requestContent is TextContent) {
                 val excerpt = requestContent.text.take(MAX_EXCERPT_SIZE)
-                requestExcerptBuilder.append(excerpt)
+                requestExcerptBuilder
+                    .append("\n\n")
+                    .append(excerpt)
 
             } else if (requestContentType != null && requestContentType.isText() && requestContent is OutgoingContent.ByteArrayContent) {
                 val bytes = requestContent.bytes()
                 val excerptSize = min(bytes.size, MAX_EXCERPT_SIZE)
                 val truncated = bytes.copyOf(excerptSize)
                 val excerpt = truncated.toString(requestContentType.charset() ?: Charsets.UTF_8)
-                requestExcerptBuilder.append(excerpt)
+                requestExcerptBuilder
+                    .append("\n\n")
+                    .append(excerpt)
 
-            } else {
-                // otherwise, at least indicate request body size (if available)
-                requestExcerptBuilder.append("<request body")
-                requestContent.contentLength?.let {
-                    requestExcerptBuilder
-                        .append(" with ")
-                        .append(it)
-                        .append(" byte(s)")
-                }
-                requestExcerptBuilder.append('>')
+            } else if (requestContentLength != null && requestContentLength > 0) {
+                // otherwise, at least indicate request body size
+                requestExcerptBuilder.append("\n\n<request body with $requestContentLength byte(s)>")
             }
 
             // extract response body if it's text
