@@ -285,7 +285,7 @@ open class DavResource(
      * is appended (unless [location] already has a trailing slash).
      *
      * @param xmlBody           optional request body (used for MKCALENDAR or Extended MKCOL)
-     * @param method            HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
+     * @param methodName        HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
      * @param additionalHeaders additional headers to send with the request
      * @param callback          called with server response on success
      *
@@ -295,13 +295,13 @@ open class DavResource(
      */
     suspend fun mkCol(
         xmlBody: String?,
-        method: String = "MKCOL",
+        methodName: String = "MKCOL",
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
         followRedirects({
             httpClient.prepareRequest(UrlUtils.withTrailingSlash(location)) {
-                this.method = HttpMethod.parse(method)
+                method = HttpMethod.parse(methodName)
 
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
