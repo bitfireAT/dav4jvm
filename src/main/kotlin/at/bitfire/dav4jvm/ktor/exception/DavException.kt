@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
+import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -48,18 +49,20 @@ open class DavException(
     /**
      * Takes the request, response and errors from a given HTTP response.
      *
-     * @param message   optional exception message
-     * @param cause     optional exception cause
-     * @param response  response to extract status code and request/response excerpt from (if possible)
+     * @param message               optional exception message
+     * @param cause                 optional exception cause
+     * @param response              response to extract status code and request/response excerpt from (if possible)
+     * @param responseBodyChannel   optional existing response body channel that can be used to read the response body
      */
     constructor(
         message: String,
         cause: Throwable? = null,
-        response: HttpResponse
+        response: HttpResponse,
+        responseBodyChannel: ByteReadChannel? = null
     ) : this(
         message,
         cause,
-        runBlocking { HttpResponseInfo.fromResponse(response) }
+        runBlocking { HttpResponseInfo.fromResponse(response, responseBodyChannel) }
     )
 
     private constructor(

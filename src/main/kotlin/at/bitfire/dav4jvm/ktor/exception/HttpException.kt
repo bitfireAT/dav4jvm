@@ -32,7 +32,7 @@ open class HttpException(
     /**
      * Takes the request, response and errors from a given HTTP response.
      *
-     * @param response  response to extract status code and request/response excerpt from (if possible)
+     * @param response  unconsumed response to extract status code and request/response excerpt from (if possible)
      * @param message   optional exception message
      * @param cause     optional exception cause
      */
