@@ -19,15 +19,8 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
 import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
-import at.bitfire.dav4jvm.ktor.exception.ConflictException
 import at.bitfire.dav4jvm.ktor.exception.DavException
-import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
-import at.bitfire.dav4jvm.ktor.exception.GoneException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.ktor.exception.NotFoundException
-import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException
-import at.bitfire.dav4jvm.ktor.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
@@ -225,11 +218,12 @@ open class DavResource(
             }
         }.let { response ->
             checkStatus(response)
+
             if (response.status == HttpStatusCode.MultiStatus)
                 /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             // update location
             val nPath = response.headers[HttpHeaders.Location] ?: destination.toString()
@@ -261,11 +255,12 @@ open class DavResource(
             }
         }.let { response ->
             checkStatus(response)
-            if(response.status == HttpStatusCode.MultiStatus)
+
+            if (response.status == HttpStatusCode.MultiStatus)
                 /* Multiple resources were to be affected by the COPY, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             callback.onResponse(response)
         }
@@ -524,7 +519,7 @@ open class DavResource(
                 /* If an error occurs deleting a member resource (a resource other than
                    the resource identified in the Request-URI), then the response can be
                    a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             callback.onResponse(response)
         }
@@ -646,21 +641,11 @@ open class DavResource(
      *
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: HttpResponse) {
+    protected suspend fun checkStatus(response: HttpResponse) {
         if (response.status.isSuccess())
-            // everything OK
-            return
+            return      // everything OK
 
-        throw when (response.status.value) {
-            401 -> UnauthorizedException(response)
-            403 -> ForbiddenException(response)
-            404 -> NotFoundException(response)
-            409 -> ConflictException(response)
-            410 -> GoneException(response)
-            412 -> PreconditionFailedException(response)
-            503 -> ServiceUnavailableException(response)
-            else -> HttpException(response)
-        }
+        throw HttpException.fromResponse(response)
     }
 
     /**
@@ -715,8 +700,12 @@ open class DavResource(
      */
     suspend fun assertMultiStatus(httpResponse: HttpResponse) {
         if (httpResponse.status != HttpStatusCode.MultiStatus)
-            throw DavException("Expected 207 Multi-Status, got ${httpResponse.status.value} ${httpResponse.status.description}", response = httpResponse)
+            throw DavException.fromResponse(
+                message = "Expected 207 Multi-Status, got ${httpResponse.status.value} ${httpResponse.status.description}",
+                response = httpResponse
+            )
 
+        // FIXME
         val bodyChannel = httpResponse.bodyAsChannel()
 
         httpResponse.contentType()?.let { mimeType ->          // is response.contentType() ok here? Or must it be the content type of the body?
@@ -737,7 +726,10 @@ open class DavResource(
                     logger.warn("Couldn't scan for XML signature", e)
                 }
 
-                throw DavException("Received non-XML 207 Multi-Status", response = httpResponse)
+                throw DavException.fromResponse(
+                    message = "Received non-XML 207 Multi-Status",
+                    response = httpResponse
+                )
             }
         } ?: logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
     }

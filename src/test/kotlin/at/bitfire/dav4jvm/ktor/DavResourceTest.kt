@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
@@ -1115,7 +1114,10 @@ class DavResourceTest {
                 called = true
             }
             fail("Expected PreconditionFailedException")
-        } catch(_: PreconditionFailedException) {}
+        } catch (e: HttpException) {
+            if (e.statusCode != HttpStatusCode.PreconditionFailed.value)
+                fail("Expected HTTP 412")
+        }
         assertFalse(called)
         val rq = mockEngine.requestHistory.last()
         assertEquals("\"ExistingETag\"", rq.headers[HttpHeaders.IfMatch])
