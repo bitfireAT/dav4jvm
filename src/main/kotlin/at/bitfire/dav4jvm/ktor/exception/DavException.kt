@@ -49,6 +49,9 @@ open class DavException(
     /**
      * Takes the request, response and errors from a given HTTP response.
      *
+     * This constructor may block when it tries to read a potential response body and
+     * thus should only be called from worker threads.
+     *
      * @param message               optional exception message
      * @param cause                 optional exception cause
      * @param response              response to extract status code and request/response excerpt from (if possible)

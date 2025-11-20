@@ -84,7 +84,7 @@ internal class HttpResponseInfo private constructor(
                 } else
                     null
 
-            // get XML errors from request body excerpt
+            // extract XML errors from response body excerpt
             val errors: List<Error> =
                 if (responseContentType != null && responseContentType.isXml() && responseExcerpt != null)
                     extractErrors(responseExcerpt)
