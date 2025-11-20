@@ -12,13 +12,11 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
-import kotlinx.coroutines.runBlocking
-
 
 /**
  * Signals that a HTTP error was sent by the server in the context of a WebDAV operation.
  */
-open class HttpException(
+class HttpException(
     message: String? = null,
     cause: Throwable? = null,
     override val statusCode: Int,
@@ -26,42 +24,6 @@ open class HttpException(
     responseExcerpt: String?,
     errors: List<Error> = emptyList()
 ): DavException(message, cause, statusCode, requestExcerpt, responseExcerpt, errors) {
-
-    // constructor from Response
-
-    /**
-     * Takes the request, response and errors from a given HTTP response.
-     *
-     * This constructor may block when it tries to read a potential response body and
-     * thus should only be called from worker threads.
-     *
-     * @param response  unconsumed response to extract status code and request/response excerpt from (if possible)
-     * @param message   optional exception message
-     * @param cause     optional exception cause
-     */
-    constructor(
-        response: HttpResponse,
-        message: String = "HTTP ${response.status.value} ${response.status.description}",
-        cause: Throwable? = null
-    ) : this(
-        runBlocking { HttpResponseInfo.fromResponse(response) },
-        message,
-        cause
-    )
-
-    private constructor(
-        httpResponseInfo: HttpResponseInfo,
-        message: String?,
-        cause: Throwable? = null
-    ): this(
-        message = message,
-        cause = cause,
-        statusCode = httpResponseInfo.statusCode,
-        requestExcerpt = httpResponseInfo.requestExcerpt,
-        responseExcerpt = httpResponseInfo.responseExcerpt,
-        errors = httpResponseInfo.errors
-    )
-
 
     // status code classes
 
@@ -76,5 +38,33 @@ open class HttpException(
     /** Whether the [statusCode] is 5xx and thus indicates a server error. */
     val isServerError
         get() = statusCode / 100 == 5
+
+
+    companion object {
+
+        /**
+         * Creates a [HttpException] from the request, response and errors of a given HTTP response.
+         *
+         * @param response  unconsumed response to extract status code and request/response excerpt from (if possible)
+         * @param message   optional exception message
+         * @param cause     optional exception cause
+         */
+        suspend fun fromResponse(
+            response: HttpResponse,
+            message: String = "HTTP ${response.status}",
+            cause: Throwable? = null
+        ): HttpException {
+            val responseInfo = HttpResponseInfo.fromResponse(response)
+            return HttpException(
+                message = message,
+                cause = cause,
+                statusCode = responseInfo.statusCode,
+                requestExcerpt = responseInfo.requestExcerpt,
+                responseExcerpt = responseInfo.responseExcerpt,
+                errors = responseInfo.errors
+            )
+        }
+
+    }
 
 }

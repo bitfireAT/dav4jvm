@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.ktor.exception
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.ktor.exception.DavException.Companion.MAX_EXCERPT_SIZE
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
@@ -39,6 +38,11 @@ internal class HttpResponseInfo private constructor(
 ) {
 
     companion object {
+
+        /**
+         * maximum size of extracted response body
+         */
+        const val MAX_EXCERPT_SIZE = 20*1024
 
         suspend fun fromResponse(response: HttpResponse, responseBodyChannel: ByteReadChannel? = null): HttpResponseInfo {
             val request = response.request

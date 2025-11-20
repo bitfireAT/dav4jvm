@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.ktor.exception
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
 import io.ktor.utils.io.ByteReadChannel
-import kotlinx.coroutines.runBlocking
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -44,50 +43,32 @@ open class DavException(
     val errors: List<Error> = emptyList()
 ): Exception(message, cause) {
 
-    // constructor from Response
-
-    /**
-     * Takes the request, response and errors from a given HTTP response.
-     *
-     * This constructor may block when it tries to read a potential response body and
-     * thus should only be called from worker threads.
-     *
-     * @param message               optional exception message
-     * @param cause                 optional exception cause
-     * @param response              response to extract status code and request/response excerpt from (if possible)
-     * @param responseBodyChannel   optional existing response body channel that can be used to read the response body
-     */
-    constructor(
-        message: String,
-        cause: Throwable? = null,
-        response: HttpResponse,
-        responseBodyChannel: ByteReadChannel? = null
-    ) : this(
-        message,
-        cause,
-        runBlocking { HttpResponseInfo.fromResponse(response, responseBodyChannel) }
-    )
-
-    private constructor(
-        message: String?,
-        cause: Throwable? = null,
-        httpResponseInfo: HttpResponseInfo
-    ): this(
-        message = message,
-        cause = cause,
-        statusCode = httpResponseInfo.statusCode,
-        requestExcerpt = httpResponseInfo.requestExcerpt,
-        responseExcerpt = httpResponseInfo.responseExcerpt,
-        errors = httpResponseInfo.errors
-    )
-
-
     companion object {
 
         /**
-         * maximum size of extracted response body
+         * Creates a [DavException] from the request, response and errors of a given HTTP response.
+         *
+         * @param message               optional exception message
+         * @param cause                 optional exception cause
+         * @param response              response to extract status code and request/response excerpt from (if possible)
+         * @param responseBodyChannel   optional existing response body channel that can be used to read the response body
          */
-        const val MAX_EXCERPT_SIZE = 20*1024
+        suspend fun fromResponse(
+            message: String,
+            cause: Throwable? = null,
+            response: HttpResponse,
+            responseBodyChannel: ByteReadChannel? = null
+        ): DavException {
+            val responseInfo = HttpResponseInfo.fromResponse(response, responseBodyChannel)
+            return DavException(
+                message = message,
+                cause = cause,
+                statusCode = responseInfo.statusCode,
+                requestExcerpt = responseInfo.requestExcerpt,
+                responseExcerpt = responseInfo.responseExcerpt,
+                errors = responseInfo.errors
+            )
+        }
 
     }
 
