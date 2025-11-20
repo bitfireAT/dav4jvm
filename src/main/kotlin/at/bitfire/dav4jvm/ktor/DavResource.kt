@@ -38,6 +38,8 @@ import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.HttpStatement
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
@@ -45,6 +47,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
+import io.ktor.http.URLParserException
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.isSecure
@@ -650,44 +653,51 @@ open class DavResource(
     /**
      * Send a request and follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param sendRequest called to send the request (may be called multiple times)
+     * @param prepareRequest    prepares the request (may be called multiple times with updated [location])
+     * @param callback          called for the final resource that is not redirected anymore
+     *                          (may never be called if there are too many redirects)
      *
-     * @return response of the last request (whether it is a redirect or not)
-     *
-     * @throws DavException on HTTPS -> HTTP redirect
+     * @throws DavException     on invalid redirects or when the number of redirects has reached [MAX_REDIRECTS]
      */
-    internal suspend fun followRedirects(sendRequest: suspend () -> HttpResponse): HttpResponse {
+    internal suspend fun followRedirects(prepareRequest: suspend () -> HttpStatement, callback: ResponseCallback) {
+        var redirects = 0
+        var finished = false
+        while (!finished) {
+            prepareRequest().execute { response ->
+                val isRedirect = response.status.value in 300..399
+                if (isRedirect) {
+                    if (++redirects >= MAX_REDIRECTS)
+                        throw DavException("Too many redirects")
 
-        lateinit var response: HttpResponse
-        for (attempt in 1..MAX_REDIRECTS) {
-            response = sendRequest()
-            if (response.status in listOf(
-                    HttpStatusCode.PermanentRedirect,
-                    HttpStatusCode.TemporaryRedirect,
-                    HttpStatusCode.MultipleChoices,
-                    HttpStatusCode.MovedPermanently,
-                    HttpStatusCode.Found,
-                    HttpStatusCode.SeeOther)
-            )     //if is redirect
-            // handle 3xx Redirection
-                response.let {
-                    val target = it.headers[HttpHeaders.Location]?.let { newLocation ->
-                        URLBuilder(location).takeFrom(newLocation).build()
+                    // take new location from response header
+                    val newLocation = response.headers[HttpHeaders.Location]
+                        ?: throw DavException("Redirected without new Location")
+
+                    // resolve possible relative location URL
+                    val destination = try {
+                        URLBuilder(location)
+                            .takeFrom(newLocation)
+                            .build()
+                    } catch (e: URLParserException) {
+                        throw DavException("Redirected to invalid Location", e)
                     }
-                    if (target != null) {
-                        logger.info("Redirected, new location = $target")    // TODO: Is logger.info ok here?
 
-                        if (location.protocol.isSecure() && !target.protocol.isSecure())
-                            throw DavException("Received redirect from HTTPS to HTTP")
+                    // block insecure redirects
+                    if (location.protocol.isSecure() && !destination.protocol.isSecure())
+                        throw DavException("Received redirect from HTTPS to HTTP")
 
-                        location = target
-                    } else
-                        throw DavException("Redirected without new Location")
+                    // save new location
+                    location = destination
+
+                } else {
+                    // no redirect, pass scoped response to callback
+                    callback.onResponse(response)
+
+                    // quit loop (we can't use break because we're in the scoped execute() callback)
+                    finished = true
                 }
-            else
-                break
+            }
         }
-        return response
     }
 
     /**
