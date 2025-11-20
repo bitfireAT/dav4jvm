@@ -86,11 +86,11 @@ class HttpResponseInfoTest {
         val httpClient = HttpClient(mockEngine)
         val result = httpClient.post(sampleUrl) {
             contentType(ContentType.Text.CSS)
-            setBody("*".repeat(DavException.MAX_EXCERPT_SIZE * 2))
+            setBody("*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE * 2))
         }.let { response ->
             HttpResponseInfo.fromResponse(response)
         }
-        val truncatedText = "*".repeat(DavException.MAX_EXCERPT_SIZE)
+        val truncatedText = "*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE)
         assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
     }
 

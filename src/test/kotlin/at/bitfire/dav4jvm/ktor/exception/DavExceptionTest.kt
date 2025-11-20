@@ -47,9 +47,9 @@ class DavExceptionTest {
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
         val cause = Exception()
-        val result = DavException("Message", cause, response)
+        val result = DavException.fromResponse("Unexpected response", response, cause = cause)
 
-        assertEquals("Message", result.message)
+        assertEquals("Unexpected response", result.message)
         assertEquals(cause, result.cause)
         assertEquals(200, result.statusCode)
         assertEquals("GET $sampleUrl", result.requestExcerpt)

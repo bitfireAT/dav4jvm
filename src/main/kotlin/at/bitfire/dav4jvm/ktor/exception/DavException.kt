@@ -36,11 +36,11 @@ import io.ktor.utils.io.ByteReadChannel
  */
 open class DavException(
     message: String? = null,
-    cause: Throwable? = null,
     open val statusCode: Int? = null,
     val requestExcerpt: String? = null,
     val responseExcerpt: String? = null,
-    val errors: List<Error> = emptyList()
+    val errors: List<Error> = emptyList(),
+    cause: Throwable? = null
 ): Exception(message, cause) {
 
     companion object {
@@ -55,15 +55,15 @@ open class DavException(
          */
         suspend fun fromResponse(
             message: String,
-            cause: Throwable? = null,
             response: HttpResponse,
-            responseBodyChannel: ByteReadChannel? = null
+            responseBodyChannel: ByteReadChannel? = null,
+            cause: Throwable? = null
         ): DavException {
             val responseInfo = HttpResponseInfo.fromResponse(response, responseBodyChannel)
             return DavException(
                 message = message,
                 cause = cause,
-                statusCode = responseInfo.statusCode,
+                statusCode = responseInfo.status.value,
                 requestExcerpt = responseInfo.requestExcerpt,
                 responseExcerpt = responseInfo.responseExcerpt,
                 errors = responseInfo.errors

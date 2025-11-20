@@ -809,9 +809,9 @@ open class DavResource(
             throw DavException("Multi-Status response didn't contain multistatus XML element")
 
         } catch (e: EOFException) {
-            throw DavException("Incomplete multistatus XML element", e)
+            throw DavException("Incomplete multistatus XML element", cause = e)
         } catch (e: XmlPullParserException) {
-            throw DavException("Couldn't parse multistatus XML element", e)
+            throw DavException("Couldn't parse multistatus XML element", cause = e)
         }
     }
 

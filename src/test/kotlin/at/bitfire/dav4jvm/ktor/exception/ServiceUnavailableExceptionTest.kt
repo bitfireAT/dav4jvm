@@ -37,9 +37,10 @@ class ServiceUnavailableExceptionTest {
             respondError(HttpStatusCode.ServiceUnavailable)  // 503
         }
         val httpClient = HttpClient(mockEngine)
-
-        val e = ServiceUnavailableException(httpClient.get(sampleUrl))
-        assertNull(e.retryAfter)
+        val response = httpClient.get(sampleUrl)
+        val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+        assertNull(ex.retryAfter)
+        assertNull(ex.retryAfterAbs)
     }
 
     @Test
@@ -54,9 +55,9 @@ class ServiceUnavailableExceptionTest {
         val httpClient = HttpClient(mockEngine)
 
         val response = httpClient.get(sampleUrl)
-        val e = ServiceUnavailableException(response)
-        assertNotNull(e.retryAfter)
-        assertTrue(withinTimeRange(e.retryAfter!!, 120))
+        val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+        assertNotNull(ex.retryAfter)
+        assertTrue(withinTimeRange(ex.retryAfterAbs!!, 120))
     }
 
     @Test
@@ -71,9 +72,9 @@ class ServiceUnavailableExceptionTest {
         val httpClient = HttpClient(mockEngine)
 
         val response = httpClient.get(sampleUrl)
-        val e = ServiceUnavailableException(response)
-        assertNotNull(e.retryAfter)
-        assertTrue(withinTimeRange(e.retryAfter!!, 30*60))
+        val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+        assertNotNull(ex.retryAfter)
+        assertTrue(withinTimeRange(ex.retryAfterAbs!!, 30*60))
     }
 
 
@@ -81,9 +82,9 @@ class ServiceUnavailableExceptionTest {
 
     private fun withinTimeRange(d: Instant, seconds: Long) =
         d.isBefore(
-            Instant.now()
-                .plusSeconds(seconds)
-                .plusSeconds(5)     // tolerance for test running
+        Instant.now()
+            .plusSeconds(seconds)
+            .plusSeconds(5)     // tolerance for test running
         )
 
 }

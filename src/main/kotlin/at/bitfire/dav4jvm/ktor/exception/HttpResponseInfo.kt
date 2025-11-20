@@ -17,6 +17,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.charset
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
@@ -31,7 +32,7 @@ import java.io.StringReader
 import kotlin.math.min
 
 internal class HttpResponseInfo private constructor(
-    val statusCode: Int,
+    val status: HttpStatusCode,
     val requestExcerpt: String?,
     val responseExcerpt: String?,
     val errors: List<Error>
@@ -96,7 +97,7 @@ internal class HttpResponseInfo private constructor(
                     emptyList()
 
             return HttpResponseInfo(
-                statusCode = response.status.value,
+                status = response.status,
                 requestExcerpt = requestExcerptBuilder.toString(),
                 responseExcerpt = responseExcerpt,
                 errors = errors
