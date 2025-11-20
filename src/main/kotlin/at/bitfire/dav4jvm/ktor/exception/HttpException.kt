@@ -25,6 +25,7 @@ open class HttpException internal constructor(
     errors: List<Error> = emptyList()
 ): DavException(
     message = "HTTP $status",
+    statusCode = status.value,
     requestExcerpt = requestExcerpt,
     responseExcerpt = responseExcerpt,
     errors = errors

@@ -19,6 +19,8 @@ import java.time.Instant
 
 class ServiceUnavailableException internal constructor(
     responseInfo: HttpResponseInfo,
+
+    /** unprocessed value of the `Retry-After` header */
     val retryAfter: String?
 ): HttpException(
     status = responseInfo.status,
