@@ -58,6 +58,7 @@ dependencies {
     api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
+    implementation(libs.ktor.client.encoding)
     implementation(libs.ktor.client.core)
 
     testImplementation(libs.junit4)

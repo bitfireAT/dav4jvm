@@ -25,7 +25,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -37,8 +37,7 @@ class HttpResponseInfoTest {
     // requestExcerpt
 
     @Test
-    fun `requestExcerpt (binary blob)`() {
-
+    fun `requestExcerpt (binary blob)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(
                 status = HttpStatusCode.NoContent,
@@ -49,19 +48,16 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val response = httpClient.post(sampleUrl) {
-                setBody("Sample")
-                contentType(ContentType.parse("application/test"))
-            }
-            val result = HttpException(response, "Message")
-            assertEquals("POST $sampleUrl\n\n<request body (6 bytes)>", result.requestExcerpt)
+        val response = httpClient.post(sampleUrl) {
+            setBody("Sample")
+            contentType(ContentType.parse("application/test"))
         }
+        val result = HttpException(response, "Message")
+        assertEquals("POST $sampleUrl\n\n<request body (6 bytes)>", result.requestExcerpt)
     }
 
     @Test
-    fun `requestExcerpt (large CSS text)`() {
-
+    fun `requestExcerpt (large CSS text)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(
                 status = HttpStatusCode.NoContent,
@@ -72,24 +68,21 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.post(sampleUrl) {
-                setBody("*".repeat(DavException.Companion.MAX_EXCERPT_SIZE * 2))
-                contentType(ContentType.Text.CSS)
-            }.let { response ->
-                HttpResponseInfo.fromResponse(response)
-            }
-            val truncatedText = "*".repeat(DavException.Companion.MAX_EXCERPT_SIZE)
-            assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
+        val result = httpClient.post(sampleUrl) {
+            setBody("*".repeat(DavException.Companion.MAX_EXCERPT_SIZE * 2))
+            contentType(ContentType.Text.CSS)
+        }.let { response ->
+            HttpResponseInfo.fromResponse(response)
         }
+        val truncatedText = "*".repeat(DavException.Companion.MAX_EXCERPT_SIZE)
+        assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
     }
 
 
     // responseExcerpt
 
     @Test
-    fun `responseExcerpt (binary blob)`() {
-
+    fun `responseExcerpt (binary blob)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(
                 status = HttpStatusCode.NotFound,
@@ -101,17 +94,14 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.get(sampleUrl).let { response ->
-                HttpResponseInfo.Companion.fromResponse(response)
-            }
-            assertNull(result.responseExcerpt)
+        val result = httpClient.get(sampleUrl).let { response ->
+            HttpResponseInfo.Companion.fromResponse(response)
         }
+        assertNull(result.responseExcerpt)
     }
 
     @Test
-    fun `responseExcerpt (HTML)`() {
-
+    fun `responseExcerpt (HTML)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(
                 status = HttpStatusCode.NotFound,
@@ -123,17 +113,14 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.get(sampleUrl).let { response ->
-                HttpResponseInfo.Companion.fromResponse(response)
-            }
-            assertEquals("Interesting details about error", result.responseExcerpt)
+        val result = httpClient.get(sampleUrl).let { response ->
+            HttpResponseInfo.Companion.fromResponse(response)
         }
+        assertEquals("Interesting details about error", result.responseExcerpt)
     }
 
     @Test
-    fun `responseExcerpt (large HTML)`() {
-
+    fun `responseExcerpt (large HTML)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondError(
                 status = HttpStatusCode.NotFound,
@@ -145,21 +132,18 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.get(sampleUrl).let { response ->
-                HttpResponseInfo.Companion.fromResponse(response)
-            }
-            assertEquals(
-                "0123456789".repeat(2 * 1024),    // limited to 20 kB
-                result.responseExcerpt
-            )
+        val result = httpClient.get(sampleUrl).let { response ->
+            HttpResponseInfo.Companion.fromResponse(response)
         }
+        assertEquals(
+            "0123456789".repeat(2 * 1024),    // limited to 20 kB
+            result.responseExcerpt
+        )
     }
 
 
     @Test
-    fun `responseExcerpt (no MIME type)`() {
-
+    fun `responseExcerpt (no MIME type)`() = runTest {
         val mockEngine = MockEngine { request ->
             respondOk(
                 content = "Maybe evil binary data",
@@ -169,17 +153,14 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.get(sampleUrl).let { response ->
-                HttpResponseInfo.Companion.fromResponse(response)
-            }
-            assertNull(result.responseExcerpt)
+        val result = httpClient.get(sampleUrl).let { response ->
+            HttpResponseInfo.Companion.fromResponse(response)
         }
+        assertNull(result.responseExcerpt)
     }
 
     @Test
-    fun `responseExcerpt (XML with error elements)`() {
-
+    fun `responseExcerpt (XML with error elements)`() = runTest {
         val xml = """
             <?xml version="1.0" encoding="utf-8" ?>
             <D:error xmlns:D="DAV:">
@@ -200,17 +181,15 @@ class HttpResponseInfoTest {
             followRedirects = false
         }
 
-        runBlocking {
-            val result = httpClient.get(sampleUrl).let { response ->
-                HttpResponseInfo.Companion.fromResponse(response)
-            }
-            assertEquals(xml, result.responseExcerpt)
-            assertEquals(
-                listOf(
-                    Error(Property.Name("DAV:", "lock-token-submitted"))
-                ),
-                result.errors
-            )
+        val result = httpClient.get(sampleUrl).let { response ->
+            HttpResponseInfo.Companion.fromResponse(response)
         }
+        assertEquals(xml, result.responseExcerpt)
+        assertEquals(
+            listOf(
+                Error(Property.Name("DAV:", "lock-token-submitted"))
+            ),
+            result.errors
+        )
     }
 }

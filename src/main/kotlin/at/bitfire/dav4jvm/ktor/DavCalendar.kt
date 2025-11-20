@@ -122,7 +122,7 @@ class DavCalendar @JvmOverloads constructor(
                 url(location)
                 method = HttpMethod.Companion.parse("REPORT")
                 setBody(writer.toString())
-                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
                 headers.append(HttpHeaders.Depth, "1")
             }.execute()
         }.let { response ->
@@ -182,7 +182,7 @@ class DavCalendar @JvmOverloads constructor(
                 url(location)
                 method = HttpMethod.Companion.parse("REPORT")
                 setBody(writer.toString())
-                headers.append(HttpHeaders.ContentType, MIME_XML.toString())
+                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
             }.execute()
         }.let { response ->
             return processMultiStatus(response, callback)
