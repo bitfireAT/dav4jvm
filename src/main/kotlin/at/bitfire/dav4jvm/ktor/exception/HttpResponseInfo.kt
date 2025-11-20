@@ -13,10 +13,11 @@ package at.bitfire.dav4jvm.ktor.exception
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
+import at.bitfire.dav4jvm.ktor.isText
+import at.bitfire.dav4jvm.ktor.isXml
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.charset
 import io.ktor.http.content.OutgoingContent
@@ -124,15 +125,6 @@ internal class HttpResponseInfo private constructor(
 
             return emptyList()
         }
-
-
-        // extensions
-
-        fun ContentType.isText() =
-            isXml() || match(ContentType.Text.Any)
-
-        fun ContentType.isXml() =
-            match(ContentType.Application.Xml) || match(ContentType.Text.Xml)
 
     }
 
