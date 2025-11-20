@@ -54,9 +54,9 @@ import io.ktor.http.withCharset
 import io.ktor.util.IdentityEncoder
 import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.core.readFully
 import io.ktor.utils.io.jvm.javaio.toInputStream
-import io.ktor.utils.io.readBuffer
+import io.ktor.utils.io.peek
+import kotlinx.io.bytestring.encodeToByteString
 import org.slf4j.LoggerFactory
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -99,7 +99,7 @@ open class DavResource(
         val REMOVE = Property.Name(NS_WEBDAV, "remove")
         val PROP = Property.Name(NS_WEBDAV, "prop")
 
-        val XML_SIGNATURE = "<?xml".toByteArray()
+        val XML_SIGNATURE = "<?xml".encodeToByteString()
 
 
         /**
@@ -693,9 +693,11 @@ open class DavResource(
     /**
      * Validates a 207 Multi-Status response.
      *
-     * @param httpResponse will be checked for Multi-Status response
+     * @param httpResponse  response that will be checked for Multi-Status
+     * @param bodyChannel   response body channel that will be peeked into in order to
+     *                      determine whether it's XML
      *
-     * @throws DavException if the response is not a Multi-Status response
+     * @throws DavException if the response is not a Multi-Status response with XML body
      */
     suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
         if (httpResponse.status != HttpStatusCode.MultiStatus)
@@ -718,9 +720,8 @@ open class DavResource(
            Some broken servers return an XML response with some other MIME type. So we try to see
            whether the response is maybe XML although the Content-Type is something else. */
         try {
-            val firstBytes = ByteArray(XML_SIGNATURE.size)
-            bodyChannel.readBuffer().peek().readFully(firstBytes)
-            if (XML_SIGNATURE.contentEquals(firstBytes)) {
+            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
+            if (firstBytes == XML_SIGNATURE) {
                 logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
                 return  // response body starts with XML signature, fine
             }

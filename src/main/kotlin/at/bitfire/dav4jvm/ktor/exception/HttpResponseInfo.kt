@@ -61,7 +61,7 @@ internal class HttpResponseInfo private constructor(
                     .append("\n\n")
                     .append(excerpt)
 
-            } else if (requestContentType != null && requestContentType.isText() && requestContent is OutgoingContent.ByteArrayContent) {
+            } else if (requestContent is OutgoingContent.ByteArrayContent && requestContentType != null && requestContentType.isText()) {
                 val bytes = requestContent.bytes()
                 val excerptSize = min(bytes.size, MAX_EXCERPT_SIZE)
                 val truncated = bytes.copyOf(excerptSize)
