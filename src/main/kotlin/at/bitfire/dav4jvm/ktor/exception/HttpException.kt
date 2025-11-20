@@ -12,7 +12,7 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
-import javax.annotation.WillNotClose
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -37,10 +37,14 @@ open class HttpException(
      * @param cause     optional exception cause
      */
     constructor(
-        @WillNotClose response: HttpResponse,
+        response: HttpResponse,
         message: String = "HTTP ${response.status.value} ${response.status.description}",
         cause: Throwable? = null
-    ) : this(HttpResponseInfo.fromResponse(response), message, cause)
+    ) : this(
+        runBlocking { HttpResponseInfo.fromResponse(response) },
+        message,
+        cause
+    )
 
     private constructor(
         httpResponseInfo: HttpResponseInfo,

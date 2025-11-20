@@ -19,4 +19,5 @@ class ForbiddenException: HttpException {
         if (response.status.value != HttpStatusCode.Forbidden.value)
             throw IllegalArgumentException("Status code must be 403")
     }
+
 }

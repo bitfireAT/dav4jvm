@@ -19,4 +19,5 @@ class GoneException: HttpException {
         if (response.status.value != HttpStatusCode.Gone.value)
             throw IllegalArgumentException("Status code must be 410")
     }
+
 }

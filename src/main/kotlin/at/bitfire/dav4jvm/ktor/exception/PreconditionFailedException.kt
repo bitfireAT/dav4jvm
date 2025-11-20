@@ -19,4 +19,5 @@ class PreconditionFailedException: HttpException {
         if (response.status.value != HttpStatusCode.PreconditionFailed.value)
             throw IllegalArgumentException("Status code must be 412")
     }
+
 }

@@ -12,7 +12,7 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
-import javax.annotation.WillNotClose
+import kotlinx.coroutines.runBlocking
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -55,8 +55,12 @@ open class DavException(
     constructor(
         message: String,
         cause: Throwable? = null,
-        @WillNotClose response: HttpResponse
-    ) : this(message, cause, HttpResponseInfo.fromResponse(response))
+        response: HttpResponse
+    ) : this(
+        message,
+        cause,
+        runBlocking { HttpResponseInfo.fromResponse(response) }
+    )
 
     private constructor(
         message: String?,

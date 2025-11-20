@@ -19,4 +19,5 @@ class NotFoundException: HttpException {
         if (response.status.value != HttpStatusCode.NotFound.value)
             throw IllegalArgumentException("Status code must be 404")
     }
+
 }

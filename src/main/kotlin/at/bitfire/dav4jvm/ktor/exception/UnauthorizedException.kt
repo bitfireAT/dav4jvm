@@ -19,4 +19,5 @@ class UnauthorizedException: HttpException {
         if (response.status.value != HttpStatusCode.Unauthorized.value)
             throw IllegalArgumentException("Status code must be 401")
     }
+
 }

@@ -20,7 +20,6 @@ import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
 
-
 class ServiceUnavailableException(response: HttpResponse) : HttpException(response) {
 
     private val logger
