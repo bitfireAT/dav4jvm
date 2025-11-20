@@ -351,7 +351,7 @@ class DavResourceTest {
         // 200 OK
         var called = false
         dav.post(
-            body = ByteReadChannel("body"),
+            provideBody = ByteReadChannel("body"),
             mimeType = ContentType.parse("application/x-test-result")
         ) { response ->
             called = true
@@ -417,7 +417,7 @@ class DavResourceTest {
 
         var called = false
         dav.post(
-            body = ByteReadChannel("body"),
+            provideBody = ByteReadChannel("body"),
             mimeType = ContentType.parse("application/x-test-result")
         ) { response ->
             called = true
@@ -442,7 +442,7 @@ class DavResourceTest {
 
         var called = false
         dav.post(
-            body = ByteReadChannel("body"),
+            provideBody = ByteReadChannel("body"),
             mimeType = ContentType.Text.Plain
         ) { response ->
             called = true
