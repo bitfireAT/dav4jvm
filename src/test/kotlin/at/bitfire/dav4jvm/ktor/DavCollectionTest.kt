@@ -270,7 +270,7 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, sampleUrl)
 
         var called = false
-        dav.post(ByteReadChannel(sampleText), ContentType.Text.Plain) { response ->
+        dav.post({ ByteReadChannel(sampleText) }, ContentType.Text.Plain) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(response.request.url, dav.location)

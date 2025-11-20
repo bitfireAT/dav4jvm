@@ -669,6 +669,9 @@ open class DavResource(
         }
     }
 
+
+    // Multi-Status handling
+
     /**
      * Validates a 207 Multi-Status response.
      *
@@ -714,9 +717,6 @@ open class DavResource(
             response = httpResponse
         )
     }
-
-
-    // Multi-Status handling
 
     /**
      * Processes a Multi-Status response.
