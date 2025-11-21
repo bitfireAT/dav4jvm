@@ -25,17 +25,9 @@ data class VapidPublicKey(
     val key: String? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "vapid-public-key")
-
-    }
-
-
     object Factory : PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.VapidPublicKey
 
         override fun create(parser: XmlPullParser): VapidPublicKey {
             return VapidPublicKey(

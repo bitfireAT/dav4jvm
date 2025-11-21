@@ -11,12 +11,12 @@
 package at.bitfire.dav4jvm.okhttp.property.push
 
 import at.bitfire.dav4jvm.okhttp.property.PropertyTest
-import at.bitfire.dav4jvm.property.push.NS_WEBDAV_PUSH
 import at.bitfire.dav4jvm.property.push.PushMessage
 import at.bitfire.dav4jvm.property.push.PushRegister
 import at.bitfire.dav4jvm.property.push.PushTransports
 import at.bitfire.dav4jvm.property.push.Topic
 import at.bitfire.dav4jvm.property.push.VapidPublicKey
+import at.bitfire.dav4jvm.property.push.WebDAVPush.NS_WEBDAV_PUSH
 import at.bitfire.dav4jvm.property.push.WebPush
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

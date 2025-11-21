@@ -24,17 +24,9 @@ data class Topic(
     val topic: String? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "topic")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.Topic
 
         override fun create(parser: XmlPullParser): Topic =
             Topic(XmlReader(parser).readText())

@@ -26,17 +26,9 @@ data class PushResource(
     val uri: URI? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-resource")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.PushResource
 
         override fun create(parser: XmlPullParser): PushResource =
             PushResource(

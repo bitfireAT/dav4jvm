@@ -24,17 +24,12 @@ class PushTransports private constructor(
     val transports: Set<PushTransport>
 ): Property {
 
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "transports")
-    }
-
     fun hasWebPush() = transports.any { it is WebPush }
 
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.Transports
 
         override fun create(parser: XmlPullParser): PushTransports {
             val transports = mutableListOf<PushTransport>()
@@ -43,7 +38,8 @@ class PushTransports private constructor(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        WebPush.NAME -> transports += WebPush.Factory.create(parser)
+                        WebDAVPush.WebPush ->
+                            transports += WebPush.Factory.create(parser)
                     }
                 }
                 eventType = parser.next()

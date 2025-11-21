@@ -28,17 +28,9 @@ data class ContentUpdate(
     val syncToken: SyncToken? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "content-update")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.ContentUpdate
 
         override fun create(parser: XmlPullParser): ContentUpdate {
             var contentUpdate = ContentUpdate()

@@ -11,6 +11,7 @@
 package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.property.PropertyTest
+import at.bitfire.dav4jvm.property.push.WebDAVPush.NS_WEBDAV_PUSH
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue

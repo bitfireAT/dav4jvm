@@ -26,17 +26,9 @@ data class PropertyUpdate(
     val syncLevel: SyncLevel? = null,
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "property-update")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.PropertyUpdate
 
         override fun create(parser: XmlPullParser): PropertyUpdate {
             var propertyUpdate = PropertyUpdate()

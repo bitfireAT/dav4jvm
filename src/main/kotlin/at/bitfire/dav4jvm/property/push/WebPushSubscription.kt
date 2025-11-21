@@ -26,17 +26,9 @@ data class WebPushSubscription(
     val authSecret: AuthSecret? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "web-push-subscription")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.WebPushSubscription
 
         override fun create(parser: XmlPullParser): WebPushSubscription {
             var subscription = WebPushSubscription()
@@ -46,9 +38,12 @@ data class WebPushSubscription(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        PushResource.NAME -> subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
-                        SubscriptionPublicKey.NAME -> subscription = subscription.copy(subscriptionPublicKey = SubscriptionPublicKey.Factory.create(parser))
-                        AuthSecret.NAME -> subscription = subscription.copy(authSecret = AuthSecret.Factory.create(parser))
+                        WebDAVPush.PushResource ->
+                            subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
+                        WebDAVPush.SubscriptionPublicKey ->
+                            subscription = subscription.copy(subscriptionPublicKey = SubscriptionPublicKey.Factory.create(parser))
+                        WebDAVPush.AuthSecret ->
+                            subscription = subscription.copy(authSecret = AuthSecret.Factory.create(parser))
                     }
                 }
                 eventType = parser.next()
