@@ -22,10 +22,6 @@ class SupportedAddressData(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(NS_CARDDAV, "supported-address-data")
-
-        val ADDRESS_DATA_TYPE = Property.Name(NS_CARDDAV, "address-data-type")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
 
@@ -43,12 +39,12 @@ class SupportedAddressData(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CardDAV.SupportedAddressData
 
         override fun create(parser: XmlPullParser): SupportedAddressData {
             val supportedTypes = mutableSetOf<String>()
 
-            XmlReader(parser).readContentTypes(ADDRESS_DATA_TYPE, supportedTypes::add)
+            XmlReader(parser).readContentTypes(CardDAV.AddressDataType, supportedTypes::add)
 
             return SupportedAddressData(supportedTypes)
         }

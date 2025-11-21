@@ -19,7 +19,7 @@ import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
 import at.bitfire.dav4jvm.property.caldav.CalDAV
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
@@ -507,7 +507,7 @@ open class DavResource(
         serializer.setOutput(writer)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
         serializer.insertTag(WebDAV.PropFind) {
             insertTag(WebDAV.Prop) {

@@ -13,7 +13,7 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.property.caldav.CalDAV
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import org.xmlpull.v1.XmlPullParser
 
 class ResourceType(
@@ -22,7 +22,6 @@ class ResourceType(
 
     companion object {
 
-        val ADDRESSBOOK = Property.Name(NS_CARDDAV, "addressbook") // CardDAV
 
     }
 
@@ -43,7 +42,7 @@ class ResourceType(
                     when (typeName) {       // if equals(), replace by our instance
                         WebDAV.Collection -> typeName = WebDAV.Collection
                         WebDAV.Principal -> typeName = WebDAV.Principal
-                        ADDRESSBOOK -> typeName = ADDRESSBOOK
+                        CardDAV.Addressbook -> typeName = CardDAV.Addressbook
                         CalDAV.Calendar -> typeName = CalDAV.Calendar
                         CalDAV.CalendarProxyRead -> typeName = CalDAV.CalendarProxyRead
                         CalDAV.CalendarProxyWrite -> typeName = CalDAV.CalendarProxyWrite

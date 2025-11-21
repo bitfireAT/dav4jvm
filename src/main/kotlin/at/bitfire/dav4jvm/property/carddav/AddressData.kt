@@ -21,9 +21,6 @@ data class AddressData(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(NS_CARDDAV, "address-data")
-
         // attributes
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
@@ -33,7 +30,7 @@ data class AddressData(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CardDAV.AddressData
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT address-data (#PCDATA)>

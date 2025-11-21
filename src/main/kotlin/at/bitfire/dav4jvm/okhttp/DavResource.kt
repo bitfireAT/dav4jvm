@@ -27,7 +27,7 @@ import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.okhttp.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.caldav.CalDAV
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.Headers
@@ -573,7 +573,7 @@ open class DavResource @JvmOverloads constructor(
         serializer.setOutput(writer)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
         serializer.insertTag(WebDAV.PropFind) {
             insertTag(WebDAV.Prop) {

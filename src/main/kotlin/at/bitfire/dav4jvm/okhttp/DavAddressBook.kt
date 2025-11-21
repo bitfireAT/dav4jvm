@@ -14,7 +14,7 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,10 +35,6 @@ class DavAddressBook @JvmOverloads constructor(
         val MIME_JCARD = "application/vcard+json".toMediaType()
         val MIME_VCARD3_UTF8 = "text/vcard;charset=utf-8".toMediaType()
         val MIME_VCARD4 = "text/vcard;version=4.0".toMediaType()
-
-        val ADDRESSBOOK_QUERY = Property.Name(NS_CARDDAV, "addressbook-query")
-        val ADDRESSBOOK_MULTIGET = Property.Name(NS_CARDDAV, "addressbook-multiget")
-        val FILTER = Property.Name(NS_CARDDAV, "filter")
     }
 
     /**
@@ -64,12 +60,12 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
-        serializer.insertTag(ADDRESSBOOK_QUERY) {
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookQuery) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetETag)
             }
-            insertTag(FILTER)
+            insertTag(CardDAV.Filter)
         }
         serializer.endDocument()
 
@@ -113,12 +109,12 @@ class DavAddressBook @JvmOverloads constructor(
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
-        serializer.insertTag(ADDRESSBOOK_MULTIGET) {
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookMultiget) {
             insertTag(WebDAV.Prop) {
                 insertTag(WebDAV.GetContentType)
                 insertTag(WebDAV.GetETag)
-                insertTag(AddressData.NAME) {
+                insertTag(CardDAV.AddressData) {
                     if (contentType != null)
                         attribute(null, AddressData.CONTENT_TYPE, contentType)
                     if (version != null)
