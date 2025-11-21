@@ -349,7 +349,7 @@ class DavResourceTest {
                 }.build()
             )
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         /* POSITIVE TEST CASES */
@@ -418,7 +418,7 @@ class DavResourceTest {
                 else -> respond(sampleText, HttpStatusCode.OK, headersOf(HttpHeaders.ETag,"\"StrongETag\""))
             }
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -444,7 +444,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond(sampleText, HttpStatusCode.OK)
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -462,7 +462,7 @@ class DavResourceTest {
   fun `Move POSITIVE TEST CASES no preconditions, 201 Created, new URL mapping at the destination`() = runTest {      val mockEngine = MockEngine {
           respond("",HttpStatusCode.Created)     // 201 Created
       }
-      val httpClient = HttpClient(mockEngine) { followRedirects = false }
+      val httpClient = HttpClient(mockEngine)
       val destination = URLBuilder(sampleUrl).takeFrom("test").build()
 
       // no preconditions, 201 Created, new URL mapping at the destination
@@ -487,7 +487,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond("",HttpStatusCode.NoContent)     // 204 No content
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val destination = URLBuilder(sampleUrl).takeFrom("test").build()
 
         var called = false
@@ -511,7 +511,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond("",HttpStatusCode.MultiStatus)     // 207 Multi-Status
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val destination = URLBuilder(sampleUrl).takeFrom("test").build()
 
         // 207 multi-status (e.g. errors on some of resources affected by
@@ -532,7 +532,7 @@ class DavResourceTest {
       val mockEngine = MockEngine {
           respond("",HttpStatusCode.OK, HeadersBuilder().apply { append("DAV", "  1,  2 ,3,hyperactive-access")}.build())     // 200 Ok
       }
-      val httpClient = HttpClient(mockEngine) { followRedirects = false }
+      val httpClient = HttpClient(mockEngine)
       val dav = DavResource(httpClient, sampleUrl)
 
       var called = false
@@ -552,7 +552,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respondOk()     // 200 OK
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -568,7 +568,7 @@ class DavResourceTest {
       val mockEngine = MockEngine {
           respondError(HttpStatusCode.InternalServerError)     // 500
       }
-      val httpClient = HttpClient(mockEngine) { followRedirects = false }
+      val httpClient = HttpClient(mockEngine)
       val dav = DavResource(httpClient, sampleUrl)
 
       var called = false
@@ -583,7 +583,7 @@ class DavResourceTest {
     @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus 200 OK (instead of 207 Multi-Status)`() = runTest {
         val mockEngine = MockEngine { respondOk() }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * 200 OK (instead of 207 Multi-Status)
@@ -601,7 +601,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond("<html></html>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString()))   // non-XML response
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * non-XML response
@@ -619,7 +619,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond("<malformed-xml>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString()))   // * malformed XML response
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * malformed XML response
@@ -638,7 +638,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             respond("<test></test>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString()))   // * response without <multistatus> root element
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * response without <multistatus> root element
@@ -665,7 +665,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // * multi-status response with invalid <status> in <response>
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * multi-status response with invalid <status> in <response>
@@ -691,7 +691,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // * multi-status response with <response>/<status> element indicating failure
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * multi-status response with <response>/<status> element indicating failure
@@ -722,7 +722,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // * multi-status response with invalid <status> in <propstat>
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // * multi-status response with invalid <status> in <propstat>
@@ -744,7 +744,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // multi-status response without <response> elements
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // multi-status response without <response> elements
@@ -766,7 +766,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // multi-status response with <response>/<status> element indicating success
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -800,7 +800,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // multi-status response with <response>/<propstat> element
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -878,7 +878,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         // multi-status response for collection with several members; incomplete (not all <resourcetype>s listed)
@@ -951,7 +951,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // same property is sent as 200 OK and 404 Not Found in same <response> (seen in iCloud)
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
@@ -984,7 +984,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )   // multi-status response with <propstat> that doesn't contain <status> (=> assume 200 OK)
         }
-        val httpClient = HttpClient(mockEngine) { followRedirects = false }
+        val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
         /*** SPECIAL CASES ***/

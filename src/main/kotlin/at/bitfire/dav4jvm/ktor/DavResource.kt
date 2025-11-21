@@ -404,7 +404,7 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param provideBody       resource body to upload
+     * @param provideBody       resource body to upload (unconsumed, may be called multiple times on redirects)
      * @param mimeType          content type of resource body
      * @param additionalHeaders additional headers to send
      * @param callback          called with server response on success
@@ -434,7 +434,7 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param provideBody       resource body to upload
+     * @param provideBody       resource body to upload (unconsumed, may be called multiple times on redirects)
      * @param mimeType          content type of resource body
      * @param additionalHeaders additional headers to send (like [HttpHeaders.IfNoneMatch] to prevent overwriting)
      * @param callback          called with server response on success
@@ -633,7 +633,12 @@ open class DavResource(
         var finished = false
         while (!finished) {
             prepareRequest().execute { response ->
-                val isRedirect = response.status.value in 300..399
+                val isRedirect = response.status in arrayOf(
+                    HttpStatusCode.MovedPermanently,
+                    HttpStatusCode.Found,
+                    HttpStatusCode.TemporaryRedirect,
+                    HttpStatusCode.PermanentRedirect
+                )
                 if (isRedirect) {
                     if (++redirects >= MAX_REDIRECTS)
                         throw DavException("Too many redirects")
