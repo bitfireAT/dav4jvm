@@ -19,15 +19,9 @@ data class CalendarTimezoneId(
     val identifier: String?
 ): Property {
 
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "calendar-timezone-id")
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.CalendarTimezoneId
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT calendar-timezone-id (#PCDATA)>

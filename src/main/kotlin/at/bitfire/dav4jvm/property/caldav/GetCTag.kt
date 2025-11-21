@@ -19,15 +19,9 @@ data class GetCTag(
     val cTag: String?
 ): Property {
 
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_CALENDARSERVER, "getctag")
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.GetCTag
 
         override fun create(parser: XmlPullParser) = GetCTag(XmlReader(parser).readText())
 

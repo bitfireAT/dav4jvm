@@ -12,8 +12,7 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.property.caldav.NS_CALENDARSERVER
+import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import org.xmlpull.v1.XmlPullParser
 
@@ -23,14 +22,7 @@ class ResourceType(
 
     companion object {
 
-        val PRINCIPAL = Property.Name(WebDAV.NS_WEBDAV, "principal")      // WebDAV ACL
         val ADDRESSBOOK = Property.Name(NS_CARDDAV, "addressbook") // CardDAV
-        val CALENDAR = Property.Name(NS_CALDAV, "calendar")        // CalDAV
-
-        // CalendarServer extensions
-        val CALENDAR_PROXY_READ = Property.Name(NS_CALENDARSERVER, "calendar-proxy-read")      // CalDAV Proxy
-        val CALENDAR_PROXY_WRITE = Property.Name(NS_CALENDARSERVER, "calendar-proxy-write")    // CalDAV Proxy
-        val SUBSCRIBED = Property.Name(NS_CALENDARSERVER, "subscribed")
 
     }
 
@@ -50,12 +42,12 @@ class ResourceType(
                     var typeName = Property.Name(parser.namespace, parser.name)
                     when (typeName) {       // if equals(), replace by our instance
                         WebDAV.Collection -> typeName = WebDAV.Collection
-                        PRINCIPAL -> typeName = PRINCIPAL
+                        WebDAV.Principal -> typeName = WebDAV.Principal
                         ADDRESSBOOK -> typeName = ADDRESSBOOK
-                        CALENDAR -> typeName = CALENDAR
-                        CALENDAR_PROXY_READ -> typeName = CALENDAR_PROXY_READ
-                        CALENDAR_PROXY_WRITE -> typeName = CALENDAR_PROXY_WRITE
-                        SUBSCRIBED -> typeName = SUBSCRIBED
+                        CalDAV.Calendar -> typeName = CalDAV.Calendar
+                        CalDAV.CalendarProxyRead -> typeName = CalDAV.CalendarProxyRead
+                        CalDAV.CalendarProxyWrite -> typeName = CalDAV.CalendarProxyWrite
+                        CalDAV.Subscribed -> typeName = CalDAV.Subscribed
                     }
                     types.add(typeName)
                 }

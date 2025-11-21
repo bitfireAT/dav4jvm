@@ -18,7 +18,7 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
+import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
@@ -506,7 +506,7 @@ open class DavResource(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.setPrefix("CAL", NS_CALDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
         serializer.insertTag(WebDAV.PropFind) {

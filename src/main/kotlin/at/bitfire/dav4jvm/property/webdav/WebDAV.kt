@@ -34,6 +34,7 @@ object WebDAV {
     val Location = Property.Name(NS_WEBDAV, "location")
     val MultiStatus = Property.Name(NS_WEBDAV, "multistatus")
     val Owner = Property.Name(NS_WEBDAV, "owner")
+    val Principal = Property.Name(WebDAV.NS_WEBDAV, "principal")
     val Prop = Property.Name(NS_WEBDAV, "prop")
     val PropertyUpdate = Property.Name(NS_WEBDAV, "propertyupdate")
     val PropFind = Property.Name(NS_WEBDAV, "propfind")

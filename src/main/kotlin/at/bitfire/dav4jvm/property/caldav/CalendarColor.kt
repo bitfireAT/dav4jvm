@@ -23,8 +23,6 @@ data class CalendarColor(
 ): Property {
 
     companion object {
-        @JvmField
-        val NAME = Property.Name(NS_APPLE_ICAL, "calendar-color")
 
         private val PATTERN = Pattern.compile("#?(\\p{XDigit}{6})(\\p{XDigit}{2})?")!!
 
@@ -51,7 +49,7 @@ data class CalendarColor(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.CalendarColor
 
         override fun create(parser: XmlPullParser): CalendarColor {
             XmlReader(parser).readText()?.let {

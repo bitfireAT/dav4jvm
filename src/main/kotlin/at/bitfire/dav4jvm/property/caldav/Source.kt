@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.property.caldav
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.property.common.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
@@ -18,17 +17,9 @@ class Source(
     override val hrefs: List<String> = emptyList()
 ): HrefListProperty(hrefs) {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_CALENDARSERVER, "source")
-
-    }
-
-
     object Factory: HrefListProperty.Factory() {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.Source
 
         override fun create(parser: XmlPullParser) = create(parser, ::Source)
 
