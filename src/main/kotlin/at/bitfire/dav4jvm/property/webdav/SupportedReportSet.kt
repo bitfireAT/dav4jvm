@@ -19,22 +19,9 @@ data class SupportedReportSet(
     val reports: Set<String> = emptySet()
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(WebDAV.NAMESPACE, "supported-report-set")
-
-        val SUPPORTED_REPORT = Property.Name(WebDAV.NAMESPACE, "supported-report")
-        val REPORT = Property.Name(WebDAV.NAMESPACE, "report")
-
-        const val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.SupportedReportSet
 
         override fun create(parser: XmlPullParser): SupportedReportSet {
             /* <!ELEMENT supported-report-set (supported-report*)>
@@ -43,8 +30,8 @@ data class SupportedReportSet(
             */
 
             val reports = mutableSetOf<String>()
-            XmlReader(parser).processTag(SUPPORTED_REPORT) {
-                processTag(REPORT) {
+            XmlReader(parser).processTag(WebDAV.SupportedReport) {
+                processTag(WebDAV.Report) {
                     parser.nextTag()
                     if (parser.eventType == XmlPullParser.TEXT)
                         reports += parser.text

@@ -28,7 +28,7 @@ data class Error(
 
     companion object {
 
-        val NAME = Property.Name(WebDAV.NAMESPACE, "error")
+        val NAME = Property.Name(WebDAV.NS_WEBDAV, "error")
 
         fun parseError(parser: XmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
@@ -47,8 +47,8 @@ data class Error(
 
         // some pre-defined errors
 
-        val NEED_PRIVILEGES = Error(Property.Name(WebDAV.NAMESPACE, "need-privileges"))
-        val VALID_SYNC_TOKEN = Error(Property.Name(WebDAV.NAMESPACE, "valid-sync-token"))
+        val NEED_PRIVILEGES = Error(Property.Name(WebDAV.NS_WEBDAV, "need-privileges"))
+        val VALID_SYNC_TOKEN = Error(Property.Name(WebDAV.NS_WEBDAV, "valid-sync-token"))
 
     }
 

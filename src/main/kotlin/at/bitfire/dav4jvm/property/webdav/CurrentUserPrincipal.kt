@@ -21,17 +21,9 @@ data class CurrentUserPrincipal(
     val href: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(WebDAV.NAMESPACE, "current-user-principal")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.CurrentUserPrincipal
 
         override fun create(parser: XmlPullParser): CurrentUserPrincipal {
             // <!ELEMENT current-user-principal (unauthenticated | href)>

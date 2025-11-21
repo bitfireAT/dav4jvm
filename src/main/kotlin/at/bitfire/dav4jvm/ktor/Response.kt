@@ -184,7 +184,7 @@ data class Response(
                 .filterIsInstance<ResourceType>()
                 .firstOrNull()
                 ?.let { type ->
-                    if (type.types.contains(ResourceType.COLLECTION))
+                    if (type.types.contains(WebDAV.Collection))
                         href = UrlUtils.withTrailingSlash(href)
                 }
 

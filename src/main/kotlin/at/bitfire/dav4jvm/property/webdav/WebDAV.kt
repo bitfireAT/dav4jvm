@@ -17,29 +17,77 @@ import at.bitfire.dav4jvm.Property
  */
 object WebDAV {
 
-    const val NAMESPACE = "DAV:"
+    const val NS_WEBDAV = "DAV:"
 
 
-    // WebDAV XML elements (see Section 14 of RFC 4918)
+    // WebDAV XML elements/properties (see Section 14 and 15 of RFC 4918)
 
-    val Href = Property.Name(NAMESPACE, "href")
-    val Location = Property.Name(NAMESPACE, "location")
-    val MultiStatus = Property.Name(NAMESPACE, "multistatus")
-    val Prop = Property.Name(NAMESPACE, "prop")
-    val PropertyUpdate = Property.Name(NAMESPACE, "propertyupdate")
-    val PropFind = Property.Name(NAMESPACE, "propfind")
-    val PropStat = Property.Name(WebDAV.NAMESPACE, "propstat")
-    val Remove = Property.Name(NAMESPACE, "remove")
-    val Response = Property.Name(NAMESPACE, "response")
-    val Set = Property.Name(NAMESPACE, "set")
-    val Status = Property.Name(NAMESPACE, "status")
+    val Collection = Property.Name(NS_WEBDAV, "collection")
+    val CreationDate = Property.Name(NS_WEBDAV, "creationdate")
+    val Depth = Property.Name(NS_WEBDAV, "depth")
+    val DisplayName = Property.Name(NS_WEBDAV, "displayname")
+    val GetContentLength = Property.Name(NS_WEBDAV, "getcontentlength")
+    val GetContentType = Property.Name(NS_WEBDAV, "getcontenttype")
+    val GetETag = Property.Name(NS_WEBDAV, "getetag")
+    val GetLastModified = Property.Name(NS_WEBDAV, "getlastmodified")
+    val Href = Property.Name(NS_WEBDAV, "href")
+    val Location = Property.Name(NS_WEBDAV, "location")
+    val MultiStatus = Property.Name(NS_WEBDAV, "multistatus")
+    val Owner = Property.Name(NS_WEBDAV, "owner")
+    val Prop = Property.Name(NS_WEBDAV, "prop")
+    val PropertyUpdate = Property.Name(NS_WEBDAV, "propertyupdate")
+    val PropFind = Property.Name(NS_WEBDAV, "propfind")
+    val PropStat = Property.Name(NS_WEBDAV, "propstat")
+    val Remove = Property.Name(NS_WEBDAV, "remove")
+    val ResourceType = Property.Name(NS_WEBDAV, "resourcetype")
+    val Response = Property.Name(NS_WEBDAV, "response")
+    val Set = Property.Name(NS_WEBDAV, "set")
+    val Status = Property.Name(NS_WEBDAV, "status")
 
 
-    // Collection Synchronization XML elements (see Section 6 of RFC 6578)
+    // Versioning Extensions to WebDAV (RFC 3253)
 
-    val SyncCollection = Property.Name(NAMESPACE, "sync-collection")
-    val SyncLevel = Property.Name(WebDAV.NAMESPACE, "sync-level")
-    val Limit = Property.Name(WebDAV.NAMESPACE, "limit")
-    val NResults = Property.Name(WebDAV.NAMESPACE, "nresults")
+    val Report = Property.Name(WebDAV.NS_WEBDAV, "report")
+    val SupportedReportSet = Property.Name(WebDAV.NS_WEBDAV, "supported-report-set")
+    val SupportedReport = Property.Name(WebDAV.NS_WEBDAV, "supported-report")
+
+
+    // WebDAV ACL (RFC 3744)
+
+    val All = Property.Name(NS_WEBDAV, "all")
+    val Bind = Property.Name(NS_WEBDAV, "bind")
+    val CurrentUserPrivilegeSet = Property.Name(NS_WEBDAV, "current-user-privilege-set")
+    val GroupMembership = Property.Name(WebDAV.NS_WEBDAV, "group-membership")
+    val Privilege = Property.Name(NS_WEBDAV, "privilege")
+    val Read = Property.Name(NS_WEBDAV, "read")
+    val Unbind = Property.Name(NS_WEBDAV, "unbind")
+    val Write = Property.Name(NS_WEBDAV, "write")
+    val WriteContent = Property.Name(NS_WEBDAV, "write-content")
+    val WriteProperties = Property.Name(NS_WEBDAV, "write-properties")
+
+
+    // Quota and Size Properties for WebDAV (RFC 4331)
+
+    val QuotaAvailableBytes = Property.Name(WebDAV.NS_WEBDAV, "quota-available-bytes")
+    val QuotaUsedBytes = Property.Name(WebDAV.NS_WEBDAV, "quota-used-bytes")
+
+
+    // WebDAV Current Principal Extension (RFC 5397)
+
+    val CurrentUserPrincipal = Property.Name(NS_WEBDAV, "current-user-principal")
+
+
+    // Using POST to Add Members (RFC 5995)
+
+    val AddMember = Property.Name(NS_WEBDAV, "add-member")
+
+
+    // Collection Synchronization (RFC 6578)
+
+    val Limit = Property.Name(NS_WEBDAV, "limit")
+    val NResults = Property.Name(NS_WEBDAV, "nresults")
+    val SyncCollection = Property.Name(NS_WEBDAV, "sync-collection")
+    val SyncLevel = Property.Name(NS_WEBDAV, "sync-level")
+    val SyncToken = Property.Name(NS_WEBDAV, "sync-token")
 
 }

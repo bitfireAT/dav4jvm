@@ -18,8 +18,6 @@ import at.bitfire.dav4jvm.okhttp.exception.HttpException
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.caldav.ScheduleTag
-import at.bitfire.dav4jvm.property.webdav.GetContentType
-import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -91,11 +89,11 @@ class DavCalendar @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_QUERY) {
             insertTag(WebDAV.Prop) {
-                insertTag(GetETag.NAME)
+                insertTag(WebDAV.GetETag)
             }
             insertTag(FILTER) {
                 insertTag(COMP_FILTER) {
@@ -157,12 +155,12 @@ class DavCalendar @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_MULTIGET) {
             insertTag(WebDAV.Prop) {
-                insertTag(GetContentType.NAME)     // to determine the character set
-                insertTag(GetETag.NAME)
+                insertTag(WebDAV.GetContentType)     // to determine the character set
+                insertTag(WebDAV.GetETag)
                 insertTag(ScheduleTag.NAME)
                 insertTag(CalendarData.NAME) {
                     if (contentType != null)

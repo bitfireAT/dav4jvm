@@ -89,7 +89,7 @@ open class DavResource @JvmOverloads constructor(
             val serializer = XmlUtils.newSerializer()
             val writer = StringWriter()
             serializer.setOutput(writer)
-            serializer.setPrefix("d", WebDAV.NAMESPACE)
+            serializer.setPrefix("d", WebDAV.NS_WEBDAV)
             serializer.startDocument("UTF-8", null)
             serializer.insertTag(WebDAV.PropertyUpdate) {
                 // DAV:set
@@ -571,7 +571,7 @@ open class DavResource @JvmOverloads constructor(
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
@@ -800,7 +800,7 @@ open class DavResource @JvmOverloads constructor(
                     when (parser.propertyName()) {
                         WebDAV.Response ->
                             DavResponse.Companion.parse(parser, location, callback)
-                        SyncToken.NAME ->
+                        WebDAV.SyncToken ->
                             XmlReader(parser).readText()?.let {
                                 responseProperties += SyncToken(it)
                             }

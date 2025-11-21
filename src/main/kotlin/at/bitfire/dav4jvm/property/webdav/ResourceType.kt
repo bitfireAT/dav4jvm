@@ -23,11 +23,7 @@ class ResourceType(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(WebDAV.NAMESPACE, "resourcetype")
-
-        val COLLECTION = Property.Name(WebDAV.NAMESPACE, "collection")    // WebDAV
-        val PRINCIPAL = Property.Name(WebDAV.NAMESPACE, "principal")      // WebDAV ACL
+        val PRINCIPAL = Property.Name(WebDAV.NS_WEBDAV, "principal")      // WebDAV ACL
         val ADDRESSBOOK = Property.Name(NS_CARDDAV, "addressbook") // CardDAV
         val CALENDAR = Property.Name(NS_CALDAV, "calendar")        // CalDAV
 
@@ -41,7 +37,7 @@ class ResourceType(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.ResourceType
 
         override fun create(parser: XmlPullParser): ResourceType {
             val types = mutableSetOf<Property.Name>()
@@ -53,7 +49,7 @@ class ResourceType(
                     // use static objects to allow types.contains()
                     var typeName = Property.Name(parser.namespace, parser.name)
                     when (typeName) {       // if equals(), replace by our instance
-                        COLLECTION -> typeName = COLLECTION
+                        WebDAV.Collection -> typeName = WebDAV.Collection
                         PRINCIPAL -> typeName = PRINCIPAL
                         ADDRESSBOOK -> typeName = ADDRESSBOOK
                         CALENDAR -> typeName = CALENDAR

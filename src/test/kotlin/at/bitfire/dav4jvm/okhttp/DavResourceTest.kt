@@ -18,6 +18,7 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -534,7 +535,7 @@ class DavResourceTest {
         )
         var called = false
         try {
-            dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
             fail("Expected HttpException")
         } catch(_: HttpException) {
             assertFalse(called)
@@ -547,7 +548,7 @@ class DavResourceTest {
         )
         try {
             called = false
-            dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
             fail("Expected DavException")
         } catch(_: DavException) {
             assertFalse(called)
@@ -564,7 +565,7 @@ class DavResourceTest {
         )
         try {
             called = false
-            dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
             fail("Expected DavException")
         } catch(_: DavException) {
             assertFalse(called)
@@ -580,7 +581,7 @@ class DavResourceTest {
         )
         try {
             called = false
-            dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
             fail("Expected DavException")
         } catch(_: DavException) {
             assertFalse(called)
@@ -596,7 +597,7 @@ class DavResourceTest {
         )
         try {
             called = false
-            dav.propfind(0, ResourceType.NAME) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
             fail("Expected DavException")
         } catch(_: DavException) {
             assertFalse(called)
@@ -618,7 +619,7 @@ class DavResourceTest {
                 .build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
             assertEquals(500, response.status?.code)
             called = true
@@ -641,7 +642,7 @@ class DavResourceTest {
                 .build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
             assertEquals(403, response.status?.code)
             called = true
@@ -669,7 +670,7 @@ class DavResourceTest {
                 .build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             called = true
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
             assertTrue(response.properties.filterIsInstance<ResourceType>().isEmpty())
@@ -686,7 +687,7 @@ class DavResourceTest {
                 .setHeader("Content-Type", "application/xml; charset=utf-8")
                 .body("<multistatus xmlns='DAV:'></multistatus>").build()
         )
-        dav.propfind(0, ResourceType.NAME) { _, _ ->
+        dav.propfind(0, WebDAV.ResourceType) { _, _ ->
             fail("Shouldn't be called")
         }
 
@@ -706,7 +707,7 @@ class DavResourceTest {
                 .build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             called = true
             assertTrue(response.isSuccess())
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
@@ -736,7 +737,7 @@ class DavResourceTest {
                 .build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
             called = true
             assertTrue(response.isSuccess())
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
@@ -811,19 +812,19 @@ class DavResourceTest {
                 ).build()
         )
         var nrCalled = 0
-        dav.propfind(1, ResourceType.NAME, DisplayName.NAME) { response, relation ->
+        dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
             when (response.href) {
                 url.resolve("/dav/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
-                    assertTrue(response[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
+                    assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
                     assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
                     nrCalled++
                 }
                 url.resolve("/dav/subcollection/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.MEMBER, relation)
-                    assertTrue(response[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
+                    assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
                     assertEquals("A Subfolder", response[DisplayName::class.java]?.displayName)
                     nrCalled++
                 }
@@ -879,12 +880,12 @@ class DavResourceTest {
                 ).build()
         )
         called = false
-        dav.propfind(0, ResourceType.NAME, DisplayName.NAME) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
             called = true
             assertTrue(response.isSuccess())
             assertEquals(at.bitfire.dav4jvm.okhttp.Response.HrefRelation.SELF, relation)
             assertEquals(url.resolve("/dav/"), response.href)
-            assertTrue(response[ResourceType::class.java]!!.types.contains(ResourceType.COLLECTION))
+            assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
             assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
         }
         assertTrue(called)
@@ -908,7 +909,7 @@ class DavResourceTest {
                 ).build()
         )
         called = false
-        dav.propfind(0, DisplayName.NAME) { response, _ ->
+        dav.propfind(0, WebDAV.DisplayName) { response, _ ->
             called = true
             assertEquals(200, response.propstat.first().status.code)
             assertEquals("Without Status", response[DisplayName::class.java]?.displayName)

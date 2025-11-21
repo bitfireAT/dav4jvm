@@ -64,9 +64,9 @@ open class DavCollection @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.insertTag(WebDAV.SyncCollection) {
-            insertTag(SyncToken.NAME) {
+            insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
             }

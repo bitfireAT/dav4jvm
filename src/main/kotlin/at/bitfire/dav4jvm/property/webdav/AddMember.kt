@@ -22,16 +22,9 @@ data class AddMember(
     val href: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(WebDAV.NAMESPACE, "add-member")
-
-    }
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.AddMember
 
         override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(WebDAV.Href))
 

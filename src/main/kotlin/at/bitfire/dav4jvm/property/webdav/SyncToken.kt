@@ -19,17 +19,9 @@ data class SyncToken(
     val token: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(WebDAV.NAMESPACE, "sync-token")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.SyncToken
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT sync-token #PCDATA>

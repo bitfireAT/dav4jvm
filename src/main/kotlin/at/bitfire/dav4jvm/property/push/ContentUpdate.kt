@@ -14,8 +14,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.Depth
-import at.bitfire.dav4jvm.property.webdav.SyncLevel
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -48,10 +48,10 @@ data class ContentUpdate(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        SyncLevel.NAME -> contentUpdate = contentUpdate.copy(
+                        WebDAV.SyncLevel -> contentUpdate = contentUpdate.copy(
                             depth = Depth.Factory.create(parser)
                         )
-                        SyncToken.NAME -> contentUpdate = contentUpdate.copy(
+                        WebDAV.SyncToken -> contentUpdate = contentUpdate.copy(
                             syncToken = SyncToken.Factory.create(parser)
                         )
                     }

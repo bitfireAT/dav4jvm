@@ -15,8 +15,6 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.property.webdav.GetContentType
-import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -65,11 +63,11 @@ class DavAddressBook @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_QUERY) {
             insertTag(WebDAV.Prop) {
-                insertTag(GetETag.NAME)
+                insertTag(WebDAV.GetETag)
             }
             insertTag(FILTER)
         }
@@ -114,12 +112,12 @@ class DavAddressBook @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", WebDAV.NAMESPACE)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_MULTIGET) {
             insertTag(WebDAV.Prop) {
-                insertTag(GetContentType.NAME)
-                insertTag(GetETag.NAME)
+                insertTag(WebDAV.GetContentType)
+                insertTag(WebDAV.GetETag)
                 insertTag(AddressData.NAME) {
                     if (contentType != null)
                         attribute(null, AddressData.CONTENT_TYPE, contentType)
