@@ -19,20 +19,12 @@ data class Owner(
     val href: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "owner")
-
-    }
-
-
     object Factory: HrefListProperty.Factory() {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.Owner
 
         override fun create(parser: XmlPullParser): Owner =
-            Owner(XmlReader(parser).readTextProperty(HrefListProperty.HREF))
+            Owner(XmlReader(parser).readTextProperty(WebDAV.Href))
 
     }
 

@@ -19,16 +19,9 @@ data class CreationDate(
     var creationDate: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "creationdate")
-
-    }
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.CreationDate
 
         override fun create(parser: XmlPullParser) =
             CreationDate(XmlReader(parser).readText())

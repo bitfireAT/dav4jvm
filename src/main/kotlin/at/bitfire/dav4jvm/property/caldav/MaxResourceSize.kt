@@ -18,13 +18,9 @@ import org.xmlpull.v1.XmlPullParser
 data class MaxResourceSize(
     val maxSize: Long?
 ) : Property {
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "max-resource-size")
-    }
 
     object Factory: PropertyFactory {
-        override fun getName() = NAME
+        override fun getName() = CalDAV.MaxResourceSize
 
         override fun create(parser: XmlPullParser) =
             MaxResourceSize(XmlReader(parser).readLong())

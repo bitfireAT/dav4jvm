@@ -29,19 +29,9 @@ data class PushRegister(
     val trigger: Trigger? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-register")
-
-        val EXPIRES = Property.Name(NS_WEBDAV_PUSH, "expires")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.PushRegister
 
         override fun create(parser: XmlPullParser): PushRegister {
             var register = PushRegister()
@@ -51,17 +41,17 @@ data class PushRegister(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
-                        EXPIRES ->
+                        WebDAVPush.Expires ->
                             register = register.copy(
                                 expires = XmlReader(parser).readText()?.let {
                                     HttpUtils.parseDate(it)
                                 }
                             )
-                        Subscription.NAME ->
+                        WebDAVPush.Subscription ->
                             register = register.copy(
                                 subscription = Subscription.Factory.create(parser)
                             )
-                        Trigger.NAME ->
+                        WebDAVPush.Trigger ->
                             register = register.copy(
                                 trigger = Trigger.Factory.create(parser)
                             )

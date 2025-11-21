@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.property.webdav
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlReader
-import at.bitfire.dav4jvm.property.common.HrefListProperty
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -23,18 +22,11 @@ data class AddMember(
     val href: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "add-member")
-
-    }
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.AddMember
 
-        override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(HrefListProperty.HREF))
+        override fun create(parser: XmlPullParser) = AddMember(XmlReader(parser).readTextProperty(WebDAV.Href))
 
     }
 

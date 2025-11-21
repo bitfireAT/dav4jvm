@@ -26,17 +26,9 @@ data class PushMessage(
     val propertyUpdate: PropertyUpdate? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "push-message")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.PushMessage
 
         override fun create(parser: XmlPullParser): PushMessage {
             var message = PushMessage()
@@ -46,13 +38,13 @@ data class PushMessage(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        Topic.NAME -> message = message.copy(
+                        WebDAVPush.Topic -> message = message.copy(
                             topic = Topic.Factory.create(parser)
                         )
-                        ContentUpdate.NAME -> message = message.copy(
+                        WebDAVPush.ContentUpdate -> message = message.copy(
                             contentUpdate = ContentUpdate.Factory.create(parser)
                         )
-                        PropertyUpdate.NAME -> message = message.copy(
+                        WebDAVPush.PropertyUpdate -> message = message.copy(
                             propertyUpdate = PropertyUpdate.Factory.create(parser)
                         )
                     }

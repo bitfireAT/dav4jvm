@@ -19,15 +19,9 @@ data class CalendarDescription(
     val description: String?
 ): Property {
 
-    companion object {
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "calendar-description")
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.CalendarDescription
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT calendar-description (#PCDATA)>

@@ -24,18 +24,13 @@ data class Depth(
 ): Property {
 
     companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "depth")
-
         const val INFINITY = Int.MAX_VALUE
-
     }
 
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.Depth
 
         override fun create(parser: XmlPullParser): Depth {
             val text = XmlReader(parser).readText()

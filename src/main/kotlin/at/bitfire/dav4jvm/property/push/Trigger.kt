@@ -20,17 +20,9 @@ data class Trigger(
     val propertyUpdate: PropertyUpdate? = null
 ) : Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "trigger")
-
-    }
-
-
     object Factory : PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.Trigger
 
         override fun create(parser: XmlPullParser): Trigger {
             var trigger = Trigger()
@@ -40,10 +32,10 @@ data class Trigger(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        ContentUpdate.NAME -> trigger = trigger.copy(
+                        WebDAVPush.ContentUpdate -> trigger = trigger.copy(
                             contentUpdate = ContentUpdate.Factory.create(parser)
                         )
-                        PropertyUpdate.NAME -> trigger = trigger.copy(
+                        WebDAVPush.PropertyUpdate -> trigger = trigger.copy(
                             propertyUpdate = PropertyUpdate.Factory.create(parser)
                         )
                     }

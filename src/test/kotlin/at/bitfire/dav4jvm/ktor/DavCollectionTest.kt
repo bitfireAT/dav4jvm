@@ -13,8 +13,8 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.exception.HttpException
 import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -109,7 +109,7 @@ class DavCollectionTest {
         val collection = DavCollection(httpClient, url)
 
         var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
+        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
                 URLBuilder(url).takeFrom("/dav/test.doc").build() -> {
                     assertTrue(response.isSuccess())
@@ -190,7 +190,7 @@ class DavCollectionTest {
 
         var nrCalled = 0
 
-        val result = collection.reportChanges(null, false, null, GetETag.NAME) { response, relation ->
+        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
                 URLBuilder(sampleUrl).takeFrom("/dav/test.doc").build() -> {
                     assertTrue(response.isSuccess())
@@ -248,11 +248,11 @@ class DavCollectionTest {
         val collection = DavCollection(httpClient, sampleUrl)
 
         try {
-            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, GetETag.NAME) { _, _ -> }
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag) { _, _ -> }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(HttpStatusCode.InsufficientStorage.value, e.statusCode)
-            assertTrue(e.errors.any { it.name == Property.Name(NS_WEBDAV, "number-of-matches-within-limits") })
+            assertTrue(e.errors.any { it.name == Property.Name(WebDAV.NS_WEBDAV, "number-of-matches-within-limits") })
             assertEquals(1, e.errors.size)
         }
     }

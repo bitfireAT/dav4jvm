@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.property.webdav
 
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.property.caldav.NS_CALENDARSERVER
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
+import at.bitfire.dav4jvm.property.caldav.CalDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import org.xmlpull.v1.XmlPullParser
 
 class ResourceType(
@@ -23,25 +22,13 @@ class ResourceType(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "resourcetype")
-
-        val COLLECTION = Property.Name(NS_WEBDAV, "collection")    // WebDAV
-        val PRINCIPAL = Property.Name(NS_WEBDAV, "principal")      // WebDAV ACL
-        val ADDRESSBOOK = Property.Name(NS_CARDDAV, "addressbook") // CardDAV
-        val CALENDAR = Property.Name(NS_CALDAV, "calendar")        // CalDAV
-
-        // CalendarServer extensions
-        val CALENDAR_PROXY_READ = Property.Name(NS_CALENDARSERVER, "calendar-proxy-read")      // CalDAV Proxy
-        val CALENDAR_PROXY_WRITE = Property.Name(NS_CALENDARSERVER, "calendar-proxy-write")    // CalDAV Proxy
-        val SUBSCRIBED = Property.Name(NS_CALENDARSERVER, "subscribed")
 
     }
 
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.ResourceType
 
         override fun create(parser: XmlPullParser): ResourceType {
             val types = mutableSetOf<Property.Name>()
@@ -53,13 +40,13 @@ class ResourceType(
                     // use static objects to allow types.contains()
                     var typeName = Property.Name(parser.namespace, parser.name)
                     when (typeName) {       // if equals(), replace by our instance
-                        COLLECTION -> typeName = COLLECTION
-                        PRINCIPAL -> typeName = PRINCIPAL
-                        ADDRESSBOOK -> typeName = ADDRESSBOOK
-                        CALENDAR -> typeName = CALENDAR
-                        CALENDAR_PROXY_READ -> typeName = CALENDAR_PROXY_READ
-                        CALENDAR_PROXY_WRITE -> typeName = CALENDAR_PROXY_WRITE
-                        SUBSCRIBED -> typeName = SUBSCRIBED
+                        WebDAV.Collection -> typeName = WebDAV.Collection
+                        WebDAV.Principal -> typeName = WebDAV.Principal
+                        CardDAV.Addressbook -> typeName = CardDAV.Addressbook
+                        CalDAV.Calendar -> typeName = CalDAV.Calendar
+                        CalDAV.CalendarProxyRead -> typeName = CalDAV.CalendarProxyRead
+                        CalDAV.CalendarProxyWrite -> typeName = CalDAV.CalendarProxyWrite
+                        CalDAV.Subscribed -> typeName = CalDAV.Subscribed
                     }
                     types.add(typeName)
                 }

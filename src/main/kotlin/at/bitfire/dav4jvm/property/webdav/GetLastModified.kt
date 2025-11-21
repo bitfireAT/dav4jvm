@@ -20,17 +20,9 @@ data class GetLastModified(
     val lastModified: Instant?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getlastmodified")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.GetLastModified
 
         override fun create(parser: XmlPullParser): GetLastModified {
             // <!ELEMENT getlastmodified (#PCDATA) >

@@ -25,17 +25,9 @@ data class SubscriptionPublicKey(
     val key: String? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "subscription-public-key")
-
-    }
-
-
     object Factory : PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.SubscriptionPublicKey
 
         override fun create(parser: XmlPullParser): SubscriptionPublicKey {
             return SubscriptionPublicKey(

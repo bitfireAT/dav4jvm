@@ -19,16 +19,9 @@ data class GetContentType(
     val type: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getcontenttype")
-
-    }
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.GetContentType
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT getcontenttype (#PCDATA) >

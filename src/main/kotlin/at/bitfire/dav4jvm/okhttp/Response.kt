@@ -13,9 +13,8 @@ package at.bitfire.dav4jvm.okhttp
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.property.common.HrefListProperty
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.ResourceType
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Protocol
@@ -101,11 +100,6 @@ data class Response(
 
     companion object {
 
-        val RESPONSE = Property.Name(NS_WEBDAV, "response")
-        val MULTISTATUS = Property.Name(NS_WEBDAV, "multistatus")
-        val STATUS = Property.Name(NS_WEBDAV, "status")
-        val LOCATION = Property.Name(NS_WEBDAV, "location")
-
         /**
          * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
          * The arguments of the [MultiResponseCallback.onResponse] are set accordingly.
@@ -132,7 +126,7 @@ data class Response(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
                     when (parser.propertyName()) {
-                        HrefListProperty.HREF -> {
+                        WebDAV.Href -> {
                             var sHref = parser.nextText()
                             if (!sHref.startsWith("/")) {
                                 /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
@@ -156,18 +150,18 @@ data class Response(
                             }
                             hrefOrNull = location.resolve(sHref)
                         }
-                        STATUS ->
+                        WebDAV.Status ->
                             status = try {
                                 StatusLine.parse(parser.nextText())
                             } catch(e: ProtocolException) {
                                 logger.warning("Invalid status line, treating as HTTP error 500")
                                 StatusLine(Protocol.HTTP_1_1, 500, "Invalid status line")
                             }
-                        PropStat.NAME ->
+                        WebDAV.PropStat ->
                             PropStat.parse(parser).let { propStat += it }
                         Error.NAME ->
                             error = Error.parseError(parser)
-                        LOCATION ->
+                        WebDAV.Location ->
                             newLocation = parser.nextText().toHttpUrlOrNull()
                         }
                 eventType = parser.next()
@@ -186,7 +180,7 @@ data class Response(
                 .filterIsInstance<ResourceType>()
                 .firstOrNull()
                 ?.let { type ->
-                    if (type.types.contains(ResourceType.COLLECTION))
+                    if (type.types.contains(WebDAV.Collection))
                         href = UrlUtils.withTrailingSlash(href)
                 }
 

@@ -13,8 +13,7 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -73,22 +72,22 @@ open class DavCollection @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.insertTag(SYNC_COLLECTION) {
-            insertTag(SyncToken.Companion.NAME) {
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.insertTag(WebDAV.SyncCollection) {
+            insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
             }
-            insertTag(SYNC_LEVEL) {
+            insertTag(WebDAV.SyncLevel) {
                 text(if (infiniteDepth) "infinite" else "1")
             }
             if (limit != null)
-                insertTag(LIMIT) {
-                    insertTag(NRESULTS) {
+                insertTag(WebDAV.Limit) {
+                    insertTag(WebDAV.NResults) {
                         text(limit.toString())
                     }
                 }
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 for (prop in properties)
                     insertTag(prop)
             }
@@ -109,16 +108,6 @@ open class DavCollection @JvmOverloads constructor(
             result = processMultiStatus(response, callback)
         }
         return result ?: emptyList()
-    }
-
-
-    companion object {
-
-        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
-
     }
 
 }

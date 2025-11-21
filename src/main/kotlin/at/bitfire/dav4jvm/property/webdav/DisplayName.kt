@@ -19,17 +19,9 @@ data class DisplayName(
     val displayName: String?
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "displayname")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.DisplayName
 
         override fun create(parser: XmlPullParser) =
             // <!ELEMENT displayname (#PCDATA) >

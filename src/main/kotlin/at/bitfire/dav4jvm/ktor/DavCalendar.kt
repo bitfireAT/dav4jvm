@@ -13,13 +13,9 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
+import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.caldav.CalendarData
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.property.caldav.ScheduleTag
-import at.bitfire.dav4jvm.property.common.HrefListProperty
-import at.bitfire.dav4jvm.property.webdav.GetContentType
-import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -81,19 +77,19 @@ class DavCalendar(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CAL", NS_CALDAV)
-        serializer.insertTag(CALENDAR_QUERY) {
-            insertTag(PROP) {
-                insertTag(GetETag.NAME)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.insertTag(CalDAV.CalendarQuery) {
+            insertTag(WebDAV.Prop) {
+                insertTag(WebDAV.GetETag)
             }
-            insertTag(FILTER) {
-                insertTag(COMP_FILTER) {
+            insertTag(CalDAV.Filter) {
+                insertTag(CalDAV.CompFilter) {
                     attribute(null, COMP_FILTER_NAME, "VCALENDAR")
-                    insertTag(COMP_FILTER) {
+                    insertTag(CalDAV.CompFilter) {
                         attribute(null, COMP_FILTER_NAME, component)
                         if (start != null || end != null) {
-                            insertTag(TIME_RANGE) {
+                            insertTag(CalDAV.TimeRange) {
                                 if (start != null)
                                     attribute(null, TIME_RANGE_START, timeFormatUTC.format(
                                         ZonedDateTime.ofInstant(start, ZoneOffset.UTC)
@@ -157,14 +153,14 @@ class DavCalendar(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CAL", NS_CALDAV)
-        serializer.insertTag(CALENDAR_MULTIGET) {
-            insertTag(PROP) {
-                insertTag(GetContentType.NAME)     // to determine the character set
-                insertTag(GetETag.NAME)
-                insertTag(ScheduleTag.NAME)
-                insertTag(CalendarData.NAME) {
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.insertTag(CalDAV.CalendarMultiget) {
+            insertTag(WebDAV.Prop) {
+                insertTag(WebDAV.GetContentType)     // to determine the character set
+                insertTag(WebDAV.GetETag)
+                insertTag(CalDAV.ScheduleTag)
+                insertTag(CalDAV.CalendarData) {
                     if (contentType != null)
                         attribute(null, CalendarData.CONTENT_TYPE, contentType)
                     if (version != null)
@@ -172,7 +168,7 @@ class DavCalendar(
                 }
             }
             for (url in urls)
-                insertTag(HrefListProperty.HREF) {
+                insertTag(WebDAV.Href) {
                     serializer.text(url.encodedPath)
                 }
         }
@@ -198,13 +194,7 @@ class DavCalendar(
         val MIME_ICALENDAR = ContentType.parse("text/calendar")
         val MIME_ICALENDAR_UTF8 = ContentType.parse("text/calendar;charset=utf-8")
 
-        val CALENDAR_QUERY = Property.Name(NS_CALDAV, "calendar-query")
-        val CALENDAR_MULTIGET = Property.Name(NS_CALDAV, "calendar-multiget")
-
-        val FILTER = Property.Name(NS_CALDAV, "filter")
-        val COMP_FILTER = Property.Name(NS_CALDAV, "comp-filter")
         const val COMP_FILTER_NAME = "name"
-        val TIME_RANGE = Property.Name(NS_CALDAV, "time-range")
         const val TIME_RANGE_START = "start"
         const val TIME_RANGE_END = "end"
 

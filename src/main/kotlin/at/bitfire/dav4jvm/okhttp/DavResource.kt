@@ -26,10 +26,10 @@ import at.bitfire.dav4jvm.okhttp.exception.NotFoundException
 import at.bitfire.dav4jvm.okhttp.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.okhttp.exception.ServiceUnavailableException
 import at.bitfire.dav4jvm.okhttp.exception.UnauthorizedException
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.caldav.CalDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -75,12 +75,6 @@ open class DavResource @JvmOverloads constructor(
         const val HTTP_MULTISTATUS = 207
         val MIME_XML = "application/xml; charset=utf-8".toMediaType()
 
-        val PROPFIND = Property.Name(NS_WEBDAV, "propfind")
-        val PROPERTYUPDATE = Property.Name(NS_WEBDAV, "propertyupdate")
-        val SET = Property.Name(NS_WEBDAV, "set")
-        val REMOVE = Property.Name(NS_WEBDAV, "remove")
-        val PROP = Property.Name(NS_WEBDAV, "prop")
-
         val XML_SIGNATURE = "<?xml".toByteArray()
 
 
@@ -95,14 +89,14 @@ open class DavResource @JvmOverloads constructor(
             val serializer = XmlUtils.newSerializer()
             val writer = StringWriter()
             serializer.setOutput(writer)
-            serializer.setPrefix("d", NS_WEBDAV)
+            serializer.setPrefix("d", WebDAV.NS_WEBDAV)
             serializer.startDocument("UTF-8", null)
-            serializer.insertTag(PROPERTYUPDATE) {
+            serializer.insertTag(WebDAV.PropertyUpdate) {
                 // DAV:set
                 if (setProperties.isNotEmpty()) {
-                    serializer.insertTag(SET) {
+                    serializer.insertTag(WebDAV.Set) {
                         for (prop in setProperties) {
-                            serializer.insertTag(PROP) {
+                            serializer.insertTag(WebDAV.Prop) {
                                 serializer.insertTag(prop.key) {
                                     text(prop.value)
                                 }
@@ -113,9 +107,9 @@ open class DavResource @JvmOverloads constructor(
 
                 // DAV:remove
                 if (removeProperties.isNotEmpty()) {
-                    serializer.insertTag(REMOVE) {
+                    serializer.insertTag(WebDAV.Remove) {
                         for (prop in removeProperties) {
-                            insertTag(PROP) {
+                            insertTag(WebDAV.Prop) {
                                 insertTag(prop)
                             }
                         }
@@ -577,12 +571,12 @@ open class DavResource @JvmOverloads constructor(
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CAL", NS_CALDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
-        serializer.insertTag(PROPFIND) {
-            insertTag(PROP) {
+        serializer.insertTag(WebDAV.PropFind) {
+            insertTag(WebDAV.Prop) {
                 for (prop in reqProp)
                     insertTag(prop)
             }
@@ -804,9 +798,9 @@ open class DavResource @JvmOverloads constructor(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                     when (parser.propertyName()) {
-                        at.bitfire.dav4jvm.okhttp.Response.Companion.RESPONSE ->
+                        WebDAV.Response ->
                             DavResponse.Companion.parse(parser, location, callback)
-                        SyncToken.NAME ->
+                        WebDAV.SyncToken ->
                             XmlReader(parser).readText()?.let {
                                 responseProperties += SyncToken(it)
                             }
@@ -823,7 +817,7 @@ open class DavResource @JvmOverloads constructor(
             var eventType = parser.eventType
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                    if (parser.propertyName() == at.bitfire.dav4jvm.okhttp.Response.Companion.MULTISTATUS)
+                    if (parser.propertyName() == WebDAV.MultiStatus)
                         return parseMultiStatus()
                 // ignore further <multistatus> elements
                 eventType = parser.next()

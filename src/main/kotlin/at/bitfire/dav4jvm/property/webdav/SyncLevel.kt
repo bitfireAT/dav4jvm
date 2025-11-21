@@ -23,17 +23,9 @@ data class SyncLevel(
     val level: Int? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "sync-level")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAV.SyncLevel
 
         override fun create(parser: XmlPullParser): SyncLevel {
             val text = XmlReader(parser).readText()

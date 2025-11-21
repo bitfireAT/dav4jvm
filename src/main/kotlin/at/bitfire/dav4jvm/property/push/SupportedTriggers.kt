@@ -25,17 +25,9 @@ data class SupportedTriggers(
     val propertyUpdate: PropertyUpdate? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "supported-triggers")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.SupportedTriggers
 
         override fun create(parser: XmlPullParser): SupportedTriggers {
             var supportedTriggers = SupportedTriggers()
@@ -45,10 +37,10 @@ data class SupportedTriggers(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        ContentUpdate.NAME -> supportedTriggers = supportedTriggers.copy(
+                        WebDAVPush.ContentUpdate -> supportedTriggers = supportedTriggers.copy(
                             contentUpdate = ContentUpdate.Factory.create(parser)
                         )
-                        PropertyUpdate.NAME -> supportedTriggers = supportedTriggers.copy(
+                        WebDAVPush.PropertyUpdate -> supportedTriggers = supportedTriggers.copy(
                             propertyUpdate = PropertyUpdate.Factory.create(parser)
                         )
                     }

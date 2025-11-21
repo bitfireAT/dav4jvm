@@ -14,11 +14,8 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.property.common.HrefListProperty
-import at.bitfire.dav4jvm.property.webdav.GetContentType
-import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -60,13 +57,13 @@ class DavAddressBook(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
-        serializer.insertTag(ADDRESSBOOK_QUERY) {
-            insertTag(PROP) {
-                insertTag(GetETag.NAME)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookQuery) {
+            insertTag(WebDAV.Prop) {
+                insertTag(WebDAV.GetETag)
             }
-            insertTag(FILTER)
+            insertTag(CardDAV.Filter)
         }
         serializer.endDocument()
 
@@ -118,13 +115,13 @@ class DavAddressBook(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
-        serializer.insertTag(ADDRESSBOOK_MULTIGET) {
-            insertTag(PROP) {
-                insertTag(GetContentType.NAME)
-                insertTag(GetETag.NAME)
-                insertTag(AddressData.NAME) {
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
+        serializer.insertTag(CardDAV.AddressbookMultiget) {
+            insertTag(WebDAV.Prop) {
+                insertTag(WebDAV.GetContentType)
+                insertTag(WebDAV.GetETag)
+                insertTag(CardDAV.AddressData) {
                     if (contentType != null)
                         attribute(null, AddressData.CONTENT_TYPE, contentType)
                     if (version != null)
@@ -132,7 +129,7 @@ class DavAddressBook(
                 }
             }
             for (url in urls)
-                insertTag(HrefListProperty.HREF) {
+                insertTag(WebDAV.Href) {
                     text(url.encodedPath)
                 }
         }
@@ -160,10 +157,6 @@ class DavAddressBook(
         val MIME_JCARD = ContentType.parse("application/vcard+json")
         val MIME_VCARD3_UTF8 = ContentType.parse("text/vcard;charset=utf-8")
         val MIME_VCARD4 = ContentType.parse("text/vcard;version=4.0")
-
-        val ADDRESSBOOK_QUERY = Property.Name(NS_CARDDAV, "addressbook-query")
-        val ADDRESSBOOK_MULTIGET = Property.Name(NS_CARDDAV, "addressbook-multiget")
-        val FILTER = Property.Name(NS_CARDDAV, "filter")
 
     }
 

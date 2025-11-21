@@ -25,9 +25,6 @@ data class ScheduleTag(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "schedule-tag")
-
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ScheduleTag]?.let { ScheduleTag(it) }
 
@@ -46,7 +43,7 @@ data class ScheduleTag(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.ScheduleTag
 
         override fun create(parser: XmlPullParser) = ScheduleTag(XmlReader(parser).readText())
 

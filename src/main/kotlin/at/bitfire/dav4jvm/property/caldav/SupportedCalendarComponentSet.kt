@@ -21,20 +21,10 @@ data class SupportedCalendarComponentSet(
     val supportsJournal: Boolean
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "supported-calendar-component-set")
-
-        val ALLCOMP = Property.Name(NS_CALDAV, "allcomp")
-        val COMP = Property.Name(NS_CALDAV, "comp")
-
-    }
-
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.SupportedCalendarComponentSet
 
         override fun create(parser: XmlPullParser): SupportedCalendarComponentSet {
             /* <!ELEMENT supported-calendar-component-set (comp+)>
@@ -52,14 +42,14 @@ data class SupportedCalendarComponentSet(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        ALLCOMP -> {
+                        CalDAV.AllComp -> {
                             components = SupportedCalendarComponentSet(
                                 supportsEvents = true,
                                 supportsTasks = true,
                                 supportsJournal = true
                             )
                         }
-                        COMP ->
+                        CalDAV.Comp ->
                             when (parser.getAttributeValue(null, "name")?.uppercase()) {
                                 "VEVENT" -> components = components.copy(supportsEvents = true)
                                 "VTODO" -> components = components.copy(supportsTasks = true)

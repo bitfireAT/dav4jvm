@@ -24,23 +24,15 @@ data class Subscription private constructor(
     val webPushSubscription: WebPushSubscription? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "subscription")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.Subscription
 
         override fun create(parser: XmlPullParser): Subscription {
             // currently we only support WebPushSubscription
             var webPushSubscription: WebPushSubscription? = null
 
-            XmlReader(parser).processTag(WebPushSubscription.NAME) {
+            XmlReader(parser).processTag(WebDAVPush.WebPushSubscription) {
                 webPushSubscription = WebPushSubscription.Factory.create(parser)
             }
 

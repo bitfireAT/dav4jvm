@@ -15,8 +15,8 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.okhttp.exception.DavException
 import at.bitfire.dav4jvm.okhttp.exception.HttpException
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -32,13 +32,6 @@ open class DavCollection @JvmOverloads constructor(
     location: HttpUrl,
     logger: Logger = Logger.getLogger(DavCollection::class.java.name)
 ): DavResource(httpClient, location, logger) {
-
-    companion object {
-        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
-    }
 
     /**
      * Sends a REPORT sync-collection request.
@@ -71,22 +64,22 @@ open class DavCollection @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.insertTag(SYNC_COLLECTION) {
-            insertTag(SyncToken.NAME) {
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.insertTag(WebDAV.SyncCollection) {
+            insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
             }
-            insertTag(SYNC_LEVEL) {
+            insertTag(WebDAV.SyncLevel) {
                 text(if (infiniteDepth) "infinite" else "1")
             }
             if (limit != null)
-                insertTag(LIMIT) {
-                    insertTag(NRESULTS) {
+                insertTag(WebDAV.Limit) {
+                    insertTag(WebDAV.NResults) {
                         text(limit.toString())
                     }
                 }
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 for (prop in properties)
                     insertTag(prop)
             }

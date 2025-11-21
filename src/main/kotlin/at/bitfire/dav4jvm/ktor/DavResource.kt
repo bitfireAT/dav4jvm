@@ -16,14 +16,12 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
-import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
-import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
-import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.caldav.CalDAV
+import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.compression.compress
 import io.ktor.client.request.header
@@ -93,12 +91,6 @@ open class DavResource(
 
         val MIME_XML_UTF8 = ContentType.Application.Xml.withCharset(Charsets.UTF_8)
 
-        val PROPFIND = Property.Name(NS_WEBDAV, "propfind")
-        val PROPERTYUPDATE = Property.Name(NS_WEBDAV, "propertyupdate")
-        val SET = Property.Name(NS_WEBDAV, "set")
-        val REMOVE = Property.Name(NS_WEBDAV, "remove")
-        val PROP = Property.Name(NS_WEBDAV, "prop")
-
         val XML_SIGNATURE = "<?xml".encodeToByteString()
 
 
@@ -113,14 +105,14 @@ open class DavResource(
             val serializer = XmlUtils.newSerializer()
             val writer = StringWriter()
             serializer.setOutput(writer)
-            serializer.setPrefix("d", NS_WEBDAV)
+            serializer.setPrefix("d", WebDAV.NS_WEBDAV)
             serializer.startDocument("UTF-8", null)
-            serializer.insertTag(PROPERTYUPDATE) {
+            serializer.insertTag(WebDAV.PropertyUpdate) {
                 // DAV:set
                 if (setProperties.isNotEmpty()) {
-                    serializer.insertTag(SET) {
+                    serializer.insertTag(WebDAV.Set) {
                         for (prop in setProperties) {
-                            serializer.insertTag(PROP) {
+                            serializer.insertTag(WebDAV.Prop) {
                                 serializer.insertTag(prop.key) {
                                     text(prop.value)
                                 }
@@ -131,9 +123,9 @@ open class DavResource(
 
                 // DAV:remove
                 if (removeProperties.isNotEmpty()) {
-                    serializer.insertTag(REMOVE) {
+                    serializer.insertTag(WebDAV.Remove) {
                         for (prop in removeProperties) {
-                            insertTag(PROP) {
+                            insertTag(WebDAV.Prop) {
                                 insertTag(prop)
                             }
                         }
@@ -513,12 +505,12 @@ open class DavResource(
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
         serializer.setOutput(writer)
-        serializer.setPrefix("", NS_WEBDAV)
-        serializer.setPrefix("CAL", NS_CALDAV)
-        serializer.setPrefix("CARD", NS_CARDDAV)
+        serializer.setPrefix("", WebDAV.NS_WEBDAV)
+        serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
+        serializer.setPrefix("CARD", CardDAV.NS_CARDDAV)
         serializer.startDocument("UTF-8", null)
-        serializer.insertTag(PROPFIND) {
-            insertTag(PROP) {
+        serializer.insertTag(WebDAV.PropFind) {
+            insertTag(WebDAV.Prop) {
                 for (prop in reqProp)
                     insertTag(prop)
             }
@@ -769,7 +761,7 @@ open class DavResource(
                 var eventType = parser.eventType
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                        if (parser.propertyName() == MULTISTATUS) {
+                        if (parser.propertyName() == WebDAV.MultiStatus) {
                             return parseMultiStatus(parser, callback)
                             // further <multistatus> elements are ignored
                         }
@@ -797,9 +789,9 @@ open class DavResource(
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                 when (parser.propertyName()) {
-                    RESPONSE ->
+                    WebDAV.Response ->
                         Response.parse(parser, location, callback)
-                    SyncToken.NAME ->
+                    WebDAV.SyncToken ->
                         XmlReader(parser).readText()?.let {
                             responseProperties += SyncToken(it)
                         }

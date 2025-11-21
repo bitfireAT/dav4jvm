@@ -16,7 +16,7 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 /**
- * Represents a [NS_WEBDAV_PUSH]`:auth-secret` property.
+ * Represents an `auth-secret` property.
  *
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
@@ -24,17 +24,9 @@ data class AuthSecret(
     val secret: String? = null
 ): Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_WEBDAV_PUSH, "auth-secret")
-
-    }
-
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = WebDAVPush.AuthSecret
 
         override fun create(parser: XmlPullParser): AuthSecret =
             AuthSecret(XmlReader(parser).readText())

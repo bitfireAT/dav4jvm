@@ -19,16 +19,9 @@ data class MaxResourceSize(
     val maxSize: Long?
 ) : Property {
 
-    companion object {
-
-        @JvmField
-        val NAME = Property.Name(NS_CARDDAV, "max-resource-size")
-
-    }
-
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CardDAV.MaxResourceSize
 
         override fun create(parser: XmlPullParser) =
             MaxResourceSize(XmlReader(parser).readLong())

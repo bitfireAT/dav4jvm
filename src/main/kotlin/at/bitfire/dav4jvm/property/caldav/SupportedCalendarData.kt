@@ -22,10 +22,6 @@ data class SupportedCalendarData(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(NS_CALDAV, "supported-calendar-data")
-
-        val CALENDAR_DATA_TYPE = Property.Name(NS_CALDAV, "calendar-data")
         const val CONTENT_TYPE = "content-type"
         const val VERSION = "version"
 
@@ -38,12 +34,12 @@ data class SupportedCalendarData(
 
     object Factory: PropertyFactory {
 
-        override fun getName() = NAME
+        override fun getName() = CalDAV.SupportedCalendarData
 
         override fun create(parser: XmlPullParser): SupportedCalendarData {
             val supportedTypes = mutableSetOf<String>()
 
-            XmlReader(parser).readContentTypes(CALENDAR_DATA_TYPE, supportedTypes::add)
+            XmlReader(parser).readContentTypes(CalDAV.CalendarData, supportedTypes::add)
 
             return SupportedCalendarData(supportedTypes)
         }
