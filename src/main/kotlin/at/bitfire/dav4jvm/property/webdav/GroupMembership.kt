@@ -21,7 +21,7 @@ class GroupMembership(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "group-membership")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "group-membership")
 
     }
 

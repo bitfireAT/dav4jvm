@@ -23,7 +23,7 @@ data class GetLastModified(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getlastmodified")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "getlastmodified")
 
     }
 

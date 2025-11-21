@@ -24,10 +24,10 @@ class ResourceType(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "resourcetype")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "resourcetype")
 
-        val COLLECTION = Property.Name(NS_WEBDAV, "collection")    // WebDAV
-        val PRINCIPAL = Property.Name(NS_WEBDAV, "principal")      // WebDAV ACL
+        val COLLECTION = Property.Name(WebDAV.NAMESPACE, "collection")    // WebDAV
+        val PRINCIPAL = Property.Name(WebDAV.NAMESPACE, "principal")      // WebDAV ACL
         val ADDRESSBOOK = Property.Name(NS_CARDDAV, "addressbook") // CardDAV
         val CALENDAR = Property.Name(NS_CALDAV, "calendar")        // CalDAV
 

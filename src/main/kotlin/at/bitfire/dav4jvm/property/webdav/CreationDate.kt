@@ -22,7 +22,7 @@ data class CreationDate(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "creationdate")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "creationdate")
 
     }
 

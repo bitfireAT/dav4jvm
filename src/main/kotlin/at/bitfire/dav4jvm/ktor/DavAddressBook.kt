@@ -15,10 +15,9 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
-import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -60,10 +59,10 @@ class DavAddressBook(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("", WebDAV.NAMESPACE)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_QUERY) {
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 insertTag(GetETag.NAME)
             }
             insertTag(FILTER)
@@ -118,10 +117,10 @@ class DavAddressBook(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("", WebDAV.NAMESPACE)
         serializer.setPrefix("CARD", NS_CARDDAV)
         serializer.insertTag(ADDRESSBOOK_MULTIGET) {
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 insertTag(GetContentType.NAME)
                 insertTag(GetETag.NAME)
                 insertTag(AddressData.NAME) {
@@ -132,7 +131,7 @@ class DavAddressBook(
                 }
             }
             for (url in urls)
-                insertTag(HrefListProperty.HREF) {
+                insertTag(WebDAV.Href) {
                     text(url.encodedPath)
                 }
         }

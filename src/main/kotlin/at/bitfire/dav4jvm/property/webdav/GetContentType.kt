@@ -22,7 +22,7 @@ data class GetContentType(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getcontenttype")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "getcontenttype")
 
     }
 

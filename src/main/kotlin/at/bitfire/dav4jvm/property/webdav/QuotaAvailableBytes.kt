@@ -22,7 +22,7 @@ data class QuotaAvailableBytes(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "quota-available-bytes")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "quota-available-bytes")
 
     }
 

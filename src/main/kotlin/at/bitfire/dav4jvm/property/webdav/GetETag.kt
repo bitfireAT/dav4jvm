@@ -31,7 +31,7 @@ data class GetETag(
 
     companion object {
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getetag")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "getetag")
 
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ETag]?.let { GetETag(it) }

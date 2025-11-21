@@ -16,10 +16,9 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.caldav.ScheduleTag
-import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -81,10 +80,10 @@ class DavCalendar(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("", WebDAV.NAMESPACE)
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_QUERY) {
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 insertTag(GetETag.NAME)
             }
             insertTag(FILTER) {
@@ -157,10 +156,10 @@ class DavCalendar(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("", WebDAV.NAMESPACE)
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_MULTIGET) {
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 insertTag(GetContentType.NAME)     // to determine the character set
                 insertTag(GetETag.NAME)
                 insertTag(ScheduleTag.NAME)
@@ -172,7 +171,7 @@ class DavCalendar(
                 }
             }
             for (url in urls)
-                insertTag(HrefListProperty.HREF) {
+                insertTag(WebDAV.Href) {
                     serializer.text(url.encodedPath)
                 }
         }

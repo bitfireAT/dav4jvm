@@ -26,7 +26,7 @@ data class SyncLevel(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "sync-level")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "sync-level")
 
     }
 

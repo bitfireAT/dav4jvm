@@ -29,16 +29,16 @@ data class CurrentUserPrivilegeSet(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "current-user-privilege-set")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "current-user-privilege-set")
 
-        val PRIVILEGE = Property.Name(NS_WEBDAV, "privilege")
-        val READ = Property.Name(NS_WEBDAV, "read")
-        val WRITE = Property.Name(NS_WEBDAV, "write")
-        val WRITE_PROPERTIES = Property.Name(NS_WEBDAV, "write-properties")
-        val WRITE_CONTENT = Property.Name(NS_WEBDAV, "write-content")
-        val BIND = Property.Name(NS_WEBDAV, "bind")
-        val UNBIND = Property.Name(NS_WEBDAV, "unbind")
-        val ALL = Property.Name(NS_WEBDAV, "all")
+        val PRIVILEGE = Property.Name(WebDAV.NAMESPACE, "privilege")
+        val READ = Property.Name(WebDAV.NAMESPACE, "read")
+        val WRITE = Property.Name(WebDAV.NAMESPACE, "write")
+        val WRITE_PROPERTIES = Property.Name(WebDAV.NAMESPACE, "write-properties")
+        val WRITE_CONTENT = Property.Name(WebDAV.NAMESPACE, "write-content")
+        val BIND = Property.Name(WebDAV.NAMESPACE, "bind")
+        val UNBIND = Property.Name(WebDAV.NAMESPACE, "unbind")
+        val ALL = Property.Name(WebDAV.NAMESPACE, "all")
 
     }
 

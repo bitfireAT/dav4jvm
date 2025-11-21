@@ -22,7 +22,7 @@ data class Owner(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "owner")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "owner")
 
     }
 
@@ -32,7 +32,7 @@ data class Owner(
         override fun getName() = NAME
 
         override fun create(parser: XmlPullParser): Owner =
-            Owner(XmlReader(parser).readTextProperty(HrefListProperty.HREF))
+            Owner(XmlReader(parser).readTextProperty(WebDAV.Href))
 
     }
 

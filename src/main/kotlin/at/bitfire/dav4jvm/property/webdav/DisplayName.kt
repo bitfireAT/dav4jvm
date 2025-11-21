@@ -22,7 +22,7 @@ data class DisplayName(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "displayname")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "displayname")
 
     }
 

@@ -13,8 +13,8 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
-import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
@@ -73,7 +73,7 @@ open class DavCollection @JvmOverloads constructor(
         val writer = StringWriter()
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
-        serializer.setPrefix("", NS_WEBDAV)
+        serializer.setPrefix("", WebDAV.NAMESPACE)
         serializer.insertTag(SYNC_COLLECTION) {
             insertTag(SyncToken.Companion.NAME) {
                 if (syncToken != null)
@@ -88,7 +88,7 @@ open class DavCollection @JvmOverloads constructor(
                         text(limit.toString())
                     }
                 }
-            insertTag(PROP) {
+            insertTag(WebDAV.Prop) {
                 for (prop in properties)
                     insertTag(prop)
             }
@@ -114,10 +114,10 @@ open class DavCollection @JvmOverloads constructor(
 
     companion object {
 
-        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
+        val SYNC_COLLECTION = Property.Name(WebDAV.NAMESPACE, "sync-collection")
+        val SYNC_LEVEL = Property.Name(WebDAV.NAMESPACE, "sync-level")
+        val LIMIT = Property.Name(WebDAV.NAMESPACE, "limit")
+        val NRESULTS = Property.Name(WebDAV.NAMESPACE, "nresults")
 
     }
 

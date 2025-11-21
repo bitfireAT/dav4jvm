@@ -22,7 +22,7 @@ data class SyncToken(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "sync-token")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "sync-token")
 
     }
 

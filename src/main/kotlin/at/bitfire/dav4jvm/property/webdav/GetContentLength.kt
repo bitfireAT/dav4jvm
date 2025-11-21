@@ -22,7 +22,7 @@ data class GetContentLength(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "getcontentlength")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "getcontentlength")
 
     }
 

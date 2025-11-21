@@ -26,7 +26,7 @@ data class Depth(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "depth")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "depth")
 
         const val INFINITY = Int.MAX_VALUE
 

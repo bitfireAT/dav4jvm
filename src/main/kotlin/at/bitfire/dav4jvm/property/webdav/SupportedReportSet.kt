@@ -22,10 +22,10 @@ data class SupportedReportSet(
     companion object {
 
         @JvmField
-        val NAME = Property.Name(NS_WEBDAV, "supported-report-set")
+        val NAME = Property.Name(WebDAV.NAMESPACE, "supported-report-set")
 
-        val SUPPORTED_REPORT = Property.Name(NS_WEBDAV, "supported-report")
-        val REPORT = Property.Name(NS_WEBDAV, "report")
+        val SUPPORTED_REPORT = Property.Name(WebDAV.NAMESPACE, "supported-report")
+        val REPORT = Property.Name(WebDAV.NAMESPACE, "report")
 
         const val SYNC_COLLECTION = "DAV:sync-collection"    // collection synchronization (RFC 6578)
 
