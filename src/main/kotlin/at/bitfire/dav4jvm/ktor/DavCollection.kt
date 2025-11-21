@@ -73,17 +73,17 @@ open class DavCollection @JvmOverloads constructor(
         serializer.setOutput(writer)
         serializer.startDocument("UTF-8", null)
         serializer.setPrefix("", WebDAV.NS_WEBDAV)
-        serializer.insertTag(SYNC_COLLECTION) {
+        serializer.insertTag(WebDAV.SyncCollection) {
             insertTag(WebDAV.SyncToken) {
                 if (syncToken != null)
                     text(syncToken)
             }
-            insertTag(SYNC_LEVEL) {
+            insertTag(WebDAV.SyncLevel) {
                 text(if (infiniteDepth) "infinite" else "1")
             }
             if (limit != null)
-                insertTag(LIMIT) {
-                    insertTag(NRESULTS) {
+                insertTag(WebDAV.Limit) {
+                    insertTag(WebDAV.NResults) {
                         text(limit.toString())
                     }
                 }
@@ -108,16 +108,6 @@ open class DavCollection @JvmOverloads constructor(
             result = processMultiStatus(response, callback)
         }
         return result ?: emptyList()
-    }
-
-
-    companion object {
-
-        val SYNC_COLLECTION = Property.Name(WebDAV.NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(WebDAV.NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(WebDAV.NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(WebDAV.NS_WEBDAV, "nresults")
-
     }
 
 }

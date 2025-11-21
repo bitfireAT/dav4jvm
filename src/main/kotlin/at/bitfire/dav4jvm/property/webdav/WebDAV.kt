@@ -34,7 +34,7 @@ object WebDAV {
     val Location = Property.Name(NS_WEBDAV, "location")
     val MultiStatus = Property.Name(NS_WEBDAV, "multistatus")
     val Owner = Property.Name(NS_WEBDAV, "owner")
-    val Principal = Property.Name(WebDAV.NS_WEBDAV, "principal")
+    val Principal = Property.Name(NS_WEBDAV, "principal")
     val Prop = Property.Name(NS_WEBDAV, "prop")
     val PropertyUpdate = Property.Name(NS_WEBDAV, "propertyupdate")
     val PropFind = Property.Name(NS_WEBDAV, "propfind")
@@ -48,9 +48,9 @@ object WebDAV {
 
     // Versioning Extensions to WebDAV (RFC 3253)
 
-    val Report = Property.Name(WebDAV.NS_WEBDAV, "report")
-    val SupportedReportSet = Property.Name(WebDAV.NS_WEBDAV, "supported-report-set")
-    val SupportedReport = Property.Name(WebDAV.NS_WEBDAV, "supported-report")
+    val Report = Property.Name(NS_WEBDAV, "report")
+    val SupportedReportSet = Property.Name(NS_WEBDAV, "supported-report-set")
+    val SupportedReport = Property.Name(NS_WEBDAV, "supported-report")
 
 
     // WebDAV ACL (RFC 3744)
@@ -58,7 +58,7 @@ object WebDAV {
     val All = Property.Name(NS_WEBDAV, "all")
     val Bind = Property.Name(NS_WEBDAV, "bind")
     val CurrentUserPrivilegeSet = Property.Name(NS_WEBDAV, "current-user-privilege-set")
-    val GroupMembership = Property.Name(WebDAV.NS_WEBDAV, "group-membership")
+    val GroupMembership = Property.Name(NS_WEBDAV, "group-membership")
     val Privilege = Property.Name(NS_WEBDAV, "privilege")
     val Read = Property.Name(NS_WEBDAV, "read")
     val Unbind = Property.Name(NS_WEBDAV, "unbind")
@@ -69,8 +69,8 @@ object WebDAV {
 
     // Quota and Size Properties for WebDAV (RFC 4331)
 
-    val QuotaAvailableBytes = Property.Name(WebDAV.NS_WEBDAV, "quota-available-bytes")
-    val QuotaUsedBytes = Property.Name(WebDAV.NS_WEBDAV, "quota-used-bytes")
+    val QuotaAvailableBytes = Property.Name(NS_WEBDAV, "quota-available-bytes")
+    val QuotaUsedBytes = Property.Name(NS_WEBDAV, "quota-used-bytes")
 
 
     // WebDAV Current Principal Extension (RFC 5397)
