@@ -167,8 +167,8 @@ data class Response(
                         }
                         STATUS ->
                             status = KtorHttpUtils.parseStatusLine(parser.nextText())
-                        PropStat.Companion.NAME ->
-                            PropStat.Companion.parse(parser).let { propStat += it }
+                        PropStat.NAME ->
+                            PropStat.parse(parser).let { propStat += it }
                         Error.NAME ->
                             error = Error.parseError(parser)
                         LOCATION ->
@@ -190,7 +190,7 @@ data class Response(
                 .filterIsInstance<ResourceType>()
                 .firstOrNull()
                 ?.let { type ->
-                    if (type.types.contains(ResourceType.Companion.COLLECTION))
+                    if (type.types.contains(ResourceType.COLLECTION))
                         href = UrlUtils.withTrailingSlash(href)
                 }
 

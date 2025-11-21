@@ -20,42 +20,30 @@ import at.bitfire.dav4jvm.property.common.HrefListProperty
 import at.bitfire.dav4jvm.property.webdav.GetContentType
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.util.logging.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+import io.ktor.http.contentType
+import io.ktor.util.logging.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Locale
 
 @Suppress("unused")
-class DavCalendar @JvmOverloads constructor(
+class DavCalendar(
     httpClient: HttpClient,
     location: Url,
     logger: Logger = LoggerFactory.getLogger(DavCalendar::javaClass.name)
 ): DavCollection(httpClient, location, logger) {
-
-    companion object {
-        val MIME_ICALENDAR = ContentType.Companion.parse("text/calendar")
-        val MIME_ICALENDAR_UTF8 = ContentType.Companion.parse("text/calendar;charset=utf-8")
-
-        val CALENDAR_QUERY = Property.Name(NS_CALDAV, "calendar-query")
-        val CALENDAR_MULTIGET = Property.Name(NS_CALDAV, "calendar-multiget")
-
-        val FILTER = Property.Name(NS_CALDAV, "filter")
-        val COMP_FILTER = Property.Name(NS_CALDAV, "comp-filter")
-        const val COMP_FILTER_NAME = "name"
-        val TIME_RANGE = Property.Name(NS_CALDAV, "time-range")
-        const val TIME_RANGE_START = "start"
-        const val TIME_RANGE_END = "end"
-
-        private val timeFormatUTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssVV", Locale.US)
-    }
-
 
     /**
      * Sends a calendar-query REPORT to the resource.
@@ -72,7 +60,12 @@ class DavCalendar @JvmOverloads constructor(
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun calendarQuery(component: String, start: Instant?, end: Instant?, callback: MultiResponseCallback): List<Property> {
+    suspend fun calendarQuery(
+        component: String,
+        start: Instant?,
+        end: Instant?,
+        callback: MultiResponseCallback
+    ): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -92,7 +85,7 @@ class DavCalendar @JvmOverloads constructor(
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_QUERY) {
             insertTag(PROP) {
-                insertTag(GetETag.Companion.NAME)
+                insertTag(GetETag.NAME)
             }
             insertTag(FILTER) {
                 insertTag(COMP_FILTER) {
@@ -117,17 +110,20 @@ class DavCalendar @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        followRedirects {
-            httpClient.prepareRequest {
-                url(location)
-                method = HttpMethod.Companion.parse("REPORT")
+        var result: List<Property>? = null
+        followRedirects({
+            httpClient.prepareRequest(location) {
+                method = HttpMethod.parse("REPORT")
+
+                header(HttpHeaders.Depth, "1")
+
+                contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
-                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
-                headers.append(HttpHeaders.Depth, "1")
-            }.execute()
-        }.let { response ->
-            return processMultiStatus(response, callback)
+            }
+        }) { response ->
+            result = processMultiStatus(response, callback)
         }
+        return result ?: emptyList()
     }
 
     /**
@@ -147,7 +143,12 @@ class DavCalendar @JvmOverloads constructor(
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun multiget(urls: List<Url>, contentType: String? = null, version: String? = null, callback: MultiResponseCallback): List<Property> {
+    suspend fun multiget(
+        urls: List<Url>,
+        contentType: String? = null,
+        version: String? = null,
+        callback: MultiResponseCallback
+    ): List<Property> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -160,14 +161,14 @@ class DavCalendar @JvmOverloads constructor(
         serializer.setPrefix("CAL", NS_CALDAV)
         serializer.insertTag(CALENDAR_MULTIGET) {
             insertTag(PROP) {
-                insertTag(GetContentType.Companion.NAME)     // to determine the character set
-                insertTag(GetETag.Companion.NAME)
-                insertTag(ScheduleTag.Companion.NAME)
-                insertTag(CalendarData.Companion.NAME) {
+                insertTag(GetContentType.NAME)     // to determine the character set
+                insertTag(GetETag.NAME)
+                insertTag(ScheduleTag.NAME)
+                insertTag(CalendarData.NAME) {
                     if (contentType != null)
-                        attribute(null, CalendarData.Companion.CONTENT_TYPE, contentType)
+                        attribute(null, CalendarData.CONTENT_TYPE, contentType)
                     if (version != null)
-                        attribute(null, CalendarData.Companion.VERSION, version)
+                        attribute(null, CalendarData.VERSION, version)
                 }
             }
             for (url in urls)
@@ -177,16 +178,38 @@ class DavCalendar @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        followRedirects {
-            httpClient.prepareRequest {
-                url(location)
-                method = HttpMethod.Companion.parse("REPORT")
+        var result: List<Property>? = null
+        followRedirects({
+            httpClient.prepareRequest(location) {
+                method = HttpMethod.parse("REPORT")
+
+                contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
-                headers.append(HttpHeaders.ContentType, MIME_XML_UTF8.toString())
-            }.execute()
-        }.let { response ->
-            return processMultiStatus(response, callback)
+            }
+        }) { response ->
+            result = processMultiStatus(response, callback)
         }
+        return result ?: emptyList()
+    }
+
+
+    companion object {
+
+        val MIME_ICALENDAR = ContentType.parse("text/calendar")
+        val MIME_ICALENDAR_UTF8 = ContentType.parse("text/calendar;charset=utf-8")
+
+        val CALENDAR_QUERY = Property.Name(NS_CALDAV, "calendar-query")
+        val CALENDAR_MULTIGET = Property.Name(NS_CALDAV, "calendar-multiget")
+
+        val FILTER = Property.Name(NS_CALDAV, "filter")
+        val COMP_FILTER = Property.Name(NS_CALDAV, "comp-filter")
+        const val COMP_FILTER_NAME = "name"
+        val TIME_RANGE = Property.Name(NS_CALDAV, "time-range")
+        const val TIME_RANGE_START = "start"
+        const val TIME_RANGE_END = "end"
+
+        private val timeFormatUTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssVV", Locale.US)
+
     }
 
 }

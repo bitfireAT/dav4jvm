@@ -19,10 +19,10 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody
-import io.ktor.client.request.url
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
+import io.ktor.http.contentType
 import io.ktor.util.logging.Logger
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
@@ -35,13 +35,6 @@ open class DavCollection @JvmOverloads constructor(
     location: Url,
     logger: Logger = LoggerFactory.getLogger(DavCollection::class.java.name)
 ): DavResource(httpClient, location, logger) {
-
-    companion object {
-        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
-        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
-        val LIMIT = Property.Name(NS_WEBDAV, "limit")
-        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
-    }
 
     /**
      * Sends a REPORT sync-collection request.
@@ -59,7 +52,13 @@ open class DavCollection @JvmOverloads constructor(
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun reportChanges(syncToken: String?, infiniteDepth: Boolean, limit: Int?, vararg properties: Property.Name, callback: MultiResponseCallback): List<Property> {
+    suspend fun reportChanges(
+        syncToken: String?,
+        infiniteDepth: Boolean,
+        limit: Int?,
+        vararg properties: Property.Name,
+        callback: MultiResponseCallback
+    ): List<Property> {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -96,16 +95,30 @@ open class DavCollection @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        followRedirects {
-            httpClient.prepareRequest {
-                url(location)
-                method = HttpMethod.Companion.parse("REPORT")
-                setBody(writer.toString())
-                header(HttpHeaders.ContentType, MIME_XML_UTF8)
+        var result: List<Property>? = null
+        followRedirects({
+            httpClient.prepareRequest(location) {
+                method = HttpMethod.parse("REPORT")
+
                 header(HttpHeaders.Depth, "0")
-            }.execute()
-        }.let { response ->
-            return processMultiStatus(response, callback)
+
+                contentType(MIME_XML_UTF8)
+                setBody(writer.toString())
+            }
+        }) { response ->
+            result = processMultiStatus(response, callback)
         }
+        return result ?: emptyList()
     }
+
+
+    companion object {
+
+        val SYNC_COLLECTION = Property.Name(NS_WEBDAV, "sync-collection")
+        val SYNC_LEVEL = Property.Name(NS_WEBDAV, "sync-level")
+        val LIMIT = Property.Name(NS_WEBDAV, "limit")
+        val NRESULTS = Property.Name(NS_WEBDAV, "nresults")
+
+    }
+
 }
