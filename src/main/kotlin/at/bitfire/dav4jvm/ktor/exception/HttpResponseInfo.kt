@@ -13,30 +13,27 @@ package at.bitfire.dav4jvm.ktor.exception
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.ktor.exception.DavException.Companion.MAX_EXCERPT_SIZE
+import at.bitfire.dav4jvm.ktor.isText
+import at.bitfire.dav4jvm.ktor.isXml
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
-import io.ktor.content.ByteArrayContent
-import io.ktor.content.TextContent
-import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.charset
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
+import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readBuffer
-import kotlinx.coroutines.runBlocking
-import kotlinx.io.Buffer
 import kotlinx.io.EOFException
-import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.ByteArrayOutputStream
 import java.io.StringReader
-import javax.annotation.WillNotClose
 import kotlin.math.min
 
 internal class HttpResponseInfo private constructor(
-    val statusCode: Int,
+    val status: HttpStatusCode,
     val requestExcerpt: String?,
     val responseExcerpt: String?,
     val errors: List<Error>
@@ -44,66 +41,66 @@ internal class HttpResponseInfo private constructor(
 
     companion object {
 
-        fun fromResponse(@WillNotClose response: HttpResponse): HttpResponseInfo {
+        /**
+         * maximum size of extracted response body
+         */
+        const val MAX_EXCERPT_SIZE = 20*1024
 
-            // extract request body if it's text
+        suspend fun fromResponse(response: HttpResponse, responseBodyChannel: ByteReadChannel? = null): HttpResponseInfo {
             val request = response.request
-            val requestExcerptBuilder = StringBuilder(
-                "${request.method} ${request.url}"
-            )
-            request.content.let { requestBody ->
-                requestBody.contentType?.let { contentType ->
-                    if (contentType.isText()) {
-                        val requestBodyBytes = when (requestBody) {
-                            is TextContent -> requestBody.text.toByteArray(contentType.charset() ?: Charsets.UTF_8)
-                            is ByteArrayContent -> requestBody.bytes()
-                            else -> requestBody.toString().toByteArray(contentType.charset() ?: Charsets.UTF_8) // Fallback, may not be ideal
-                        }
-                        val buffer = Buffer()
-                        buffer.write(requestBodyBytes)
+            val requestExcerptBuilder = StringBuilder("${request.method} ${request.url}")
 
-                        val bytesToRead = min(buffer.size, MAX_EXCERPT_SIZE.toLong()).toInt()
-                        val excerptBytes = buffer.readByteArray(bytesToRead)
-                        val baos = ByteArrayOutputStream()
-                        baos.write(excerptBytes)
+            val requestContent = request.content
+            val requestContentType = requestContent.contentType
+            val requestContentLength = requestContent.contentLength
 
-                        requestExcerptBuilder
-                            .append("\n\n")
-                            .append(baos.toString())
-                    } else
-                        requestExcerptBuilder.append("\n\n<request body (${requestBody.contentLength} bytes)>")
-                }
+            // extract request body if it's consumable text
+            if (requestContent is TextContent) {
+                val excerpt = requestContent.text.take(MAX_EXCERPT_SIZE)
+                requestExcerptBuilder
+                    .append("\n\n")
+                    .append(excerpt)
+
+            } else if (requestContent is OutgoingContent.ByteArrayContent && requestContentType != null && requestContentType.isText()) {
+                val bytes = requestContent.bytes()
+                val excerptSize = min(bytes.size, MAX_EXCERPT_SIZE)
+                val truncated = bytes.copyOf(excerptSize)
+                val excerpt = truncated.toString(requestContentType.charset() ?: Charsets.UTF_8)
+                requestExcerptBuilder
+                    .append("\n\n")
+                    .append(excerpt)
+
+            } else if (requestContentLength != null && requestContentLength > 0) {
+                // otherwise, at least indicate request body size
+                requestExcerptBuilder.append("\n\n<request body with $requestContentLength byte(s)>")
             }
-            //requestExcerpt = requestExcerptBuilder.toString()
 
             // extract response body if it's text
-            val responseBody = response.contentType()?.let { mimeType ->
-                if (mimeType.isText())
+            val responseContentType = response.contentType()
+            val responseExcerpt: String? =
+                if (responseContentType != null && responseContentType.isText()) {
                     try {
-                        runBlocking {
-                            response
-                                .bodyAsChannel()
-                                .readBuffer(MAX_EXCERPT_SIZE)
-                                .readString(mimeType.charset() ?: Charsets.UTF_8)
-                        }
+                        val responseBody = responseBodyChannel ?: response.bodyAsChannel()
+                        val charset = responseContentType.charset() ?: Charsets.UTF_8
+                        responseBody.readBuffer(MAX_EXCERPT_SIZE).readString(charset)
                     } catch (_: Exception) {
-                        // response body not available anymore, probably already consumed / closed
+                        // response body not available anymore, probably already consumed
                         null
                     }
-                else
+                } else
                     null
-            }
 
-            // get XML errors from request body excerpt
-            val errors: List<Error> = if (response.contentType()?.isXml() == true && responseBody != null)
-                extractErrors(responseBody)
-            else
-                emptyList()
+            // extract XML errors from response body excerpt
+            val errors: List<Error> =
+                if (responseContentType != null && responseContentType.isXml() && responseExcerpt != null)
+                    extractErrors(responseExcerpt)
+                else
+                    emptyList()
 
             return HttpResponseInfo(
-                statusCode = response.status.value,
+                status = response.status,
                 requestExcerpt = requestExcerptBuilder.toString(),
-                responseExcerpt = responseBody,
+                responseExcerpt = responseExcerpt,
                 errors = errors
             )
         }
@@ -128,18 +125,6 @@ internal class HttpResponseInfo private constructor(
 
             return emptyList()
         }
-
-
-        // extensions
-
-        fun ContentType.isText() =
-            this.match(ContentType.Text.Any)
-                    || this.match(ContentType.Application.Xml)
-                    || (this.contentType == ContentType.Application.TYPE && this.contentSubtype == ContentType.Text.Html.contentSubtype)
-
-        fun ContentType.isXml() =
-            this.match(ContentType.Text.Xml)
-                    || this.match(ContentType.Application.Xml)
 
     }
 

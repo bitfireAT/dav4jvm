@@ -10,13 +10,20 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 
-class ForbiddenException: HttpException {
+class ForbiddenException internal constructor(
+    responseInfo: HttpResponseInfo
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
-    constructor(response: HttpResponse) : super(response) {
-        if (response.status.value != HttpStatusCode.Forbidden.value)
-            throw IllegalArgumentException("Status code must be 403")
+    init {
+        if (responseInfo.status != HttpStatusCode.Forbidden)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.Forbidden}")
     }
+
 }

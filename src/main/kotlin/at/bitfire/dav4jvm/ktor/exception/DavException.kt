@@ -12,7 +12,7 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
-import javax.annotation.WillNotClose
+import io.ktor.utils.io.ByteReadChannel
 
 /**
  * Signals that an error occurred during a WebDAV-related operation.
@@ -36,48 +36,39 @@ import javax.annotation.WillNotClose
  */
 open class DavException(
     message: String? = null,
-    cause: Throwable? = null,
     open val statusCode: Int? = null,
     val requestExcerpt: String? = null,
     val responseExcerpt: String? = null,
-    val errors: List<Error> = emptyList()
+    val errors: List<Error> = emptyList(),
+    cause: Throwable? = null
 ): Exception(message, cause) {
-
-    // constructor from Response
-
-    /**
-     * Takes the request, response and errors from a given HTTP response.
-     *
-     * @param message   optional exception message
-     * @param cause     optional exception cause
-     * @param response  response to extract status code and request/response excerpt from (if possible)
-     */
-    constructor(
-        message: String,
-        cause: Throwable? = null,
-        @WillNotClose response: HttpResponse
-    ) : this(message, cause, HttpResponseInfo.fromResponse(response))
-
-    private constructor(
-        message: String?,
-        cause: Throwable? = null,
-        httpResponseInfo: HttpResponseInfo
-    ): this(
-        message = message,
-        cause = cause,
-        statusCode = httpResponseInfo.statusCode,
-        requestExcerpt = httpResponseInfo.requestExcerpt,
-        responseExcerpt = httpResponseInfo.responseExcerpt,
-        errors = httpResponseInfo.errors
-    )
-
 
     companion object {
 
         /**
-         * maximum size of extracted response body
+         * Creates a [DavException] from the request, response and errors of a given HTTP response.
+         *
+         * @param message               optional exception message
+         * @param cause                 optional exception cause
+         * @param response              response to extract status code and request/response excerpt from (if possible)
+         * @param responseBodyChannel   optional existing response body channel that can be used to read the response body
          */
-        const val MAX_EXCERPT_SIZE = 20*1024
+        suspend fun fromResponse(
+            message: String,
+            response: HttpResponse,
+            responseBodyChannel: ByteReadChannel? = null,
+            cause: Throwable? = null
+        ): DavException {
+            val responseInfo = HttpResponseInfo.fromResponse(response, responseBodyChannel)
+            return DavException(
+                message = message,
+                cause = cause,
+                statusCode = responseInfo.status.value,
+                requestExcerpt = responseInfo.requestExcerpt,
+                responseExcerpt = responseInfo.responseExcerpt,
+                errors = responseInfo.errors
+            )
+        }
 
     }
 

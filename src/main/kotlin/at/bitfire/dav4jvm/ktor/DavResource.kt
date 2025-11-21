@@ -19,15 +19,8 @@ import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.Response.Companion.MULTISTATUS
 import at.bitfire.dav4jvm.ktor.Response.Companion.RESPONSE
-import at.bitfire.dav4jvm.ktor.exception.ConflictException
 import at.bitfire.dav4jvm.ktor.exception.DavException
-import at.bitfire.dav4jvm.ktor.exception.ForbiddenException
-import at.bitfire.dav4jvm.ktor.exception.GoneException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.ktor.exception.NotFoundException
-import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
-import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException
-import at.bitfire.dav4jvm.ktor.exception.UnauthorizedException
 import at.bitfire.dav4jvm.property.caldav.NS_CALDAV
 import at.bitfire.dav4jvm.property.carddav.NS_CARDDAV
 import at.bitfire.dav4jvm.property.webdav.NS_WEBDAV
@@ -45,7 +38,6 @@ import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
@@ -62,14 +54,14 @@ import io.ktor.http.withCharset
 import io.ktor.util.IdentityEncoder
 import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.core.readFully
-import io.ktor.utils.io.readBuffer
+import io.ktor.utils.io.jvm.javaio.toInputStream
+import io.ktor.utils.io.peek
+import kotlinx.io.bytestring.encodeToByteString
 import org.slf4j.LoggerFactory
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.EOFException
 import java.io.IOException
-import java.io.Reader
 import java.io.StringWriter
 
 
@@ -107,7 +99,7 @@ open class DavResource(
         val REMOVE = Property.Name(NS_WEBDAV, "remove")
         val PROP = Property.Name(NS_WEBDAV, "prop")
 
-        val XML_SIGNATURE = "<?xml".toByteArray()
+        val XML_SIGNATURE = "<?xml".encodeToByteString()
 
 
         /**
@@ -225,11 +217,12 @@ open class DavResource(
             }
         }.let { response ->
             checkStatus(response)
+
             if (response.status == HttpStatusCode.MultiStatus)
                 /* Multiple resources were to be affected by the MOVE, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             // update location
             val nPath = response.headers[HttpHeaders.Location] ?: destination.toString()
@@ -261,11 +254,12 @@ open class DavResource(
             }
         }.let { response ->
             checkStatus(response)
-            if(response.status == HttpStatusCode.MultiStatus)
+
+            if (response.status == HttpStatusCode.MultiStatus)
                 /* Multiple resources were to be affected by the COPY, but errors on some
                 of them prevented the operation from taking place.
                 [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             callback.onResponse(response)
         }
@@ -524,7 +518,7 @@ open class DavResource(
                 /* If an error occurs deleting a member resource (a resource other than
                    the resource identified in the Request-URI), then the response can be
                    a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
-                throw HttpException(response)
+                throw HttpException.fromResponse(response)
 
             callback.onResponse(response)
         }
@@ -646,21 +640,11 @@ open class DavResource(
      *
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: HttpResponse) {
+    protected suspend fun checkStatus(response: HttpResponse) {
         if (response.status.isSuccess())
-            // everything OK
-            return
+            return      // everything OK
 
-        throw when (response.status.value) {
-            401 -> UnauthorizedException(response)
-            403 -> ForbiddenException(response)
-            404 -> NotFoundException(response)
-            409 -> ConflictException(response)
-            410 -> GoneException(response)
-            412 -> PreconditionFailedException(response)
-            503 -> ServiceUnavailableException(response)
-            else -> HttpException(response)
-        }
+        throw HttpException.fromResponse(response)
     }
 
     /**
@@ -709,37 +693,47 @@ open class DavResource(
     /**
      * Validates a 207 Multi-Status response.
      *
-     * @param httpResponse will be checked for Multi-Status response
+     * @param httpResponse  response that will be checked for Multi-Status
+     * @param bodyChannel   response body channel that will be peeked into in order to
+     *                      determine whether it's XML
      *
-     * @throws DavException if the response is not a Multi-Status response
+     * @throws DavException if the response is not a Multi-Status response with XML body
      */
-    suspend fun assertMultiStatus(httpResponse: HttpResponse) {
+    suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
         if (httpResponse.status != HttpStatusCode.MultiStatus)
-            throw DavException("Expected 207 Multi-Status, got ${httpResponse.status.value} ${httpResponse.status.description}", response = httpResponse)
+            throw DavException.fromResponse(
+                message = "Expected 207 Multi-Status, got ${httpResponse.status}",
+                response = httpResponse,
+                responseBodyChannel = bodyChannel
+            )
 
-        val bodyChannel = httpResponse.bodyAsChannel()
+        val contentType = httpResponse.contentType()
+        if (contentType == null) {
+            logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
+            return  // supposed XML response body, fine
+        }
 
-        httpResponse.contentType()?.let { mimeType ->          // is response.contentType() ok here? Or must it be the content type of the body?
-            if (((!ContentType.Application.contains(mimeType) && !ContentType.Text.contains(mimeType))) || mimeType.contentSubtype != "xml") {
-                /* Content-Type is not application/xml or text/xml although that is expected here.
-                   Some broken servers return an XML response with some other MIME type. So we try to see
-                   whether the response is maybe XML although the Content-Type is something else. */
-                try {
-                    val firstBytes = ByteArray(XML_SIGNATURE.size)
-                    bodyChannel.readBuffer().peek().readFully(firstBytes)
-                    if (XML_SIGNATURE.contentEquals(firstBytes)) {
-                        logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $mimeType")
+        if (contentType.isXml())
+            return  // reported XML response body, fine
 
-                        // response is OK, return and do not throw Exception below
-                        return
-                    }
-                } catch (e: Exception) {
-                    logger.warn("Couldn't scan for XML signature", e)
-                }
-
-                throw DavException("Received non-XML 207 Multi-Status", response = httpResponse)
+        /* Content-Type is not application/xml or text/xml although that is expected here.
+           Some broken servers return an XML response with some other MIME type. So we try to see
+           whether the response is maybe XML although the Content-Type is something else. */
+        try {
+            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
+            if (firstBytes == XML_SIGNATURE) {
+                logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                return  // response body starts with XML signature, fine
             }
-        } ?: logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
+        } catch (e: Exception) {
+            logger.warn("Couldn't scan for XML signature", e)
+        }
+
+        // non-XML response body
+        throw DavException.fromResponse(
+            message = "Received non-XML 207 Multi-Status",
+            response = httpResponse
+        )
     }
 
 
@@ -748,7 +742,7 @@ open class DavResource(
     /**
      * Processes a Multi-Status response.
      *
-     * @param response response which is expected to contain a Multi-Status response
+     * @param response unconsumed response which is expected to contain a Multi-Status response
      * @param callback called for every XML response element in the Multi-Status response
      *
      * @return list of properties which have been received in the Multi-Status response, but
@@ -760,15 +754,19 @@ open class DavResource(
      */
     protected suspend fun processMultiStatus(response: HttpResponse, callback: MultiResponseCallback): List<Property> {
         checkStatus(response)
-        assertMultiStatus(response)
-        return processMultiStatus(response.bodyAsBytes().inputStream().reader(), callback)
+        val bodyChannel = response.bodyAsChannel()
+
+        // verify that the response is 207 Multi-Status
+        assertMultiStatus(response, bodyChannel)
+
+        return processMultiStatus(bodyChannel, callback)
     }
 
     /**
      * Processes a Multi-Status response.
      *
-     * @param reader   the Multi-Status response is read from this
-     * @param callback called for every XML response element in the Multi-Status response
+     * @param bodyChannel   the response body channel to read the Multi-Status response from
+     * @param callback      called for every XML response element in the Multi-Status response
      *
      * @return list of properties which have been received in the Multi-Status response, but
      * are not part of response XML elements (like `sync-token` which is returned as [SyncToken])
@@ -777,50 +775,55 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like an invalid XML response)
      */
-    protected suspend fun processMultiStatus(reader: Reader, callback: MultiResponseCallback): List<Property> {
-        val responseProperties = mutableListOf<Property>()
+    protected suspend fun processMultiStatus(bodyChannel: ByteReadChannel, callback: MultiResponseCallback): List<Property> {
         val parser = XmlUtils.newPullParser()
 
-        suspend fun parseMultiStatus(): List<Property> {
-            // <!ELEMENT multistatus (response*, responsedescription?,
-            //                        sync-token?) >
-            val depth = parser.depth
-            var eventType = parser.eventType
-            while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                    when (parser.propertyName()) {
-                        RESPONSE ->
-                            Response.parse(parser, location, callback)
-                        SyncToken.NAME ->
-                            XmlReader(parser).readText()?.let {
-                                responseProperties += SyncToken(it)
-                            }
-                    }
-                eventType = parser.next()
-            }
-
-            return responseProperties
-        }
-
         try {
-            parser.setInput(reader)
+            bodyChannel.toInputStream().use { stream ->
+                parser.setInput(stream, null)
 
-            var eventType = parser.eventType
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                    if (parser.propertyName() == MULTISTATUS)
-                        return parseMultiStatus()
-                // ignore further <multistatus> elements
-                eventType = parser.next()
+                var eventType = parser.eventType
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
+                        if (parser.propertyName() == MULTISTATUS) {
+                            return parseMultiStatus(parser, callback)
+                            // further <multistatus> elements are ignored
+                        }
+
+                    eventType = parser.next()
+                }
             }
 
             throw DavException("Multi-Status response didn't contain multistatus XML element")
 
         } catch (e: EOFException) {
-            throw DavException("Incomplete multistatus XML element", e)
+            throw DavException("Incomplete multistatus XML element", cause = e)
         } catch (e: XmlPullParserException) {
-            throw DavException("Couldn't parse multistatus XML element", e)
+            throw DavException("Couldn't parse multistatus XML element", cause = e)
         }
+    }
+
+    private suspend fun parseMultiStatus(parser: XmlPullParser, callback: MultiResponseCallback): List<Property> {
+        val responseProperties = mutableListOf<Property>()
+
+        // <!ELEMENT multistatus (response*, responsedescription?,
+        //                        sync-token?) >
+        val depth = parser.depth
+        var eventType = parser.eventType
+        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
+                when (parser.propertyName()) {
+                    RESPONSE ->
+                        Response.parse(parser, location, callback)
+                    SyncToken.NAME ->
+                        XmlReader(parser).readText()?.let {
+                            responseProperties += SyncToken(it)
+                        }
+                }
+            eventType = parser.next()
+        }
+
+        return responseProperties
     }
 
 }

@@ -23,11 +23,11 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.FileNotFoundException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
@@ -37,19 +37,16 @@ class HttpExceptionTest {
 
     @Test
     fun isRedirect() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.Found,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
-        val result = HttpException(response, "Message")
+        val result = HttpException.fromResponse(response)
 
         assertTrue(result.isRedirect)
         assertFalse(result.isClientError)
@@ -58,19 +55,16 @@ class HttpExceptionTest {
 
     @Test
     fun isClientError() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.NotFound,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
-        val result = HttpException(response, "Message")
+        val result = HttpException.fromResponse(response)
 
         assertFalse(result.isRedirect)
         assertTrue(result.isClientError)
@@ -79,19 +73,16 @@ class HttpExceptionTest {
 
     @Test
     fun isServerError() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.InternalServerError,
                 content = "Your Information",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
-        val result = HttpException(response, "Message")
+        val result = HttpException.fromResponse(response)
 
         assertFalse(result.isRedirect)
         assertFalse(result.isClientError)
@@ -101,14 +92,12 @@ class HttpExceptionTest {
     @Test
     fun `is Java-serializable`() {
         val ex = HttpException(
-            message = "Some Error",
-            statusCode = 500,
+            status = HttpStatusCode.InternalServerError,
             requestExcerpt = "Request Body",
             responseExcerpt = "Response Body",
             errors = listOf(
                 Error(Property.Name("Serialized", "Name"))
-            ),
-            cause = FileNotFoundException()
+            )
         )
 
         // serialize (Java-style as in Serializable interface, not Kotlin serialization)
@@ -128,7 +117,7 @@ class HttpExceptionTest {
                 assertEquals(ex.requestExcerpt, actual.requestExcerpt)
                 assertEquals(ex.responseExcerpt, actual.responseExcerpt)
                 assertEquals(ex.errors, actual.errors)
-                assertTrue(actual.cause is FileNotFoundException)
+                assertNull(actual.cause)
             }
         }
     }

@@ -10,13 +10,20 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 
-class ConflictException: HttpException {
+class ConflictException internal constructor(
+    responseInfo: HttpResponseInfo
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
-    constructor(response: HttpResponse) : super(response) {
-        if (response.status.value != HttpStatusCode.Conflict.value)
-            throw IllegalArgumentException("Status code must be 409")
+    init {
+        if (responseInfo.status != HttpStatusCode.Conflict)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.Conflict}")
     }
+
 }

@@ -12,49 +12,26 @@ package at.bitfire.dav4jvm.ktor.exception
 
 import at.bitfire.dav4jvm.Error
 import io.ktor.client.statement.HttpResponse
-import javax.annotation.WillNotClose
-
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 
 /**
  * Signals that a HTTP error was sent by the server in the context of a WebDAV operation.
  */
-open class HttpException(
-    message: String? = null,
-    cause: Throwable? = null,
-    override val statusCode: Int,
+open class HttpException internal constructor(
+    status: HttpStatusCode,
     requestExcerpt: String?,
     responseExcerpt: String?,
     errors: List<Error> = emptyList()
-): DavException(message, cause, statusCode, requestExcerpt, responseExcerpt, errors) {
+): DavException(
+    message = "HTTP $status",
+    statusCode = status.value,
+    requestExcerpt = requestExcerpt,
+    responseExcerpt = responseExcerpt,
+    errors = errors
+) {
 
-    // constructor from Response
-
-    /**
-     * Takes the request, response and errors from a given HTTP response.
-     *
-     * @param response  response to extract status code and request/response excerpt from (if possible)
-     * @param message   optional exception message
-     * @param cause     optional exception cause
-     */
-    constructor(
-        @WillNotClose response: HttpResponse,
-        message: String = "HTTP ${response.status.value} ${response.status.description}",
-        cause: Throwable? = null
-    ) : this(HttpResponseInfo.fromResponse(response), message, cause)
-
-    private constructor(
-        httpResponseInfo: HttpResponseInfo,
-        message: String?,
-        cause: Throwable? = null
-    ): this(
-        message = message,
-        cause = cause,
-        statusCode = httpResponseInfo.statusCode,
-        requestExcerpt = httpResponseInfo.requestExcerpt,
-        responseExcerpt = httpResponseInfo.responseExcerpt,
-        errors = httpResponseInfo.errors
-    )
-
+    override val statusCode: Int = status.value
 
     // status code classes
 
@@ -69,5 +46,58 @@ open class HttpException(
     /** Whether the [statusCode] is 5xx and thus indicates a server error. */
     val isServerError
         get() = statusCode / 100 == 5
+
+
+    companion object {
+
+        /**
+         * Creates a [HttpException] from the request, response and errors of a given HTTP response.
+         *
+         * @param response  unconsumed response to extract status code and request/response excerpt from (if possible)
+         * @param message   optional exception message
+         * @param cause     optional exception cause
+         *
+         * @return specific HTTP response (like [UnauthorizedException] for 401) or generic
+         * [HttpException] if no specific exception class is available
+         */
+        suspend fun fromResponse(response: HttpResponse): HttpException {
+            val responseInfo = HttpResponseInfo.fromResponse(response)
+            return when (responseInfo.status) {
+                // specific status codes
+                HttpStatusCode.Unauthorized ->          // 401 Unauthorized
+                    UnauthorizedException(responseInfo)
+
+                HttpStatusCode.Forbidden ->             // 403 Forbidden
+                    ForbiddenException(responseInfo)
+
+                HttpStatusCode.NotFound ->              // 404 Not Found
+                    NotFoundException(responseInfo)
+
+                HttpStatusCode.Conflict ->              // 409 Conflict
+                    ConflictException(responseInfo)
+
+                HttpStatusCode.Gone ->                  // 410 Gone
+                    GoneException(responseInfo)
+
+                HttpStatusCode.PreconditionFailed ->    // 412 Precondition failed
+                    PreconditionFailedException(responseInfo)
+
+                HttpStatusCode.ServiceUnavailable ->    // 503 Service Unavailable
+                    ServiceUnavailableException(
+                        responseInfo,
+                        retryAfter = response.headers[HttpHeaders.RetryAfter]
+                    )
+
+                else ->     // generic HTTP exception
+                    HttpException(
+                        status = response.status,
+                        requestExcerpt = responseInfo.requestExcerpt,
+                        responseExcerpt = responseInfo.responseExcerpt,
+                        errors = responseInfo.errors
+                    )
+            }
+        }
+
+    }
 
 }

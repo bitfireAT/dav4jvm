@@ -10,13 +10,20 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 
-class GoneException: HttpException {
+class GoneException internal constructor(
+    responseInfo: HttpResponseInfo
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
-    constructor(response: HttpResponse) : super(response) {
-        if (response.status.value != HttpStatusCode.Gone.value)
-            throw IllegalArgumentException("Status code must be 410")
+    init {
+        if (responseInfo.status != HttpStatusCode.Gone)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.Gone}")
     }
+
 }

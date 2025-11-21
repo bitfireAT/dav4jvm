@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.ktor
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
-import at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException
 import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
@@ -24,7 +23,7 @@ import io.ktor.client.engine.mock.respondError
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.engine.mock.respondRedirect
 import io.ktor.client.request.get
-import io.ktor.client.request.prepareRequest
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
@@ -1115,7 +1114,10 @@ class DavResourceTest {
                 called = true
             }
             fail("Expected PreconditionFailedException")
-        } catch(_: PreconditionFailedException) {}
+        } catch (e: HttpException) {
+            if (e.statusCode != HttpStatusCode.PreconditionFailed.value)
+                fail("Expected HTTP 412")
+        }
         assertFalse(called)
         val rq = mockEngine.requestHistory.last()
         assertEquals("\"ExistingETag\"", rq.headers[HttpHeaders.IfMatch])
@@ -1162,7 +1164,8 @@ class DavResourceTest {
     /** test helpers **/
 
     @Test
-    fun `AssertMultiStatus EmptyBody NoXML`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus EmptyBody NoXML`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "",
                 status = HttpStatusCode.MultiStatus  // 207 Multi-Status
@@ -1171,11 +1174,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test
-    fun `AssertMultiStatus EmptyBody XML`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus EmptyBody XML`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
@@ -1185,11 +1190,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test
-    fun `AssertMultiStatus NonXML ButContentIsXML`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus NonXML ButContentIsXML`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "<?xml version=\"1.0\"><test/>",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
@@ -1199,11 +1206,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test(expected = DavException::class)
-    fun `AssertMultiStatus NonXML Really Not XML`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus NonXML Really Not XML`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "Some error occurred",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
@@ -1213,11 +1222,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test(expected = DavException::class)
-    fun `AssertMultiStatus Not 207`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus Not 207`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "",
                 status = HttpStatusCode(403, "Multi-Status"),  // 207 Multi-Status
@@ -1227,11 +1238,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test
-    fun `AssertMultiStatus Ok ApplicationXml`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus Ok ApplicationXml`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
@@ -1241,11 +1254,13 @@ class DavResourceTest {
         val httpClient = HttpClient(mockEngine)
 
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 
     @Test
-    fun `AssertMultiStatus Ok TextXml`() = runTest {        val mockEngine = MockEngine {
+    fun `AssertMultiStatus Ok TextXml`() = runTest {
+        val mockEngine = MockEngine {
             respond(
                 content = "",
                 status = HttpStatusCode.MultiStatus,  // 207 Multi-Status
@@ -1254,6 +1269,7 @@ class DavResourceTest {
         }
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, Url("https://from.com"))
-        dav.assertMultiStatus(httpClient.prepareRequest(dav.location).execute())
+        val response = httpClient.get(dav.location)
+        dav.assertMultiStatus(response, response.bodyAsChannel())
     }
 }

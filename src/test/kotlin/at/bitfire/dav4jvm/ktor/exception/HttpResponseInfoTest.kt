@@ -19,7 +19,9 @@ import io.ktor.client.engine.mock.respondError
 import io.ktor.client.engine.mock.respondOk
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.prepareGet
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -34,47 +36,61 @@ class HttpResponseInfoTest {
 
     private val sampleUrl = "https://example.com"
 
+
     // requestExcerpt
 
     @Test
     fun `requestExcerpt (binary blob)`() = runTest {
-        val mockEngine = MockEngine { request ->
-            respondError(
-                status = HttpStatusCode.NoContent,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.InternalServerError)
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
+        val httpClient = HttpClient(mockEngine)
         val response = httpClient.post(sampleUrl) {
-            setBody("Sample")
-            contentType(ContentType.parse("application/test"))
+            contentType(ContentType.Application.OctetStream)
+            setBody(ByteArray(6))
         }
-        val result = HttpException(response, "Message")
-        assertEquals("POST $sampleUrl\n\n<request body (6 bytes)>", result.requestExcerpt)
+        val result = HttpResponseInfo.fromResponse(response)
+        assertEquals("POST $sampleUrl\n\n<request body with 6 byte(s)>", result.requestExcerpt)
     }
 
     @Test
-    fun `requestExcerpt (large CSS text)`() = runTest {
-        val mockEngine = MockEngine { request ->
-            respondError(
-                status = HttpStatusCode.NoContent,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
+    fun `requestExcerpt (no body)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.InternalServerError)
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
+        assertEquals("GET $sampleUrl", result.requestExcerpt)
+    }
 
+    @Test
+    fun `requestExcerpt (text as ByteArrayContent)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.InternalServerError)
+        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.post(sampleUrl) {
+            contentType(ContentType.Text.Plain)
+            setBody("Sample".toByteArray())
+        }
+        val result = HttpResponseInfo.fromResponse(response)
+        assertEquals("POST $sampleUrl\n\nSample", result.requestExcerpt)
+    }
+
+    @Test
+    fun `requestExcerpt (text as large TextContent)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(HttpStatusCode.InternalServerError)
+        }
+        val httpClient = HttpClient(mockEngine)
         val result = httpClient.post(sampleUrl) {
-            setBody("*".repeat(DavException.Companion.MAX_EXCERPT_SIZE * 2))
             contentType(ContentType.Text.CSS)
+            setBody("*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE * 2))
         }.let { response ->
             HttpResponseInfo.fromResponse(response)
         }
-        val truncatedText = "*".repeat(DavException.Companion.MAX_EXCERPT_SIZE)
+        val truncatedText = "*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE)
         assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
     }
 
@@ -82,80 +98,99 @@ class HttpResponseInfoTest {
     // responseExcerpt
 
     @Test
-    fun `responseExcerpt (binary blob)`() = runTest {
-        val mockEngine = MockEngine { request ->
-            respondError(
-                status = HttpStatusCode.NotFound,
-                content = "Evil binary data",
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.OctetStream.toString())
-            )
-        }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
-        val result = httpClient.get(sampleUrl).let { response ->
-            HttpResponseInfo.Companion.fromResponse(response)
-        }
-        assertNull(result.responseExcerpt)
-    }
-
-    @Test
-    fun `responseExcerpt (HTML)`() = runTest {
-        val mockEngine = MockEngine { request ->
+    fun `responseExcerpt (already consumed)`() = runTest {
+        val mockEngine = MockEngine {
             respondError(
                 status = HttpStatusCode.NotFound,
                 content = "Interesting details about error",
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
+        val httpClient = HttpClient(mockEngine)
+        httpClient.prepareGet(sampleUrl).execute { response ->
+            response.bodyAsChannel()
+            // body is now already consumed
+            val result = HttpResponseInfo.fromResponse(response)
+            assertNull(result.responseExcerpt)
         }
+    }
 
-        val result = httpClient.get(sampleUrl).let { response ->
-            HttpResponseInfo.Companion.fromResponse(response)
+    @Test
+    fun `responseExcerpt (binary blob)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(
+                status = HttpStatusCode.NotFound,
+                content = "Evil binary data",
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.OctetStream.toString())
+            )
         }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
+        assertNull(result.responseExcerpt)
+    }
+
+    @Test
+    fun `responseExcerpt (HTML)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(
+                status = HttpStatusCode.NotFound,
+                content = "Interesting details about error",
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
         assertEquals("Interesting details about error", result.responseExcerpt)
     }
 
     @Test
+    fun `responseExcerpt (HTML over responseBodyChannel)`() = runTest {
+        val mockEngine = MockEngine {
+            respondError(
+                status = HttpStatusCode.NotFound,
+                content = "Interesting details about error",
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine)
+        httpClient.prepareGet(sampleUrl).execute { response ->
+            val channel = response.bodyAsChannel()
+            // body is now already consumed, but existing channel can be used
+            val result = HttpResponseInfo.fromResponse(response, channel)
+            assertEquals("Interesting details about error", result.responseExcerpt)
+        }
+    }
+
+    @Test
     fun `responseExcerpt (large HTML)`() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respondError(
                 status = HttpStatusCode.NotFound,
                 content = "0123456789".repeat(3 * 1024),
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
-        val result = httpClient.get(sampleUrl).let { response ->
-            HttpResponseInfo.Companion.fromResponse(response)
-        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
         assertEquals(
             "0123456789".repeat(2 * 1024),    // limited to 20 kB
             result.responseExcerpt
         )
     }
 
-
     @Test
     fun `responseExcerpt (no MIME type)`() = runTest {
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respondOk(
                 content = "Maybe evil binary data",
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
-        val result = httpClient.get(sampleUrl).let { response ->
-            HttpResponseInfo.Companion.fromResponse(response)
-        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
         assertNull(result.responseExcerpt)
     }
 
@@ -170,20 +205,16 @@ class HttpResponseInfoTest {
             </D:error>
             """.trimIndent()
 
-        val mockEngine = MockEngine { request ->
+        val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString()),
                 content = xml
             )
         }
-        val httpClient = HttpClient(mockEngine) {
-            followRedirects = false
-        }
-
-        val result = httpClient.get(sampleUrl).let { response ->
-            HttpResponseInfo.Companion.fromResponse(response)
-        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpResponseInfo.fromResponse(response)
         assertEquals(xml, result.responseExcerpt)
         assertEquals(
             listOf(
@@ -192,4 +223,5 @@ class HttpResponseInfoTest {
             result.errors
         )
     }
+
 }

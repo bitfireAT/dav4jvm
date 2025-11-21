@@ -10,13 +10,20 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 
-class UnauthorizedException: HttpException {
+class UnauthorizedException internal constructor(
+    responseInfo: HttpResponseInfo
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
-    constructor(response: HttpResponse) : super(response) {
-        if (response.status.value != HttpStatusCode.Unauthorized.value)
-            throw IllegalArgumentException("Status code must be 401")
+    init {
+        if (responseInfo.status != HttpStatusCode.Unauthorized)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.Unauthorized}")
     }
+
 }

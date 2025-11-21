@@ -101,6 +101,12 @@ object KtorHttpUtils {
 
 // extension methods
 
+fun ContentType.isText() =
+    isXml() || match(ContentType.Text.Any)
+
+fun ContentType.isXml() =
+    match(ContentType.Application.Xml) || match(ContentType.Text.Xml)
+
 fun String?.toContentTypeOrNull(): ContentType? {
     if (this == null)
         return null

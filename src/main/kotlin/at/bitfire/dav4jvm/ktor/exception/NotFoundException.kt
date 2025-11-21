@@ -10,13 +10,20 @@
 
 package at.bitfire.dav4jvm.ktor.exception
 
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 
-class NotFoundException: HttpException {
+class NotFoundException internal constructor(
+    responseInfo: HttpResponseInfo
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
-    constructor(response: HttpResponse) : super(response) {
-        if (response.status.value != HttpStatusCode.NotFound.value)
-            throw IllegalArgumentException("Status code must be 404")
+    init {
+        if (responseInfo.status != HttpStatusCode.NotFound)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.NotFound}")
     }
+
 }

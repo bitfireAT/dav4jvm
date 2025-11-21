@@ -14,43 +14,46 @@ import at.bitfire.dav4jvm.HttpUtils
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_DEFAULT
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MAX
 import at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException.Companion.DELAY_UNTIL_MIN
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import java.time.Instant
-import java.util.logging.Level
-import java.util.logging.Logger
 
+class ServiceUnavailableException internal constructor(
+    responseInfo: HttpResponseInfo,
 
-class ServiceUnavailableException(response: HttpResponse) : HttpException(response) {
-
-    private val logger
-        get() = Logger.getLogger(javaClass.name)
-
-    val retryAfter: Instant?
+    /** unprocessed value of the `Retry-After` header */
+    val retryAfter: String?
+): HttpException(
+    status = responseInfo.status,
+    requestExcerpt = responseInfo.requestExcerpt,
+    responseExcerpt = responseInfo.responseExcerpt,
+    errors = responseInfo.errors
+) {
 
     init {
-        if (response.status.value != HttpStatusCode.ServiceUnavailable.value)
-            throw IllegalArgumentException("Status code must be 503")
-
-        // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
-        // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
-
-        var retryAfterValue: Instant? = null
-        response.headers["Retry-After"]?.let { after ->
-            retryAfterValue = HttpUtils.parseDate(after) ?:
-                    // not a HTTP-date, must be delta-seconds
-                    try {
-                        val seconds = after.toLong()
-                        Instant.now().plusSeconds(seconds)
-                    } catch (e: NumberFormatException) {
-                        logger.log(Level.WARNING, "Received Retry-After which was not a HTTP-date nor delta-seconds: $after", e)
-                        null
-                    }
-        }
-
-        retryAfter = retryAfterValue
+        if (responseInfo.status != HttpStatusCode.ServiceUnavailable)
+            throw IllegalArgumentException("Status must be ${HttpStatusCode.ServiceUnavailable}")
     }
 
+    /**
+     * absolute time of [retryAfter] (if available)
+     */
+    val retryAfterAbs: Instant? =
+        if (retryAfter != null) {
+            // Retry-After  = "Retry-After" ":" ( HTTP-date | delta-seconds )
+            // HTTP-date    = rfc1123-date | rfc850-date | asctime-date
+            HttpUtils.parseDate(retryAfter)     // parse as HTTP-date, if possible
+                ?: parseAsSeconds(retryAfter)           // not a HTTP-date, must be delta-seconds
+        } else
+            null
+
+    private fun parseAsSeconds(retryAfter: String): Instant? {
+        return try {
+            val seconds = retryAfter.toLong()
+            Instant.now().plusSeconds(seconds)
+        } catch (_: NumberFormatException) {
+            null
+        }
+    }
 
     /**
      * Returns appropriate sync retry delay in seconds, considering the servers suggestion
@@ -64,11 +67,11 @@ class ServiceUnavailableException(response: HttpResponse) : HttpException(respon
      * @return until when to wait before sync can be retried
      */
     fun getDelayUntil(start: Instant = Instant.now()): Instant {
-        if (retryAfter == null)
+        if (retryAfterAbs == null)
             return start.plusSeconds(DELAY_UNTIL_DEFAULT)
 
         // take server suggestion, but restrict to plausible min/max values
-        return retryAfter.coerceIn(
+        return retryAfterAbs.coerceIn(
             minimumValue = start.plusSeconds(DELAY_UNTIL_MIN),
             maximumValue = start.plusSeconds(DELAY_UNTIL_MAX)
         )
