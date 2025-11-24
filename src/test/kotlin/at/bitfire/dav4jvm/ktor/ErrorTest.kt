@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.Property
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -20,7 +21,7 @@ class ErrorTest {
     @Test
     fun testEquals() {
         val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
-        assertTrue(errors.contains(Error.VALID_SYNC_TOKEN))
+        assertTrue(errors.contains(Error(WebDAV.ValidSyncToken)))
     }
 
 }
