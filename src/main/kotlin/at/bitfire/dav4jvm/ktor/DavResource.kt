@@ -11,7 +11,6 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Property
-import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
@@ -735,23 +734,6 @@ open class DavResource(
         // verify that the response is 207 Multi-Status
         assertMultiStatus(response, bodyChannel)
 
-        return processMultiStatus(bodyChannel, callback)
-    }
-
-    /**
-     * Processes a Multi-Status response.
-     *
-     * @param bodyChannel   the response body channel to read the Multi-Status response from
-     * @param callback      called for every XML response element in the Multi-Status response
-     *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements (like `sync-token` which is returned as [SyncToken])
-     *
-     * @throws IOException on I/O error
-     * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (like an invalid XML response)
-     */
-    protected suspend fun processMultiStatus(bodyChannel: ByteReadChannel, callback: MultiResponseCallback): List<Property> {
         val parser = XmlUtils.newPullParser()
 
         try {
@@ -762,7 +744,7 @@ open class DavResource(
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.MultiStatus) {
-                            return parseMultiStatus(parser, callback)
+                            return MultiStatusParser(location, callback).parseResponse(parser)
                             // further <multistatus> elements are ignored
                         }
 
@@ -777,29 +759,6 @@ open class DavResource(
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", cause = e)
         }
-    }
-
-    private suspend fun parseMultiStatus(parser: XmlPullParser, callback: MultiResponseCallback): List<Property> {
-        val responseProperties = mutableListOf<Property>()
-
-        // <!ELEMENT multistatus (response*, responsedescription?,
-        //                        sync-token?) >
-        val depth = parser.depth
-        var eventType = parser.eventType
-        while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                when (parser.propertyName()) {
-                    WebDAV.Response ->
-                        Response.parse(parser, location, callback)
-                    WebDAV.SyncToken ->
-                        XmlReader(parser).readText()?.let {
-                            responseProperties += SyncToken(it)
-                        }
-                }
-            eventType = parser.next()
-        }
-
-        return responseProperties
     }
 
 }
