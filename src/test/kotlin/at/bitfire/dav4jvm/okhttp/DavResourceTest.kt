@@ -848,7 +848,7 @@ class DavResourceTest {
                 }
             }
         }
-        assertEquals(4, nrCalled)
+        assertEquals(5, nrCalled)
 
 
         /*** SPECIAL CASES ***/
