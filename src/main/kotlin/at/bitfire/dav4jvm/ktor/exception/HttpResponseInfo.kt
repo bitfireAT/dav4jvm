@@ -15,6 +15,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.ktor.isText
 import at.bitfire.dav4jvm.ktor.isXml
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.client.statement.request
@@ -113,7 +114,7 @@ internal class HttpResponseInfo private constructor(
                 var eventType = parser.eventType
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                        if (parser.propertyName() == Error.NAME)
+                        if (parser.propertyName() == WebDAV.Error)
                             return Error.parseError(parser)
                     eventType = parser.next()
                 }

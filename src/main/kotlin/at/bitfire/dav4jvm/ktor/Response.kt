@@ -161,9 +161,9 @@ data class Response(
                         }
                         WebDAV.Status ->
                             status = KtorHttpUtils.parseStatusLine(parser.nextText())
-                        PropStat.NAME ->
+                        WebDAV.PropStat ->
                             PropStat.parse(parser).let { propStat += it }
-                        Error.NAME ->
+                        WebDAV.Error ->
                             error = Error.parseError(parser)
                         WebDAV.Location ->
                             newLocation = Url(parser.nextText())    // TODO: Need to catch exception here?
