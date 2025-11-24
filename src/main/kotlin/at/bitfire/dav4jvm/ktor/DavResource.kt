@@ -744,7 +744,7 @@ open class DavResource(
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.MultiStatus) {
-                            return MultiStatusParser(location).parseResponse(parser, callback)
+                            return MultiStatusParser(location, callback).parseResponse(parser)
                             // further <multistatus> elements are ignored
                         }
 

@@ -29,7 +29,8 @@ import java.util.logging.Logger
  * @param location  location of the request (used to resolve possible relative `<href>`)
  */
 class ResponseParser(
-    private val location: Url
+    private val location: Url,
+    private val callback: MultiResponseCallback
 ) {
 
     private val logger
@@ -46,13 +47,13 @@ class ResponseParser(
      * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
      * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
      */
-    suspend fun parseResponse(parser: XmlPullParser, callback: MultiResponseCallback) {
+    suspend fun parseResponse(parser: XmlPullParser) {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
         var status: HttpStatusCode? = null
         val propStat = mutableListOf<PropStat>()
-        var error: List<at.bitfire.dav4jvm.Error>? = null
+        var error: List<Error>? = null
         var newLocation: Url? = null
 
         var eventType = parser.eventType
@@ -83,8 +84,7 @@ class ResponseParser(
                             }
                         }
 
-
-                        if(!hierarchical) {
+                        if (!hierarchical) {
                             val urlBuilder = URLBuilder(location).takeFrom(sHref)
                             urlBuilder.pathSegments = urlBuilder.pathSegments.filterNot { it == "." } // Drop segments that are "./"
                             hrefOrNull = urlBuilder.build()
@@ -95,7 +95,7 @@ class ResponseParser(
                     WebDAV.Status ->
                         status = KtorHttpUtils.parseStatusLine(parser.nextText())
                     WebDAV.PropStat ->
-                        PropStatParser().parse(parser).let { propStat += it }
+                        PropStatParser.parse(parser).let { propStat += it }
                     WebDAV.Error ->
                         error = Error.parseError(parser)
                     WebDAV.Location ->

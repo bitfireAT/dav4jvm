@@ -24,11 +24,13 @@ import org.xmlpull.v1.XmlPullParser
  * @param location  location of the request (used to resolve possible relative `<href>` in responses)
  */
 class MultiStatusParser(
-    private val location: Url
+    private val location: Url,
+    private val callback: MultiResponseCallback
 ) {
 
-    suspend fun parseResponse(parser: XmlPullParser, callback: MultiResponseCallback): List<Property> {
+    suspend fun parseResponse(parser: XmlPullParser): List<Property> {
         val responseProperties = mutableListOf<Property>()
+        val responseParser = ResponseParser(location, callback)
 
         // <!ELEMENT multistatus (response*, responsedescription?,
         //                        sync-token?) >
@@ -38,7 +40,7 @@ class MultiStatusParser(
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                 when (parser.propertyName()) {
                     WebDAV.Response ->
-                        ResponseParser(location).parseResponse(parser, callback)
+                        responseParser.parseResponse(parser)
                     WebDAV.SyncToken ->
                         XmlReader(parser).readText()?.let {
                             responseProperties += SyncToken(it)

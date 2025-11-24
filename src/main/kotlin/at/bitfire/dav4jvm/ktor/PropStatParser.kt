@@ -17,7 +17,9 @@ import io.ktor.http.HttpStatusCode
 import org.xmlpull.v1.XmlPullParser
 import java.util.LinkedList
 
-class PropStatParser {
+object PropStatParser {
+
+    private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
 
     fun parse(parser: XmlPullParser): PropStat {
         val depth = parser.depth
@@ -29,22 +31,15 @@ class PropStatParser {
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                 when (parser.propertyName()) {
-                    WebDAV.Status ->
-                        status = KtorHttpUtils.parseStatusLine(parser.nextText())
                     WebDAV.Prop ->
                         prop.addAll(Property.parse(parser))
+                    WebDAV.Status ->
+                        status = KtorHttpUtils.parseStatusLine(parser.nextText())
                 }
             eventType = parser.next()
         }
 
         return PropStat(prop, status ?: ASSUMING_OK)
-    }
-
-
-    companion object {
-
-        private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
-
     }
 
 }
