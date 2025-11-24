@@ -38,7 +38,7 @@ class MultiStatusParser(
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                 when (parser.propertyName()) {
                     WebDAV.Response ->
-                        Response.parse(parser, location, callback)
+                        ResponseParser(location).parseResponse(parser, callback)
                     WebDAV.SyncToken ->
                         XmlReader(parser).readText()?.let {
                             responseProperties += SyncToken(it)
