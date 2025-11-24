@@ -26,6 +26,7 @@ object WebDAV {
     val CreationDate = Property.Name(NS_WEBDAV, "creationdate")
     val Depth = Property.Name(NS_WEBDAV, "depth")
     val DisplayName = Property.Name(NS_WEBDAV, "displayname")
+    val Error = Property.Name(NS_WEBDAV, "error")
     val GetContentLength = Property.Name(NS_WEBDAV, "getcontentlength")
     val GetContentType = Property.Name(NS_WEBDAV, "getcontenttype")
     val GetETag = Property.Name(NS_WEBDAV, "getetag")
@@ -59,6 +60,7 @@ object WebDAV {
     val Bind = Property.Name(NS_WEBDAV, "bind")
     val CurrentUserPrivilegeSet = Property.Name(NS_WEBDAV, "current-user-privilege-set")
     val GroupMembership = Property.Name(NS_WEBDAV, "group-membership")
+    val NeedPrivileges = Property.Name(NS_WEBDAV, "need-privileges")
     val Privilege = Property.Name(NS_WEBDAV, "privilege")
     val Read = Property.Name(NS_WEBDAV, "read")
     val Unbind = Property.Name(NS_WEBDAV, "unbind")
@@ -90,5 +92,6 @@ object WebDAV {
     val SyncCollection = Property.Name(NS_WEBDAV, "sync-collection")
     val SyncLevel = Property.Name(NS_WEBDAV, "sync-level")
     val SyncToken = Property.Name(NS_WEBDAV, "sync-token")
+    val ValidSyncToken = Property.Name(NS_WEBDAV, "valid-sync-token")
 
 }

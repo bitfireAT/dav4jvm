@@ -31,9 +31,6 @@ data class PropStat(
 
     companion object {
 
-        @JvmField
-        val NAME = Property.Name(WebDAV.NS_WEBDAV, "propstat")
-
         private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
 
         fun parse(parser: XmlPullParser): PropStat {

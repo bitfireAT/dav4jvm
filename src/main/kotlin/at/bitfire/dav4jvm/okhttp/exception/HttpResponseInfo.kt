@@ -14,6 +14,7 @@ import at.bitfire.dav4jvm.Error
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.okhttp.exception.DavException.Companion.MAX_EXCERPT_SIZE
+import at.bitfire.dav4jvm.property.webdav.WebDAV
 import okhttp3.MediaType
 import okhttp3.Response
 import okio.Buffer
@@ -91,7 +92,7 @@ internal class HttpResponseInfo private constructor(
                 var eventType = parser.eventType
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
-                        if (parser.propertyName() == Error.NAME)
+                        if (parser.propertyName() == WebDAV.Error)
                             return Error.parseError(parser)
                     eventType = parser.next()
                 }

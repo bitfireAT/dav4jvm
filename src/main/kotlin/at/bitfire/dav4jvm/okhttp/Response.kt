@@ -159,7 +159,7 @@ data class Response(
                             }
                         WebDAV.PropStat ->
                             PropStat.parse(parser).let { propStat += it }
-                        Error.NAME ->
+                        WebDAV.Error ->
                             error = Error.parseError(parser)
                         WebDAV.Location ->
                             newLocation = parser.nextText().toHttpUrlOrNull()
