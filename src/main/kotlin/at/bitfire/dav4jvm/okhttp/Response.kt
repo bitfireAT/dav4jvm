@@ -176,7 +176,7 @@ data class Response(
             // if we know this resource is a collection, make sure href has a trailing slash
             // (for clarity and resolving relative paths)
             propStat.filter { it.isSuccess() }
-                .map { it.properties }
+                .flatMap { it.properties }
                 .filterIsInstance<ResourceType>()
                 .firstOrNull()
                 ?.let { type ->
