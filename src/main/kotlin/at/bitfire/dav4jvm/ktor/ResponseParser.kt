@@ -17,10 +17,13 @@ import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
+import io.ktor.http.URLParserException
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
+import org.jetbrains.annotations.VisibleForTesting
 import org.xmlpull.v1.XmlPullParser
+import java.util.logging.Level
 import java.util.logging.Logger
 
 /**
@@ -60,38 +63,8 @@ class ResponseParser(
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth+1)
                 when (parser.propertyName()) {
-                    WebDAV.Href -> {
-                        var sHref = parser.nextText()
-                        var hierarchical = false
-                        if (!sHref.startsWith("/")) {
-                            /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
-                               URLs. However, some servers reply with relative paths. */
-                            val firstColon = sHref.indexOf(':')
-                            if (firstColon != -1) {
-                                /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
-                                   which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
-                                   For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
-                                   with "./" to allow resolving by HttpUrl. */
-                                try {
-                                    if (sHref.substring(firstColon, firstColon + 3) == "://")
-                                        hierarchical = true
-                                } catch (e: IndexOutOfBoundsException) {
-                                    // no "://"
-                                }
-                                if (!hierarchical)
-                                    sHref = "./$sHref"
-
-                            }
-                        }
-
-                        if (!hierarchical) {
-                            val urlBuilder = URLBuilder(location).takeFrom(sHref)
-                            urlBuilder.pathSegments = urlBuilder.pathSegments.filterNot { it == "." } // Drop segments that are "./"
-                            hrefOrNull = urlBuilder.build()
-                        } else {
-                            hrefOrNull = URLBuilder(location).takeFrom(sHref).build()
-                        }
-                    }
+                    WebDAV.Href ->
+                        hrefOrNull = resolveHref(parser.nextText())
                     WebDAV.Status ->
                         status = KtorHttpUtils.parseStatusLine(parser.nextText())
                     WebDAV.PropStat ->
@@ -166,6 +139,44 @@ class ResponseParser(
             ),
             relation
         )
+    }
+
+    @VisibleForTesting
+    internal fun resolveHref(hrefString: String): Url? {
+        var sHref = hrefString
+
+        var preserve = false
+        if (!sHref.startsWith("/")) {
+            /* According to RFC 4918 8.3 URL Handling, only absolute paths are allowed as relative
+               URLs. However, some servers reply with relative paths. */
+            val firstColon = sHref.indexOf(':')
+            if (firstColon != -1) {
+                /* There are some servers which return not only relative paths, but relative paths like "a:b.vcf",
+                   which would be interpreted as scheme: "a", scheme-specific part: "b.vcf" normally.
+                   For maximum compatibility, we prefix all relative paths which contain ":" (but not "://"),
+                   with "./" to allow resolving by HttpUrl. */
+                try {
+                    if (sHref.substring(firstColon, firstColon + 3) == "://")
+                        preserve = true
+                } catch (_: IndexOutOfBoundsException) {
+                    // no "://"
+                }
+                if (!preserve)
+                    sHref = "./$sHref"
+            }
+        }
+
+        val urlBuilder = try {
+            URLBuilder(location).takeFrom(sHref)
+        } catch (e: URLParserException) {
+            logger.log(Level.WARNING, "Unresolvable <href> in <response>: $hrefString", e)
+            return null
+        }
+
+        if (!preserve)      // drop segments that are "./"
+            urlBuilder.pathSegments = urlBuilder.pathSegments.filterNot { it == "." }
+
+        return urlBuilder.build()
     }
 
 }
