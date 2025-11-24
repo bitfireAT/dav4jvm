@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.property.webdav.WebDAV
 import org.xmlpull.v1.XmlPullParser
 import java.io.Serializable
 
@@ -28,8 +27,6 @@ data class Error(
 
     companion object {
 
-        val NAME = Property.Name(WebDAV.NS_WEBDAV, "error")
-
         fun parseError(parser: XmlPullParser): List<Error> {
             val names = mutableSetOf<Property.Name>()
 
@@ -43,12 +40,6 @@ data class Error(
 
             return names.map { Error(it) }
         }
-
-
-        // some pre-defined errors
-
-        val NEED_PRIVILEGES = Error(Property.Name(WebDAV.NS_WEBDAV, "need-privileges"))
-        val VALID_SYNC_TOKEN = Error(Property.Name(WebDAV.NS_WEBDAV, "valid-sync-token"))
 
     }
 
