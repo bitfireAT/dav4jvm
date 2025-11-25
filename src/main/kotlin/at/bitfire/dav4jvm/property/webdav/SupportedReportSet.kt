@@ -16,7 +16,7 @@ import at.bitfire.dav4jvm.XmlReader
 import org.xmlpull.v1.XmlPullParser
 
 data class SupportedReportSet(
-    val reports: Set<String> = emptySet()
+    val reports: Set<Property.Name> = emptySet()
 ): Property {
 
     object Factory: PropertyFactory {
@@ -29,14 +29,13 @@ data class SupportedReportSet(
                <!ELEMENT report ANY>
             */
 
-            val reports = mutableSetOf<String>()
+            val reports = mutableSetOf<Property.Name>()
+
             XmlReader(parser).processTag(WebDAV.SupportedReport) {
                 processTag(WebDAV.Report) {
                     parser.nextTag()
-                    if (parser.eventType == XmlPullParser.TEXT)
-                        reports += parser.text
-                    else if (parser.eventType == XmlPullParser.START_TAG)
-                        reports += "${parser.namespace}${parser.name}"
+                    if (parser.eventType == XmlPullParser.START_TAG)
+                        reports += Property.Name(parser.namespace, parser.name)
                 }
             }
             return SupportedReportSet(reports)
