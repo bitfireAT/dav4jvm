@@ -73,14 +73,14 @@ class DavResourceTest {
         }
     }
 
-    private fun createMockEngineForGet(status: HttpStatusCode, eTag: String? = null, content: String = sampleText, contentType: String = "application/x-test-result"): MockEngine {
+    private fun createMockEngineForGet(status: HttpStatusCode, eTag: String? = null, content: String = sampleText): MockEngine {
         return MockEngine {
             respond(
                 content = content,
                 status = status,
                 headers = HeadersBuilder().apply {
                     eTag?.let { append(HttpHeaders.ETag, it) }
-                    append(HttpHeaders.ContentType, contentType)
+                    append(HttpHeaders.ContentType, "application/x-test-result")
                 }.build()
             )
         }
@@ -267,7 +267,7 @@ class DavResourceTest {
 
     @Test
     fun `Get POSITIVE TEST CASES 200 OK`() = runTest {
-        val mockEngine = createMockEngineForGet(HttpStatusCode.OK, "W/\"My Weak ETag\"")
+        val mockEngine = createMockEngineForGet(status = HttpStatusCode.OK, eTag = "W/\"My Weak ETag\"")
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -319,7 +319,7 @@ class DavResourceTest {
 
     @Test
     fun `Get POSITIVE TEST CASES 200 OK without ETag in response`() = runTest {
-        val mockEngine = createMockEngineForGet(HttpStatusCode.OK, null)
+        val mockEngine = createMockEngineForGet(status = HttpStatusCode.OK, eTag = null)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
