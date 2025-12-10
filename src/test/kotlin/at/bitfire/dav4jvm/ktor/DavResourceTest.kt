@@ -57,7 +57,7 @@ class DavResourceTest {
     private val sampleDestination = URLBuilder(sampleUrl).takeFrom("test").build()
 
     // Helper methods for common test patterns
-    private fun createMockEngineForCopy(status: HttpStatusCode, overwrite: String? = "F"): MockEngine {
+    private fun createMockEngineForCopy(status: HttpStatusCode): MockEngine {
         return MockEngine {
             respond(
                 content = sampleText,
