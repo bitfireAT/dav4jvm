@@ -53,19 +53,63 @@ import org.junit.Test
 class DavResourceTest {
 
     private val sampleText = "SAMPLE RESPONSE"
-    val sampleUrl = Url("https://127.0.0.1/dav/")
-    val sampleDestination = URLBuilder(sampleUrl).takeFrom("test").build()
+    private val sampleUrl = Url("https://127.0.0.1/dav/")
+    private val sampleDestination = URLBuilder(sampleUrl).takeFrom("test").build()
+
+    // Helper methods for common test patterns
+    private fun createMockEngineForCopy(status: HttpStatusCode, overwrite: String? = "F"): MockEngine {
+        return MockEngine {
+            respond(
+                content = sampleText,
+                status = status,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+            )
+        }
+    }
+
+    private fun createMockEngineForDelete(status: HttpStatusCode): MockEngine {
+        return MockEngine {
+            respond(sampleText, status)
+        }
+    }
+
+    private fun createMockEngineForGet(status: HttpStatusCode, eTag: String? = null): MockEngine {
+        return MockEngine {
+            respond(
+                content = sampleText,
+                status = status,
+                headers = HeadersBuilder().apply {
+                    eTag?.let { append(HttpHeaders.ETag, it) }
+                    append(HttpHeaders.ContentType, "application/x-test-result")
+                }.build()
+            )
+        }
+    }
+
+    private fun createMockEngineForPut(status: HttpStatusCode, eTag: String? = null): MockEngine {
+        return MockEngine {
+            respond(
+                content = " ",
+                status = status,
+                headers = headersOf(HttpHeaders.ETag, eTag ?: "W/\"Weak PUT ETag\"")
+            )
+        }
+    }
+
+    private fun createMockEngineForPropfind(xmlResponse: String): MockEngine {
+        return MockEngine {
+            respond(
+                content = xmlResponse,
+                status = HttpStatusCode.MultiStatus,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
+            )
+        }
+    }
 
 
     @Test
     fun `Copy POSITIVE no preconditions, 201 Created, resulted in the creation of a new resource`() = runTest {
-        val mockEngine = MockEngine {
-            respond(
-                content = sampleText,
-                status = HttpStatusCode.Created,  // 201 Created
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
-        }
+        val mockEngine = createMockEngineForCopy(HttpStatusCode.Created)
         val httpClient = HttpClient(mockEngine)
         var called = false
 
@@ -85,13 +129,7 @@ class DavResourceTest {
 
     @Test
     fun `Copy POSITIVE no preconditions, 204 No content, resource successfully copied to a preexisting destination resource`() = runTest {
-        val mockEngine = MockEngine {
-            respond(
-                content = sampleText,
-                status = HttpStatusCode.NoContent,  // 204 No content
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
-        }
+        val mockEngine = createMockEngineForCopy(HttpStatusCode.NoContent)
         val httpClient = HttpClient(mockEngine)
 
         var called = false
@@ -110,17 +148,12 @@ class DavResourceTest {
     }
 
     @Test
-    fun `Copy NEGATIVE 207 multi-status eg errors on some of resources affected by the COPY prevented the operation from taking place`() = runTest {        val mockEngine = MockEngine {
-            respond(
-                content = sampleText,
-                status = HttpStatusCode.MultiStatus,  // 207 multi-status
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
-            )
-        }
+    fun `Copy NEGATIVE 207 multi-status eg errors on some of resources affected by the COPY prevented the operation from taking place`() = runTest {
+        val mockEngine = createMockEngineForCopy(HttpStatusCode.MultiStatus)
         val httpClient = HttpClient(mockEngine)
         var called = false
 
-       try {
+        try {
             called = false
             DavResource(httpClient, sampleUrl).let { dav ->
                 dav.copy(sampleDestination, false) { called = true }
@@ -133,9 +166,7 @@ class DavResourceTest {
 
     @Test
     fun `Delete only eTag POSITIVE TEST CASES  precondition If-Match 200 OK`() = runTest {
-        val mockEngine = MockEngine {
-            respond(sampleText, HttpStatusCode.NoContent)  // 204 No Content
-        }
+        val mockEngine = createMockEngineForDelete(HttpStatusCode.NoContent)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -150,9 +181,7 @@ class DavResourceTest {
 
     @Test
     fun `Delete eTag and schedule Tag POSITIVE TEST CASES  precondition If-Match 200 OK`() = runTest {
-        val mockEngine = MockEngine {
-            respondOk(content = sampleText)
-        }
+        val mockEngine = MockEngine { respondOk(content = sampleText) }
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -164,14 +193,13 @@ class DavResourceTest {
         assertEquals("\"SomeETag\"", rq.headers[HttpHeaders.IfMatch])
     }
 
-
     @Test
     fun `Delete POSITIVE TEST CASES  precondition If-Match 302 Moved Temporarily`() = runTest {
         var numResponses = 0
         val mockEngine = MockEngine {
             numResponses+=1
             when(numResponses) {
-                1 -> respondRedirect("/new-location")  //307 TemporaryRedirect
+                1 -> respondRedirect("/new-location")
                 else -> respondOk()
             }
         }
@@ -179,18 +207,13 @@ class DavResourceTest {
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
 
-        dav.delete(null) {
-            called = true
-        }
+        dav.delete(null) { called = true }
         assertTrue(called)
     }
 
-
     @Test
     fun `Delete NEGATIVE TEST CASES precondition If-Match 207 multi-status`() = runTest {
-        val mockEngine = MockEngine {
-            respondError(HttpStatusCode.MultiStatus)
-        }
+        val mockEngine = MockEngine { respondError(HttpStatusCode.MultiStatus) }
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -244,16 +267,7 @@ class DavResourceTest {
 
     @Test
     fun `Get POSITIVE TEST CASES 200 OK`() = runTest {
-        val mockEngine = MockEngine {
-            respond(
-                content = sampleText,
-                status = HttpStatusCode.OK,     // 200 OK
-                headers = HeadersBuilder().apply {
-                    append(HttpHeaders.ETag, "W/\"My Weak ETag\"")
-                    append(HttpHeaders.ContentType, "application/x-test-result")
-                }.build()
-            )
-        }
+        val mockEngine = createMockEngineForGet(HttpStatusCode.OK, "W/\"My Weak ETag\"")
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -274,7 +288,6 @@ class DavResourceTest {
         assertEquals(sampleUrl.encodedPath, rq.url.encodedPath)
         assertEquals(ContentType.Any.toString(), rq.headers[HttpHeaders.Accept])
     }
-
 
     @Test
     fun `Get POSITIVE TEST CASES 302 Moved Temporarily + 200 OK`() = runTest {
@@ -304,12 +317,9 @@ class DavResourceTest {
         assertEquals("/target", rq.url.fullPath)
     }
 
-
     @Test
     fun `Get POSITIVE TEST CASES 200 OK without ETag in response`() = runTest {
-        val mockEngine = MockEngine {
-            respond(sampleText, HttpStatusCode.OK)
-        }
+        val mockEngine = MockEngine { respond(sampleText, HttpStatusCode.OK) }
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
         var called = false
@@ -634,15 +644,12 @@ class DavResourceTest {
     }
 
 
-    @Test
+        @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus response without multistatus root element`() = runTest {
-        val mockEngine = MockEngine {
-            respond("<test></test>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString()))   // * response without <multistatus> root element
-        }
+        val mockEngine = createMockEngineForPropfind("<test></test>")
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
-        // * response without <multistatus> root element
         var called = false
         try {
             dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
@@ -652,24 +659,18 @@ class DavResourceTest {
         }
     }
 
-
     @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus multi-status response with invalid status in response`() = runTest {
-        val mockEngine = MockEngine {
-            respond("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <status>Invalid Status Line</status>" +
-                    "  </response>" +
-                    "</multistatus>",
-                HttpStatusCode.MultiStatus,
-                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
-            )   // * multi-status response with invalid <status> in <response>
-        }
+        val xmlResponse = "<multistatus xmlns='DAV:'>" +
+                "  <response>" +
+                "    <href>/dav</href>" +
+                "    <status>Invalid Status Line</status>" +
+                "  </response>" +
+                "</multistatus>"
+        val mockEngine = createMockEngineForPropfind(xmlResponse)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
-        // * multi-status response with invalid <status> in <response>
         var called = false
         dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             assertEquals(Response.HrefRelation.SELF, relation)
@@ -681,21 +682,16 @@ class DavResourceTest {
 
     @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus multi-status response with response-status element indicating failure`() = runTest {
-        val mockEngine = MockEngine {
-            respond("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <status>HTTP/1.1 403 Forbidden</status>" +
-                    "  </response>" +
-                    "</multistatus>",
-                HttpStatusCode.MultiStatus,
-                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
-            )   // * multi-status response with <response>/<status> element indicating failure
-        }
+        val xmlResponse = "<multistatus xmlns='DAV:'>" +
+                "  <response>" +
+                "    <href>/dav</href>" +
+                "    <status>HTTP/1.1 403 Forbidden</status>" +
+                "  </response>" +
+                "</multistatus>"
+        val mockEngine = createMockEngineForPropfind(xmlResponse)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
-        // * multi-status response with <response>/<status> element indicating failure
         var called = false
         dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             assertEquals(Response.HrefRelation.SELF, relation)
@@ -707,26 +703,21 @@ class DavResourceTest {
 
     @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus multi-status response with invalid status in propstat`() = runTest {
-        val mockEngine = MockEngine {
-            respond("<multistatus xmlns='DAV:'>" +
-                    "  <response>" +
-                    "    <href>/dav</href>" +
-                    "    <propstat>" +
-                    "      <prop>" +
-                    "        <resourcetype><collection/></resourcetype>" +
-                    "      </prop>" +
-                    "      <status>Invalid Status Line</status>" +
-                    "    </propstat>" +
-                    "  </response>" +
-                    "</multistatus>",
-                HttpStatusCode.MultiStatus,
-                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
-            )   // * multi-status response with invalid <status> in <propstat>
-        }
+        val xmlResponse = "<multistatus xmlns='DAV:'>" +
+                "  <response>" +
+                "    <href>/dav</href>" +
+                "    <propstat>" +
+                "      <prop>" +
+                "        <resourcetype><collection/></resourcetype>" +
+                "      </prop>" +
+                "      <status>Invalid Status Line</status>" +
+                "    </propstat>" +
+                "  </response>" +
+                "</multistatus>"
+        val mockEngine = createMockEngineForPropfind(xmlResponse)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
-        // * multi-status response with invalid <status> in <propstat>
         var called = false
         dav.propfind(0, WebDAV.ResourceType) { response, relation ->
             called = true
@@ -736,19 +727,12 @@ class DavResourceTest {
         assertTrue(called)
     }
 
-
     @Test
     fun `NEGATIVE TEST CASES Propfind And MultiStatus multi-status response without response elements`() = runTest {
-        val mockEngine = MockEngine {
-            respond("<multistatus xmlns='DAV:'></multistatus>",
-                HttpStatusCode.MultiStatus,
-                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
-            )   // multi-status response without <response> elements
-        }
+        val mockEngine = createMockEngineForPropfind("<multistatus xmlns='DAV:'></multistatus>")
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
-        // multi-status response without <response> elements
         dav.propfind(0, WebDAV.ResourceType) { _, _ ->
             fail("Shouldn't be called")
         }
@@ -1055,14 +1039,7 @@ class DavResourceTest {
 
     @Test
     fun `Put POSITIVE TEST CASES no preconditions, 201 Created`() = runTest {
-        val mockEngine = MockEngine {
-            respond(
-                content = " ",
-                status = HttpStatusCode.Created,  // 201 Created
-                headers = headersOf(HttpHeaders.ETag, "W/\"Weak PUT ETag\"")
-            )
-        }
-
+        val mockEngine = createMockEngineForPut(HttpStatusCode.Created)
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
@@ -1092,11 +1069,7 @@ class DavResourceTest {
         val mockEngine = MockEngine {
             numberOfResponse+=1
             when(numberOfResponse) {
-                1 -> respond(
-                    content = "",
-                    status = HttpStatusCode.MovedPermanently,  // 301 Moved Permanently
-                    headers = headersOf(HttpHeaders.Location, "/target")
-                )
+                1 -> respond("", HttpStatusCode.MovedPermanently, headersOf(HttpHeaders.Location, "/target"))
                 else -> respond("", HttpStatusCode.NoContent)
             }
         }
@@ -1125,10 +1098,7 @@ class DavResourceTest {
 
     @Test
     fun `Put NEGATIVE TEST CASES precondition  If-Match, 412 Precondition Failed`() = runTest {
-        val mockEngine = MockEngine {
-            respond("", HttpStatusCode.PreconditionFailed)
-        }
-
+        val mockEngine = MockEngine { respond("", HttpStatusCode.PreconditionFailed) }
         val httpClient = HttpClient(mockEngine)
         val dav = DavResource(httpClient, sampleUrl)
 
