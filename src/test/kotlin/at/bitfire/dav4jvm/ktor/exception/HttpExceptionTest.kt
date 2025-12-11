@@ -36,6 +36,21 @@ class HttpExceptionTest {
     private val sampleUrl = "https://example.com"
 
     @Test
+    fun message() = runTest {
+        val mockEngine = MockEngine {
+            respond(
+                status = HttpStatusCode.Forbidden,
+                content = "Your Information"
+            )
+        }
+        val httpClient = HttpClient(mockEngine)
+        val response = httpClient.get(sampleUrl)
+        val result = HttpException.fromResponse(response)
+
+        assertEquals("HTTP 403 Forbidden", result.message)
+    }
+
+    @Test
     fun isRedirect() = runTest {
         val mockEngine = MockEngine {
             respond(
@@ -120,6 +135,16 @@ class HttpExceptionTest {
                 assertNull(actual.cause)
             }
         }
+    }
+
+    @Test
+    fun `reasonPhrase (default phrase fallback)`() {
+        assertEquals("OK", HttpException.reasonPhrase(HttpStatusCode(200, "")))
+    }
+
+    @Test
+    fun `reasonPhrase (from HttpStatusCode)`() {
+        assertEquals("Custom OK", HttpException.reasonPhrase(HttpStatusCode(200, "Custom OK")))
     }
 
 }
