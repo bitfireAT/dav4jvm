@@ -24,7 +24,7 @@ open class HttpException internal constructor(
     responseExcerpt: String?,
     errors: List<Error> = emptyList()
 ): DavException(
-    message = "HTTP $status",
+    message = "HTTP ${status.value} ${reasonPhrase(status)}",
     statusCode = status.value,
     requestExcerpt = requestExcerpt,
     responseExcerpt = responseExcerpt,
@@ -96,6 +96,24 @@ open class HttpException internal constructor(
                         errors = responseInfo.errors
                     )
             }
+        }
+
+        /**
+         * Determines the reason phrase / description of the given HTTP status. If
+         * there is none, a default phrase for the respective status code is returned.
+         *
+         * @param status    HTTP status
+         *
+         * @return reason phrase, either taken from [status] or default reason phrase for that code
+         */
+        fun reasonPhrase(status: HttpStatusCode): String {
+            val description = status.description
+            if (description.isNotBlank())
+                return description
+
+            // blank description (happens for instance when using HTTP/2), find default reason phrase
+            val defaultStatus = HttpStatusCode.fromValue(status.value)
+            return defaultStatus.description
         }
 
     }
