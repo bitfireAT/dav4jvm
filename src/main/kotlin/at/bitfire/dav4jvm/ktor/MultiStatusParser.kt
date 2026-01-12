@@ -30,7 +30,7 @@ class MultiStatusParser(
 
     suspend fun parseResponse(parser: XmlPullParser): List<Property> {
         val responseProperties = mutableListOf<Property>()
-        val responseParser = ResponseParser(location, callback)
+        val responseParser = ResponseParser(location)
 
         // <!ELEMENT multistatus (response*, responsedescription?,
         //                        sync-token?) >
@@ -40,7 +40,7 @@ class MultiStatusParser(
             if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
                 when (parser.propertyName()) {
                     WebDAV.Response ->
-                        responseParser.parseResponse(parser)
+                        responseParser.parseResponse(parser, callback)
                     WebDAV.SyncToken ->
                         XmlReader(parser).readText()?.let {
                             responseProperties += SyncToken(it)

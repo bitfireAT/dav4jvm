@@ -32,8 +32,7 @@ import java.util.logging.Logger
  * @param location  location of the request (used to resolve possible relative `<href>`)
  */
 class ResponseParser(
-    private val location: Url,
-    private val callback: MultiResponseCallback
+    private val location: Url
 ) {
 
     private val logger
@@ -49,8 +48,11 @@ class ResponseParser(
      *
      * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
      * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
+     *
+     * @param parser    XML document to parse
+     * @param callback  callback to be called for every multistatus `<response>`
      */
-    suspend fun parseResponse(parser: XmlPullParser) {
+    suspend fun parseResponse(parser: XmlPullParser, callback: MultiResponseCallback) {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
@@ -72,7 +74,7 @@ class ResponseParser(
                     WebDAV.Error ->
                         error = Error.parseError(parser)
                     WebDAV.Location ->
-                        newLocation = Url(parser.nextText())    // TODO: Need to catch exception here?
+                        newLocation = parser.nextText().toUrlOrNull()
                 }
             eventType = parser.next()
         }
@@ -93,8 +95,6 @@ class ResponseParser(
                 if (type.types.contains(WebDAV.Collection))
                     href = UrlUtils.withTrailingSlash(href)
             }
-
-        //log.log(Level.FINE, "Received properties for $href", if (status != null) status else propStat)
 
         // Which resource does this <response> represent?
         val relation = when {
