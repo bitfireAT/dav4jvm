@@ -268,6 +268,11 @@ class KtorHttpUtilsTest {
     }
 
     @Test
+    fun `toUrlOrNull with invalid HTTPS URL that can't be decoded`() {
+        assertNull("https://example.com/%f".toUrlOrNull())
+    }
+
+    @Test
     fun `toUrlOrNull with valid HTTPS URL`() {
         assertEquals(
             Url("https://example.com"),

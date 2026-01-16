@@ -14,7 +14,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLParserException
 import io.ktor.http.Url
 
 object KtorHttpUtils {
@@ -118,13 +117,24 @@ fun String?.toContentTypeOrNull(): ContentType? {
     }
 }
 
+/**
+ * Converts the [String] into a Ktor [Url], if possible.
+ *
+ * Differs from [io.ktor.http.parseUrl]:
+ *
+ * - `"relative".toUrlOrNull() == Url("relative")` (without host) but
+ * - `parseUrl("relative") == null` (requires host)
+ *
+ * @return the Ktor [Url], or `null` if the string couldn't be converted
+ */
 fun String?.toUrlOrNull(): Url? {
     if (this == null)
         return null
 
     return try {
         Url(this)
-    } catch (_: URLParserException) {
+    } catch (_: Exception) {
+        // parseUrl doesn't catch URLDecodeException, see https://github.com/ktorio/ktor/pull/5231
         null
     }
 }

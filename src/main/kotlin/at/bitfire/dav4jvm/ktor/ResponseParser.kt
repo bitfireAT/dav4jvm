@@ -17,7 +17,6 @@ import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
-import io.ktor.http.URLParserException
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
@@ -168,7 +167,7 @@ class ResponseParser(
 
         val urlBuilder = try {
             URLBuilder(location).takeFrom(sHref)
-        } catch (e: URLParserException) {
+        } catch (e: Exception) {
             logger.log(Level.WARNING, "Unresolvable <href> in <response>: $hrefString", e)
             return null
         }
