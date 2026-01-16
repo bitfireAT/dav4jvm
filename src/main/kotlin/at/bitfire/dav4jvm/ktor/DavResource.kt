@@ -41,7 +41,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
-import io.ktor.http.URLParserException
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import io.ktor.http.isSecure
@@ -643,7 +642,7 @@ open class DavResource(
                         URLBuilder(location)
                             .takeFrom(newLocation)
                             .build()
-                    } catch (e: URLParserException) {
+                    } catch (e: Exception) {
                         throw DavException("Redirected to invalid Location", cause = e)
                     }
 
