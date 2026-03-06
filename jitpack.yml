@@ -1,0 +1,6 @@
+# https://docs.jitpack.io/building/#java-version
+jdk:
+  - openjdk21
+before_install:
+  - sdk install java 21-open
+  - sdk use java 21-open
