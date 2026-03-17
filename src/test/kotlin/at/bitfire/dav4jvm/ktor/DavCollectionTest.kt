@@ -18,6 +18,10 @@ import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
+import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -277,6 +281,54 @@ class DavCollectionTest {
             called = true
         }
         assertTrue(called)
+    }
+
+    @Test
+    fun testPostRepeatedlyBecause401() = runTest {
+        var requestCount = 0
+
+        val mockEngine = MockEngine { request ->
+            requestCount++
+
+            // Verify that request body is always sent – https://github.com/bitfireAT/dav4jvm/issues/156
+            assertEquals(sampleText, request.body.toByteArray().toString(Charsets.UTF_8))
+
+            if (requestCount == 1) {
+                // First request: respond with redirect
+                respond(
+                    content = "Send Auth",
+                    status = HttpStatusCode.Unauthorized
+                )
+            } else {
+                // Second request: respond with success
+                respond(
+                    content = sampleText,
+                    status = HttpStatusCode.Created,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                )
+            }
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(Auth) {
+                basic {
+                    credentials {
+                        BasicAuthCredentials("test", "test")
+                    }
+                }
+            }
+        }
+        val dav = DavCollection(httpClient, sampleUrl)
+
+        var called = false
+        // Use a body provider that returns the same channel (which gets consumed)
+        dav.post({ ByteReadChannel(sampleText) }, ContentType.Text.Plain) { response ->
+            assertEquals(HttpMethod.Post, response.request.method)
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(response.request.url, dav.location)
+            called = true
+        }
+        assertTrue(called)
+        assertEquals(2, requestCount)
     }
 
 }
