@@ -300,7 +300,8 @@ class DavCollectionTest {
                 // First request: respond with 401 to indicate that request shall be sent again
                 respond(
                     content = "Send Auth",
-                    status = HttpStatusCode.Unauthorized
+                    status = HttpStatusCode.Unauthorized,
+                    headers = headersOf(HttpHeaders.WWWAuthenticate, "Basic realm=\"test\"")
                 )
             } else {
                 // Second request: respond with success
@@ -312,7 +313,7 @@ class DavCollectionTest {
             }
         }
         val httpClient = HttpClient(mockEngine) {
-            install(Auth) {
+            install(Auth) {     // authentication plugin retries request when receiving 401
                 basic {
                     credentials {
                         BasicAuthCredentials("test", "test")
