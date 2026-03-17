@@ -42,6 +42,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
@@ -394,14 +395,12 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param provideBody       resource body to upload (unconsumed, may be called multiple times on redirects)
-     * @param mimeType          content type of resource body
+     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent] for streaming)
      * @param additionalHeaders additional headers to send
      * @param callback          called with server response on success
      */
     suspend fun post(
-        provideBody: () -> ByteReadChannel,
-        mimeType: ContentType,
+        body: OutgoingContent,
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
@@ -410,8 +409,7 @@ open class DavResource(
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
 
-                contentType(mimeType)
-                setBody(provideBody())
+                setBody(body)
             }
         }) { response ->
             checkStatus(response)
@@ -424,8 +422,7 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param provideBody       resource body to upload (unconsumed, may be called multiple times on redirects)
-     * @param mimeType          content type of resource body
+     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent] for streaming)
      * @param additionalHeaders additional headers to send (like [HttpHeaders.IfNoneMatch] to prevent overwriting)
      * @param callback          called with server response on success
      *
@@ -434,8 +431,7 @@ open class DavResource(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     suspend fun put(
-        provideBody: () -> ByteReadChannel,
-        mimeType: ContentType,
+        body: OutgoingContent,
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
@@ -444,8 +440,7 @@ open class DavResource(
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
 
-                contentType(mimeType)
-                setBody(provideBody())
+                setBody(body)
             }
         }) { response ->
             checkStatus(response)

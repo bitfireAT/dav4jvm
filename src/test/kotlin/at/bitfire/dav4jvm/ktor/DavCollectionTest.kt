@@ -29,6 +29,8 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
@@ -274,8 +276,9 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, sampleUrl)
 
         var called = false
-        dav.post({ ByteReadChannel(sampleText) }, ContentType.Text.Plain) { response ->
+        dav.post(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
+            assertEquals(ContentType.Text.Plain, response.request.content.contentType)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(response.request.url, dav.location)
             called = true
@@ -284,7 +287,7 @@ class DavCollectionTest {
     }
 
     @Test
-    fun testPostRepeatedlyBecause401() = runTest {
+    fun testPostStreamingRepeatedlyBecause401() = runTest {
         var requestCount = 0
 
         val mockEngine = MockEngine { request ->
@@ -320,9 +323,14 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, sampleUrl)
 
         var called = false
+        val streamingBody = object : OutgoingContent.ReadChannelContent() {
+            override fun readFrom() = ByteReadChannel(sampleText)
+            override val contentType = ContentType.Text.Plain
+        }
         // Use a body provider that returns the same channel (which gets consumed)
-        dav.post({ ByteReadChannel(sampleText) }, ContentType.Text.Plain) { response ->
+        dav.post(streamingBody) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
+            assertEquals(ContentType.Text.Plain, response.request.content.contentType)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(response.request.url, dav.location)
             called = true
