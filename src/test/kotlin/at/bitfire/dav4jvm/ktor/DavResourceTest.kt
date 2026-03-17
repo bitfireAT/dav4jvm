@@ -1050,7 +1050,7 @@ class DavResourceTest {
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
-        dav.put(TextContent("body", ContentType.Text.Plain)) { response ->
+        dav.put(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             called = true
             val eTag = GetETag.fromHttpResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)

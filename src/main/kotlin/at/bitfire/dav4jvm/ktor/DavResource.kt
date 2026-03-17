@@ -395,7 +395,8 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent] for streaming)
+     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent]
+     * for streaming; ensure that every [OutgoingContent.ReadChannelContent.readFrom] returns an unconsumed channel)
      * @param additionalHeaders additional headers to send
      * @param callback          called with server response on success
      */
@@ -422,7 +423,8 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent] for streaming)
+     * @param body              resource body to upload (use [OutgoingContent.ReadChannelContent]
+     * for streaming; ensure that every [OutgoingContent.ReadChannelContent.readFrom] returns an unconsumed channel)
      * @param additionalHeaders additional headers to send (like [HttpHeaders.IfNoneMatch] to prevent overwriting)
      * @param callback          called with server response on success
      *

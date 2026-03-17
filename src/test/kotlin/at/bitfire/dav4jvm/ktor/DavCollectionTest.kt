@@ -297,7 +297,7 @@ class DavCollectionTest {
             assertEquals(sampleText, request.body.toByteArray().toString(Charsets.UTF_8))
 
             if (requestCount == 1) {
-                // First request: respond with redirect
+                // First request: respond with 401 to indicate that request shall be sent again
                 respond(
                     content = "Send Auth",
                     status = HttpStatusCode.Unauthorized
@@ -323,11 +323,14 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, sampleUrl)
 
         var called = false
+        var channelsCreated = 0     // ByteReadChannel is created anew for every request
         val streamingBody = object : OutgoingContent.ReadChannelContent() {
-            override fun readFrom() = ByteReadChannel(sampleText)
+            override fun readFrom(): ByteReadChannel {
+                channelsCreated++
+                return ByteReadChannel(sampleText)
+            }
             override val contentType = ContentType.Text.Plain
         }
-        // Use a body provider that returns the same channel (which gets consumed)
         dav.post(streamingBody) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
             assertEquals(ContentType.Text.Plain, response.request.content.contentType)
@@ -336,6 +339,7 @@ class DavCollectionTest {
             called = true
         }
         assertTrue(called)
+        assertEquals(2, channelsCreated)
         assertEquals(2, requestCount)
     }
 
