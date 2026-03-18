@@ -18,6 +18,10 @@ import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
+import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -25,6 +29,8 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
@@ -270,13 +276,72 @@ class DavCollectionTest {
         val dav = DavCollection(httpClient, sampleUrl)
 
         var called = false
-        dav.post({ ByteReadChannel(sampleText) }, ContentType.Text.Plain) { response ->
+        dav.post(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
+            assertEquals(ContentType.Text.Plain, response.request.content.contentType)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(response.request.url, dav.location)
             called = true
         }
         assertTrue(called)
+    }
+
+    @Test
+    fun testPostStreamingRepeatedlyBecause401() = runTest {
+        var requestCount = 0
+
+        val mockEngine = MockEngine { request ->
+            requestCount++
+
+            // Verify that request body is always sent – https://github.com/bitfireAT/dav4jvm/issues/156
+            assertEquals(sampleText, request.body.toByteArray().toString(Charsets.UTF_8))
+
+            if (requestCount == 1) {
+                // First request: respond with 401 to indicate that request shall be sent again
+                respond(
+                    content = "Send Auth",
+                    status = HttpStatusCode.Unauthorized,
+                    headers = headersOf(HttpHeaders.WWWAuthenticate, "Basic realm=\"test\"")
+                )
+            } else {
+                // Second request: respond with success
+                respond(
+                    content = sampleText,
+                    status = HttpStatusCode.Created,
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                )
+            }
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(Auth) {     // authentication plugin retries request when receiving 401
+                basic {
+                    credentials {
+                        BasicAuthCredentials("test", "test")
+                    }
+                }
+            }
+        }
+        val dav = DavCollection(httpClient, sampleUrl)
+
+        var called = false
+        var channelsCreated = 0     // ByteReadChannel is created anew for every request
+        val streamingBody = object : OutgoingContent.ReadChannelContent() {
+            override fun readFrom(): ByteReadChannel {
+                channelsCreated++
+                return ByteReadChannel(sampleText)
+            }
+            override val contentType = ContentType.Text.Plain
+        }
+        dav.post(streamingBody) { response ->
+            assertEquals(HttpMethod.Post, response.request.method)
+            assertEquals(ContentType.Text.Plain, response.request.content.contentType)
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(response.request.url, dav.location)
+            called = true
+        }
+        assertTrue(called)
+        assertEquals(2, channelsCreated)
+        assertEquals(2, requestCount)
     }
 
 }

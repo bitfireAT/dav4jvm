@@ -63,6 +63,7 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.ktor.client.auth)
     testImplementation(libs.ktor.client.mock)
     testImplementation(libs.okhttp.mockwebserver)
 }

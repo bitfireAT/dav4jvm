@@ -41,7 +41,6 @@ import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
-import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -367,10 +366,7 @@ class DavResourceTest {
 
         // 200 OK
         var called = false
-        dav.post(
-            provideBody = { ByteReadChannel("body") },
-            mimeType = ContentType.parse("application/x-test-result")
-        ) { response ->
+        dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
             called = true
             assertEquals(sampleText, response.bodyAsText())
 
@@ -436,10 +432,7 @@ class DavResourceTest {
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
-        dav.post(
-            provideBody = { ByteReadChannel("body") },
-            mimeType = ContentType.parse("application/x-test-result")
-        ) { response ->
+        dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
             called = true
             assertEquals(sampleText, response.bodyAsText())
             val eTag = GetETag(response.headers[HttpHeaders.ETag])
@@ -462,10 +455,7 @@ class DavResourceTest {
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
-        dav.post(
-            provideBody = { ByteReadChannel("body") },
-            mimeType = ContentType.Text.Plain
-        ) { response ->
+        dav.post(TextContent("body", ContentType.Text.Plain)) { response ->
             called = true
             assertNull(response.headers[HttpHeaders.ETag])
         }
@@ -1060,10 +1050,7 @@ class DavResourceTest {
         val dav = DavResource(httpClient, sampleUrl)
 
         var called = false
-        dav.put(
-            provideBody = { ByteReadChannel(sampleText) },
-            mimeType = ContentType.Text.Plain
-        ) { response ->
+        dav.put(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             called = true
             val eTag = GetETag.fromHttpResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
@@ -1095,8 +1082,7 @@ class DavResourceTest {
 
         var called = false
         dav.put(
-            { ByteReadChannel(sampleText) },
-            ContentType.Text.Plain,
+            TextContent(sampleText, ContentType.Text.Plain),
             headersOf(HttpHeaders.IfNoneMatch, "*")
         ) { response ->
             called = true
@@ -1121,8 +1107,7 @@ class DavResourceTest {
         var called = false
         try {
             dav.put(
-                { ByteReadChannel(sampleText) },
-                ContentType.Text.Plain,
+                TextContent(sampleText, ContentType.Text.Plain),
                 headersOf(HttpHeaders.IfMatch, "\"ExistingETag\"")
             ) {
                 called = true
