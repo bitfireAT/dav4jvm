@@ -41,7 +41,7 @@ class DavCalendar(
      * @param component requested component name (like VEVENT or VTODO)
      * @param start     time-range filter: start date (optional)
      * @param end       time-range filter: end date (optional)
-     * @param props     requested WebDAV properties for results (default: only ETag; use [CalendarData] to receive iCalendars)
+     * @param props     requested WebDAV properties for results (default: only [WebDAV.GetETag]; use [CalDAV.CalendarData] to receive full iCalendars)
      * @param callback  called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but
