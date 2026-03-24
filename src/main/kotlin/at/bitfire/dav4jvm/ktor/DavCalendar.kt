@@ -16,16 +16,10 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import io.ktor.client.HttpClient
-import io.ktor.client.request.header
-import io.ktor.client.request.prepareRequest
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.Url
-import io.ktor.http.contentType
-import io.ktor.util.logging.Logger
+import io.ktor.client.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.util.logging.*
 import org.slf4j.LoggerFactory
 import java.io.StringWriter
 import java.time.Instant
@@ -47,6 +41,7 @@ class DavCalendar(
      * @param component requested component name (like VEVENT or VTODO)
      * @param start     time-range filter: start date (optional)
      * @param end       time-range filter: end date (optional)
+     * @param props     requested WebDAV properties for results (default: only ETag; use [CalendarData] to receive iCalendars)
      * @param callback  called for every WebDAV response XML element in the result
      *
      * @return list of properties which have been received in the Multi-Status response, but
@@ -60,6 +55,7 @@ class DavCalendar(
         component: String,
         start: Instant?,
         end: Instant?,
+        props: Set<Property.Name> = setOf(WebDAV.GetETag),
         callback: MultiResponseCallback
     ): List<Property> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
@@ -81,7 +77,8 @@ class DavCalendar(
         serializer.setPrefix("CAL", CalDAV.NS_CALDAV)
         serializer.insertTag(CalDAV.CalendarQuery) {
             insertTag(WebDAV.Prop) {
-                insertTag(WebDAV.GetETag)
+                for (prop in props)
+                    insertTag(prop)
             }
             insertTag(CalDAV.Filter) {
                 insertTag(CalDAV.CompFilter) {
