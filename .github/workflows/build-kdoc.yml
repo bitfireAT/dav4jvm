@@ -18,11 +18,11 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
 
       - name: Build KDoc
-        run: ./gradlew --no-daemon dokkaGenerate
+        run: ./gradlew dokkaGenerate
 
       - uses: actions/upload-pages-artifact@v4
         with:
