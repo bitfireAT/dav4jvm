@@ -21,38 +21,16 @@ import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.compression.compress
-import io.ktor.client.request.header
-import io.ktor.client.request.prepareDelete
-import io.ktor.client.request.prepareGet
-import io.ktor.client.request.prepareHead
-import io.ktor.client.request.prepareOptions
-import io.ktor.client.request.preparePost
-import io.ktor.client.request.preparePut
-import io.ktor.client.request.prepareRequest
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.HttpStatement
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
-import io.ktor.http.Url
-import io.ktor.http.content.OutgoingContent
-import io.ktor.http.contentType
-import io.ktor.http.isSecure
-import io.ktor.http.isSuccess
-import io.ktor.http.takeFrom
-import io.ktor.http.withCharset
-import io.ktor.util.IdentityEncoder
-import io.ktor.util.logging.Logger
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.jvm.javaio.toInputStream
-import io.ktor.utils.io.peek
+import io.ktor.client.*
+import io.ktor.client.plugins.compression.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.http.content.*
+import io.ktor.util.*
+import io.ktor.util.logging.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.io.bytestring.encodeToByteString
 import org.slf4j.LoggerFactory
 import org.xmlpull.v1.XmlPullParser
@@ -220,14 +198,7 @@ open class DavResource(
                     header(HttpHeaders.Overwrite, "F")
             }
         }) { response ->
-            checkStatus(response)
-
-            if (response.status == HttpStatusCode.MultiStatus) {
-                /* Multiple resources were to be affected by the MOVE, but errors on some
-                of them prevented the operation from taking place.
-                [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
-                throw HttpException.fromResponse(response)
-            }
+            checkStatus(response, multiStatusIsError = true)
 
             // update location
             val nPath = response.headers[HttpHeaders.Location] ?: destination.toString()
@@ -258,13 +229,7 @@ open class DavResource(
                     header("Overwrite", "F")
             }
         }) { response ->
-            checkStatus(response)
-
-            if (response.status == HttpStatusCode.MultiStatus)
-                /* Multiple resources were to be affected by the COPY, but errors on some
-                of them prevented the operation from taking place.
-                [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
-                throw HttpException.fromResponse(response)
+            checkStatus(response, multiStatusIsError = true)
 
             callback.onResponse(response)
         }
@@ -301,7 +266,7 @@ open class DavResource(
                 setBody(xmlBody)
             }
         }) { response ->
-            checkStatus(response)
+            checkStatus(response, multiStatusIsError = true)
             callback.onResponse(response)
         }
     }
@@ -470,13 +435,7 @@ open class DavResource(
                     headers.appendAll(additionalHeaders)
             }
         }) { response ->
-            checkStatus(response)
-
-            if (response.status == HttpStatusCode.MultiStatus)
-                /* If an error occurs deleting a member resource (a resource other than
-                   the resource identified in the Request-URI), then the response can be
-                   a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
-                throw HttpException.fromResponse(response)
+            checkStatus(response, multiStatusIsError = true)
 
             callback.onResponse(response)
         }
@@ -597,12 +556,18 @@ open class DavResource(
     /**
      * Checks the status from an HTTP response and throws a specific exception in case of an error.
      *
+     * @param multiStatusIsError when true, 207 Multi-Status is treated as an error
      * @throws HttpException in case of an HTTP error
      */
-    protected suspend fun checkStatus(response: HttpResponse) {
-        if (response.status.isSuccess())
-            return      // everything OK
+    protected suspend fun checkStatus(response: HttpResponse, multiStatusIsError: Boolean = false) {
+        // handle 2xx response codes
+        if (response.status.isSuccess()) {
+            if (response.status == HttpStatusCode.MultiStatus && multiStatusIsError)
+                throw HttpException.fromResponse(response)
+            return
+        }
 
+        // handle other response codes
         throw HttpException.fromResponse(response)
     }
 
