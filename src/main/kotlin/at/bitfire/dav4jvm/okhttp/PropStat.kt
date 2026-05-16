@@ -24,6 +24,7 @@ import java.util.LinkedList
  *
  *     <!ELEMENT propstat (prop, status, error?, responsedescription?) >
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.PropStat"))
 data class PropStat(
     val properties: List<Property>,
     val status: StatusLine,

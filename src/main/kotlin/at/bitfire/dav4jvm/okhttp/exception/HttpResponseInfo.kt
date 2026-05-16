@@ -25,6 +25,7 @@ import java.io.StringReader
 import javax.annotation.WillNotClose
 import kotlin.math.min
 
+@Deprecated("Internal helper class. Use Ktor equivalents instead.")
 internal class HttpResponseInfo private constructor(
     val statusCode: Int,
     val requestExcerpt: String?,

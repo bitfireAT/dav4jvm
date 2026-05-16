@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.okhttp.exception
 
 import okhttp3.Response
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.UnauthorizedException"))
 class UnauthorizedException: HttpException {
 
     constructor(response: Response) : super(response) {

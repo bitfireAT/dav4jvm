@@ -63,6 +63,7 @@ import at.bitfire.dav4jvm.okhttp.Response as DavResponse
  * @param location      location of the WebDAV resource
  * @param logger        will be used for logging
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.DavResource"))
 open class DavResource @JvmOverloads constructor(
     val httpClient: OkHttpClient,
     location: HttpUrl,

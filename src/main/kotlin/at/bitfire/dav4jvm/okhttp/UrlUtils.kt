@@ -14,6 +14,7 @@ import at.bitfire.dav4jvm.okhttp.UrlUtils.omitTrailingSlash
 import at.bitfire.dav4jvm.okhttp.UrlUtils.withTrailingSlash
 import okhttp3.HttpUrl
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.UrlUtils"))
 object UrlUtils {
 
     /**
