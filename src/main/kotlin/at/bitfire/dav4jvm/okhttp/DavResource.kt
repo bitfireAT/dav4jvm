@@ -208,12 +208,7 @@ open class DavResource @JvmOverloads constructor(
                     .build())
                     .execute()
         }.use { response ->
-            checkStatus(response)
-            if (response.code == HTTP_MULTISTATUS)
-                /* Multiple resources were to be affected by the MOVE, but errors on some
-                of them prevented the operation from taking place.
-                [_] (RFC 4918 9.9.4. Status Codes for MOVE Method) */
-                throw HttpException(response)
+            checkStatus(response, multiStatusIsError = true)
 
             // update location
             location.resolve(response.header("Location") ?: destination.toString())?.let {
@@ -250,13 +245,7 @@ open class DavResource @JvmOverloads constructor(
                     .build())
                     .execute()
         }.use{ response ->
-            checkStatus(response)
-
-            if (response.code == HTTP_MULTISTATUS)
-                /* Multiple resources were to be affected by the COPY, but errors on some
-                of them prevented the operation from taking place.
-                [_] (RFC 4918 9.8.5. Status Codes for COPY Method) */
-                throw HttpException(response)
+            checkStatus(response, multiStatusIsError = true)
 
             callback.onResponse(response)
         }
@@ -290,7 +279,7 @@ open class DavResource @JvmOverloads constructor(
         followRedirects {
             httpClient.newCall(request.build()).execute()
         }.use { response ->
-            checkStatus(response)
+            checkStatus(response, multiStatusIsError = true)
             callback.onResponse(response)
         }
     }
@@ -541,13 +530,7 @@ open class DavResource @JvmOverloads constructor(
 
             httpClient.newCall(builder.build()).execute()
         }.use { response ->
-            checkStatus(response)
-
-            if (response.code == HTTP_MULTISTATUS)
-                /* If an error occurs deleting a member resource (a resource other than
-                   the resource identified in the Request-URI), then the response can be
-                   a 207 (Multi-Status). […] (RFC 4918 9.6.1. DELETE for Collections) */
-                throw HttpException(response)
+            checkStatus(response, multiStatusIsError = true)
 
             callback.onResponse(response)
         }
@@ -662,13 +645,18 @@ open class DavResource @JvmOverloads constructor(
     /**
      * Checks the status from an HTTP response and throws an exception in case of an error.
      *
+     * @param multiStatusIsError when true, 207 Multi-Status is treated as an error
      * @throws HttpException in case of an HTTP error
      */
-    protected fun checkStatus(response: Response) {
-        if (response.code / 100 == 2)
-            // everything OK
+    protected fun checkStatus(response: Response, multiStatusIsError: Boolean = false) {
+        // handle 2xx response codes
+        if (response.code / 100 == 2) {
+            if (response.code == HTTP_MULTISTATUS && multiStatusIsError)
+                throw HttpException(response)
             return
+        }
 
+        // handle other response codes
         throw when (response.code) {
             401 -> UnauthorizedException(response)
             403 -> ForbiddenException(response)
