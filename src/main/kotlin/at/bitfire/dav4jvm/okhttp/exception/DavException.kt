@@ -34,6 +34,7 @@ import javax.annotation.WillNotClose
  * @param responseExcerpt   cached excerpt of associated HTTP response body
  * @param errors            precondition/postcondition XML elements which have been found in the XML response
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.DavException"))
 open class DavException(
     message: String? = null,
     cause: Throwable? = null,

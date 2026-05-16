@@ -38,6 +38,7 @@ import java.util.logging.Logger
  *
  * Usage: Set as authenticator *and* as network interceptor.
  */
+@Deprecated("Use Ktor's built-in authentication mechanisms instead. See at.bitfire.dav4jvm.ktor package.")
 class BasicDigestAuthHandler(
     /** Authenticate only against hosts ending with this domain (may be null, which means no restriction) */
     val domain: String?,

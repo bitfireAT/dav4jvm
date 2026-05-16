@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.logging.Logger
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.DavCalendar"))
 @Suppress("unused")
 class DavCalendar @JvmOverloads constructor(
     httpClient: OkHttpClient,

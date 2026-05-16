@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.okhttp.exception
 
 import okhttp3.Response
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.ConflictException"))
 class ConflictException: HttpException {
 
     constructor(response: Response) : super(response) {

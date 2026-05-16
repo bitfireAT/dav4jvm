@@ -24,6 +24,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.StringWriter
 import java.util.logging.Logger
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.DavAddressBook"))
 @Suppress("unused")
 class DavAddressBook @JvmOverloads constructor(
     httpClient: OkHttpClient,

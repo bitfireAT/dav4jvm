@@ -17,6 +17,7 @@ import javax.annotation.WillNotClose
 /**
  * Signals that a HTTP error was sent by the server in the context of a WebDAV operation.
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.HttpException"))
 open class HttpException(
     message: String? = null,
     cause: Throwable? = null,

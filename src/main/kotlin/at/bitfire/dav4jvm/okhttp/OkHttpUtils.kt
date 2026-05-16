@@ -13,6 +13,7 @@ package at.bitfire.dav4jvm.okhttp
 import okhttp3.HttpUrl
 import okhttp3.Response
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.KtorHttpUtils"))
 object OkHttpUtils {
 
     /**

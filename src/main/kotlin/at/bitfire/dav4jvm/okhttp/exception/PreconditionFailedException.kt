@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.okhttp.exception
 
 import okhttp3.Response
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.PreconditionFailedException"))
 class PreconditionFailedException: HttpException {
 
     constructor(response: Response) : super(response) {

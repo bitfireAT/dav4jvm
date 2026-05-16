@@ -19,6 +19,7 @@ import java.time.Instant
 import java.util.logging.Level
 import java.util.logging.Logger
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.exception.ServiceUnavailableException"))
 class ServiceUnavailableException(response: Response) : HttpException(response) {
 
     private val logger

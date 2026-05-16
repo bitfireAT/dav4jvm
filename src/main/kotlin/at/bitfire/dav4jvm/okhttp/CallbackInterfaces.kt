@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.okhttp
 
 import okhttp3.Response
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.CallbackInterfaces"))
 /**
  * Callback for the OPTIONS request.
  */
@@ -19,6 +20,7 @@ fun interface CapabilitiesCallback {
     fun onCapabilities(davCapabilities: Set<String>, response: Response)
 }
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.CallbackInterfaces"))
 /**
  * Callback for 207 Multi-Status responses.
  */
@@ -36,6 +38,7 @@ fun interface MultiResponseCallback {
     fun onResponse(response: at.bitfire.dav4jvm.okhttp.Response, relation: at.bitfire.dav4jvm.okhttp.Response.HrefRelation)
 }
 
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.CallbackInterfaces"))
 /**
  * Callback for HTTP responses.
  */

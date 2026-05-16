@@ -27,6 +27,7 @@ import java.util.logging.Logger
 /**
  * Represents a WebDAV collection.
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.DavCollection"))
 open class DavCollection @JvmOverloads constructor(
     httpClient: OkHttpClient,
     location: HttpUrl,

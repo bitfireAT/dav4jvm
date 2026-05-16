@@ -29,6 +29,7 @@ import java.util.logging.Logger
  *     <!ELEMENT response (href, ((href*, status)|(propstat+)),
  *                         error?, responsedescription? , location?) >
  */
+@Deprecated("Migrate to Ktor", ReplaceWith("at.bitfire.dav4jvm.ktor.Response"))
 @Suppress("unused")
 data class Response(
     /**
