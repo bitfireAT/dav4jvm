@@ -16,6 +16,7 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -28,7 +29,7 @@ object HttpUtils {
     /**
      * Preferred HTTP date/time format, see RFC 7231 7.1.1.1 IMF-fixdate
      */
-    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
+    private const val httpDateFormatStr = "EEE, dd MMM yyyy HH:mm:ss z"
     private val httpDateFormat = DateTimeFormatter.ofPattern(httpDateFormatStr, Locale.US)
 
     private val logger
@@ -42,7 +43,7 @@ object HttpUtils {
      * @return date in HTTP-date format
      */
     fun formatDate(date: Instant): String =
-        ZonedDateTime.ofInstant(date, ZoneOffset.UTC).format(httpDateFormat)
+        ZonedDateTime.ofInstant(date, ZoneId.of("GMT")).format(httpDateFormat)
 
     /**
      * Parses a HTTP-date according to RFC 7231 section 7.1.1.1.
