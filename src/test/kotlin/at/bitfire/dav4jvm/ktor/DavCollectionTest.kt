@@ -47,13 +47,23 @@ class DavCollectionTest {
     private val sampleText = "SAMPLE RESPONSE"
     private val sampleUrl = Url("http://127.0.0.1/dav/")
 
+    private fun minimalMultiStatus() = MockEngine { _ ->
+        respond(
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><multistatus xmlns=\"DAV:\"/>",
+            HttpStatusCode.MultiStatus,
+            headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.UTF_8).toString())
+        )
+    }
 
-    /**
-     * Test sample response for an initial sync-collection report from RFC 6578 3.8.
-     */
+    private fun davCollection(engine: MockEngine) = DavCollection(HttpClient(engine), sampleUrl)
+
+    private suspend fun requestBody(engine: MockEngine) =
+        engine.requestHistory.last().body.toByteArray().toString(Charsets.UTF_8)
+
+
     @Test
-    fun testInitialSyncCollectionReport() = runTest {
-        val mockEngine = MockEngine { request ->
+    fun `reportChanges initial sync parses all members`() = runTest {
+        val mockEngine = MockEngine { _ ->
             respond(
                 content =
                     "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
@@ -109,15 +119,11 @@ class DavCollectionTest {
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.UTF_8).toString())
             )
         }
-        val httpClient = HttpClient(mockEngine)
-
-        val url = sampleUrl
-        val collection = DavCollection(httpClient, url)
-
+        val collection = davCollection(mockEngine)
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
-                URLBuilder(url).takeFrom("/dav/test.doc").build() -> {
+                URLBuilder(sampleUrl).takeFrom("/dav/test.doc").build() -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -126,7 +132,7 @@ class DavCollectionTest {
                     nrCalled++
                 }
 
-                URLBuilder(url).takeFrom("/dav/vcard.vcf").build() -> {
+                URLBuilder(sampleUrl).takeFrom("/dav/vcard.vcf").build() -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -135,7 +141,7 @@ class DavCollectionTest {
                     nrCalled++
                 }
 
-                URLBuilder(url).takeFrom("/dav/calendar.ics").build() -> {
+                URLBuilder(sampleUrl).takeFrom("/dav/calendar.ics").build() -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -149,12 +155,9 @@ class DavCollectionTest {
         assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
     }
 
-    /**
-     * Test sample response for an initial sync-collection report with truncation from RFC 6578 3.10.
-     */
     @Test
-    fun testInitialSyncCollectionReportWithTruncation() = runTest {
-        val mockEngine = MockEngine { request ->
+    fun `reportChanges truncated parses error and sync token`() = runTest {
+        val mockEngine = MockEngine { _ ->
             respond(
                 content = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "   <D:multistatus xmlns:D=\"DAV:\">\n" +
@@ -187,15 +190,12 @@ class DavCollectionTest {
                         "     </D:response>" +
                         "     <D:sync-token>http://example.com/ns/sync/1233</D:sync-token>\n" +
                         "   </D:multistatus>",
-                status = HttpStatusCode.MultiStatus,  // 207
+                status = HttpStatusCode.MultiStatus,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.UTF_8).toString())
             )
         }
-        val httpClient = HttpClient(mockEngine)
-        val collection = DavCollection(httpClient, sampleUrl)
-
+        val collection = davCollection(mockEngine)
         var nrCalled = 0
-
         val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
                 URLBuilder(sampleUrl).takeFrom("/dav/test.doc").build() -> {
@@ -206,7 +206,6 @@ class DavCollectionTest {
                     assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
-
                 URLBuilder(sampleUrl).takeFrom("/dav/vcard.vcf").build() -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
@@ -215,14 +214,12 @@ class DavCollectionTest {
                     assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
-
                 URLBuilder(sampleUrl).takeFrom("/dav/removed.txt").build() -> {
                     assertFalse(response.isSuccess())
                     assertEquals(404, response.status?.value)
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     nrCalled++
                 }
-
                 URLBuilder(sampleUrl).takeFrom("/dav/").build() -> {
                     assertFalse(response.isSuccess())
                     assertEquals(507, response.status?.value)
@@ -235,24 +232,19 @@ class DavCollectionTest {
         assertEquals(4, nrCalled)
     }
 
-    /**
-     * Test sample response for a sync-collection report with unsupported limit from RFC 6578 3.12.
-     */
     @Test
-    fun testSyncCollectionReportWithUnsupportedLimit() = runTest {
-        val mockEngine = MockEngine { request ->
+    fun `reportChanges 507 Insufficient Storage throws HttpException`() = runTest {
+        val mockEngine = MockEngine { _ ->
             respond(
                 content = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                         "   <D:error xmlns:D=\"DAV:\">\n" +
                         "     <D:number-of-matches-within-limits/>\n" +
                         "   </D:error>",
-                status = HttpStatusCode.InsufficientStorage,  // 507   @Ricki, does 507 really make sense here?
+                status = HttpStatusCode.InsufficientStorage,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Xml.withCharset(Charsets.UTF_8).toString())
             )
         }
-        val httpClient = HttpClient(mockEngine)
-        val collection = DavCollection(httpClient, sampleUrl)
-
+        val collection = davCollection(mockEngine)
         try {
             collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag) { _, _ -> }
             fail("Expected HttpException")
@@ -264,17 +256,57 @@ class DavCollectionTest {
     }
 
     @Test
-    fun testPost() = runTest {
-        val mockEngine = MockEngine {
+    fun `reportChanges sends REPORT with Depth 0`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(HttpMethod.parse("REPORT"), method)
+            assertEquals("0", headers[HttpHeaders.Depth])
+        }
+    }
+
+    @Test
+    fun `reportChanges null sync token sends empty sync-token element`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        val body = requestBody(engine)
+        assertTrue(body.contains("<sync-token />"))
+        assertTrue(body.contains("<sync-level>1</sync-level>"))
+        assertFalse(body.contains("<limit>"))
+        assertTrue(body.contains("<getetag />"))
+    }
+
+    @Test
+    fun `reportChanges non-null sync token included in body`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges("http://example.com/ns/sync/42", false, null, WebDAV.GetETag) { _, _ -> }
+        assertTrue(requestBody(engine).contains("<sync-token>http://example.com/ns/sync/42</sync-token>"))
+    }
+
+    @Test
+    fun `reportChanges infiniteDepth sends sync-level infinite`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges(null, true, null, WebDAV.GetETag) { _, _ -> }
+        assertTrue(requestBody(engine).contains("<sync-level>infinite</sync-level>"))
+    }
+
+    @Test
+    fun `reportChanges with limit includes nresults element`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges(null, false, 50, WebDAV.GetETag) { _, _ -> }
+        assertTrue(requestBody(engine).contains("<nresults>50</nresults>"))
+    }
+
+    @Test
+    fun `post 201 Created`() = runTest {
+        val mockEngine = MockEngine { _ ->
             respond(
                 content = sampleText,
-                status = HttpStatusCode.Created,  // 201 Created
+                status = HttpStatusCode.Created,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
             )
         }
-        val httpClient = HttpClient(mockEngine)
-        val dav = DavCollection(httpClient, sampleUrl)
-
+        val dav = davCollection(mockEngine)
         var called = false
         dav.post(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             assertEquals(HttpMethod.Post, response.request.method)
@@ -287,44 +319,34 @@ class DavCollectionTest {
     }
 
     @Test
-    fun testPostStreamingRepeatedlyBecause401() = runTest {
+    fun `post streaming body resent after 401`() = runTest {
         var requestCount = 0
-
         val mockEngine = MockEngine { request ->
             requestCount++
-
-            // Verify that request body is always sent – https://github.com/bitfireAT/dav4jvm/issues/156
             assertEquals(sampleText, request.body.toByteArray().toString(Charsets.UTF_8))
-
-            if (requestCount == 1) {
-                // First request: respond with 401 to indicate that request shall be sent again
+            if (requestCount == 1)
                 respond(
                     content = "Send Auth",
                     status = HttpStatusCode.Unauthorized,
                     headers = headersOf(HttpHeaders.WWWAuthenticate, "Basic realm=\"test\"")
                 )
-            } else {
-                // Second request: respond with success
+            else
                 respond(
                     content = sampleText,
                     status = HttpStatusCode.Created,
                     headers = headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
                 )
-            }
         }
         val httpClient = HttpClient(mockEngine) {
-            install(Auth) {     // authentication plugin retries request when receiving 401
+            install(Auth) {
                 basic {
-                    credentials {
-                        BasicAuthCredentials("test", "test")
-                    }
+                    credentials { BasicAuthCredentials("test", "test") }
                 }
             }
         }
         val dav = DavCollection(httpClient, sampleUrl)
-
         var called = false
-        var channelsCreated = 0     // ByteReadChannel is created anew for every request
+        var channelsCreated = 0
         val streamingBody = object : OutgoingContent.ReadChannelContent() {
             override fun readFrom(): ByteReadChannel {
                 channelsCreated++
