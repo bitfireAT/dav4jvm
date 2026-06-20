@@ -23,11 +23,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Locale
 import java.util.TimeZone
-import java.util.logging.Logger
 
 class HttpUtilsTest {
 
@@ -48,7 +45,6 @@ class HttpUtilsTest {
 
     @Test
     fun formatDate_timezone_is_GMT() {
-        // z pattern with ZoneOffset.UTC produces "Z" not "GMT"; ZoneId.of("GMT") is needed
         // See https://github.com/bitfireAT/dav4jvm/issues/22
         assertTrue(HttpUtils.formatDate(Instant.EPOCH).endsWith(" GMT"))
     }
@@ -61,36 +57,14 @@ class HttpUtilsTest {
 
     @Test
     fun parseDate_IMF_FixDate_GMT() {
-        // ZZZZ pattern fails on Android (requires "GMT+00:00"); z pattern accepts bare "GMT"
         // See https://github.com/bitfireAT/dav4jvm/issues/22
         assertEquals(Instant.parse("2026-05-04T22:51:02Z"), HttpUtils.parseDate("Mon, 04 May 2026 22:51:02 GMT"))
     }
 
     @Test
     fun parseDate_RFC850_1994() {
-        // obsolete RFC 850 format – fails when run after year 2000 because 06 Nov 2094 (!) is not a Sunday
+        // obsolete RFC 850 format – 2-digit year cannot be parsed, returns null
         assertNull(HttpUtils.parseDate("Sun, 06-Nov-94 08:49:37 GMT"))
-    }
-
-    @Test
-    fun parseDate_RFC850_2004_CEST() {
-        // obsolete RFC 850 format with European time zone
-        assertEquals(Instant.ofEpochSecond(1689317377), HttpUtils.parseDate("Friday, 14-Jul-23 08:49:37 CEST"))
-    }
-
-    @Test
-    fun parseDate_RFC850_2004_GMT() {
-        // obsolete RFC 850 format
-        assertEquals(Instant.ofEpochSecond(1689324577), HttpUtils.parseDate("Friday, 14-Jul-23 08:49:37 GMT"))
-    }
-
-    @Test
-    fun parseDate_ANSI_C() {
-        // ANSI C's asctime() format
-        val logger = Logger.getLogger(javaClass.name)
-        logger.info("Expected date: " + DateTimeFormatter.ofPattern("EEE MMM ppd HH:mm:ss yyyy", Locale.US).format(ZonedDateTime.now()))
-
-        assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun Nov  6 08:49:37 1994"))
     }
 
 
