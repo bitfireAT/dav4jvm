@@ -17,12 +17,30 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.http.content.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.respondError
+import io.ktor.client.engine.mock.respondOk
+import io.ktor.client.engine.mock.respondRedirect
+import io.ktor.client.request.get
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.request
+import io.ktor.http.ContentType
+import io.ktor.http.HeadersBuilder
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.URLBuilder
+import io.ktor.http.Url
+import io.ktor.http.content.TextContent
+import io.ktor.http.contentType
+import io.ktor.http.fullPath
+import io.ktor.http.headersOf
+import io.ktor.http.takeFrom
+import io.ktor.http.withCharset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -526,6 +544,20 @@ class DavResourceTest {
         } catch (_: HttpException) {
             assertFalse(called)
         }
+    }
+
+    @Test
+    fun `MkCol with null body sends no Content-Type`() = runTest {
+        val mockEngine = MockEngine { respond("", HttpStatusCode.Created) }
+        val httpClient = HttpClient(mockEngine)
+        var called = false
+
+        DavResource(httpClient, sampleUrl).mkCol(null) { called = true }
+        assertTrue(called)
+
+        val rq = mockEngine.requestHistory.last()
+        assertEquals(HttpMethod.parse("MKCOL"), rq.method)
+        assertNull(rq.headers[HttpHeaders.ContentType])
     }
 
     @Test

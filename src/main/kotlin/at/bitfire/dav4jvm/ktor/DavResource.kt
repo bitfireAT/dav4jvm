@@ -284,8 +284,10 @@ open class DavResource(
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
 
-                contentType(MIME_XML_UTF8)
-                setBody(xmlBody)
+                if (xmlBody != null) {
+                    contentType(MIME_XML_UTF8)
+                    setBody(xmlBody)
+                }
             }
         }) { response ->
             checkStatus(response, multiStatusIsError = true)
