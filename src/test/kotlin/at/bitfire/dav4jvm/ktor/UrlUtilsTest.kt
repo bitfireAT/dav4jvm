@@ -41,6 +41,7 @@ class UrlUtilsTest {
         assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource/")))
         assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host")))
         assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host/")))
+        assertEquals(Url("http://host/resource?q=1"), UrlUtils.omitTrailingSlash(Url("http://host/resource?q=1")))
 
     }
 
@@ -50,6 +51,7 @@ class UrlUtilsTest {
         assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource/")))
         assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host")))
         assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host/")))
+        assertEquals(Url("http://host/resource/?q=1"), UrlUtils.withTrailingSlash(Url("http://host/resource?q=1")))
     }
 
 
@@ -63,6 +65,7 @@ class UrlUtilsTest {
 
         assertFalse(Url("http://host/resource").equalsForWebDAV(Url("http://host/resource/")))
         assertFalse(Url("http://host/resource").equalsForWebDAV(Url("http://host:81/resource")))
+        assertFalse(Url("http://host/resource").equalsForWebDAV(Url("https://host/resource")))
 
         assertTrue(Url("https://www.example.com/folder/[X]Y!.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
         assertTrue(Url("https://www.example.com/folder/%5BX%5DY!.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
