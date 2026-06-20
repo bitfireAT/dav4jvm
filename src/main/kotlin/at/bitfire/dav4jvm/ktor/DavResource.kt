@@ -73,8 +73,9 @@ import java.io.StringWriter
  *
  * ATTENTION: dav4jvm handles redirects itself. Make sure followRedirects is set to FALSE for the httpClient.
  *
- * **HTTP compression:** [options] and [get] (by default) send `Accept-Encoding: identity` to disable
- * compression.
+ * **Important:** Some methods (like [options] and [get]) send `Accept-Encoding: identity` to
+ * suppress HTTP compression, which is unreliable with WebDAV (servers may alter ETags or send
+ * truncated chunked responses).
  *
  * @param httpClient    [HttpClient] to access this object (must not follow redirects)
  * @param location      location of the WebDAV resource
