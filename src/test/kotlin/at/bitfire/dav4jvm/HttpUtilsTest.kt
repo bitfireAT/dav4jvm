@@ -16,6 +16,7 @@ import io.ktor.http.Url
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -46,9 +47,23 @@ class HttpUtilsTest {
 
 
     @Test
+    fun formatDate_timezone_is_GMT() {
+        // z pattern with ZoneOffset.UTC produces "Z" not "GMT"; ZoneId.of("GMT") is needed
+        // See https://github.com/bitfireAT/dav4jvm/issues/22
+        assertTrue(HttpUtils.formatDate(Instant.EPOCH).endsWith(" GMT"))
+    }
+
+    @Test
     fun parseDate_IMF_FixDate() {
         // RFC 7231 IMF-fixdate (preferred format)
         assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun, 06 Nov 1994 08:49:37 GMT"))
+    }
+
+    @Test
+    fun parseDate_IMF_FixDate_GMT() {
+        // ZZZZ pattern fails on Android (requires "GMT+00:00"); z pattern accepts bare "GMT"
+        // See https://github.com/bitfireAT/dav4jvm/issues/22
+        assertEquals(Instant.parse("2026-05-04T22:51:02Z"), HttpUtils.parseDate("Mon, 04 May 2026 22:51:02 GMT"))
     }
 
     @Test
