@@ -286,6 +286,18 @@ class DavResourceTest {
         assertEquals(HttpMethod.Get, rq.method)
         assertEquals(sampleUrl.encodedPath, rq.url.encodedPath)
         assertEquals(ContentType.Any.toString(), rq.headers[HttpHeaders.Accept])
+        assertEquals("identity", rq.headers[HttpHeaders.AcceptEncoding])
+    }
+
+    @Test
+    fun `Get disableCompression false sends no identity encoding`() = runTest {
+        val mockEngine = createMockEngineForGet(status = HttpStatusCode.OK, eTag = null)
+        val httpClient = HttpClient(mockEngine)
+
+        DavResource(httpClient, sampleUrl).get(disableCompression = false) {}
+
+        val rq = mockEngine.requestHistory.last()
+        assertNull(rq.headers[HttpHeaders.AcceptEncoding])
     }
 
     @Test
@@ -577,6 +589,9 @@ class DavResourceTest {
             assertTrue(davCapabilities.any { it.contains("hyperactive-access") })
         }
         assertTrue(called)
+
+        val rq = mockEngine.requestHistory.last()
+        assertEquals("identity", rq.headers[HttpHeaders.AcceptEncoding])
     }
 
 

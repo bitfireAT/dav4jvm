@@ -22,7 +22,6 @@ import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.compression.compress
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareDelete
 import io.ktor.client.request.prepareGet
@@ -48,7 +47,6 @@ import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
-import io.ktor.util.IdentityEncoder
 import io.ktor.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
@@ -74,6 +72,10 @@ import java.io.StringWriter
  * throw `InterruptedException` or `InterruptedIOException`.
  *
  * ATTENTION: dav4jvm handles redirects itself. Make sure followRedirects is set to FALSE for the httpClient.
+ *
+ * **Important:** Some methods (like [options] and [get]) send `Accept-Encoding: identity` to
+ * suppress HTTP compression, which is unreliable with WebDAV (servers may alter ETags or send
+ * truncated chunked responses).
  *
  * @param httpClient    [HttpClient] to access this object (must not follow redirects)
  * @param location      location of the WebDAV resource
@@ -153,8 +155,10 @@ open class DavResource(
 
 
     /**
-     * Sends an OPTIONS request to this resource without HTTP compression (because some servers have
-     * broken compression for OPTIONS). Follows up to [MAX_REDIRECTS] redirects when set.
+     * Sends an OPTIONS request to this resource. Follows up to [MAX_REDIRECTS] redirects when set.
+     *
+     * Sends `Accept-Encoding: identity` to disable HTTP compression, because some servers have
+     * broken compression support for OPTIONS responses.
      *
      * @param followRedirects   whether redirects should be followed (default: *false*)
      * @param callback          called with server response on success
@@ -183,8 +187,7 @@ open class DavResource(
             // explicitly set Content-Length although OPTIONS has no request body (for compatibility)
             header(HttpHeaders.ContentLength, "0")
 
-            // explicitly disable compression (for compatibility)
-            compress(IdentityEncoder.name)
+            header(HttpHeaders.AcceptEncoding, "identity")
         }
 
     private suspend fun processOptionsResponse(response: HttpResponse, callback: CapabilitiesCallback) {
@@ -321,7 +324,9 @@ open class DavResource(
      * Follows up to [MAX_REDIRECTS] redirects.
      *
      * @param additionalHeaders     additional headers to send with the request (at least [HttpHeaders.Accept] is recommended)
-     * @param disableCompression    whether compression shall be disabled (because it may change the returned ETag)
+     * @param disableCompression    whether to send `Accept-Encoding: identity` to disable HTTP compression.
+     *                              Defaults to *true* because HTTP compression may change the returned ETag,
+     *                              which would break cache validation.
      * @param callback              called with server response on success
      *
      * @throws IOException on I/O error
@@ -330,7 +335,7 @@ open class DavResource(
      */
     suspend fun get(
         additionalHeaders: Headers? = null,
-        disableCompression: Boolean = false,
+        disableCompression: Boolean = true,
         callback: ResponseCallback
     ) {
         followRedirects({
@@ -339,7 +344,7 @@ open class DavResource(
                     headers.appendAll(additionalHeaders)
 
                 if (disableCompression)
-                    compress(IdentityEncoder.name)
+                    header(HttpHeaders.AcceptEncoding, "identity")
             }
         }) { response ->
             checkStatus(response)
