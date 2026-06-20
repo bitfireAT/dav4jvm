@@ -21,7 +21,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class KtorHttpUtilsTest {
@@ -249,6 +251,36 @@ class KtorHttpUtilsTest {
 
 
     @Test
+    fun `isText with text plain`() =
+        assertTrue(ContentType.Text.Plain.isText())
+
+    @Test
+    fun `isText with text xml`() =
+        assertTrue(ContentType.Text.Xml.isText())
+
+    @Test
+    fun `isText with application xml`() =
+        assertTrue(ContentType.Application.Xml.isText())
+
+    @Test
+    fun `isText with application json`() =
+        assertFalse(ContentType.Application.Json.isText())
+
+
+    @Test
+    fun `isXml with application xml`() =
+        assertTrue(ContentType.Application.Xml.isXml())
+
+    @Test
+    fun `isXml with text xml`() =
+        assertTrue(ContentType.Text.Xml.isXml())
+
+    @Test
+    fun `isXml with text plain`() =
+        assertFalse(ContentType.Text.Plain.isXml())
+
+
+    @Test
     fun `toContentTypeOrNull with correct MIME type`() {
         assertEquals(
             ContentType.parse("text/x-example"),
@@ -260,6 +292,10 @@ class KtorHttpUtilsTest {
     fun `toContentTypeOrNull with invalid MIME type`() {
         assertNull("INVALID".toContentTypeOrNull())
     }
+
+    @Test
+    fun `toContentTypeOrNull with null`() =
+        assertNull(null.toContentTypeOrNull())
 
 
     @Test
@@ -287,5 +323,9 @@ class KtorHttpUtilsTest {
             "relative".toUrlOrNull()
         )
     }
+
+    @Test
+    fun `toUrlOrNull with null`() =
+        assertNull(null.toUrlOrNull())
 
 }

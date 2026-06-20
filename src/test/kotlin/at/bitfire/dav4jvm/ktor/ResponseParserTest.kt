@@ -14,6 +14,7 @@ import at.bitfire.dav4jvm.XmlUtils
 import io.ktor.http.Url
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 import java.io.StringReader
 
@@ -110,6 +111,106 @@ class ResponseParserTest {
         parser.parseResponse(xml) { response, relation ->
             assertEquals(Url("http://other.example.com/was-not-requested"), response.href)
             assertEquals(Response.HrefRelation.OTHER, relation)
+        }
+    }
+
+    @Test
+    fun `parseResponse collection href gets trailing slash`() = runTest {
+        val xml = XmlUtils.newPullParser()
+        xml.setInput(
+            StringReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop>\n" +
+                        "      <resourcetype><collection/></resourcetype>\n" +
+                        "    </prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        parser.parseResponse(xml) { response, relation ->
+            assertEquals(Url("http://www.example.com/container/"), response.href)
+            assertEquals(Response.HrefRelation.SELF, relation)
+        }
+    }
+
+    @Test
+    fun `parseResponse non-collection href unchanged`() = runTest {
+        val xml = XmlUtils.newPullParser()
+        xml.setInput(
+            StringReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container/file.txt</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop>\n" +
+                        "      <resourcetype/>\n" +
+                        "    </prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        parser.parseResponse(xml) { response, _ ->
+            assertEquals(Url("http://www.example.com/container/file.txt"), response.href)
+        }
+    }
+
+    @Test
+    fun `parseResponse without href does not call callback`() = runTest {
+        val xml = XmlUtils.newPullParser()
+        xml.setInput(
+            StringReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><resourcetype/></prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        var called = false
+        parser.parseResponse(xml) { _, _ -> called = true }
+        assertFalse(called)
+    }
+
+    @Test
+    fun `parseResponse multiple propstats`() = runTest {
+        val xml = XmlUtils.newPullParser()
+        xml.setInput(
+            StringReader(
+                "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                        "<multistatus xmlns=\"DAV:\">\n" +
+                        "<response>\n" +
+                        "  <href>http://www.example.com/container/member.txt</href>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><getetag>\"abc\"</getetag></prop>\n" +
+                        "    <status>HTTP/1.1 200 OK</status>\n" +
+                        "  </propstat>\n" +
+                        "  <propstat>\n" +
+                        "    <prop><displayname/></prop>\n" +
+                        "    <status>HTTP/1.1 404 Not Found</status>\n" +
+                        "  </propstat>\n" +
+                        "</response>"
+            )
+        )
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        parser.parseResponse(xml) { response, _ ->
+            assertEquals(2, response.propstat.size)
         }
     }
 
