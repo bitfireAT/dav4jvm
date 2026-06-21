@@ -47,12 +47,13 @@ import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
-import io.ktor.util.logging.Logger
+import java.util.logging.Level
+import java.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.peek
 import kotlinx.io.bytestring.encodeToByteString
-import org.slf4j.LoggerFactory
+
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.EOFException
@@ -84,7 +85,7 @@ import java.io.StringWriter
 open class DavResource(
     val httpClient: HttpClient,
     location: Url,
-    val logger: Logger = LoggerFactory.getLogger(DavResource::class.java.name)
+    val logger: Logger = Logger.getLogger(javaClass.name)
 ) {
 
     companion object {
@@ -677,7 +678,7 @@ open class DavResource(
 
         val contentType = httpResponse.contentType()
         if (contentType == null) {
-            logger.warn("Received 207 Multi-Status without Content-Type, assuming XML")
+            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
             return  // supposed XML response body, fine
         }
 
@@ -690,11 +691,11 @@ open class DavResource(
         try {
             val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
             if (firstBytes == XML_SIGNATURE) {
-                logger.warn("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
                 return  // response body starts with XML signature, fine
             }
         } catch (e: Exception) {
-            logger.warn("Couldn't scan for XML signature", e)
+            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
         }
 
         // non-XML response body
