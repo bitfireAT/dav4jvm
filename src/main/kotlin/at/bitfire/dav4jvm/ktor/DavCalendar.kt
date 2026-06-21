@@ -19,8 +19,7 @@ import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.util.logging.*
-import org.slf4j.LoggerFactory
+import java.util.logging.Logger
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
@@ -32,7 +31,7 @@ import java.util.Locale
 class DavCalendar(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = LoggerFactory.getLogger(DavCalendar::javaClass.name)
+    logger: Logger = Logger.getLogger(javaClass.name)
 ): DavCollection(httpClient, location, logger) {
 
     /**

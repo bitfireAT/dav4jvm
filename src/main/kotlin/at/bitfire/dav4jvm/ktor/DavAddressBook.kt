@@ -25,14 +25,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
-import io.ktor.util.logging.Logger
-import org.slf4j.LoggerFactory
+import java.util.logging.Logger
 import java.io.StringWriter
 
 class DavAddressBook(
     httpClient: HttpClient,
     location: Url,
-    logger: Logger = LoggerFactory.getLogger(DavAddressBook::javaClass.name)
+    logger: Logger = Logger.getLogger(javaClass.name)
 ): DavCollection(httpClient, location, logger) {
 
     /**
