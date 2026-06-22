@@ -52,7 +52,7 @@ class DavResourceTest {
 
     private val sampleText = "SAMPLE RESPONSE"
     private val sampleUrl = Url("https://127.0.0.1/dav/")
-    private val sampleDestination = sampleUrl.resolve("test")
+    private val sampleDestination = sampleUrl.resolve("test")!!
 
     private fun mockEngine(status: HttpStatusCode, content: String = "", headers: Headers = headersOf()) =
         MockEngine { respond(content, status, headers) }

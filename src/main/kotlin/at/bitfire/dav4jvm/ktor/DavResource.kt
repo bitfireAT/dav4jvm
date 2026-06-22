@@ -224,8 +224,7 @@ open class DavResource(
             checkStatus(response, multiStatusIsError = true)
 
             // update location
-            val nPath = response.headers[HttpHeaders.Location] ?: destination.toString()
-            location = location.resolve(nPath)
+            location = response.headers[HttpHeaders.Location]?.let { location.resolve(it) } ?: destination
 
             callback.onResponse(response)
         }
@@ -627,11 +626,7 @@ open class DavResource(
                         ?: throw DavException("Redirected without new Location")
 
                     // resolve possible relative location URL
-                    val destination = try {
-                        location.resolve(newLocation)
-                    } catch (e: Exception) {
-                        throw DavException("Redirected to invalid Location", cause = e)
-                    }
+                    val destination = location.resolve(newLocation) ?: throw DavException("Redirected to invalid Location")
 
                     // block insecure redirects
                     if (location.protocol.isSecure() && !destination.protocol.isSecure())

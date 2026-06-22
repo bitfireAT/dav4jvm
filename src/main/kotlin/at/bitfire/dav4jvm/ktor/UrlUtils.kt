@@ -11,6 +11,7 @@
 package at.bitfire.dav4jvm.ktor
 
 import io.ktor.http.URLBuilder
+import io.ktor.http.URLParserException
 import io.ktor.http.Url
 import io.ktor.http.takeFrom
 
@@ -41,46 +42,44 @@ object UrlUtils {
 
 }
 
+fun Url.hasTrailingSlash(): Boolean =
+    rawSegments.isNotEmpty() && rawSegments.last() == ""
+
 /**
  * Ensures that a given URL doesn't have a trailing slash after member names.
  * If the path is the root path (`/`), the slash is preserved.
  *
  * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
  */
-fun Url.omitTrailingSlash(): Url {
-    val hasTrailingSlash = this.rawSegments.isNotEmpty() && this.rawSegments.last() == ""
-
-    return if (hasTrailingSlash)
+fun Url.omitTrailingSlash(): Url =
+    if (hasTrailingSlash())
         URLBuilder(this).apply { pathSegments = pathSegments.dropLast(1) }.build()
     else
         this
-}
 
 /**
  * Ensures that a given URL has a trailing slash after member names.
  *
  * @return URL with trailing slash, e.g. `http://host/test1/`
  */
-fun Url.withTrailingSlash(): Url {
-    val hasTrailingSlash = this.rawSegments.isNotEmpty() && this.rawSegments.last() == ""
-
-    return if (hasTrailingSlash)
+fun Url.withTrailingSlash(): Url =
+    if (hasTrailingSlash())
         this
     else
         URLBuilder(this).apply { pathSegments += "" }.build()
-}
 
 /**
  * Returns parent URL (parent folder). Always with trailing slash.
  */
 fun Url.parent(): Url {
     val segments = this.rawSegments
-    if (segments.size <= 1)
-    // root URL, ensure it has trailing slash
+    if (segments.size <= 1) {
+        // root URL, ensure it has trailing slash
         return if (segments.lastOrNull() == "")
             this
         else
             URLBuilder(this).apply { pathSegments = listOf("") }.build()
+    }
     return if (segments.last() == "")
         URLBuilder(this).apply { pathSegments = segments.dropLast(2) + "" }.build()
     else
@@ -95,8 +94,13 @@ fun Url.parent(): Url {
  * @param relative The relative path to resolve.
  * @return A new [Url] representing the resolved URL.
  */
-fun Url.resolve(relative: String): Url =
-    URLBuilder(this).takeFrom(relative).build()
+fun Url.resolve(relative: String): Url? =
+    try {
+        URLBuilder(this).takeFrom(relative).build()
+    } catch (_: URLParserException) {
+        // thrown by takeFrom on invalid URL string
+        null
+    }
 
 /**
  * Compares two [Url]s in WebDAV context. If two URLs are considered *equal*, both

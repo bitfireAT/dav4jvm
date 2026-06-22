@@ -99,7 +99,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun testUrl_Resolve_Collection() {
+    fun `Url resolve on collection`() {
         val collection = Url("https://example.com/base/path/")
 
         // relative path
@@ -113,10 +113,13 @@ class UrlUtilsTest {
         // absolute URL
         assertEquals(Url("https://other.com/path"), collection.resolve("https://other.com/path"))
         assertEquals(Url("http://example.org/test"), collection.resolve("http://example.org/test"))
+
+        // invalid URL (wrong scheme)
+        assertNull(collection.resolve("mailto:"))
     }
 
     @Test
-    fun testUrl_Resolve_NonCollection() {
+    fun `Url resolve on non-collection`() {
         val baseUrl = Url("https://example.com/base")
 
         // relative path
