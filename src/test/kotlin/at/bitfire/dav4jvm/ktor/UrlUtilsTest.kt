@@ -72,4 +72,38 @@ class UrlUtilsTest {
         assertTrue(Url("https://www.example.com/folder/%5bX%5dY%21.txt").equalsForWebDAV(Url("https://www.example.com/folder/[X]Y!.txt")))
     }
 
+    @Test
+    fun testUrl_Resolve_Collection() {
+        val collection = Url("https://example.com/base/path/")
+
+        // relative path
+        assertEquals(Url("https://example.com/base/path/relative"), collection.resolve("relative"))
+        assertEquals(Url("https://example.com/base/path/subdir/file"), collection.resolve("subdir/file"))
+
+        // absolute path
+        assertEquals(Url("https://example.com/absolute"), collection.resolve("/absolute"))
+        assertEquals(Url("https://example.com/"), collection.resolve("/"))
+
+        // absolute URL
+        assertEquals(Url("https://other.com/path"), collection.resolve("https://other.com/path"))
+        assertEquals(Url("http://example.org/test"), collection.resolve("http://example.org/test"))
+    }
+
+    @Test
+    fun testUrl_Resolve_NonCollection() {
+        val baseUrl = Url("https://example.com/base")
+
+        // relative path
+        assertEquals(Url("https://example.com/relative"), baseUrl.resolve("relative"))
+        assertEquals(Url("https://example.com/subdir/file"), baseUrl.resolve("subdir/file"))
+
+        // absolute path
+        assertEquals(Url("https://example.com/absolute"), baseUrl.resolve("/absolute"))
+        assertEquals(Url("https://example.com/"), baseUrl.resolve("/"))
+
+        // absolute URL
+        assertEquals(Url("https://other.com/path"), baseUrl.resolve("https://other.com/path"))
+        assertEquals(Url("http://example.org/test"), baseUrl.resolve("http://example.org/test"))
+    }
+
 }
