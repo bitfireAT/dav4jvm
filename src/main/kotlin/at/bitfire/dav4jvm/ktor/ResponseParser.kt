@@ -67,7 +67,7 @@ class ResponseParser(
                     WebDAV.Href ->
                         hrefOrNull = resolveHref(parser.nextText())
                     WebDAV.Status ->
-                        status = KtorHttpUtils.parseStatusLine(parser.nextText())
+                        status = HttpUtils.parseStatusLine(parser.nextText())
                     WebDAV.PropStat ->
                         PropStatParser.parse(parser).let { propStat += it }
                     WebDAV.Error ->

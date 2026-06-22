@@ -132,4 +132,34 @@ class UrlUtilsTest {
         assertEquals(Url("http://example.org/test"), baseUrl.resolve("http://example.org/test"))
     }
 
+    @Test
+    fun `toUrlOrNull with invalid mailto URL`() {
+        assertNull("mailto:invalid".toUrlOrNull())
+    }
+
+    @Test
+    fun `toUrlOrNull with invalid HTTPS URL that can't be decoded`() {
+        assertNull("https://example.com/%f".toUrlOrNull())
+    }
+
+    @Test
+    fun `toUrlOrNull with valid HTTPS URL`() {
+        assertEquals(
+            Url("https://example.com"),
+            "https://example.com".toUrlOrNull()
+        )
+    }
+
+    @Test
+    fun `toUrlOrNull with valid relative URL`() {
+        assertEquals(
+            Url("relative"),
+            "relative".toUrlOrNull()
+        )
+    }
+
+    @Test
+    fun `toUrlOrNull with null`() =
+        assertNull(null.toUrlOrNull())
+
 }
