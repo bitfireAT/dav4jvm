@@ -37,21 +37,47 @@ class UrlUtilsTest {
 
     @Test
     fun testOmitTrailingSlash() {
-        assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource")))
-        assertEquals(Url("http://host/resource"), UrlUtils.omitTrailingSlash(Url("http://host/resource/")))
-        assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host")))
-        assertEquals(Url("http://host"), UrlUtils.omitTrailingSlash(Url("http://host/")))
-        assertEquals(Url("http://host/resource?q=1"), UrlUtils.omitTrailingSlash(Url("http://host/resource?q=1")))
-
+        assertEquals(Url("http://host/resource"), Url("http://host/resource").omitTrailingSlash())
+        assertEquals(Url("http://host/resource"), Url("http://host/resource/").omitTrailingSlash())
+        assertEquals(Url("http://host"), Url("http://host").omitTrailingSlash())
+        assertEquals(Url("http://host"), Url("http://host/").omitTrailingSlash())
+        assertEquals(Url("http://host/resource?q=1"), Url("http://host/resource?q=1").omitTrailingSlash())
     }
 
     @Test
     fun testWithTrailingSlash() {
-        assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource")))
-        assertEquals(Url("http://host/resource/"), UrlUtils.withTrailingSlash(Url("http://host/resource/")))
-        assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host")))
-        assertEquals(Url("http://host/"), UrlUtils.withTrailingSlash(Url("http://host/")))
-        assertEquals(Url("http://host/resource/?q=1"), UrlUtils.withTrailingSlash(Url("http://host/resource?q=1")))
+        assertEquals(Url("http://host/resource/"), Url("http://host/resource").withTrailingSlash())
+        assertEquals(Url("http://host/resource/"), Url("http://host/resource/").withTrailingSlash())
+        assertEquals(Url("http://host/"), Url("http://host").withTrailingSlash())
+        assertEquals(Url("http://host/"), Url("http://host/").withTrailingSlash())
+        assertEquals(Url("http://host/resource/?q=1"), Url("http://host/resource?q=1").withTrailingSlash())
+    }
+
+    @Test
+    fun testUrl_Parent() {
+        // Root URL - should return itself
+        assertEquals(Url("http://host/"), Url("http://host/").parent())
+        assertEquals(Url("http://host/"), Url("http://host").parent())
+
+        // Single level with trailing slash
+        assertEquals(Url("http://host/"), Url("http://host/folder/").parent())
+
+        // Single level without trailing slash
+        assertEquals(Url("http://host/"), Url("http://host/folder").parent())
+
+        // Multiple levels with trailing slash
+        assertEquals(Url("http://host/folder/"), Url("http://host/folder/subfolder/").parent())
+
+        // Multiple levels without trailing slash
+        assertEquals(Url("http://host/folder/"), Url("http://host/folder/subfolder").parent())
+
+        // Deep nested
+        assertEquals(Url("http://host/a/b/"), Url("http://host/a/b/c/").parent())
+        assertEquals(Url("http://host/a/b/"), Url("http://host/a/b/c").parent())
+
+        // With query parameters
+        assertEquals(Url("http://host/?q=1"), Url("http://host/folder/?q=1").parent())
+        assertEquals(Url("http://host/folder/?q=1"), Url("http://host/folder/subfolder/?q=1").parent())
     }
 
 

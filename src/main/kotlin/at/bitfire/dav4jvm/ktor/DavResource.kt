@@ -279,7 +279,7 @@ open class DavResource(
         callback: ResponseCallback
     ) {
         followRedirects({
-            httpClient.prepareRequest(UrlUtils.withTrailingSlash(location)) {
+            httpClient.prepareRequest(location.withTrailingSlash()) {
                 method = HttpMethod.parse(methodName)
 
                 if (additionalHeaders != null)

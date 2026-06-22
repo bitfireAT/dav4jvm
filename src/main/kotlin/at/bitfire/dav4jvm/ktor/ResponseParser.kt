@@ -92,12 +92,12 @@ class ResponseParser(
             .firstOrNull()
             ?.let { type ->
                 if (type.types.contains(WebDAV.Collection))
-                    href = UrlUtils.withTrailingSlash(href)
+                    href = href.withTrailingSlash()
             }
 
         // Which resource does this <response> represent?
         val relation = when {
-            UrlUtils.omitTrailingSlash(href).equalsForWebDAV(UrlUtils.omitTrailingSlash(location)) ->
+            href.omitTrailingSlash().equalsForWebDAV(location.omitTrailingSlash()) ->
                 HrefRelation.SELF
 
             else -> {

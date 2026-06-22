@@ -10,8 +10,6 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.ktor.UrlUtils.omitTrailingSlash
-import at.bitfire.dav4jvm.ktor.UrlUtils.withTrailingSlash
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.takeFrom
@@ -41,39 +39,52 @@ object UrlUtils {
             withoutTrailingDot
     }
 
-    /**
-     * Ensures that a given URL doesn't have a trailing slash after member names.
-     * If the path is the root path (`/`), the slash is preserved.
-     *
-     * @param url URL to process (e.g. 'http://host/test1/')
-     *
-     * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
-     */
-    fun omitTrailingSlash(url: Url): Url {
-        val hasTrailingSlash = url.rawSegments.isNotEmpty() && url.rawSegments.last() == ""
+}
 
-        return if (hasTrailingSlash)
-            URLBuilder(url).apply { pathSegments = pathSegments.dropLast(1) }.build()
+/**
+ * Ensures that a given URL doesn't have a trailing slash after member names.
+ * If the path is the root path (`/`), the slash is preserved.
+ *
+ * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
+ */
+fun Url.omitTrailingSlash(): Url {
+    val hasTrailingSlash = this.rawSegments.isNotEmpty() && this.rawSegments.last() == ""
+
+    return if (hasTrailingSlash)
+        URLBuilder(this).apply { pathSegments = pathSegments.dropLast(1) }.build()
+    else
+        this
+}
+
+/**
+ * Ensures that a given URL has a trailing slash after member names.
+ *
+ * @return URL with trailing slash, e.g. `http://host/test1/`
+ */
+fun Url.withTrailingSlash(): Url {
+    val hasTrailingSlash = this.rawSegments.isNotEmpty() && this.rawSegments.last() == ""
+
+    return if (hasTrailingSlash)
+        this
+    else
+        URLBuilder(this).apply { pathSegments += "" }.build()
+}
+
+/**
+ * Returns parent URL (parent folder). Always with trailing slash.
+ */
+fun Url.parent(): Url {
+    val segments = this.rawSegments
+    if (segments.size <= 1)
+    // root URL, ensure it has trailing slash
+        return if (segments.lastOrNull() == "")
+            this
         else
-            url
-    }
-
-    /**
-     * Ensures that a given URL has a trailing slash after member names.
-     *
-     * @param url URL to process (e.g. 'http://host/test1')
-     *
-     * @return URL with trailing slash, e.g. `http://host/test1/`
-     */
-    fun withTrailingSlash(url: Url): Url {
-        val hasTrailingSlash = url.rawSegments.isNotEmpty() && url.rawSegments.last() == ""
-
-        return if (hasTrailingSlash)
-            url
-        else
-            URLBuilder(url).apply { pathSegments += "" }.build()
-    }
-
+            URLBuilder(this).apply { pathSegments = listOf("") }.build()
+    return if (segments.last() == "")
+        URLBuilder(this).apply { pathSegments = segments.dropLast(2) + "" }.build()
+    else
+        URLBuilder(this).apply { pathSegments = segments.dropLast(1) + "" }.build()
 }
 
 /**
