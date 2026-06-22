@@ -14,6 +14,7 @@ import at.bitfire.dav4jvm.ktor.UrlUtils.omitTrailingSlash
 import at.bitfire.dav4jvm.ktor.UrlUtils.withTrailingSlash
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
+import io.ktor.http.takeFrom
 
 object UrlUtils {
 
@@ -74,6 +75,17 @@ object UrlUtils {
     }
 
 }
+
+/**
+ * Resolves `this` URL against a relative path.
+ *
+ * See [URLBuilder.takeFrom] for details of resolving.
+ *
+ * @param relative The relative path to resolve.
+ * @return A new [Url] representing the resolved URL.
+ */
+fun Url.resolve(relative: String): Url =
+    URLBuilder(this).takeFrom(relative).build()
 
 /**
  * Compares two [Url]s in WebDAV context. If two URLs are considered *equal*, both

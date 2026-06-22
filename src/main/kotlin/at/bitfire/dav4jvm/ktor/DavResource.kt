@@ -39,26 +39,23 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import io.ktor.http.isSecure
 import io.ktor.http.isSuccess
-import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
-import java.util.logging.Level
-import java.util.logging.Logger
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.peek
 import kotlinx.io.bytestring.encodeToByteString
-
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.EOFException
 import java.io.IOException
 import java.io.StringWriter
+import java.util.logging.Level
+import java.util.logging.Logger
 
 
 /**
@@ -228,7 +225,7 @@ open class DavResource(
 
             // update location
             val nPath = response.headers[HttpHeaders.Location] ?: destination.toString()
-            location = URLBuilder(location).takeFrom(nPath).build()
+            location = location.resolve(nPath)
 
             callback.onResponse(response)
         }
@@ -631,9 +628,7 @@ open class DavResource(
 
                     // resolve possible relative location URL
                     val destination = try {
-                        URLBuilder(location)
-                            .takeFrom(newLocation)
-                            .build()
+                        location.resolve(newLocation)
                     } catch (e: Exception) {
                         throw DavException("Redirected to invalid Location", cause = e)
                     }

@@ -34,13 +34,11 @@ import io.ktor.http.HeadersBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.content.TextContent
 import io.ktor.http.contentType
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
-import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -54,7 +52,7 @@ class DavResourceTest {
 
     private val sampleText = "SAMPLE RESPONSE"
     private val sampleUrl = Url("https://127.0.0.1/dav/")
-    private val sampleDestination = URLBuilder(sampleUrl).takeFrom("test").build()
+    private val sampleDestination = sampleUrl.resolve("test")
 
     private fun mockEngine(status: HttpStatusCode, content: String = "", headers: Headers = headersOf()) =
         MockEngine { respond(content, status, headers) }
@@ -686,7 +684,7 @@ class DavResourceTest {
         var nrCalled = 0
         dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
             when (response.href) {
-                URLBuilder(sampleUrl).takeFrom("/dav/").build() -> {
+                sampleUrl.resolve("/dav/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.SELF, relation)
                     assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
@@ -694,7 +692,7 @@ class DavResourceTest {
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/subcollection/").build() -> {
+                sampleUrl.resolve("/dav/subcollection/") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
@@ -702,21 +700,21 @@ class DavResourceTest {
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/uid@host:file").build() -> {
+                sampleUrl.resolve("/dav/uid@host:file") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     assertEquals("Absolute path with @ and :", response[DisplayName::class.java]?.displayName)
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/relative-uid@host.file").build() -> {
+                sampleUrl.resolve("/dav/relative-uid@host.file") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     assertEquals("Relative path with @", response[DisplayName::class.java]?.displayName)
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/relative:colon.vcf").build() -> {
+                sampleUrl.resolve("/dav/relative:colon.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     assertEquals("Relative path with colon", response[DisplayName::class.java]?.displayName)
@@ -754,7 +752,7 @@ class DavResourceTest {
             called = true
             assertTrue(response.isSuccess())
             assertEquals(Response.HrefRelation.SELF, relation)
-            assertEquals(URLBuilder(sampleUrl).takeFrom("/dav/").build(), response.href)
+            assertEquals(sampleUrl.resolve("/dav/"), response.href)
             assertTrue(response[ResourceType::class.java]!!.types.contains(WebDAV.Collection))
             assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
         }
@@ -864,7 +862,7 @@ class DavResourceTest {
         var called = false
         dav.put(TextContent(sampleText, ContentType.Text.Plain), headersOf(HttpHeaders.IfNoneMatch, "*")) { response ->
             called = true
-            assertEquals(URLBuilder(sampleUrl).takeFrom("/target").build(), response.request.url)
+            assertEquals(sampleUrl.resolve("/target"), response.request.url)
             assertNull(GetETag.fromHttpResponse(response))
         }
         assertTrue(called)

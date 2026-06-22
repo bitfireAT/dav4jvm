@@ -27,12 +27,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
-import io.ktor.http.takeFrom
 import io.ktor.http.withCharset
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
@@ -123,7 +121,7 @@ class DavCollectionTest {
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
-                URLBuilder(sampleUrl).takeFrom("/dav/test.doc").build() -> {
+                sampleUrl.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -132,7 +130,7 @@ class DavCollectionTest {
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/vcard.vcf").build() -> {
+                sampleUrl.resolve("/dav/vcard.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -141,7 +139,7 @@ class DavCollectionTest {
                     nrCalled++
                 }
 
-                URLBuilder(sampleUrl).takeFrom("/dav/calendar.ics").build() -> {
+                sampleUrl.resolve("/dav/calendar.ics") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -198,7 +196,7 @@ class DavCollectionTest {
         var nrCalled = 0
         val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
             when (response.href) {
-                URLBuilder(sampleUrl).takeFrom("/dav/test.doc").build() -> {
+                sampleUrl.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -206,7 +204,8 @@ class DavCollectionTest {
                     assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
-                URLBuilder(sampleUrl).takeFrom("/dav/vcard.vcf").build() -> {
+
+                sampleUrl.resolve("/dav/vcard.vcf") -> {
                     assertTrue(response.isSuccess())
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     val eTag = response[GetETag::class.java]
@@ -214,13 +213,15 @@ class DavCollectionTest {
                     assertTrue(eTag?.weak == false)
                     nrCalled++
                 }
-                URLBuilder(sampleUrl).takeFrom("/dav/removed.txt").build() -> {
+
+                sampleUrl.resolve("/dav/removed.txt") -> {
                     assertFalse(response.isSuccess())
                     assertEquals(404, response.status?.value)
                     assertEquals(Response.HrefRelation.MEMBER, relation)
                     nrCalled++
                 }
-                URLBuilder(sampleUrl).takeFrom("/dav/").build() -> {
+
+                sampleUrl.resolve("/dav/") -> {
                     assertFalse(response.isSuccess())
                     assertEquals(507, response.status?.value)
                     assertEquals(Response.HrefRelation.SELF, relation)
