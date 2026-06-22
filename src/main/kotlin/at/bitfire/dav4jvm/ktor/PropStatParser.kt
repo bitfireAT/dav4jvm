@@ -34,7 +34,7 @@ object PropStatParser {
                     WebDAV.Prop ->
                         prop.addAll(Property.parse(parser))
                     WebDAV.Status ->
-                        status = KtorHttpUtils.parseStatusLine(parser.nextText())
+                        status = HttpUtils.parseStatusLine(parser.nextText())
                 }
             eventType = parser.next()
         }

@@ -11,12 +11,10 @@
 package at.bitfire.dav4jvm.ktor
 
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.BadContentTypeFormatException
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 
-object KtorHttpUtils {
+object HttpUtils {
 
     val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
 
@@ -94,47 +92,5 @@ object KtorHttpUtils {
         } else {
             INVALID_STATUS
         }
-    }
-}
-
-
-// extension methods
-
-fun ContentType.isText() =
-    isXml() || match(ContentType.Text.Any)
-
-fun ContentType.isXml() =
-    match(ContentType.Application.Xml) || match(ContentType.Text.Xml)
-
-fun String?.toContentTypeOrNull(): ContentType? {
-    if (this == null)
-        return null
-
-    return try {
-        ContentType.parse(this)
-    } catch (_: BadContentTypeFormatException) {
-        null
-    }
-}
-
-/**
- * Converts the [String] into a Ktor [Url], if possible.
- *
- * Differs from [io.ktor.http.parseUrl]:
- *
- * - `"relative".toUrlOrNull() == Url("relative")` (without host) but
- * - `parseUrl("relative") == null` (requires host)
- *
- * @return the Ktor [Url], or `null` if the string couldn't be converted
- */
-fun String?.toUrlOrNull(): Url? {
-    if (this == null)
-        return null
-
-    return try {
-        Url(this)
-    } catch (_: Exception) {
-        // parseUrl doesn't catch URLDecodeException, see https://github.com/ktorio/ktor/pull/5231
-        null
     }
 }

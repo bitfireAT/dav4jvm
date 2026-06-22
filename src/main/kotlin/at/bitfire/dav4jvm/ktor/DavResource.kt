@@ -149,7 +149,7 @@ open class DavResource(
      * File name of this resource (determined from [location])
      */
     val fileName
-        get() = KtorHttpUtils.fileName(location)
+        get() = HttpUtils.fileName(location)
 
 
     /**
@@ -192,7 +192,7 @@ open class DavResource(
         // check for success
         checkStatus(response)
 
-        val capabilities = KtorHttpUtils.listHeader(response, "DAV")
+        val capabilities = HttpUtils.listHeader(response, "DAV")
         callback.onCapabilities(
             capabilities.map { it.trim() }.toSet(),
             response
@@ -279,7 +279,7 @@ open class DavResource(
         callback: ResponseCallback
     ) {
         followRedirects({
-            httpClient.prepareRequest(UrlUtils.withTrailingSlash(location)) {
+            httpClient.prepareRequest(location.withTrailingSlash()) {
                 method = HttpMethod.parse(methodName)
 
                 if (additionalHeaders != null)

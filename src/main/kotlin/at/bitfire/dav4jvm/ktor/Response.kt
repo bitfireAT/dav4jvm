@@ -88,6 +88,6 @@ data class Response(
     /**
      * Returns the name (last path segment) of the resource.
      */
-    fun hrefName() = KtorHttpUtils.fileName(href)
+    fun hrefName() = HttpUtils.fileName(href)
 
 }

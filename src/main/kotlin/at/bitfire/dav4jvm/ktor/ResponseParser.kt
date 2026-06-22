@@ -67,7 +67,7 @@ class ResponseParser(
                     WebDAV.Href ->
                         hrefOrNull = resolveHref(parser.nextText())
                     WebDAV.Status ->
-                        status = KtorHttpUtils.parseStatusLine(parser.nextText())
+                        status = HttpUtils.parseStatusLine(parser.nextText())
                     WebDAV.PropStat ->
                         PropStatParser.parse(parser).let { propStat += it }
                     WebDAV.Error ->
@@ -92,12 +92,12 @@ class ResponseParser(
             .firstOrNull()
             ?.let { type ->
                 if (type.types.contains(WebDAV.Collection))
-                    href = UrlUtils.withTrailingSlash(href)
+                    href = href.withTrailingSlash()
             }
 
         // Which resource does this <response> represent?
         val relation = when {
-            UrlUtils.omitTrailingSlash(href).equalsForWebDAV(UrlUtils.omitTrailingSlash(location)) ->
+            href.omitTrailingSlash().equalsForWebDAV(location.omitTrailingSlash()) ->
                 HrefRelation.SELF
 
             else -> {
