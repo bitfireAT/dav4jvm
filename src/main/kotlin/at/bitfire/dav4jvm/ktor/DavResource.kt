@@ -80,9 +80,9 @@ import java.util.logging.Logger
  * @param logger        will be used for logging
  */
 open class DavResource(
-    val httpClient: HttpClient,
+    protected val httpClient: HttpClient,
     location: Url,
-    val logger: Logger = Logger.getLogger(javaClass.name)
+    protected val logger: Logger = Logger.getLogger(javaClass.name)
 ) {
 
     companion object {
