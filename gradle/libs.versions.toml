@@ -7,7 +7,7 @@ kotlin-coroutines = "1.11.0"
 okhttpVersion = "5.4.0"
 spotbugs = "4.10.2"
 xpp3Version = "1.1.6"
-ktor = "3.5.0"
+ktor = "3.5.1"
 
 [libraries]
 junit4 = { module = "junit:junit", version.ref = "junit4" }
