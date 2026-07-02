@@ -10,12 +10,9 @@
 
 package at.bitfire.dav4jvm
 
-import io.ktor.http.Url
 import io.ktor.http.fromHttpToGmtDate
 import io.ktor.http.toHttpDate
 import io.ktor.util.date.GMTDate
-import okhttp3.HttpUrl
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.time.Instant
 import java.util.logging.Logger
 
@@ -51,18 +48,5 @@ object HttpUtils {
         logger.warning("Couldn't parse HTTP date: $dateStr, ignoring")
         null
     }
-
-
-    // for migration between Ktor and okhttp
-
-    /**
-     * Converts an okhttp [HttpUrl] to a Ktor [Url].
-     */
-    fun HttpUrl.toKtorUrl() = Url(toString())
-
-    /**
-     * Converts a Ktor [Url] to an okhttp [HttpUrl].
-     */
-    fun Url.toHttpUrl() = toString().toHttpUrl()
 
 }

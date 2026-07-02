@@ -10,10 +10,6 @@
 
 package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.HttpUtils.toHttpUrl
-import at.bitfire.dav4jvm.HttpUtils.toKtorUrl
-import io.ktor.http.Url
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -65,17 +61,6 @@ class HttpUtilsTest {
     fun parseDate_RFC850_1994() {
         // obsolete RFC 850 format – 2-digit year cannot be parsed, returns null
         assertNull(HttpUtils.parseDate("Sun, 06-Nov-94 08:49:37 GMT"))
-    }
-
-
-    @Test
-    fun testHttpUrl_toKtorUrl() {
-        assertEquals(Url("https://example.com:123/path"), "https://example.com:123/path".toHttpUrl().toKtorUrl())
-    }
-
-    @Test
-    fun testUrl_ToHttpUrl() {
-        assertEquals("https://example.com:123/path".toHttpUrl(), Url("https://example.com:123/path").toHttpUrl())
     }
 
 }
