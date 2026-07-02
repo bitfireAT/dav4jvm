@@ -54,7 +54,6 @@ tasks.withType<DokkaTask>().configureEach {
 }
 
 dependencies {
-    api(libs.okhttp)
     api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
@@ -65,5 +64,4 @@ dependencies {
     testImplementation(libs.kotlin.coroutines.test)
     testImplementation(libs.ktor.client.auth)
     testImplementation(libs.ktor.client.mock)
-    testImplementation(libs.okhttp.mockwebserver)
 }
