@@ -59,7 +59,7 @@ interface Property {
                             properties.add(property)
                         } else
                             logger.fine("Ignoring unknown property $name")
-                    } catch (e: Exception) {     // catching here generic exception in order to avoid dependency on specific okhttp or ktor Exception
+                    } catch (e: Exception) {     // catching generic exception here to avoid a dependency on a specific HTTP library's exception type
                         logger.log(Level.WARNING, "Ignoring invalid property", e)
                     }
                 }
