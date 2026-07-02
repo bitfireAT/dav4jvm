@@ -29,11 +29,11 @@ object UrlUtils {
         if (host == null)
             return null
 
-        if (InetAddresses.isInetAddress(host))
-            return host
-
         // remove optional dot at end
         val withoutTrailingDot = host.removeSuffix(".")
+
+        if (InetAddresses.isInetAddress(withoutTrailingDot))
+            return withoutTrailingDot
 
         // split into labels
         val labels = withoutTrailingDot.split('.')

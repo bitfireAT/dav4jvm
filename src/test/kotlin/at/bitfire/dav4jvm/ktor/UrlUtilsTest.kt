@@ -33,11 +33,11 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun `testHostToDomain does not truncate IPv4 addresses`() {
+    fun `testHostToDomain does not truncate IP addresses`() {
         assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1"))
-        assertEquals("10.20.0.1", UrlUtils.hostToDomain("10.20.0.1"))
-        assertEquals("192.168.0.1", UrlUtils.hostToDomain("192.168.0.1"))
-        assertNotEquals(UrlUtils.hostToDomain("10.20.0.1"), UrlUtils.hostToDomain("192.168.0.1"))
+        assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1."))
+        assertEquals("2001:db8::1", UrlUtils.hostToDomain("2001:db8::1"))
+        assertEquals("[2001:db8::1]", UrlUtils.hostToDomain("[2001:db8::1]"))
     }
 
     @Test
