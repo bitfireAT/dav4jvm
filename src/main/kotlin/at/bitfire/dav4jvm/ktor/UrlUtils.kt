@@ -10,10 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import io.ktor.http.URLBuilder
-import io.ktor.http.URLParserException
-import io.ktor.http.Url
-import io.ktor.http.takeFrom
+import com.google.common.net.InetAddresses
+import io.ktor.http.*
 
 object UrlUtils {
 
@@ -21,13 +19,18 @@ object UrlUtils {
      * Gets the first-level domain name (without subdomains) from a host name.
      * Also removes trailing dots.
      *
-     * @param host name (e.g. `www.example.com.`)
+     * If [host] is an IP address, it's returned unchanged.
      *
-     * @return domain name (e.g. `example.com`)
+     * @param host name (e.g. `www.example.com.`) or IP address
+     *
+     * @return domain name (e.g. `example.com`) or unchanged IP address
      */
     fun hostToDomain(host: String?): String? {
         if (host == null)
             return null
+
+        if (InetAddresses.isInetAddress(host))
+            return host
 
         // remove optional dot at end
         val withoutTrailingDot = host.removeSuffix(".")

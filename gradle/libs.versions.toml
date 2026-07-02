@@ -1,5 +1,6 @@
 [versions]
 dokka = "2.2.0"
+guava = "33.6.0-jre"
 junit4 = "4.13.2"
 # don't upgrade to Kotlin 2.4 until Hilt > 2.59.2 fixes the metadata problem (https://github.com/google/dagger/issues/5177)
 kotlin = "2.3.21"
@@ -10,6 +11,7 @@ xpp3Version = "1.1.6"
 ktor = "3.5.1"
 
 [libraries]
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }

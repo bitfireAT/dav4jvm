@@ -54,6 +54,7 @@ tasks.withType<DokkaTask>().configureEach {
 }
 
 dependencies {
+    api(libs.guava)
     api(libs.okhttp)
     api(libs.spotbugs.annotations)
     api(libs.xpp3)
