@@ -55,12 +55,13 @@ tasks.withType<DokkaTask>().configureEach {
 
 dependencies {
     api(libs.okhttp)
-    api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
+    implementation(libs.guava)
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.encoding)
     implementation(libs.ktor.client.core)
+    implementation(libs.spotbugs.annotations)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.coroutines.test)

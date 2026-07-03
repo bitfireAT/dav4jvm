@@ -10,11 +10,8 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import io.ktor.http.Url
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import io.ktor.http.*
+import org.junit.Assert.*
 import org.junit.Test
 
 class UrlUtilsTest {
@@ -33,6 +30,14 @@ class UrlUtilsTest {
         assertEquals("example.com", UrlUtils.hostToDomain("host.example.com."))
         assertEquals("example.com", UrlUtils.hostToDomain("sub.host.example.com"))
         assertEquals("example.com", UrlUtils.hostToDomain("sub.host.example.com."))
+    }
+
+    @Test
+    fun `testHostToDomain does not truncate IP addresses`() {
+        assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1"))
+        assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1."))
+        assertEquals("2001:db8::1", UrlUtils.hostToDomain("2001:db8::1"))
+        assertEquals("[2001:db8::1]", UrlUtils.hostToDomain("[2001:db8::1]"))
     }
 
     @Test
