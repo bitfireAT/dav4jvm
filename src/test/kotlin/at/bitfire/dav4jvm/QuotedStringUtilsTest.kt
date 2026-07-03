@@ -8,9 +8,8 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-package at.bitfire.dav4jvm.okhttp
+package at.bitfire.dav4jvm
 
-import at.bitfire.dav4jvm.QuotedStringUtils
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
