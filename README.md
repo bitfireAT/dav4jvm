@@ -15,7 +15,7 @@ Repository: https://github.com/bitfireAT/dav4jvm/
 Generated KDoc: https://bitfireat.github.io/dav4jvm/
 
 For questions, suggestions etc. use [Github discussions](https://github.com/bitfireAT/dav4jvm/discussions).
-We're happy about contributions, but please let us know in the discussions before. 
+We're happy about contributions, but please let us know in the discussions before.
 Then make the changes in your own repository and send a pull request.
 
 dav4jvm uses [Ktor](https://ktor.io/) as its HTTP client, which allows Kotlin
