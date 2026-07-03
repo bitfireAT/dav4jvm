@@ -58,10 +58,11 @@ dependencies {
     api(libs.spotbugs.annotations)
     api(libs.xpp3)
 
+    implementation(libs.guava)
+    implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.encoding)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.coroutines.test)
-    testImplementation(libs.ktor.client.auth)
     testImplementation(libs.ktor.client.mock)
 }
