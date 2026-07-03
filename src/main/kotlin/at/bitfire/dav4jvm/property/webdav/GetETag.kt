@@ -16,7 +16,6 @@ import at.bitfire.dav4jvm.QuotedStringUtils
 import at.bitfire.dav4jvm.XmlReader
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
-import okhttp3.Response
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -33,9 +32,6 @@ data class GetETag(
 
         fun fromHttpResponse(response: HttpResponse) =
             response.headers[HttpHeaders.ETag]?.let { GetETag(it) }
-
-        fun fromResponse(response: Response) =
-            response.header(HttpHeaders.ETag)?.let { GetETag(it) }
     }
 
     /**
