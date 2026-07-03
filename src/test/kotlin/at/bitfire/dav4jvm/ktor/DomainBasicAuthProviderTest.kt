@@ -28,7 +28,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = null
+            firstLevelDomain = null
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -45,7 +45,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -62,7 +62,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -79,7 +79,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -96,7 +96,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -113,7 +113,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = null
+            firstLevelDomain = null
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTP
@@ -130,7 +130,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = null
+            firstLevelDomain = null
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -147,7 +147,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = null,
+            firstLevelDomain = null,
             insecurePreemptive = false
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
@@ -165,7 +165,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = null,
+            firstLevelDomain = null,
             insecurePreemptive = true
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
@@ -183,7 +183,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -200,7 +200,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -217,7 +217,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
@@ -234,7 +234,7 @@ class DomainBasicAuthProviderTest {
         val authProvider = createDomainBasicAuthProvider(
             username = "user",
             password = "password",
-            domain = "domain.example"
+            firstLevelDomain = "domain.example"
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS

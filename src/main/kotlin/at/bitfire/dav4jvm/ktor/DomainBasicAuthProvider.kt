@@ -24,7 +24,7 @@ import io.ktor.client.plugins.auth.providers.BasicAuthProvider
  *         createDomainBasicAuthProvider(
  *             username = "user",
  *             password = "password",
- *             domain = "domain.example",
+ *             firstLevelDomain = "domain.example",
  *         )
  *     )
  * }
@@ -33,7 +33,7 @@ import io.ktor.client.plugins.auth.providers.BasicAuthProvider
 fun createDomainBasicAuthProvider(
     username: String,
     password: String,
-    domain: String? = null,
+    firstLevelDomain: String? = null,
     insecurePreemptive: Boolean = false,
 ): DomainAuthProvider {
     val basicAuthProvider = BasicAuthProvider(
@@ -41,5 +41,5 @@ fun createDomainBasicAuthProvider(
         sendWithoutRequestCallback = { true }
     )
 
-    return DomainAuthProvider(domain, insecurePreemptive, basicAuthProvider)
+    return DomainAuthProvider(firstLevelDomain, insecurePreemptive, basicAuthProvider)
 }

@@ -24,7 +24,7 @@ import io.ktor.client.plugins.auth.providers.DigestAuthProvider
  *         createDomainDigestAuthProvider(
  *             username = "user",
  *             password = "password",
- *             domain = "domain.example",
+ *             firstLevelDomain = "domain.example",
  *         )
  *     )
  * }
@@ -33,11 +33,11 @@ import io.ktor.client.plugins.auth.providers.DigestAuthProvider
 fun createDomainDigestAuthProvider(
     username: String,
     password: String,
-    domain: String? = null,
+    firstLevelDomain: String? = null,
 ): DomainAuthProvider {
     val digestAuthProvider = DigestAuthProvider(
         credentials = { DigestAuthCredentials(username, password) }
     )
 
-    return DomainAuthProvider(domain, insecurePreemptive = false, digestAuthProvider)
+    return DomainAuthProvider(firstLevelDomain, insecurePreemptive = false, digestAuthProvider)
 }

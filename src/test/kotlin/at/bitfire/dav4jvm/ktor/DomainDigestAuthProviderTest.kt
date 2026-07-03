@@ -25,7 +25,7 @@ class DomainDigestAuthProviderTest {
         val authProvider = createDomainDigestAuthProvider(
             username = "user",
             password = "password",
-            domain = null
+            firstLevelDomain = null
         )
         val httpRequestBuilder = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
