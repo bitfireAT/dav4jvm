@@ -28,15 +28,16 @@ are located in the `at.bitfire.dav4jvm.ktor` package.
 ## Installation
 
 You can use jitpack.io to include dav4jvm:
-```groovy
+```kotlin
 allprojects {
     repositories {
-        maven { url 'https://jitpack.io' }
+        maven("https://jitpack.io")
     }
 }
 dependencies {
-    implementation 'com.github.bitfireAT:dav4jvm:<tag or commit>'  // usually the latest commit ID from main branch
-    //implementation 'com.github.bitfireAT:dav4jvm:main-SNAPSHOT'  // use it only for testing because it doesn't generate reproducible builds
+    implementation("com.github.bitfireAT:dav4jvm:<version>")       // recommended: use the latest version available
+    //implementation("com.github.bitfireAT:dav4jvm:<commit>")      // try the latest changes from the commit ID from main branch
+    //implementation("com.github.bitfireAT:dav4jvm:main-SNAPSHOT") // use it only for testing because it doesn't generate reproducible builds
 }
 ```
 
