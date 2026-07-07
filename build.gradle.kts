@@ -15,8 +15,15 @@ repositories {
     mavenCentral()
 }
 
+/** Checks whether this string is a valid semver: `X.Y.Z` */
+fun String.isSemVer(): Boolean = "\\d+.\\d+.\\d+".toRegex().matches(this)
+
 group="com.github.bitfireAT"
-version=System.getenv("GIT_COMMIT")     // set by jitpack.io
+
+// set by jitpack.io
+val gitCommit: String? = System.getenv("GIT_COMMIT")
+val jitpackVersion: String? = System.getenv("VERSION")
+version = if (jitpackVersion?.isSemVer() == true) jitpackVersion else gitCommit ?: "SNAPSHOT"
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
