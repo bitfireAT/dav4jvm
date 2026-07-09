@@ -16,16 +16,22 @@ import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.caldav.CalDAV
 import at.bitfire.dav4jvm.property.caldav.CalendarData
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import java.util.logging.Logger
+import io.ktor.client.HttpClient
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareRequest
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.Url
+import io.ktor.http.contentType
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.logging.Logger
 
 @Suppress("unused")
 class DavCalendar(
@@ -109,6 +115,7 @@ class DavCalendar(
 
                 header(HttpHeaders.Depth, "1")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
@@ -175,6 +182,7 @@ class DavCalendar(
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }

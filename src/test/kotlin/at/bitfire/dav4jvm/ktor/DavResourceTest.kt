@@ -408,6 +408,15 @@ class DavResourceTest {
     }
 
     @Test
+    fun `mkCol xmlBody sends headers`() = runTest {
+        val engine = mockEngine(HttpStatusCode.Created)
+        davResource(engine).mkCol("<mkcalendar/>") { }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
+    }
+
+    @Test
     fun `options with capabilities`() = runTest {
         val engine = MockEngine {
             respond("", HttpStatusCode.OK, HeadersBuilder().apply { append("DAV", "  1,  2 ,3,hyperactive-access") }.build())
@@ -783,6 +792,15 @@ class DavResourceTest {
     }
 
     @Test
+    fun `propfind sends headers`() = runTest {
+        val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
+        davResource(engine).propfind(0, WebDAV.ResourceType) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
+    }
+
+    @Test
     fun `proppatch response with propstat`() = runTest {
         val dav = davResource(
             propfindEngine(
@@ -825,6 +843,15 @@ class DavResourceTest {
                     "<d:remove><d:prop><n2:removeThis xmlns:n2=\"sample\" /></d:prop></d:remove>" +
                     "</d:propertyupdate>", xml
         )
+    }
+
+    @Test
+    fun `proppatch sends headers`() = runTest {
+        val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
+        davResource(engine).proppatch(setProperties = emptyMap(), removeProperties = emptyList()) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
     }
 
     @Test
@@ -914,6 +941,15 @@ class DavResourceTest {
             assertEquals(HttpMethod.parse("SEARCH"), method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
             assertEquals("<TEST/>", (body as TextContent).text)
+        }
+    }
+
+    @Test
+    fun `search sends headers`() = runTest {
+        val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
+        davResource(engine).search("<TEST/>") { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
 

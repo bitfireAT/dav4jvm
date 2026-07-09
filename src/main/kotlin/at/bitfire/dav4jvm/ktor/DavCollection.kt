@@ -22,8 +22,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
-import java.util.logging.Logger
 import java.io.StringWriter
+import java.util.logging.Logger
 
 /**
  * Represents a WebDAV collection.
@@ -100,6 +100,7 @@ open class DavCollection @JvmOverloads constructor(
 
                 header(HttpHeaders.Depth, "0")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }

@@ -111,12 +111,30 @@ class DavCalendarTest {
     }
 
     @Test
+    fun `calendarQuery sends headers`() = runTest {
+        val engine = minimalMultiStatus()
+        davCalendar(engine).calendarQuery("VEVENT", start = null, end = null) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
+    }
+
+    @Test
     fun `multiget sends REPORT without Depth header`() = runTest {
         val engine = minimalMultiStatus()
         davCalendar(engine).multiget(listOf(sampleUrl)) { _, _ -> }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertNull(headers[HttpHeaders.Depth])
+        }
+    }
+
+    @Test
+    fun `multiget sends headers`() = runTest {
+        val engine = minimalMultiStatus()
+        davCalendar(engine).multiget(listOf(sampleUrl)) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
 

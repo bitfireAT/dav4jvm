@@ -56,6 +56,15 @@ class DavAddressBookTest {
     }
 
     @Test
+    fun `addressbookQuery sends headers`() = runTest {
+        val engine = minimalMultiStatus()
+        davAddressBook(engine).addressbookQuery { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
+    }
+
+    @Test
     fun `addressbookQuery request body contains query and filter`() = runTest {
         val engine = minimalMultiStatus()
         davAddressBook(engine).addressbookQuery { _, _ -> }
@@ -72,6 +81,15 @@ class DavAddressBookTest {
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
+        }
+    }
+
+    @Test
+    fun `multiget sends headers`() = runTest {
+        val engine = minimalMultiStatus()
+        davAddressBook(engine).multiget(listOf(sampleUrl)) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
 

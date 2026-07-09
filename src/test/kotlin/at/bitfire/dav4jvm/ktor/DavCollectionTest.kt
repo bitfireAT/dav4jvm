@@ -267,6 +267,15 @@ class DavCollectionTest {
     }
 
     @Test
+    fun `reportChanges sends headers`() = runTest {
+        val engine = minimalMultiStatus()
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        with(engine.requestHistory.last()) {
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+        }
+    }
+
+    @Test
     fun `reportChanges null sync token sends empty sync-token element`() = runTest {
         val engine = minimalMultiStatus()
         davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
