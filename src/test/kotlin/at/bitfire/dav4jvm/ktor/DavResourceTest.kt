@@ -48,6 +48,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 
+/*
+ * For every request-sending method, at least one test should verify:
+ *
+ * - the request method
+ * - the request headers, including Accept (application/xml, text/xml if an XML response is
+ *   expected; otherwise whatever applies) and Content-Type (if a body is sent)
+ *
+ * Other tests for the same method only need to assert a header if its expected value differs
+ * from that default.
+ */
 class DavResourceTest {
 
     private val sampleText = "SAMPLE RESPONSE"
@@ -106,7 +116,6 @@ class DavResourceTest {
         dav.copy(sampleDestination, true) { called = true }
         assertTrue(called)
         with(engine.requestHistory.last()) {
-            assertEquals(HttpMethod.parse("COPY"), method)
             assertEquals(sampleDestination.toString(), headers[HttpHeaders.Destination])
             assertNull(headers[HttpHeaders.Overwrite])
         }
@@ -273,6 +282,7 @@ class DavResourceTest {
         val dav = davResource(engine)
         var called = false
         dav.getRange(100, 342) { response ->
+            assertEquals(HttpMethod.Get, response.request.method)
             assertEquals("bytes=100-441", response.request.headers[HttpHeaders.Range])
             called = true
         }
@@ -364,7 +374,6 @@ class DavResourceTest {
         assertTrue(called)
         assertEquals(sampleDestination, dav.location)
         with(engine.requestHistory.last()) {
-            assertEquals(HttpMethod.parse("MOVE"), method)
             assertEquals(sampleDestination.toString(), headers[HttpHeaders.Destination])
             assertNull(headers[HttpHeaders.Overwrite])
         }
@@ -404,14 +413,17 @@ class DavResourceTest {
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("MKCOL"), method)
             assertNull(headers[HttpHeaders.ContentType])
+            assertEquals("*/*", headers[HttpHeaders.Accept])
         }
     }
 
     @Test
-    fun `mkCol xmlBody sends headers`() = runTest {
+    fun `mkCol xmlBody sends proper request`() = runTest {
         val engine = mockEngine(HttpStatusCode.Created)
         davResource(engine).mkCol("<mkcalendar/>") { }
         with(engine.requestHistory.last()) {
+            assertEquals(HttpMethod.parse("MKCOL"), method)
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
@@ -431,7 +443,11 @@ class DavResourceTest {
             assertTrue(davCapabilities.any { it.contains("hyperactive-access") })
         }
         assertTrue(called)
-        assertEquals("identity", engine.requestHistory.last().headers[HttpHeaders.AcceptEncoding])
+        with(engine.requestHistory.last()) {
+            assertEquals(HttpMethod.Options, method)
+            assertEquals("0", headers[HttpHeaders.ContentLength])
+            assertEquals("identity", headers[HttpHeaders.AcceptEncoding])
+        }
     }
 
     @Test
@@ -792,10 +808,13 @@ class DavResourceTest {
     }
 
     @Test
-    fun `propfind sends headers`() = runTest {
+    fun `propfind sends proper request`() = runTest {
         val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
         davResource(engine).propfind(0, WebDAV.ResourceType) { _, _ -> }
         with(engine.requestHistory.last()) {
+            assertEquals(HttpMethod.parse("PROPFIND"), method)
+            assertEquals("0", headers[HttpHeaders.Depth])
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
@@ -846,10 +865,12 @@ class DavResourceTest {
     }
 
     @Test
-    fun `proppatch sends headers`() = runTest {
+    fun `proppatch sends proper request`() = runTest {
         val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
         davResource(engine).proppatch(setProperties = emptyMap(), removeProperties = emptyList()) { _, _ -> }
         with(engine.requestHistory.last()) {
+            assertEquals(HttpMethod.parse("PROPPATCH"), method)
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
@@ -940,16 +961,9 @@ class DavResourceTest {
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("SEARCH"), method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
-            assertEquals("<TEST/>", (body as TextContent).text)
-        }
-    }
-
-    @Test
-    fun `search sends headers`() = runTest {
-        val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
-        davResource(engine).search("<TEST/>") { _, _ -> }
-        with(engine.requestHistory.last()) {
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
+            assertEquals("<TEST/>", (body as TextContent).text)
         }
     }
 

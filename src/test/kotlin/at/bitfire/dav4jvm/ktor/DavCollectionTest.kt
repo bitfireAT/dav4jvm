@@ -257,20 +257,13 @@ class DavCollectionTest {
     }
 
     @Test
-    fun `reportChanges sends REPORT with Depth 0`() = runTest {
+    fun `reportChanges sends proper request`() = runTest {
         val engine = minimalMultiStatus()
         davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
-        }
-    }
-
-    @Test
-    fun `reportChanges sends headers`() = runTest {
-        val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
-        with(engine.requestHistory.last()) {
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }

@@ -46,20 +46,13 @@ class DavAddressBookTest {
 
 
     @Test
-    fun `addressbookQuery sends REPORT with Depth 1`() = runTest {
+    fun `addressbookQuery sends proper request`() = runTest {
         val engine = minimalMultiStatus()
         davAddressBook(engine).addressbookQuery { _, _ -> }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("1", headers[HttpHeaders.Depth])
-        }
-    }
-
-    @Test
-    fun `addressbookQuery sends headers`() = runTest {
-        val engine = minimalMultiStatus()
-        davAddressBook(engine).addressbookQuery { _, _ -> }
-        with(engine.requestHistory.last()) {
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
@@ -75,20 +68,13 @@ class DavAddressBookTest {
     }
 
     @Test
-    fun `multiget sends REPORT with Depth 0`() = runTest {
+    fun `multiget sends proper request`() = runTest {
         val engine = minimalMultiStatus()
         davAddressBook(engine).multiget(listOf(sampleUrl)) { _, _ -> }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
-        }
-    }
-
-    @Test
-    fun `multiget sends headers`() = runTest {
-        val engine = minimalMultiStatus()
-        davAddressBook(engine).multiget(listOf(sampleUrl)) { _, _ -> }
-        with(engine.requestHistory.last()) {
+            assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
             assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
