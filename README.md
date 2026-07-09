@@ -28,7 +28,8 @@ are located in the `at.bitfire.dav4jvm.ktor` package.
 ## Roadmap
 
 Currently no big changes are planned. There's the idea of making XML processing
-multiplatform-capable too at some time, but no specific plans.
+multiplatform-capable too at some time, but no specific plans. Maybe it will be renamed then
+to dav4kmp or something like that.
 
 
 ## Installation
@@ -102,16 +103,24 @@ davCollection.propfind(depth = 1, DisplayName.NAME, GetLastModified.NAME) { resp
 }
 ```
 
+
 ## Custom properties
 
 If you use custom WebDAV properties, register the corresponding factories with `PropertyRegistry.register()`
 before calling other dav4jvm methods.
 
 
-# Useful forks
+## Who uses dav4jvm?
 
-For specific use-cases, we have a list of forks that cover them:
-- Kotlin Multiplatform (maintained by [McDjuady](https://github.com/McDjuady)): https://github.com/McDjuady/dav4jvm
+**If you're using dav4jvm for a public project, please create a PR to add it here** (alphabetical order).
+This helps us estimating whether the project is actually used by someone and how proper we want to do
+releases etc.
+
+- (add your project/reference here)
+
+There are also noticable forks:
+
+- for Kotlin Multiplatform (maintained by [McDjuady](https://github.com/McDjuady)): https://github.com/McDjuady/dav4jvm
 
 
 ## Contact / License
