@@ -404,7 +404,7 @@ class DavResourceTest {
     }
 
     @Test
-    fun `mkCol null body sends no Content-Type`() = runTest {
+    fun `mkCol null body sends proper request`() = runTest {
         val engine = mockEngine(HttpStatusCode.Created)
         val dav = davResource(engine)
         var called = false
@@ -413,7 +413,7 @@ class DavResourceTest {
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("MKCOL"), method)
             assertNull(headers[HttpHeaders.ContentType])
-            assertEquals("*/*", headers[HttpHeaders.Accept])
+            assertEquals(listOf("application/xml", "text/xml"), headers.getAll(HttpHeaders.Accept))
         }
     }
 

@@ -264,9 +264,7 @@ open class DavResource(
      * Because the target [location] is by definition a collection, a trailing slash
      * is appended (unless [location] already has a trailing slash).
      *
-     * @param xmlBody           optional request body (used for MKCALENDAR or Extended MKCOL);
-     *                          if set, `Accept: application/xml, text/xml` is sent because the
-     *                          server may return a Multi-Status response body
+     * @param xmlBody           optional request body (used for MKCALENDAR or Extended MKCOL)
      * @param methodName        HTTP MKCOL method (`MKCOL` by default, may for instance be `MKCALENDAR`)
      * @param additionalHeaders additional headers to send with the request
      * @param callback          called with server response on success
@@ -288,8 +286,8 @@ open class DavResource(
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
 
+                acceptXml()
                 if (xmlBody != null) {
-                    acceptXml()
                     contentType(MIME_XML_UTF8)
                     setBody(xmlBody)
                 }
