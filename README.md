@@ -25,6 +25,12 @@ Multiplatform support and the use of different HTTP engines. The dav4jvm classes
 are located in the `at.bitfire.dav4jvm.ktor` package.
 
 
+## Roadmap
+
+Currently no big changes are planned. There's the idea of making XML processing
+multiplatform-capable too at some time, but no specific plans.
+
+
 ## Installation
 
 You can use jitpack.io to include dav4jvm:
