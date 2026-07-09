@@ -22,6 +22,8 @@ import at.bitfire.dav4jvm.property.carddav.CardDAV
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.client.HttpClient
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.accept
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareDelete
 import io.ktor.client.request.prepareGet
@@ -284,6 +286,7 @@ open class DavResource(
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
 
+                acceptXml()
                 if (xmlBody != null) {
                     contentType(MIME_XML_UTF8)
                     setBody(xmlBody)
@@ -503,6 +506,7 @@ open class DavResource(
 
                 header(HttpHeaders.Depth, if (depth >= 0) depth.toString() else "infinity")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
@@ -538,6 +542,7 @@ open class DavResource(
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(rqBody)
             }
@@ -568,6 +573,7 @@ open class DavResource(
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("SEARCH")
 
+                acceptXml()
                 contentType(MIME_XML_UTF8)
                 setBody(search)
             }
@@ -740,6 +746,20 @@ open class DavResource(
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", cause = e)
         }
+    }
+
+
+    // request building
+
+    /**
+     * Adds an `Accept` header for XML request/response bodies, as sent by WebDAV methods
+     * that expect an XML (Multi-Status) response, like PROPFIND, PROPPATCH, REPORT and SEARCH.
+     *
+     * Per RFC 4918 8.2, servers MUST accept both `application/xml` and `text/xml`.
+     */
+    protected fun HttpRequestBuilder.acceptXml() {
+        accept(ContentType.Application.Xml)
+        accept(ContentType.Text.Xml)
     }
 
 }
