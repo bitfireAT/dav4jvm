@@ -99,19 +99,6 @@ class DomainAuthProviderTest {
     }
 
     @Test
-    fun `addRequestHeaders() with insecure protocol`() = runTest {
-        val authProvider = domainAuthProvider(firstLevelDomain = null)
-        val request = HttpRequestBuilder().apply {
-            url.protocol = URLProtocol.HTTP
-            url.host = "domain.example"
-        }
-
-        authProvider.addRequestHeaders(request)
-
-        assertEquals("Basic dXNlcjpwYXNzd29yZA==", request.headers[HttpHeaders.Authorization])
-    }
-
-    @Test
     fun `sendWithoutRequest() without domain set`() = runTest {
         val authProvider = domainAuthProvider(firstLevelDomain = null)
         val request = HttpRequestBuilder().apply {

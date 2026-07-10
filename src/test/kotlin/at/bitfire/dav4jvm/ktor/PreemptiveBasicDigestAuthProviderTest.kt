@@ -96,6 +96,37 @@ class PreemptiveBasicDigestAuthProviderTest {
     }
 
     @Test
+    fun `addRequestHeaders() derives scheme from authHeader instead of a concurrently-changed preemptive scheme`() =
+        runTest {
+            // simulates two concurrent requests on the same provider instance: this request's own
+            // challenge is Digest, but a concurrent request's isApplicable() call flips the shared
+            // preemptive-scheme state to Basic in between. The retry must still use Digest, since
+            // that's what this response actually challenged for.
+            val authProvider = PreemptiveBasicDigestAuthProvider(
+                username = "user",
+                password = "password"
+            )
+            val digestAuthHeader =
+                parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
+            assertTrue(authProvider.isApplicable(digestAuthHeader))
+
+            // a concurrent request's own 401 handling runs isApplicable() with a Basic challenge,
+            // flipping the shared preemptive-scheme state
+            val basicAuthHeader = parseAuthorizationHeader("""Basic realm="realm"""")!!
+            assertTrue(authProvider.isApplicable(basicAuthHeader))
+
+            // this request's own retry, using its own (Digest) authHeader captured before the race
+            val request = HttpRequestBuilder().apply {
+                url.protocol = URLProtocol.HTTPS
+                url.host = "domain.example"
+            }
+
+            authProvider.addRequestHeaders(request, digestAuthHeader)
+
+            assertTrue(request.headers[HttpHeaders.Authorization]!!.startsWith("Digest"))
+        }
+
+    @Test
     fun `addRequestHeaders() sends Digest preemptively on next request after Digest challenge`() = runTest {
         val authProvider = PreemptiveBasicDigestAuthProvider(
             username = "user",

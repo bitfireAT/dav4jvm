@@ -16,8 +16,8 @@ import io.ktor.client.plugins.auth.providers.BasicAuthProvider
 import io.ktor.client.plugins.auth.providers.DigestAuthCredentials
 import io.ktor.client.plugins.auth.providers.DigestAuthProvider
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
+import io.ktor.http.auth.AuthScheme
 import io.ktor.http.auth.HttpAuthHeader
 
 /**
@@ -44,9 +44,10 @@ class PreemptiveBasicDigestAuthProvider(
         credentials = { DigestAuthCredentials(username, password) }
     )
 
-    /* Basic is used by default; switched to Digest once a WWW-Authenticate challenge from the server requests that. */
+    /* Basic is used preemptively by default; switched to Digest once a WWW-Authenticate challenge
+    from the server requests that. Only consulted for preemptive sends (no authHeader to inspect). */
     @Volatile
-    private var activeProvider: AuthProvider = basicAuthProvider
+    private var preemptiveProvider: AuthProvider = basicAuthProvider
 
     @Suppress("OverridingDeprecatedMember", "DEPRECATION_ERROR")
     @Deprecated("Please use sendWithoutRequest function instead", level = DeprecationLevel.ERROR)
@@ -58,13 +59,13 @@ class PreemptiveBasicDigestAuthProvider(
     override fun isApplicable(auth: HttpAuthHeader): Boolean = when {
         digestAuthProvider.isApplicable(auth) -> {
             // server requested Digest auth, switch to Digest auth
-            activeProvider = digestAuthProvider
+            preemptiveProvider = digestAuthProvider
             true
         }
 
         basicAuthProvider.isApplicable(auth) -> {
             // server requested Basic auth, switch (back) to Basic auth
-            activeProvider = basicAuthProvider
+            preemptiveProvider = basicAuthProvider
             true
         }
 
@@ -80,16 +81,14 @@ class PreemptiveBasicDigestAuthProvider(
         before calling this method. Always clear it first so we never send two Authorization headers. */
         request.headers.remove(HttpHeaders.Authorization)
 
-        activeProvider.addRequestHeaders(request, authHeader)
-    }
-
-    override suspend fun refreshToken(response: HttpResponse): Boolean =
-        activeProvider.refreshToken(response)
-
-    override fun clearToken() {
-        basicAuthProvider.clearToken()
-        digestAuthProvider.clearToken()
-        activeProvider = basicAuthProvider
+        /* For a retry, authHeader tells us exactly which scheme this response challenged for.
+        Only fall back to preemptiveProvider when there's no challenge to go on, i.e. a purely preemptive send. */
+        val provider = when {
+            authHeader == null -> preemptiveProvider
+            authHeader.authScheme.equals(AuthScheme.Digest, ignoreCase = true) -> digestAuthProvider
+            else -> basicAuthProvider
+        }
+        provider.addRequestHeaders(request, authHeader)
     }
 
 }
