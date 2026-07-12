@@ -93,8 +93,7 @@ open class DavCollection @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        var result: List<Property>? = null
-        followRedirects({
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -105,9 +104,8 @@ open class DavCollection @JvmOverloads constructor(
                 setBody(writer.toString())
             }
         }) { response ->
-            result = processMultiStatus(response, callback)
+            processMultiStatus(response, callback)
         }
-        return result ?: emptyList()
     }
 
 }

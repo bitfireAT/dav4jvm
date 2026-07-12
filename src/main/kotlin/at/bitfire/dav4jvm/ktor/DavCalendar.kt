@@ -108,8 +108,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        var result: List<Property>? = null
-        followRedirects({
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -120,9 +119,8 @@ class DavCalendar(
                 setBody(writer.toString())
             }
         }) { response ->
-            result = processMultiStatus(response, callback)
+            processMultiStatus(response, callback)
         }
-        return result ?: emptyList()
     }
 
     /**
@@ -177,8 +175,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        var result: List<Property>? = null
-        followRedirects({
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -187,9 +184,8 @@ class DavCalendar(
                 setBody(writer.toString())
             }
         }) { response ->
-            result = processMultiStatus(response, callback)
+            processMultiStatus(response, callback)
         }
-        return result ?: emptyList()
     }
 
 
