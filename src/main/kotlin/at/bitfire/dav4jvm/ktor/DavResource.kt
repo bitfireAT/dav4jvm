@@ -199,6 +199,11 @@ open class DavResource(
     }
 
     /**
+     * Callback type for generic HTTP request methods. Called with the server's response to a request.
+     */
+    typealias ResponseCallback<T> = suspend (response: HttpResponse) -> T
+
+    /**
      * Sends a MOVE request to this resource. Follows up to [MAX_REDIRECTS] redirects.
      * Updates [location] on success.
      *
@@ -209,8 +214,8 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
-    suspend fun move(destination: Url, overwrite: Boolean, callback: ResponseCallback) {
-        followRedirects(prepareRequest = {
+    suspend fun <T> move(destination: Url, overwrite: Boolean, callback: ResponseCallback<T>): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("MOVE")
 
@@ -225,7 +230,7 @@ open class DavResource(
             // update location
             location = response.headers[HttpHeaders.Location]?.let { location.resolve(it) } ?: destination
 
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -239,8 +244,8 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
-    suspend fun copy(destination: Url, overwrite: Boolean, callback: ResponseCallback) {
-        followRedirects(prepareRequest = {
+    suspend fun <T> copy(destination: Url, overwrite: Boolean, callback: ResponseCallback<T>): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("COPY")
 
@@ -252,7 +257,7 @@ open class DavResource(
         }) { response ->
             checkStatus(response, multiStatusIsError = true)
 
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -270,13 +275,13 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun mkCol(
+    suspend fun <T> mkCol(
         xmlBody: String?,
         methodName: String = "MKCOL",
         additionalHeaders: Headers? = null,
-        callback: ResponseCallback
-    ) {
-        followRedirects(prepareRequest = {
+        callback: ResponseCallback<T>
+    ): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareRequest(location.withTrailingSlash()) {
                 method = HttpMethod.parse(methodName)
 
@@ -291,7 +296,7 @@ open class DavResource(
             }
         }) { response ->
             checkStatus(response, multiStatusIsError = true)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -306,12 +311,12 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun head(callback: ResponseCallback) {
-        followRedirects(prepareRequest = {
+    suspend fun <T> head(callback: ResponseCallback<T>): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareHead(location)
         }) { response ->
             checkStatus(response)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -330,12 +335,12 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun get(
+    suspend fun <T> get(
         additionalHeaders: Headers? = null,
         disableCompression: Boolean = true,
-        callback: ResponseCallback
-    ) {
-        followRedirects(prepareRequest = {
+        callback: ResponseCallback<T>
+    ): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareGet(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -345,7 +350,7 @@ open class DavResource(
             }
         }) { response ->
             checkStatus(response)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -366,8 +371,8 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on high-level errors
      */
-    suspend fun getRange(offset: Long, size: Int, additionalHeaders: Headers? = null, callback: ResponseCallback) {
-        followRedirects(prepareRequest = {
+    suspend fun <T> getRange(offset: Long, size: Int, additionalHeaders: Headers? = null, callback: ResponseCallback<T>): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareGet(location) {
                 val lastIndex = offset + size - 1
                 header(HttpHeaders.Range, "bytes=$offset-$lastIndex")
@@ -377,7 +382,7 @@ open class DavResource(
             }
         }) { response ->
             checkStatus(response)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -391,12 +396,12 @@ open class DavResource(
      * @param additionalHeaders additional headers to send
      * @param callback          called with server response on success
      */
-    suspend fun post(
+    suspend fun <T> post(
         body: OutgoingContent,
         additionalHeaders: Headers? = null,
-        callback: ResponseCallback
-    ) {
-        followRedirects(prepareRequest = {
+        callback: ResponseCallback<T>
+    ): T {
+        return followRedirects(prepareRequest = {
             httpClient.preparePost(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -405,7 +410,7 @@ open class DavResource(
             }
         }) { response ->
             checkStatus(response)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -423,12 +428,12 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun put(
+    suspend fun <T> put(
         body: OutgoingContent,
         additionalHeaders: Headers? = null,
-        callback: ResponseCallback
-    ) {
-        followRedirects(prepareRequest = {
+        callback: ResponseCallback<T>
+    ): T {
+        return followRedirects(prepareRequest = {
             httpClient.preparePut(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -437,7 +442,7 @@ open class DavResource(
             }
         }) { response ->
             checkStatus(response)
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
@@ -454,8 +459,8 @@ open class DavResource(
      *                          (because then there was probably a problem with a member resource)
      * @throws DavException     on HTTPS -> HTTP redirect
      */
-    suspend fun delete(additionalHeaders: Headers? = null, callback: ResponseCallback) {
-        followRedirects(prepareRequest = {
+    suspend fun <T> delete(additionalHeaders: Headers? = null, callback: ResponseCallback<T>): T {
+        return followRedirects(prepareRequest = {
             httpClient.prepareDelete(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -463,7 +468,7 @@ open class DavResource(
         }) { response ->
             checkStatus(response, multiStatusIsError = true)
 
-            callback.onResponse(response)
+            callback(response)
         }
     }
 
