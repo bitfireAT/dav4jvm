@@ -197,7 +197,7 @@ class DavResourceTest {
         }
         val client = HttpClient(engine) { followRedirects = false }
         val dav = DavResource(client, sampleUrl)
-        dav.followRedirects({ client.prepareGet("https://from.com/") }) { response ->
+        dav.followRedirects(prepareRequest = { client.prepareGet("https://from.com/") }) { response ->
             assertEquals(HttpStatusCode.NoContent, response.status)
             assertEquals(Url("https://to.com/"), dav.location)
         }
@@ -210,7 +210,7 @@ class DavResourceTest {
         }
         val client = HttpClient(engine) { followRedirects = false }
         val dav = DavResource(client, Url("https://from.com"))
-        dav.followRedirects({ client.prepareGet("https://from.com/") }) {}
+        dav.followRedirects(prepareRequest = { client.prepareGet("https://from.com/") }) {}
     }
 
     @Test

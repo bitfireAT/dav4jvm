@@ -603,7 +603,7 @@ open class DavResource(
     /**
      * Sends a request and follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param prepareRequest    prepares the request (may be called multiple times with updated [location])
+     * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
      * @param block             called with the scoped response for the final resource that is not
      *                          redirected anymore (may never be called if there are too many redirects);
      *                          its return value becomes the return value of [followRedirects]
@@ -637,7 +637,8 @@ open class DavResource(
                     ?: throw DavException("Redirected without new Location")
 
                 // resolve possible relative location URL
-                val destination = location.resolve(newLocation) ?: throw DavException("Redirected to invalid Location")
+                val destination = location.resolve(newLocation)
+                    ?: throw DavException("Redirected to invalid Location")
 
                 // block insecure redirects
                 if (location.protocol.isSecure() && !destination.protocol.isSecure())
