@@ -166,7 +166,7 @@ open class DavResource(
      * broken compression support for OPTIONS responses.
      *
      * @param followRedirects   whether redirects should be followed (default: *false*)
-     * @param callback          called with server response on success
+     * @param callback          called with server capabilities and response headers on success
      *
      * @return The result given by [callback].
      *
