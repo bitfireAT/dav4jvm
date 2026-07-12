@@ -601,6 +601,16 @@ open class DavResource(
     }
 
     /**
+     * Outcome of a single [followRedirects] hop: either the server redirected us to
+     * [Redirected.destination] (follow up with another request), or we're [Done] with the final
+     * value produced by the caller's block.
+     */
+    private sealed class RedirectOutcome<out T> {
+        data class Redirected(val destination: Url) : RedirectOutcome<Nothing>()
+        data class Done<T>(val value: T) : RedirectOutcome<T>()
+    }
+
+    /**
      * Sends a request and follows up to [MAX_REDIRECTS] redirects.
      *
      * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
@@ -613,44 +623,48 @@ open class DavResource(
     internal suspend fun <T> followRedirects(
         prepareRequest: suspend () -> HttpStatement,
         block: suspend (HttpResponse) -> T
-    ): T =
-        followRedirects(prepareRequest, redirectCount = 0, block)
+    ): T {
+        var redirectCount = 0
+        while (true) {
+            val outcome = prepareRequest().execute { response ->
+                val isRedirect = response.status in arrayOf(
+                    HttpStatusCode.MovedPermanently,
+                    HttpStatusCode.Found,
+                    HttpStatusCode.TemporaryRedirect,
+                    HttpStatusCode.PermanentRedirect
+                )
+                if (isRedirect) {
+                    if (redirectCount + 1 >= MAX_REDIRECTS)
+                        throw DavException("Too many redirects")
 
-    private suspend fun <T> followRedirects(
-        prepareRequest: suspend () -> HttpStatement,
-        redirectCount: Int,
-        block: suspend (HttpResponse) -> T
-    ): T =
-        prepareRequest().execute { response ->
-            val isRedirect = response.status in arrayOf(
-                HttpStatusCode.MovedPermanently,
-                HttpStatusCode.Found,
-                HttpStatusCode.TemporaryRedirect,
-                HttpStatusCode.PermanentRedirect
-            )
-            if (isRedirect) {
-                if (redirectCount + 1 >= MAX_REDIRECTS)
-                    throw DavException("Too many redirects")
+                    // take new location from response header
+                    val newLocation = response.headers[HttpHeaders.Location]
+                        ?: throw DavException("Redirected without new Location")
 
-                // take new location from response header
-                val newLocation = response.headers[HttpHeaders.Location]
-                    ?: throw DavException("Redirected without new Location")
+                    // resolve possible relative location URL
+                    val destination = location.resolve(newLocation)
+                        ?: throw DavException("Redirected to invalid Location")
 
-                // resolve possible relative location URL
-                val destination = location.resolve(newLocation)
-                    ?: throw DavException("Redirected to invalid Location")
+                    // block insecure redirects
+                    if (location.protocol.isSecure() && !destination.protocol.isSecure())
+                        throw DavException("Received redirect from HTTPS to HTTP")
 
-                // block insecure redirects
-                if (location.protocol.isSecure() && !destination.protocol.isSecure())
-                    throw DavException("Received redirect from HTTPS to HTTP")
-
-                // save new location and follow it
-                location = destination
-                followRedirects(prepareRequest, redirectCount + 1, block)
-            } else
-            // no redirect: pass scoped response to block, whose result becomes ours
-                block(response)
+                    RedirectOutcome.Redirected(destination)
+                } else
+                // no redirect: pass scoped response to block, whose result becomes ours
+                    RedirectOutcome.Done(block(response))
+            }
+            when (outcome) {
+                is RedirectOutcome.Redirected -> {
+                    // save new location and follow it in the next loop iteration, after this
+                    // hop's response/connection has already been released by execute()
+                    location = outcome.destination
+                    redirectCount++
+                }
+                is RedirectOutcome.Done -> return outcome.value
+            }
         }
+    }
 
 
     // Multi-Status handling
