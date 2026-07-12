@@ -615,10 +615,10 @@ open class DavResource(
      *
      * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
      * @param block             called with the scoped response for the final resource that is not
-     *                          redirected anymore (may never be called if there are too many redirects);
-     *                          its return value becomes the return value of [followRedirects]
+     *                          redirected anymore (may never be called if there are too many redirects)
      *
      * @throws DavException     on invalid redirects or when the number of redirects has reached [MAX_REDIRECTS]
+     * @return value of [block]
      */
     internal suspend fun <T> followRedirects(
         prepareRequest: suspend () -> HttpStatement,
@@ -627,6 +627,8 @@ open class DavResource(
         var redirectCount = 0
         while (true) {
             val outcome = prepareRequest().execute { response ->
+                /* response body is available for streaming within this block. RedirectOutcome approach
+                * allows to process block(response), but close the body in case of a redirect. */
                 val isRedirect = response.status in arrayOf(
                     HttpStatusCode.MovedPermanently,
                     HttpStatusCode.Found,
@@ -634,9 +636,6 @@ open class DavResource(
                     HttpStatusCode.PermanentRedirect
                 )
                 if (isRedirect) {
-                    if (redirectCount + 1 >= MAX_REDIRECTS)
-                        throw DavException("Too many redirects")
-
                     // take new location from response header
                     val newLocation = response.headers[HttpHeaders.Location]
                         ?: throw DavException("Redirected without new Location")
@@ -650,18 +649,22 @@ open class DavResource(
                         throw DavException("Received redirect from HTTPS to HTTP")
 
                     RedirectOutcome.Redirected(destination)
-                } else
-                // no redirect: pass scoped response to block, whose result becomes ours
+                } else {
+                    // no redirect: run block and return its value
                     RedirectOutcome.Done(block(response))
+                }
             }
             when (outcome) {
                 is RedirectOutcome.Redirected -> {
-                    // save new location and follow it in the next loop iteration, after this
-                    // hop's response/connection has already been released by execute()
+                    // prevent redirect loop
+                    if (++redirectCount >= MAX_REDIRECTS)
+                        throw DavException("Too many redirects")
+
+                    // save new location and follow it in the next loop iteration
                     location = outcome.destination
-                    redirectCount++
                 }
-                is RedirectOutcome.Done -> return outcome.value
+                is RedirectOutcome.Done ->
+                    return outcome.value
             }
         }
     }
