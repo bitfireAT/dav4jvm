@@ -167,8 +167,8 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
-        if (followRedirects)
+    suspend fun <T> options(followRedirects: Boolean = false, callback: suspend (davCapabilities: Set<String>, Headers) -> T): T {
+        return if (followRedirects)
             followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
                 processOptionsResponse(response, callback)
             }
@@ -187,14 +187,14 @@ open class DavResource(
             header(HttpHeaders.AcceptEncoding, "identity")
         }
 
-    private suspend fun processOptionsResponse(response: HttpResponse, callback: CapabilitiesCallback) {
+    private suspend fun <T> processOptionsResponse(response: HttpResponse, callback: suspend (davCapabilities: Set<String>, Headers) -> T): T {
         // check for success
         checkStatus(response)
 
         val capabilities = HttpUtils.listHeader(response, "DAV")
-        callback.onCapabilities(
+        return callback(
             capabilities.map { it.trim() }.toSet(),
-            response
+            response.headers
         )
     }
 
