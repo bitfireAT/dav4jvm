@@ -155,6 +155,11 @@ open class DavResource(
 
 
     /**
+     * Callback type for [options] method. Called with the server's DAV capabilities and response headers.
+     */
+    typealias OptionsCallback<T> = suspend (davCapabilities: Set<String>, headers: Headers) -> T
+
+    /**
      * Sends an OPTIONS request to this resource. Follows up to [MAX_REDIRECTS] redirects when set.
      *
      * Sends `Accept-Encoding: identity` to disable HTTP compression, because some servers have
@@ -163,11 +168,13 @@ open class DavResource(
      * @param followRedirects   whether redirects should be followed (default: *false*)
      * @param callback          called with server response on success
      *
+     * @return The result given by [callback].
+     *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun <T> options(followRedirects: Boolean = false, callback: suspend (davCapabilities: Set<String>, Headers) -> T): T {
+    suspend fun <T> options(followRedirects: Boolean = false, callback: OptionsCallback<T>): T {
         return if (followRedirects)
             followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
                 processOptionsResponse(response, callback)
@@ -187,7 +194,7 @@ open class DavResource(
             header(HttpHeaders.AcceptEncoding, "identity")
         }
 
-    private suspend fun <T> processOptionsResponse(response: HttpResponse, callback: suspend (davCapabilities: Set<String>, Headers) -> T): T {
+    private suspend fun <T> processOptionsResponse(response: HttpResponse, callback: OptionsCallback<T>): T {
         // check for success
         checkStatus(response)
 
