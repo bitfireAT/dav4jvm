@@ -663,7 +663,7 @@ open class DavResource(
             }
             when (outcome) {
                 is RedirectOutcome.Redirected -> {
-                    // prevent redirect loop
+                    // enforce maximum redirect count
                     if (++redirectCount >= MAX_REDIRECTS)
                         throw DavException("Too many redirects")
 
