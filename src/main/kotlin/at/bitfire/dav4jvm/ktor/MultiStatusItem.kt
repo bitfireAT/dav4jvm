@@ -18,6 +18,14 @@ import at.bitfire.dav4jvm.Property
 sealed interface MultiStatusItem {
 
     /**
+     * A property found directly under `<multistatus>`, outside any `<response>` element,
+     * like `sync-token` (see RFC 6578 6.4 DAV:multistatus XML Element).
+     */
+    data class ExtraProperty(
+        val property: Property
+    ) : MultiStatusItem
+
+    /**
      * One `<response>` element of the Multi-Status body.
      *
      * @param response  the parsed response (including URL)
@@ -26,14 +34,6 @@ sealed interface MultiStatusItem {
     data class Response(
         val response: at.bitfire.dav4jvm.ktor.Response,
         val relation: at.bitfire.dav4jvm.ktor.Response.HrefRelation
-    ) : MultiStatusItem
-
-    /**
-     * A property found directly under `<multistatus>`, outside any `<response>` element,
-     * like `sync-token` (see RFC 6578 6.4 DAV:multistatus XML Element).
-     */
-    data class ExtraProperty(
-        val property: Property
     ) : MultiStatusItem
 
 }

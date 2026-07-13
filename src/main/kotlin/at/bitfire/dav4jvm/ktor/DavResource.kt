@@ -474,13 +474,10 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * The request is only sent once the [Flow] is collected —
-     * collect it while [httpClient] is still open.
-     *
      * @param depth    "Depth" header to send (-1 for `infinity`)
      * @param reqProp  properties to request
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -524,13 +521,10 @@ open class DavResource(
      * Currently expects a 207 Multi-Status response although servers are allowed to
      * return other values, too.
      *
-     * The request is only sent once the [Flow] is collected —
-     * collect it while [httpClient] is still open.
-     *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -563,12 +557,9 @@ open class DavResource(
      *
      * Expects a 207 Multi-Status response.
      *
-     * The request is only sent once the [Flow] is collected —
-     * collect it while [httpClient] is still open.
-     *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -678,52 +669,6 @@ open class DavResource(
     // Multi-Status handling
 
     /**
-     * Validates a 207 Multi-Status response.
-     *
-     * @param httpResponse  response that will be checked for Multi-Status
-     * @param bodyChannel   response body channel that will be peeked into in order to
-     *                      determine whether it's XML
-     *
-     * @throws DavException if the response is not a Multi-Status response with XML body
-     */
-    suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
-        if (httpResponse.status != HttpStatusCode.MultiStatus)
-            throw DavException.fromResponse(
-                message = "Expected 207 Multi-Status, got ${httpResponse.status}",
-                response = httpResponse,
-                responseBodyChannel = bodyChannel
-            )
-
-        val contentType = httpResponse.contentType()
-        if (contentType == null) {
-            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
-            return  // supposed XML response body, fine
-        }
-
-        if (contentType.isXml())
-            return  // reported XML response body, fine
-
-        /* Content-Type is not application/xml or text/xml although that is expected here.
-           Some broken servers return an XML response with some other MIME type. So we try to see
-           whether the response is maybe XML although the Content-Type is something else. */
-        try {
-            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
-            if (firstBytes == XML_SIGNATURE) {
-                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
-                return  // response body starts with XML signature, fine
-            }
-        } catch (e: Exception) {
-            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
-        }
-
-        // non-XML response body
-        throw DavException.fromResponse(
-            message = "Received non-XML 207 Multi-Status",
-            response = httpResponse
-        )
-    }
-
-    /**
      * Processes a Multi-Status response.
      *
      * The [response] must still be open (its body not yet closed) when the returned [Flow] is
@@ -776,13 +721,59 @@ open class DavResource(
     }
 
     /**
-     * Sends a request and processes its Multi-Status response, following up to [MAX_REDIRECTS] redirects.
-     * Combines [followRedirects] and [processMultiStatus] into a single [Flow] — the request is only
-     * sent once it's collected.
+     * Validates a 207 Multi-Status response.
      *
-     * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
+     * @param httpResponse  response that will be checked for Multi-Status
+     * @param bodyChannel   response body channel that will be peeked into in order to
+     *                      determine whether it's XML
      *
-     * @return flow of every [MultiStatusItem] found in the Multi-Status response
+     * @throws DavException if the response is not a Multi-Status response with XML body
+     */
+    suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
+        if (httpResponse.status != HttpStatusCode.MultiStatus)
+            throw DavException.fromResponse(
+                message = "Expected 207 Multi-Status, got ${httpResponse.status}",
+                response = httpResponse,
+                responseBodyChannel = bodyChannel
+            )
+
+        val contentType = httpResponse.contentType()
+        if (contentType == null) {
+            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+            return  // supposed XML response body, fine
+        }
+
+        if (contentType.isXml())
+            return  // reported XML response body, fine
+
+        /* Content-Type is not application/xml or text/xml although that is expected here.
+           Some broken servers return an XML response with some other MIME type. So we try to see
+           whether the response is maybe XML although the Content-Type is something else. */
+        try {
+            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
+            if (firstBytes == XML_SIGNATURE) {
+                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                return  // response body starts with XML signature, fine
+            }
+        } catch (e: Exception) {
+            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
+        }
+
+        // non-XML response body
+        throw DavException.fromResponse(
+            message = "Received non-XML 207 Multi-Status",
+            response = httpResponse
+        )
+    }
+
+    /**
+     * Executes a request and processes the response as a flow of multi-status items. Follows redirects.
+     *
+     * @param prepareRequest A suspending function that prepares and returns an HttpStatement for the request.
+     * @return A Flow emitting MultiStatusItem objects from the response.
+     *
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
      */
     protected fun multiStatusFlow(prepareRequest: suspend () -> HttpStatement): Flow<MultiStatusItem> = flow {
         followRedirects(prepareRequest) { response ->

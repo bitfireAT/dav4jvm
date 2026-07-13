@@ -43,10 +43,8 @@ open class DavCollection @JvmOverloads constructor(
      * @param limit         maximum number of results (may cause truncation)
      * @param properties    WebDAV properties to be requested
      *
-     * Collect the returned flow while the underlying `HttpClient` is still open.
-     *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response (like `sync-token`, emitted as
-     * [MultiStatusItem.ExtraProperty] holding a [at.bitfire.dav4jvm.property.webdav.SyncToken])
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable;
+     * includes `sync-token`, emitted as [MultiStatusItem.ExtraProperty] holding a [at.bitfire.dav4jvm.property.webdav.SyncToken])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
