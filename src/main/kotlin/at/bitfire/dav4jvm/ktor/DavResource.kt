@@ -169,12 +169,9 @@ open class DavResource(
      */
     suspend fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
         if (followRedirects)
-            followRedirects(
-                prepareRequest = ::prepareOptionsRequest,
-                callback = { response ->
-                    processOptionsResponse(response, callback)
-                }
-            )
+            followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
+                processOptionsResponse(response, callback)
+            }
         else {
             prepareOptionsRequest().execute { response ->
                 processOptionsResponse(response, callback)
@@ -213,7 +210,7 @@ open class DavResource(
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     suspend fun move(destination: Url, overwrite: Boolean, callback: ResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("MOVE")
 
@@ -243,7 +240,7 @@ open class DavResource(
      * @throws DavException on WebDAV error or HTTPS -> HTTP redirect
      */
     suspend fun copy(destination: Url, overwrite: Boolean, callback: ResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("COPY")
 
@@ -279,7 +276,7 @@ open class DavResource(
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location.withTrailingSlash()) {
                 method = HttpMethod.parse(methodName)
 
@@ -310,7 +307,7 @@ open class DavResource(
      * @throws DavException on HTTPS -> HTTP redirect
      */
     suspend fun head(callback: ResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareHead(location)
         }) { response ->
             checkStatus(response)
@@ -338,7 +335,7 @@ open class DavResource(
         disableCompression: Boolean = true,
         callback: ResponseCallback
     ) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareGet(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -370,7 +367,7 @@ open class DavResource(
      * @throws DavException on high-level errors
      */
     suspend fun getRange(offset: Long, size: Int, additionalHeaders: Headers? = null, callback: ResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareGet(location) {
                 val lastIndex = offset + size - 1
                 header(HttpHeaders.Range, "bytes=$offset-$lastIndex")
@@ -399,7 +396,7 @@ open class DavResource(
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.preparePost(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -431,7 +428,7 @@ open class DavResource(
         additionalHeaders: Headers? = null,
         callback: ResponseCallback
     ) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.preparePut(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -458,7 +455,7 @@ open class DavResource(
      * @throws DavException     on HTTPS -> HTTP redirect
      */
     suspend fun delete(additionalHeaders: Headers? = null, callback: ResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareDelete(location) {
                 if (additionalHeaders != null)
                     headers.appendAll(additionalHeaders)
@@ -500,7 +497,7 @@ open class DavResource(
         }
         serializer.endDocument()
 
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPFIND")
 
@@ -538,7 +535,7 @@ open class DavResource(
     ) {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
 
@@ -569,7 +566,7 @@ open class DavResource(
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
     suspend fun search(search: String, callback: MultiResponseCallback) {
-        followRedirects({
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("SEARCH")
 
@@ -604,19 +601,34 @@ open class DavResource(
     }
 
     /**
-     * Send a request and follows up to [MAX_REDIRECTS] redirects.
+     * Outcome of a single [followRedirects] hop: either the server redirected us to
+     * [Redirected.destination] (follow up with another request), or we're [Done] with the final
+     * value produced by the caller's block.
+     */
+    private sealed class RedirectOutcome<out T> {
+        data class Redirected(val destination: Url) : RedirectOutcome<Nothing>()
+        data class Done<T>(val value: T) : RedirectOutcome<T>()
+    }
+
+    /**
+     * Sends a request and follows up to [MAX_REDIRECTS] redirects.
      *
-     * @param prepareRequest    prepares the request (may be called multiple times with updated [location])
-     * @param callback          called for the final resource that is not redirected anymore
-     *                          (may never be called if there are too many redirects)
+     * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
+     * @param block             called with the scoped response for the final resource that is not
+     *                          redirected anymore (may never be called if there are too many redirects)
      *
      * @throws DavException     on invalid redirects or when the number of redirects has reached [MAX_REDIRECTS]
+     * @return value of [block]
      */
-    internal suspend fun followRedirects(prepareRequest: suspend () -> HttpStatement, callback: ResponseCallback) {
-        var redirects = 0
-        var finished = false
-        while (!finished) {
-            prepareRequest().execute { response ->
+    internal suspend fun <T> followRedirects(
+        prepareRequest: suspend () -> HttpStatement,
+        block: suspend (HttpResponse) -> T
+    ): T {
+        var redirectCount = 0
+        while (true) {
+            val outcome = prepareRequest().execute { response ->
+                /* response body is available for streaming within this block. RedirectOutcome approach
+                * allows to process block(response), but close the body in case of a redirect. */
                 val isRedirect = response.status in arrayOf(
                     HttpStatusCode.MovedPermanently,
                     HttpStatusCode.Found,
@@ -624,30 +636,35 @@ open class DavResource(
                     HttpStatusCode.PermanentRedirect
                 )
                 if (isRedirect) {
-                    if (++redirects >= MAX_REDIRECTS)
-                        throw DavException("Too many redirects")
-
                     // take new location from response header
                     val newLocation = response.headers[HttpHeaders.Location]
                         ?: throw DavException("Redirected without new Location")
 
                     // resolve possible relative location URL
-                    val destination = location.resolve(newLocation) ?: throw DavException("Redirected to invalid Location")
+                    val destination = location.resolve(newLocation)
+                        ?: throw DavException("Redirected to invalid Location")
 
                     // block insecure redirects
                     if (location.protocol.isSecure() && !destination.protocol.isSecure())
                         throw DavException("Received redirect from HTTPS to HTTP")
 
-                    // save new location
-                    location = destination
-
+                    RedirectOutcome.Redirected(destination)
                 } else {
-                    // no redirect, pass scoped response to callback
-                    callback.onResponse(response)
-
-                    // quit loop (we can't use break because we're in the scoped execute() callback)
-                    finished = true
+                    // no redirect: run block and return its value
+                    RedirectOutcome.Done(block(response))
                 }
+            }
+            when (outcome) {
+                is RedirectOutcome.Redirected -> {
+                    // prevent redirect loop
+                    if (++redirectCount >= MAX_REDIRECTS)
+                        throw DavException("Too many redirects")
+
+                    // save new location and follow it in the next loop iteration
+                    location = outcome.destination
+                }
+                is RedirectOutcome.Done ->
+                    return outcome.value
             }
         }
     }
