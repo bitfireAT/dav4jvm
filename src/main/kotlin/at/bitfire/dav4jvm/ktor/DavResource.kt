@@ -62,7 +62,6 @@ import java.io.StringWriter
 import java.util.logging.Level
 import java.util.logging.Logger
 
-
 /**
  * Represents a WebDAV resource at the given location and allows WebDAV
  * requests to be performed on this resource.
@@ -475,7 +474,8 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected.
+     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * collect it while [httpClient] is still open.
      *
      * @param depth    "Depth" header to send (-1 for `infinity`)
      * @param reqProp  properties to request
@@ -524,7 +524,8 @@ open class DavResource(
      * Currently expects a 207 Multi-Status response although servers are allowed to
      * return other values, too.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected.
+     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * collect it while [httpClient] is still open.
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
@@ -562,7 +563,8 @@ open class DavResource(
      *
      * Expects a 207 Multi-Status response.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected.
+     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * collect it while [httpClient] is still open.
      *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
      *

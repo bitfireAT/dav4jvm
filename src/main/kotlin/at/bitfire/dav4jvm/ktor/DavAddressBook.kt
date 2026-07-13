@@ -37,6 +37,8 @@ class DavAddressBook(
     /**
      * Sends an addressbook-query REPORT request to the resource.
      *
+     * Collect the returned flow while the underlying `HttpClient` is still open.
+     *
      * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
      * properties which are not part of a `<response>` element
      *
@@ -85,6 +87,8 @@ class DavAddressBook(
      *                     "application/vcard+json" for jCard. *null*: don't request specific representation type
      * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
      *                     Currently only useful value: "4.0" for vCard 4. *null*: don't request specific version
+     *
+     * Collect the returned flow while the underlying `HttpClient` is still open.
      *
      * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
      * properties which are not part of a `<response>` element

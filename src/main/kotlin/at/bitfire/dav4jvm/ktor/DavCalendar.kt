@@ -49,6 +49,8 @@ class DavCalendar(
      * @param end       time-range filter: end date (optional)
      * @param props     requested WebDAV properties for results (default: only [WebDAV.GetETag]; use [CalDAV.CalendarData] to receive full iCalendars)
      *
+     * Collect the returned flow while the underlying `HttpClient` is still open.
+     *
      * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
      * properties which are not part of a `<response>` element
      *
@@ -128,6 +130,8 @@ class DavCalendar(
      * @param contentType  MIME type of requested format; may be "text/calendar" for iCalendar or
      *                     "application/calendar+json" for jCard. *null*: don't request specific representation type
      * @param version      Version subtype of the requested format, like "2.0" for iCalendar 2. *null*: don't request specific version
+     *
+     * Collect the returned flow while the underlying `HttpClient` is still open.
      *
      * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
      * properties which are not part of a `<response>` element
