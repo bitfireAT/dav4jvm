@@ -474,7 +474,7 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * The request is only sent once the [Flow] is collected —
      * collect it while [httpClient] is still open.
      *
      * @param depth    "Depth" header to send (-1 for `infinity`)
@@ -524,7 +524,7 @@ open class DavResource(
      * Currently expects a 207 Multi-Status response although servers are allowed to
      * return other values, too.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * The request is only sent once the [Flow] is collected —
      * collect it while [httpClient] is still open.
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
@@ -563,7 +563,7 @@ open class DavResource(
      *
      * Expects a 207 Multi-Status response.
      *
-     * The request is only sent (and the returned [Flow] only throws) once the [Flow] is collected —
+     * The request is only sent once the [Flow] is collected —
      * collect it while [httpClient] is still open.
      *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
@@ -778,7 +778,7 @@ open class DavResource(
     /**
      * Sends a request and processes its Multi-Status response, following up to [MAX_REDIRECTS] redirects.
      * Combines [followRedirects] and [processMultiStatus] into a single [Flow] — the request is only
-     * sent (and the flow only throws) once it's collected.
+     * sent once it's collected.
      *
      * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
      *

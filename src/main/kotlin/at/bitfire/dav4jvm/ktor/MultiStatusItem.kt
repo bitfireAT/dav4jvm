@@ -29,8 +29,8 @@ sealed interface MultiStatusItem {
     ) : MultiStatusItem
 
     /**
-     * A property found directly under `<multistatus>`, outside any `<response>` element
-     * (for instance `sync-token`).
+     * A property found directly under `<multistatus>`, outside any `<response>` element,
+     * like `sync-token` (see RFC 6578 6.4 DAV:multistatus XML Element).
      */
     data class ExtraProperty(
         val property: Property

@@ -45,8 +45,7 @@ open class DavCollection @JvmOverloads constructor(
      *
      * Collect the returned flow while the underlying `HttpClient` is still open.
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
-     * properties which are not part of a `<response>` element (like `sync-token`, emitted as
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response (like `sync-token`, emitted as
      * [MultiStatusItem.ExtraProperty] holding a [at.bitfire.dav4jvm.property.webdav.SyncToken])
      *
      * @throws java.io.IOException on I/O error

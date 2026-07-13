@@ -51,8 +51,7 @@ class DavCalendar(
      *
      * Collect the returned flow while the underlying `HttpClient` is still open.
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
-     * properties which are not part of a `<response>` element
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
@@ -133,8 +132,7 @@ class DavCalendar(
      *
      * Collect the returned flow while the underlying `HttpClient` is still open.
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
-     * properties which are not part of a `<response>` element
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
