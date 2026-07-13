@@ -13,13 +13,6 @@ package at.bitfire.dav4jvm.ktor
 import io.ktor.client.statement.HttpResponse
 
 /**
- * Callback for the OPTIONS request.
- */
-fun interface CapabilitiesCallback {
-    suspend fun onCapabilities(davCapabilities: Set<String>, response: HttpResponse)
-}
-
-/**
  * Callback for 207 Multi-Status responses.
  */
 fun interface MultiResponseCallback {

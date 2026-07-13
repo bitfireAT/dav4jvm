@@ -434,15 +434,11 @@ class DavResourceTest {
             respond("", HttpStatusCode.OK, HeadersBuilder().apply { append("DAV", "  1,  2 ,3,hyperactive-access") }.build())
         }
         val dav = davResource(engine)
-        var called = false
-        dav.options { davCapabilities, _ ->
-            called = true
-            assertTrue(davCapabilities.any { it.contains("1") })
-            assertTrue(davCapabilities.any { it.contains("2") })
-            assertTrue(davCapabilities.any { it.contains("3") })
-            assertTrue(davCapabilities.any { it.contains("hyperactive-access") })
-        }
-        assertTrue(called)
+        val (davCapabilities) = dav.options()
+        assertTrue(davCapabilities.any { it.contains("1") })
+        assertTrue(davCapabilities.any { it.contains("2") })
+        assertTrue(davCapabilities.any { it.contains("3") })
+        assertTrue(davCapabilities.any { it.contains("hyperactive-access") })
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.Options, method)
             assertEquals("0", headers[HttpHeaders.ContentLength])
@@ -453,12 +449,8 @@ class DavResourceTest {
     @Test
     fun `options without capabilities`() = runTest {
         val dav = davResource(MockEngine { respondOk() })
-        var called = false
-        dav.options { davCapabilities, _ ->
-            called = true
-            assertTrue(davCapabilities.isEmpty())
-        }
-        assertTrue(called)
+        val (davCapabilities) = dav.options()
+        assertTrue(davCapabilities.isEmpty())
     }
 
     @Test
