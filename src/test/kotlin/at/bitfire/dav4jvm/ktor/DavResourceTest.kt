@@ -466,7 +466,7 @@ class DavResourceTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
         var called = false
         try {
-            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType).collect { called = true }
             fail("Expected HttpException")
         } catch (_: HttpException) {
             assertFalse(called)
@@ -478,10 +478,23 @@ class DavResourceTest {
         val dav = davResource(MockEngine { respondOk() })
         var called = false
         try {
-            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType).collect { called = true }
             fail("Expected DavException")
         } catch (_: DavException) {
             assertFalse(called)
+        }
+    }
+
+    @Test
+    fun `propfind is not sent before flow is collected`() = runTest {
+        val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
+        // building the flow must not trigger the request or throw
+        val flow = dav.propfind(0, WebDAV.ResourceType)
+        try {
+            flow.collect { }
+            fail("Expected HttpException")
+        } catch (_: HttpException) {
+            // expected only once the flow is collected
         }
     }
 
@@ -492,7 +505,7 @@ class DavResourceTest {
         })
         var called = false
         try {
-            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType).collect { called = true }
             fail("Expected DavException")
         } catch (_: DavException) {
             assertFalse(called)
@@ -509,7 +522,7 @@ class DavResourceTest {
         })
         var called = false
         try {
-            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType).collect { called = true }
             fail("Expected DavException")
         } catch (_: DavException) {
             assertFalse(called)
@@ -521,7 +534,7 @@ class DavResourceTest {
         val dav = davResource(propfindEngine("<test></test>"))
         var called = false
         try {
-            dav.propfind(0, WebDAV.ResourceType) { _, _ -> called = true }
+            dav.propfind(0, WebDAV.ResourceType).collect { called = true }
             fail("Expected DavException")
         } catch (_: DavException) {
             assertFalse(called)
@@ -541,9 +554,10 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
-            assertEquals(Response.HrefRelation.SELF, relation)
-            assertEquals(HttpStatusCode.InternalServerError, response.status)
+        dav.propfind(0, WebDAV.ResourceType).collect { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertEquals(HttpStatusCode.InternalServerError, item.response.status)
             called = true
         }
         assertTrue(called)
@@ -562,9 +576,10 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
-            assertEquals(Response.HrefRelation.SELF, relation)
-            assertEquals(HttpStatusCode.Forbidden, response.status)
+        dav.propfind(0, WebDAV.ResourceType).collect { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertEquals(HttpStatusCode.Forbidden, item.response.status)
             called = true
         }
         assertTrue(called)
@@ -586,10 +601,11 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType).collect { item ->
+            item as MultiStatusItem.Response
             called = true
-            assertEquals(Response.HrefRelation.SELF, relation)
-            assertTrue(response.properties.filterIsInstance<ResourceType>().isEmpty())
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertTrue(item.response.properties.filterIsInstance<ResourceType>().isEmpty())
         }
         assertTrue(called)
     }
@@ -597,7 +613,7 @@ class DavResourceTest {
     @Test
     fun `propfind no response elements callback not called`() = runTest {
         val dav = davResource(propfindEngine("<multistatus xmlns='DAV:'></multistatus>"))
-        dav.propfind(0, WebDAV.ResourceType) { _, _ -> fail("Shouldn't be called") }
+        dav.propfind(0, WebDAV.ResourceType).collect { fail("Shouldn't be called") }
     }
 
     @Test
@@ -613,11 +629,12 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType).collect { item ->
+            item as MultiStatusItem.Response
             called = true
-            assertTrue(response.isSuccess())
-            assertEquals(Response.HrefRelation.SELF, relation)
-            assertEquals(0, response.properties.size)
+            assertTrue(item.response.isSuccess())
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertEquals(0, item.response.properties.size)
         }
         assertTrue(called)
     }
@@ -641,11 +658,12 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName).collect { item ->
+            item as MultiStatusItem.Response
             called = true
-            assertTrue(response.isSuccess())
-            assertEquals(Response.HrefRelation.SELF, relation)
-            assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
+            assertTrue(item.response.isSuccess())
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertEquals("My DAV Collection", item.response[DisplayName::class.java]?.displayName)
         }
         assertTrue(called)
     }
@@ -707,7 +725,9 @@ class DavResourceTest {
             )
         )
         var nrCalled = 0
-        dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
+        dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName).collect { item ->
+            item as MultiStatusItem.Response
+            val (response, relation) = item
             when (response.href) {
                 sampleUrl.resolve("/dav/") -> {
                     assertTrue(response.isSuccess())
@@ -773,7 +793,9 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName) { response, relation ->
+        dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName).collect { item ->
+            item as MultiStatusItem.Response
+            val (response, relation) = item
             called = true
             assertTrue(response.isSuccess())
             assertEquals(Response.HrefRelation.SELF, relation)
@@ -799,10 +821,11 @@ class DavResourceTest {
             )
         )
         var called = false
-        dav.propfind(0, WebDAV.DisplayName) { response, _ ->
+        dav.propfind(0, WebDAV.DisplayName).collect { item ->
+            item as MultiStatusItem.Response
             called = true
-            assertEquals(200, response.propstat.first().status.value)
-            assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
+            assertEquals(200, item.response.propstat.first().status.value)
+            assertEquals("Without Status", item.response[DisplayName::class.java]?.displayName)
         }
         assertTrue(called)
     }
@@ -810,7 +833,7 @@ class DavResourceTest {
     @Test
     fun `propfind sends proper request`() = runTest {
         val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
-        davResource(engine).propfind(0, WebDAV.ResourceType) { _, _ -> }
+        davResource(engine).propfind(0, WebDAV.ResourceType).collect { }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("PROPFIND"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
@@ -842,9 +865,10 @@ class DavResourceTest {
         dav.proppatch(
             setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
             removeProperties = listOf(Property.Name("sample", "removeThis"))
-        ) { _, hrefRelation ->
+        ).collect { item ->
+            item as MultiStatusItem.Response
             called = true
-            assertEquals(Response.HrefRelation.SELF, hrefRelation)
+            assertEquals(Response.HrefRelation.SELF, item.relation)
         }
         assertTrue(called)
     }
@@ -867,7 +891,7 @@ class DavResourceTest {
     @Test
     fun `proppatch sends proper request`() = runTest {
         val engine = propfindEngine("<multistatus xmlns='DAV:'></multistatus>")
-        davResource(engine).proppatch(setProperties = emptyMap(), removeProperties = emptyList()) { _, _ -> }
+        davResource(engine).proppatch(setProperties = emptyMap(), removeProperties = emptyList()).collect { }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("PROPPATCH"), method)
             assertEquals(DavResource.MIME_XML_UTF8, body.contentType)
@@ -952,9 +976,10 @@ class DavResourceTest {
         )
         val dav = davResource(engine)
         var called = false
-        dav.search("<TEST/>") { response, hrefRelation ->
-            assertEquals(Response.HrefRelation.SELF, hrefRelation)
-            assertEquals("Found something", response[DisplayName::class.java]?.displayName)
+        dav.search("<TEST/>").collect { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Response.HrefRelation.SELF, item.relation)
+            assertEquals("Found something", item.response[DisplayName::class.java]?.displayName)
             called = true
         }
         assertTrue(called)

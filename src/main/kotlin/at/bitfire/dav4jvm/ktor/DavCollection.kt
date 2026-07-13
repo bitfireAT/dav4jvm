@@ -22,6 +22,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -41,22 +43,21 @@ open class DavCollection @JvmOverloads constructor(
      * @param infiniteDepth sync-level to be sent with the request: false = "1", true = "infinite"
      * @param limit         maximum number of results (may cause truncation)
      * @param properties    WebDAV properties to be requested
-     * @param callback      called for every WebDAV response XML element in the result
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements (like `sync-token` which is returned as [at.bitfire.dav4jvm.property.webdav.SyncToken])
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
+     * properties which are not part of a `<response>` element (like `sync-token`, emitted as
+     * [MultiStatusItem.ExtraProperty] holding a [at.bitfire.dav4jvm.property.webdav.SyncToken])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun reportChanges(
+    fun reportChanges(
         syncToken: String?,
         infiniteDepth: Boolean,
         limit: Int?,
-        vararg properties: Property.Name,
-        callback: MultiResponseCallback
-    ): List<Property> {
+        vararg properties: Property.Name
+    ): Flow<MultiStatusItem> = flow {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -93,7 +94,7 @@ open class DavCollection @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -104,7 +105,7 @@ open class DavCollection @JvmOverloads constructor(
                 setBody(writer.toString())
             }
         }) { response ->
-            processMultiStatus(response, callback)
+            processMultiStatus(response, this@flow)
         }
     }
 

@@ -20,6 +20,7 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
+import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.annotations.VisibleForTesting
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
@@ -38,20 +39,19 @@ class ResponseParser(
         get() = Logger.getLogger(javaClass.name)
 
     /**
-     * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
-     * The arguments of the [MultiResponseCallback.onResponse] are set accordingly.
+     * Parses an XML response element and emits a [MultiStatusItem.Response] for it (when it has a `<href>`).
      *
      * If the [at.bitfire.dav4jvm.property.webdav.ResourceType] of the queried resource is known (= was queried and returned by the server)
-     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` property of the callback will automatically
+     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` of the emitted item will automatically
      * have a trailing slash.
      *
      * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
      * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
      *
      * @param parser    XML document to parse
-     * @param callback  callback to be called for every multistatus `<response>`
+     * @param collector collector that the parsed item is emitted into
      */
-    suspend fun parseResponse(parser: XmlPullParser, callback: MultiResponseCallback) {
+    suspend fun parseResponse(parser: XmlPullParser, collector: FlowCollector<MultiStatusItem>) {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
@@ -127,16 +127,18 @@ class ResponseParser(
             }
         }
 
-        callback.onResponse(
-            Response(
-                requestedUrl = location,
-                href = href,
-                status = status,
-                propstat = propStat,
-                error = error,
-                newLocation = newLocation
-            ),
-            relation
+        collector.emit(
+            MultiStatusItem.Response(
+                response = Response(
+                    requestedUrl = location,
+                    href = href,
+                    status = status,
+                    propstat = propStat,
+                    error = error,
+                    newLocation = newLocation
+                ),
+                relation = relation
+            )
         )
     }
 

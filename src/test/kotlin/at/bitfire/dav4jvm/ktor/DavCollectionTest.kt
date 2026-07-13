@@ -119,38 +119,47 @@ class DavCollectionTest {
         }
         val collection = davCollection(mockEngine)
         var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
-            when (response.href) {
-                sampleUrl.resolve("/dav/test.doc") -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00001-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
-                }
+        var syncToken: SyncToken? = null
+        collection.reportChanges(null, false, null, WebDAV.GetETag).collect { item ->
+            when (item) {
+                is MultiStatusItem.ExtraProperty ->
+                    (item.property as? SyncToken)?.let { syncToken = it }
 
-                sampleUrl.resolve("/dav/vcard.vcf") -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00002-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
-                }
+                is MultiStatusItem.Response -> {
+                    val (response, relation) = item
+                    when (response.href) {
+                        sampleUrl.resolve("/dav/test.doc") -> {
+                            assertTrue(response.isSuccess())
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            val eTag = response[GetETag::class.java]
+                            assertEquals("00001-abcd1", eTag!!.eTag)
+                            assertFalse(eTag.weak)
+                            nrCalled++
+                        }
 
-                sampleUrl.resolve("/dav/calendar.ics") -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00003-abcd1", eTag!!.eTag)
-                    assertFalse(eTag.weak)
-                    nrCalled++
+                        sampleUrl.resolve("/dav/vcard.vcf") -> {
+                            assertTrue(response.isSuccess())
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            val eTag = response[GetETag::class.java]
+                            assertEquals("00002-abcd1", eTag!!.eTag)
+                            assertFalse(eTag.weak)
+                            nrCalled++
+                        }
+
+                        sampleUrl.resolve("/dav/calendar.ics") -> {
+                            assertTrue(response.isSuccess())
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            val eTag = response[GetETag::class.java]
+                            assertEquals("00003-abcd1", eTag!!.eTag)
+                            assertFalse(eTag.weak)
+                            nrCalled++
+                        }
+                    }
                 }
             }
         }
         assertEquals(3, nrCalled)
-        assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
+        assertEquals("http://example.com/ns/sync/1234", syncToken?.token)
     }
 
     @Test
@@ -194,42 +203,51 @@ class DavCollectionTest {
         }
         val collection = davCollection(mockEngine)
         var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
-            when (response.href) {
-                sampleUrl.resolve("/dav/test.doc") -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00001-abcd1", eTag?.eTag)
-                    assertTrue(eTag?.weak == false)
-                    nrCalled++
-                }
+        var syncToken: SyncToken? = null
+        collection.reportChanges(null, false, null, WebDAV.GetETag).collect { item ->
+            when (item) {
+                is MultiStatusItem.ExtraProperty ->
+                    (item.property as? SyncToken)?.let { syncToken = it }
 
-                sampleUrl.resolve("/dav/vcard.vcf") -> {
-                    assertTrue(response.isSuccess())
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    val eTag = response[GetETag::class.java]
-                    assertEquals("00002-abcd1", eTag?.eTag)
-                    assertTrue(eTag?.weak == false)
-                    nrCalled++
-                }
+                is MultiStatusItem.Response -> {
+                    val (response, relation) = item
+                    when (response.href) {
+                        sampleUrl.resolve("/dav/test.doc") -> {
+                            assertTrue(response.isSuccess())
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            val eTag = response[GetETag::class.java]
+                            assertEquals("00001-abcd1", eTag?.eTag)
+                            assertTrue(eTag?.weak == false)
+                            nrCalled++
+                        }
 
-                sampleUrl.resolve("/dav/removed.txt") -> {
-                    assertFalse(response.isSuccess())
-                    assertEquals(404, response.status?.value)
-                    assertEquals(Response.HrefRelation.MEMBER, relation)
-                    nrCalled++
-                }
+                        sampleUrl.resolve("/dav/vcard.vcf") -> {
+                            assertTrue(response.isSuccess())
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            val eTag = response[GetETag::class.java]
+                            assertEquals("00002-abcd1", eTag?.eTag)
+                            assertTrue(eTag?.weak == false)
+                            nrCalled++
+                        }
 
-                sampleUrl.resolve("/dav/") -> {
-                    assertFalse(response.isSuccess())
-                    assertEquals(507, response.status?.value)
-                    assertEquals(Response.HrefRelation.SELF, relation)
-                    nrCalled++
+                        sampleUrl.resolve("/dav/removed.txt") -> {
+                            assertFalse(response.isSuccess())
+                            assertEquals(404, response.status?.value)
+                            assertEquals(Response.HrefRelation.MEMBER, relation)
+                            nrCalled++
+                        }
+
+                        sampleUrl.resolve("/dav/") -> {
+                            assertFalse(response.isSuccess())
+                            assertEquals(507, response.status?.value)
+                            assertEquals(Response.HrefRelation.SELF, relation)
+                            nrCalled++
+                        }
+                    }
                 }
             }
         }
-        assertEquals("http://example.com/ns/sync/1233", result.filterIsInstance<SyncToken>().first().token)
+        assertEquals("http://example.com/ns/sync/1233", syncToken?.token)
         assertEquals(4, nrCalled)
     }
 
@@ -247,7 +265,7 @@ class DavCollectionTest {
         }
         val collection = davCollection(mockEngine)
         try {
-            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag) { _, _ -> }
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag).collect { }
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(HttpStatusCode.InsufficientStorage.value, e.statusCode)
@@ -259,7 +277,7 @@ class DavCollectionTest {
     @Test
     fun `reportChanges sends proper request`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag).collect { }
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
@@ -271,7 +289,7 @@ class DavCollectionTest {
     @Test
     fun `reportChanges null sync token sends empty sync-token element`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag).collect { }
         val body = requestBody(engine)
         assertTrue(body.contains("<sync-token />"))
         assertTrue(body.contains("<sync-level>1</sync-level>"))
@@ -282,21 +300,21 @@ class DavCollectionTest {
     @Test
     fun `reportChanges non-null sync token included in body`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges("http://example.com/ns/sync/42", false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges("http://example.com/ns/sync/42", false, null, WebDAV.GetETag).collect { }
         assertTrue(requestBody(engine).contains("<sync-token>http://example.com/ns/sync/42</sync-token>"))
     }
 
     @Test
     fun `reportChanges infiniteDepth sends sync-level infinite`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, true, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, true, null, WebDAV.GetETag).collect { }
         assertTrue(requestBody(engine).contains("<sync-level>infinite</sync-level>"))
     }
 
     @Test
     fun `reportChanges with limit includes nresults element`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, 50, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, 50, WebDAV.GetETag).collect { }
         assertTrue(requestBody(engine).contains("<nresults>50</nresults>"))
     }
 

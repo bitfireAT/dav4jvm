@@ -46,9 +46,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/"), response.href)
-            assertEquals(Response.HrefRelation.SELF, relation)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Url("http://www.example.com/container/"), item.response.href)
+            assertEquals(Response.HrefRelation.SELF, item.relation)
         }
     }
 
@@ -77,9 +78,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/front.html"), response.href)
-            assertEquals(Response.HrefRelation.MEMBER, relation)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Url("http://www.example.com/container/front.html"), item.response.href)
+            assertEquals(Response.HrefRelation.MEMBER, item.relation)
         }
     }
 
@@ -108,9 +110,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://other.example.com/was-not-requested"), response.href)
-            assertEquals(Response.HrefRelation.OTHER, relation)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Url("http://other.example.com/was-not-requested"), item.response.href)
+            assertEquals(Response.HrefRelation.OTHER, item.relation)
         }
     }
 
@@ -134,9 +137,10 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/"), response.href)
-            assertEquals(Response.HrefRelation.SELF, relation)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Url("http://www.example.com/container/"), item.response.href)
+            assertEquals(Response.HrefRelation.SELF, item.relation)
         }
     }
 
@@ -160,13 +164,14 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, _ ->
-            assertEquals(Url("http://www.example.com/container/file.txt"), response.href)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(Url("http://www.example.com/container/file.txt"), item.response.href)
         }
     }
 
     @Test
-    fun `parseResponse without href does not call callback`() = runTest {
+    fun `parseResponse without href does not emit`() = runTest {
         val xml = XmlUtils.newPullParser()
         xml.setInput(
             StringReader(
@@ -183,7 +188,7 @@ class ResponseParserTest {
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
         var called = false
-        parser.parseResponse(xml) { _, _ -> called = true }
+        parser.parseResponse(xml) { called = true }
         assertFalse(called)
     }
 
@@ -209,8 +214,9 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, _ ->
-            assertEquals(2, response.propstat.size)
+        parser.parseResponse(xml) { item ->
+            item as MultiStatusItem.Response
+            assertEquals(2, item.response.propstat.size)
         }
     }
 

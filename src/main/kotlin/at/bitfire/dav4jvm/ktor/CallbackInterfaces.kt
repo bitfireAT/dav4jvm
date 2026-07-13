@@ -20,23 +20,6 @@ fun interface CapabilitiesCallback {
 }
 
 /**
- * Callback for 207 Multi-Status responses.
- */
-fun interface MultiResponseCallback {
-    /**
-     * Called for every `<response>` element in the `<multistatus>` body. For instance,
-     * in response to a `PROPFIND` request, this callback will be called once for every found
-     * member resource.
-     *
-     * Known collections have [response] `href` with trailing slash, see [Response.parse] for details.
-     *
-     * @param response   the parsed response (including URL)
-     * @param relation   relation of the response to the called resource
-     */
-    suspend fun onResponse(response: Response, relation: Response.HrefRelation)
-}
-
-/**
  * Callback for HTTP responses.
  */
 fun interface ResponseCallback {

@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
@@ -25,6 +24,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -37,16 +38,14 @@ class DavAddressBook(
     /**
      * Sends an addressbook-query REPORT request to the resource.
      *
-     * @param callback called for every WebDAV response XML element in the result
-     *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
+     * properties which are not part of a `<response>` element
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun addressbookQuery(callback: MultiResponseCallback): List<Property> {
+    fun addressbookQuery(): Flow<MultiStatusItem> = flow {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -66,7 +65,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -77,7 +76,7 @@ class DavAddressBook(
                 setBody(writer.toString())
             }
         }) { response ->
-            processMultiStatus(response, callback)
+            processMultiStatus(response, this@flow)
         }
     }
 
@@ -89,21 +88,19 @@ class DavAddressBook(
      *                     "application/vcard+json" for jCard. *null*: don't request specific representation type
      * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
      *                     Currently only useful value: "4.0" for vCard 4. *null*: don't request specific version
-     * @param callback     called for every WebDAV response XML element in the result
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return flow of [MultiStatusItem]s found in the Multi-Status response, including extra
+     * properties which are not part of a `<response>` element
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun multiget(
+    fun multiget(
         urls: List<Url>,
         contentType: String? = null,
-        version: String? = null,
-        callback: MultiResponseCallback
-    ): List<Property> {
+        version: String? = null
+    ): Flow<MultiStatusItem> = flow {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -133,7 +130,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        followRedirects(prepareRequest = {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -144,7 +141,7 @@ class DavAddressBook(
                 setBody(writer.toString())
             }
         }) { response ->
-            processMultiStatus(response, callback)
+            processMultiStatus(response, this@flow)
         }
     }
 
