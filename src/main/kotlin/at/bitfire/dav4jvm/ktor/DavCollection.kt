@@ -38,13 +38,15 @@ open class DavCollection @JvmOverloads constructor(
     /**
      * Sends a REPORT sync-collection request.
      *
+     * The returned flow includes `sync-token`, emitted as [MultiStatusItem.ExtraProperty] holding a
+     * [at.bitfire.dav4jvm.property.webdav.SyncToken] — stopping collection early may miss it.
+     *
      * @param syncToken     sync-token to be sent with the request
      * @param infiniteDepth sync-level to be sent with the request: false = "1", true = "infinite"
      * @param limit         maximum number of results (may cause truncation)
      * @param properties    WebDAV properties to be requested
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable;
-     * includes `sync-token`, emitted as [MultiStatusItem.ExtraProperty] holding a [at.bitfire.dav4jvm.property.webdav.SyncToken])
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error

@@ -59,6 +59,11 @@ class DavCollectionTest {
     private suspend fun requestBody(engine: MockEngine) =
         engine.requestHistory.last().body.toByteArray().toString(Charsets.UTF_8)
 
+    private fun List<MultiStatusItem>.syncToken(): SyncToken? =
+        filterIsInstance<MultiStatusItem.ExtraProperty>().map { it.property }
+            .filterIsInstance<SyncToken>()
+            .firstOrNull()
+
 
     @Test
     fun `reportChanges initial sync parses all members`() = runTest {
@@ -155,9 +160,7 @@ class DavCollectionTest {
         }
         assertEquals(3, nrCalled)
 
-        val syncToken = items.filterIsInstance<MultiStatusItem.ExtraProperty>()
-            .map { it.property }.filterIsInstance<SyncToken>().firstOrNull()
-        assertEquals("http://example.com/ns/sync/1234", syncToken?.token)
+        assertEquals("http://example.com/ns/sync/1234", items.syncToken()?.token)
     }
 
     @Test
@@ -241,9 +244,7 @@ class DavCollectionTest {
         }
         assertEquals(4, nrCalled)
 
-        val syncToken = items.filterIsInstance<MultiStatusItem.ExtraProperty>()
-            .map { it.property }.filterIsInstance<SyncToken>().firstOrNull()
-        assertEquals("http://example.com/ns/sync/1233", syncToken?.token)
+        assertEquals("http://example.com/ns/sync/1233", items.syncToken()?.token)
     }
 
     @Test

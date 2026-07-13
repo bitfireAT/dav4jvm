@@ -51,7 +51,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.peek
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import kotlinx.io.bytestring.encodeToByteString
 import org.xmlpull.v1.XmlPullParser
@@ -717,21 +717,19 @@ open class DavResource(
     /**
      * Processes a Multi-Status response.
      *
-     * The [response] must still be open (its body not yet closed) when the returned [Flow] is
-     * collected — collect it (for instance with [kotlinx.coroutines.flow.emitAll]) before returning
-     * from the block that received [response].
+     * The [response] must still be open (its body not yet closed) while [collector] is being fed —
+     * call this from within the block that received [response], before it returns.
      *
      * @param response  unconsumed response which is expected to contain a Multi-Status response
-     *
-     * @return cold flow of every [MultiStatusItem] found in the Multi-Status response (both `<response>`
-     * elements and extra properties like `sync-token`, emitted as [MultiStatusItem.ExtraProperty]
-     * holding a [SyncToken])
+     * @param collector collector that every [MultiStatusItem] found in the Multi-Status response is
+     *                  emitted into (both `<response>` elements and extra properties like `sync-token`,
+     *                  emitted as [MultiStatusItem.ExtraProperty] holding a [SyncToken])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
      */
-    protected fun processMultiStatus(response: HttpResponse): Flow<MultiStatusItem> = flow {
+    protected suspend fun processMultiStatus(response: HttpResponse, collector: FlowCollector<MultiStatusItem>) {
         checkStatus(response)
         val bodyChannel = response.bodyAsChannel()
 
@@ -748,8 +746,8 @@ open class DavResource(
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.MultiStatus) {
-                            MultiStatusParser(location).parseResponse(parser, this)
-                            return@flow
+                            MultiStatusParser(location).parseResponse(parser, collector)
+                            return
                             // further <multistatus> elements are ignored
                         }
 
@@ -777,7 +775,7 @@ open class DavResource(
      */
     protected fun multiStatusFlow(prepareRequest: suspend () -> HttpStatement): Flow<MultiStatusItem> = flow {
         followRedirects(prepareRequest) { response ->
-            emitAll(processMultiStatus(response))
+            processMultiStatus(response, this)
         }
     }
 
