@@ -37,7 +37,7 @@ class DavAddressBook(
     /**
      * Sends an addressbook-query REPORT request to the resource.
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
@@ -85,7 +85,7 @@ class DavAddressBook(
      * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
      *                     Currently only useful value: "4.0" for vCard 4. *null*: don't request specific version
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error

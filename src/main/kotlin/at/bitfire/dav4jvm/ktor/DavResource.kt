@@ -143,7 +143,10 @@ open class DavResource(
     }
 
     /**
-     * URL of this resource (changes when being redirected by server)
+     * URL of this resource (changes when being redirected by server).
+     *
+     * `Flow`-returning methods read this lazily at collection time — collecting several out of
+     * build order can race with a redirect. Known limitation, accepted for now.
      */
     var location: Url = location
         private set             // allow internal modification only (for redirects)
@@ -477,7 +480,7 @@ open class DavResource(
      * @param depth    "Depth" header to send (-1 for `infinity`)
      * @param reqProp  properties to request
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -524,7 +527,7 @@ open class DavResource(
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -559,7 +562,7 @@ open class DavResource(
      *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
