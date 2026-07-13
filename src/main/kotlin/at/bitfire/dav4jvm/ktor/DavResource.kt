@@ -669,6 +669,52 @@ open class DavResource(
     // Multi-Status handling
 
     /**
+     * Validates a 207 Multi-Status response.
+     *
+     * @param httpResponse  response that will be checked for Multi-Status
+     * @param bodyChannel   response body channel that will be peeked into in order to
+     *                      determine whether it's XML
+     *
+     * @throws DavException if the response is not a Multi-Status response with XML body
+     */
+    suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
+        if (httpResponse.status != HttpStatusCode.MultiStatus)
+            throw DavException.fromResponse(
+                message = "Expected 207 Multi-Status, got ${httpResponse.status}",
+                response = httpResponse,
+                responseBodyChannel = bodyChannel
+            )
+
+        val contentType = httpResponse.contentType()
+        if (contentType == null) {
+            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
+            return  // supposed XML response body, fine
+        }
+
+        if (contentType.isXml())
+            return  // reported XML response body, fine
+
+        /* Content-Type is not application/xml or text/xml although that is expected here.
+           Some broken servers return an XML response with some other MIME type. So we try to see
+           whether the response is maybe XML although the Content-Type is something else. */
+        try {
+            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
+            if (firstBytes == XML_SIGNATURE) {
+                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
+                return  // response body starts with XML signature, fine
+            }
+        } catch (e: Exception) {
+            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
+        }
+
+        // non-XML response body
+        throw DavException.fromResponse(
+            message = "Received non-XML 207 Multi-Status",
+            response = httpResponse
+        )
+    }
+
+    /**
      * Processes a Multi-Status response.
      *
      * The [response] must still be open (its body not yet closed) when the returned [Flow] is
@@ -718,52 +764,6 @@ open class DavResource(
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", cause = e)
         }
-    }
-
-    /**
-     * Validates a 207 Multi-Status response.
-     *
-     * @param httpResponse  response that will be checked for Multi-Status
-     * @param bodyChannel   response body channel that will be peeked into in order to
-     *                      determine whether it's XML
-     *
-     * @throws DavException if the response is not a Multi-Status response with XML body
-     */
-    suspend fun assertMultiStatus(httpResponse: HttpResponse, bodyChannel: ByteReadChannel) {
-        if (httpResponse.status != HttpStatusCode.MultiStatus)
-            throw DavException.fromResponse(
-                message = "Expected 207 Multi-Status, got ${httpResponse.status}",
-                response = httpResponse,
-                responseBodyChannel = bodyChannel
-            )
-
-        val contentType = httpResponse.contentType()
-        if (contentType == null) {
-            logger.warning("Received 207 Multi-Status without Content-Type, assuming XML")
-            return  // supposed XML response body, fine
-        }
-
-        if (contentType.isXml())
-            return  // reported XML response body, fine
-
-        /* Content-Type is not application/xml or text/xml although that is expected here.
-           Some broken servers return an XML response with some other MIME type. So we try to see
-           whether the response is maybe XML although the Content-Type is something else. */
-        try {
-            val firstBytes = bodyChannel.peek(XML_SIGNATURE.size)
-            if (firstBytes == XML_SIGNATURE) {
-                logger.warning("Received 207 Multi-Status that seems to be XML but has MIME type $contentType")
-                return  // response body starts with XML signature, fine
-            }
-        } catch (e: Exception) {
-            logger.log(Level.WARNING, "Couldn't scan for XML signature", e)
-        }
-
-        // non-XML response body
-        throw DavException.fromResponse(
-            message = "Received non-XML 207 Multi-Status",
-            response = httpResponse
-        )
     }
 
     /**
