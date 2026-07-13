@@ -26,7 +26,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
@@ -62,7 +61,7 @@ class DavCalendar(
         start: Instant?,
         end: Instant?,
         props: Set<Property.Name> = setOf(WebDAV.GetETag)
-    ): Flow<MultiStatusItem> = flow {
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -108,7 +107,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -118,8 +117,6 @@ class DavCalendar(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 
@@ -143,7 +140,7 @@ class DavCalendar(
         urls: List<Url>,
         contentType: String? = null,
         version: String? = null
-    ): Flow<MultiStatusItem> = flow {
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -173,7 +170,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -181,8 +178,6 @@ class DavCalendar(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 

@@ -23,7 +23,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -57,7 +56,7 @@ open class DavCollection @JvmOverloads constructor(
         infiniteDepth: Boolean,
         limit: Int?,
         vararg properties: Property.Name
-    ): Flow<MultiStatusItem> = flow {
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT sync-collection (sync-token, sync-level, limit?, prop)>
 
            <!ELEMENT sync-token CDATA>       <!-- Text MUST be a URI -->
@@ -94,7 +93,7 @@ open class DavCollection @JvmOverloads constructor(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -104,8 +103,6 @@ open class DavCollection @JvmOverloads constructor(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 

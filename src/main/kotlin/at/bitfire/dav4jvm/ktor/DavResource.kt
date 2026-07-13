@@ -51,7 +51,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.peek
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.io.bytestring.encodeToByteString
 import org.xmlpull.v1.XmlPullParser
@@ -486,7 +486,7 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    fun propfind(depth: Int, vararg reqProp: Property.Name): Flow<MultiStatusItem> = flow {
+    fun propfind(depth: Int, vararg reqProp: Property.Name): Flow<MultiStatusItem> {
         // build XML request body
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
@@ -503,7 +503,7 @@ open class DavResource(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPFIND")
 
@@ -513,8 +513,6 @@ open class DavResource(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 
@@ -540,10 +538,13 @@ open class DavResource(
     fun proppatch(
         setProperties: Map<Property.Name, String>,
         removeProperties: List<Property.Name>
-    ): Flow<MultiStatusItem> = flow {
+    ): Flow<MultiStatusItem> {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
-        followRedirects(prepareRequest = {
+        // room for further improvement: handle not only 207 Multi-Status
+        // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
+
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
 
@@ -551,11 +552,6 @@ open class DavResource(
                 contentType(MIME_XML_UTF8)
                 setBody(rqBody)
             }
-        }) { response ->
-            // room for further improvement: handle not only 207 Multi-Status
-            // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
-
-            processMultiStatus(response, this@flow)
         }
     }
 
@@ -576,17 +572,13 @@ open class DavResource(
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    fun search(search: String): Flow<MultiStatusItem> = flow {
-        followRedirects(prepareRequest = {
-            httpClient.prepareRequest(location) {
-                method = HttpMethod.parse("SEARCH")
+    fun search(search: String): Flow<MultiStatusItem> = multiStatusFlow {
+        httpClient.prepareRequest(location) {
+            method = HttpMethod.parse("SEARCH")
 
-                acceptXml()
-                contentType(MIME_XML_UTF8)
-                setBody(search)
-            }
-        }) { response ->
-            processMultiStatus(response, this@flow)
+            acceptXml()
+            contentType(MIME_XML_UTF8)
+            setBody(search)
         }
     }
 
@@ -732,16 +724,21 @@ open class DavResource(
     /**
      * Processes a Multi-Status response.
      *
+     * The [response] must still be open (its body not yet closed) when the returned [Flow] is
+     * collected — collect it (for instance with [kotlinx.coroutines.flow.emitAll]) before returning
+     * from the block that received [response].
+     *
      * @param response  unconsumed response which is expected to contain a Multi-Status response
-     * @param collector collector that every [MultiStatusItem] found in the Multi-Status response
-     *                  is emitted into (both `<response>` elements and extra properties like
-     *                  `sync-token`, which is emitted as [MultiStatusItem.ExtraProperty] holding a [SyncToken])
+     *
+     * @return flow of every [MultiStatusItem] found in the Multi-Status response (both `<response>`
+     * elements and extra properties like `sync-token`, emitted as [MultiStatusItem.ExtraProperty]
+     * holding a [SyncToken])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
      */
-    protected suspend fun processMultiStatus(response: HttpResponse, collector: FlowCollector<MultiStatusItem>) {
+    protected fun processMultiStatus(response: HttpResponse): Flow<MultiStatusItem> = flow {
         checkStatus(response)
         val bodyChannel = response.bodyAsChannel()
 
@@ -758,8 +755,8 @@ open class DavResource(
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.MultiStatus) {
-                            MultiStatusParser(location).parseResponse(parser, collector)
-                            return
+                            MultiStatusParser(location).parseResponse(parser, this)
+                            return@flow
                             // further <multistatus> elements are ignored
                         }
 
@@ -773,6 +770,21 @@ open class DavResource(
             throw DavException("Incomplete multistatus XML element", cause = e)
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", cause = e)
+        }
+    }
+
+    /**
+     * Sends a request and processes its Multi-Status response, following up to [MAX_REDIRECTS] redirects.
+     * Combines [followRedirects] and [processMultiStatus] into a single [Flow] — the request is only
+     * sent (and the flow only throws) once it's collected.
+     *
+     * @param prepareRequest    prepares the request (can be called multiple times with updated [location])
+     *
+     * @return flow of every [MultiStatusItem] found in the Multi-Status response
+     */
+    protected fun multiStatusFlow(prepareRequest: suspend () -> HttpStatement): Flow<MultiStatusItem> = flow {
+        followRedirects(prepareRequest) { response ->
+            emitAll(processMultiStatus(response))
         }
     }
 

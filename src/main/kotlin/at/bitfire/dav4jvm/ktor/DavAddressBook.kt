@@ -25,7 +25,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -45,7 +44,7 @@ class DavAddressBook(
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    fun addressbookQuery(): Flow<MultiStatusItem> = flow {
+    fun addressbookQuery(): Flow<MultiStatusItem> {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -65,7 +64,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -75,8 +74,6 @@ class DavAddressBook(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 
@@ -100,7 +97,7 @@ class DavAddressBook(
         urls: List<Url>,
         contentType: String? = null,
         version: String? = null
-    ): Flow<MultiStatusItem> = flow {
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -130,7 +127,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -140,8 +137,6 @@ class DavAddressBook(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, this@flow)
         }
     }
 
