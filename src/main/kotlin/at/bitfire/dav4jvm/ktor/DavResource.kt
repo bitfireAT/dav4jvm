@@ -154,10 +154,7 @@ open class DavResource(
         get() = HttpUtils.fileName(location)
 
 
-    /**
-     * Callback type for [options] method. Called with the server's DAV capabilities and response headers.
-     */
-    typealias OptionsCallback<T> = suspend (davCapabilities: Set<String>, headers: Headers) -> T
+    data class OptionsResponse(val davCapabilities: Set<String>, val headers: Headers)
 
     /**
      * Sends an OPTIONS request to this resource. Follows up to [MAX_REDIRECTS] redirects when set.
@@ -166,22 +163,21 @@ open class DavResource(
      * broken compression support for OPTIONS responses.
      *
      * @param followRedirects   whether redirects should be followed (default: *false*)
-     * @param callback          called with server capabilities and response headers on success
      *
-     * @return The result given by [callback].
+     * @return An instance of [OptionsResponse] with the capabilities and headers responded by the server.
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun <T> options(followRedirects: Boolean = false, callback: OptionsCallback<T>): T {
+    suspend fun options(followRedirects: Boolean = false): OptionsResponse {
         return if (followRedirects)
             followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         else {
             prepareOptionsRequest().execute { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         }
     }
@@ -194,14 +190,14 @@ open class DavResource(
             header(HttpHeaders.AcceptEncoding, "identity")
         }
 
-    private suspend fun <T> processOptionsResponse(response: HttpResponse, callback: OptionsCallback<T>): T {
+    private suspend fun processOptionsResponse(response: HttpResponse): OptionsResponse {
         // check for success
         checkStatus(response)
 
         val capabilities = HttpUtils.listHeader(response, "DAV")
-        return callback(
-            capabilities.map { it.trim() }.toSet(),
-            response.headers
+        return OptionsResponse(
+            davCapabilities = capabilities.map { it.trim() }.toSet(),
+            headers = response.headers
         )
     }
 
