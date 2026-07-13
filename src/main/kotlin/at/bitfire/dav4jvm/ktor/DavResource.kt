@@ -477,7 +477,7 @@ open class DavResource(
      * @param depth    "Depth" header to send (-1 for `infinity`)
      * @param reqProp  properties to request
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -524,7 +524,7 @@ open class DavResource(
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -559,7 +559,7 @@ open class DavResource(
      *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
      *
-     * @return flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
@@ -677,7 +677,7 @@ open class DavResource(
      *
      * @param response  unconsumed response which is expected to contain a Multi-Status response
      *
-     * @return flow of every [MultiStatusItem] found in the Multi-Status response (both `<response>`
+     * @return cold flow of every [MultiStatusItem] found in the Multi-Status response (both `<response>`
      * elements and extra properties like `sync-token`, emitted as [MultiStatusItem.ExtraProperty]
      * holding a [SyncToken])
      *
