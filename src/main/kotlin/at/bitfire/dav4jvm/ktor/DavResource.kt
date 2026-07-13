@@ -145,8 +145,8 @@ open class DavResource(
     /**
      * URL of this resource (changes when being redirected by server).
      *
-     * `Flow`-returning methods read this lazily at collection time — collecting several out of
-     * build order can race with a redirect. Known limitation, accepted for now.
+     * `Flow`-returning methods read this lazily at collection time — collecting several flows
+     * concurrently can race withs redirects, see #209.
      */
     var location: Url = location
         private set             // allow internal modification only (for redirects)
@@ -773,6 +773,7 @@ open class DavResource(
      * @param prepareRequest A suspending function that prepares and returns an HttpStatement for the request.
      * @return A Flow emitting MultiStatusItem objects from the response.
      *
+     * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
      */
