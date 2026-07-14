@@ -35,15 +35,17 @@ class MultiStatusParser(
         val depth = parser.depth
         var eventType = parser.eventType
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                when (parser.propertyName()) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                val item = when (parser.propertyName()) {
                     WebDAV.Response ->
-                        responseParser.parseResponse(parser, collector)
+                        responseParser.parseResponse(parser)
                     WebDAV.SyncToken ->
-                        XmlReader(parser).readText()?.let {
-                            collector.emit(MultiStatusItem.ExtraProperty(SyncToken(it)))
-                        }
+                        XmlReader(parser).readText()?.let { MultiStatusItem.ExtraProperty(SyncToken(it)) }
+                    else -> null
                 }
+                if (item != null)
+                    collector.emit(item)
+            }
             eventType = parser.next()
         }
     }

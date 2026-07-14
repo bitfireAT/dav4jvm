@@ -20,7 +20,6 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import kotlinx.coroutines.flow.FlowCollector
 import org.jetbrains.annotations.VisibleForTesting
 import org.xmlpull.v1.XmlPullParser
 import java.util.logging.Level
@@ -39,19 +38,21 @@ class ResponseParser(
         get() = Logger.getLogger(javaClass.name)
 
     /**
-     * Parses an XML response element and emits a [MultiStatusItem.Response] for it (when it has a `<href>`).
+     * Parses an XML response element and returns the [MultiStatusItem.Response] for it, or `null`
+     * if it doesn't have a `<href>`.
      *
      * If the [at.bitfire.dav4jvm.property.webdav.ResourceType] of the queried resource is known (= was queried and returned by the server)
-     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` of the emitted item will automatically
+     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` of the returned item will automatically
      * have a trailing slash.
      *
      * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
      * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
      *
      * @param parser    XML document to parse
-     * @param collector collector that the parsed item is emitted into
+     *
+     * @return the parsed [MultiStatusItem.Response], or `null` if the response has no `<href>`
      */
-    suspend fun parseResponse(parser: XmlPullParser, collector: FlowCollector<MultiStatusItem>) {
+    fun parseResponse(parser: XmlPullParser): MultiStatusItem.Response? {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
@@ -80,7 +81,7 @@ class ResponseParser(
 
         if (hrefOrNull == null) {
             logger.warning("Ignoring XML response element without valid href")
-            return
+            return null
         }
         var href: Url = hrefOrNull      // guaranteed to be not null
 
@@ -127,18 +128,16 @@ class ResponseParser(
             }
         }
 
-        collector.emit(
-            MultiStatusItem.Response(
-                response = Response(
-                    requestedUrl = location,
-                    href = href,
-                    status = status,
-                    propstat = propStat,
-                    error = error,
-                    newLocation = newLocation
-                ),
-                relation = relation
-            )
+        return MultiStatusItem.Response(
+            response = Response(
+                requestedUrl = location,
+                href = href,
+                status = status,
+                propstat = propStat,
+                error = error,
+                newLocation = newLocation
+            ),
+            relation = relation
         )
     }
 
