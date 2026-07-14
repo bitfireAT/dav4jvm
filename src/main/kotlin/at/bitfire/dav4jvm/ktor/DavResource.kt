@@ -159,6 +159,8 @@ open class DavResource(
         get() = HttpUtils.fileName(location)
 
 
+    data class OptionsResponse(val davCapabilities: Set<String>, val headers: Headers)
+
     /**
      * Sends an OPTIONS request to this resource. Follows up to [MAX_REDIRECTS] redirects when set.
      *
@@ -166,20 +168,21 @@ open class DavResource(
      * broken compression support for OPTIONS responses.
      *
      * @param followRedirects   whether redirects should be followed (default: *false*)
-     * @param callback          called with server response on success
+     *
+     * @return An instance of [OptionsResponse] with the capabilities and headers responded by the server.
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
-        if (followRedirects)
+    suspend fun options(followRedirects: Boolean = false): OptionsResponse {
+        return if (followRedirects)
             followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         else {
             prepareOptionsRequest().execute { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         }
     }
@@ -192,14 +195,14 @@ open class DavResource(
             header(HttpHeaders.AcceptEncoding, "identity")
         }
 
-    private suspend fun processOptionsResponse(response: HttpResponse, callback: CapabilitiesCallback) {
+    private suspend fun processOptionsResponse(response: HttpResponse): OptionsResponse {
         // check for success
         checkStatus(response)
 
         val capabilities = HttpUtils.listHeader(response, "DAV")
-        callback.onCapabilities(
-            capabilities.map { it.trim() }.toSet(),
-            response
+        return OptionsResponse(
+            davCapabilities = capabilities.map { it.trim() }.toSet(),
+            headers = response.headers
         )
     }
 
