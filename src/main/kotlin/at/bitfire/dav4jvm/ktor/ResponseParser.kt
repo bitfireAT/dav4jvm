@@ -38,20 +38,21 @@ class ResponseParser(
         get() = Logger.getLogger(javaClass.name)
 
     /**
-     * Parses an XML response element and calls the [callback] for it (when it has a `<href>`).
-     * The arguments of the [MultiResponseCallback.onResponse] are set accordingly.
+     * Parses an XML response element and returns the [MultiStatusItem.Response] for it, or `null`
+     * if it doesn't have a `<href>`.
      *
      * If the [at.bitfire.dav4jvm.property.webdav.ResourceType] of the queried resource is known (= was queried and returned by the server)
-     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` property of the callback will automatically
+     * and it contains [at.bitfire.dav4jvm.property.webdav.ResourceType.Companion.COLLECTION], the `href` of the returned item will automatically
      * have a trailing slash.
      *
      * So if you want PROPFIND results to have a trailing slash when they are collections, make sure
      * that you query [at.bitfire.dav4jvm.property.webdav.ResourceType].
      *
      * @param parser    XML document to parse
-     * @param callback  callback to be called for every multistatus `<response>`
+     *
+     * @return the parsed [MultiStatusItem.Response], or `null` if the response has no `<href>`
      */
-    suspend fun parseResponse(parser: XmlPullParser, callback: MultiResponseCallback) {
+    fun parseResponse(parser: XmlPullParser): MultiStatusItem.Response? {
         val depth = parser.depth
 
         var hrefOrNull: Url? = null
@@ -80,7 +81,7 @@ class ResponseParser(
 
         if (hrefOrNull == null) {
             logger.warning("Ignoring XML response element without valid href")
-            return
+            return null
         }
         var href: Url = hrefOrNull      // guaranteed to be not null
 
@@ -127,8 +128,8 @@ class ResponseParser(
             }
         }
 
-        callback.onResponse(
-            Response(
+        return MultiStatusItem.Response(
+            response = Response(
                 requestedUrl = location,
                 href = href,
                 status = status,
@@ -136,7 +137,7 @@ class ResponseParser(
                 error = error,
                 newLocation = newLocation
             ),
-            relation
+            relation = relation
         )
     }
 

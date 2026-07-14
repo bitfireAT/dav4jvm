@@ -12,6 +12,7 @@ ktor = "3.5.1"
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit4 = { module = "junit:junit", version.ref = "junit4" }
+kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlin-coroutines" }
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }

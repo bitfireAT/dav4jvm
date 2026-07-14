@@ -22,6 +22,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import io.ktor.http.headersOf
 import io.ktor.http.withCharset
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -55,7 +56,7 @@ class DavCalendarTest {
             "VEVENT",
             start = Instant.ofEpochSecond(784111777),
             end = Instant.ofEpochSecond(1689324577)
-        ) { _, _ -> }
+        ).toList()
         assertEquals(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                     "<CAL:calendar-query xmlns=\"DAV:\" xmlns:CAL=\"urn:ietf:params:xml:ns:caldav\">" +
@@ -77,14 +78,14 @@ class DavCalendarTest {
     @Test
     fun `calendarQuery without time range omits time-range element`() = runTest {
         val engine = minimalMultiStatus()
-        davCalendar(engine).calendarQuery("VEVENT", start = null, end = null) { _, _ -> }
+        davCalendar(engine).calendarQuery("VEVENT", start = null, end = null).toList()
         assertFalse(requestBody(engine).contains("<CAL:time-range"))
     }
 
     @Test
     fun `calendarQuery custom component name used in comp-filter`() = runTest {
         val engine = minimalMultiStatus()
-        davCalendar(engine).calendarQuery("VTODO", start = null, end = null) { _, _ -> }
+        davCalendar(engine).calendarQuery("VTODO", start = null, end = null).toList()
         assertTrue(requestBody(engine).contains("name=\"VTODO\""))
     }
 
@@ -94,7 +95,7 @@ class DavCalendarTest {
         davCalendar(engine).calendarQuery(
             "VEVENT", start = null, end = null,
             props = setOf(WebDAV.GetETag, WebDAV.DisplayName)
-        ) { _, _ -> }
+        ).toList()
         val body = requestBody(engine)
         assertTrue(body.contains("<getetag />"))
         assertTrue(body.contains("<displayname />"))
@@ -103,7 +104,7 @@ class DavCalendarTest {
     @Test
     fun `calendarQuery sends proper request`() = runTest {
         val engine = minimalMultiStatus()
-        davCalendar(engine).calendarQuery("VEVENT", start = null, end = null) { _, _ -> }
+        davCalendar(engine).calendarQuery("VEVENT", start = null, end = null).toList()
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("1", headers[HttpHeaders.Depth])
@@ -115,7 +116,7 @@ class DavCalendarTest {
     @Test
     fun `multiget sends proper request`() = runTest {
         val engine = minimalMultiStatus()
-        davCalendar(engine).multiget(listOf(sampleUrl)) { _, _ -> }
+        davCalendar(engine).multiget(listOf(sampleUrl)).toList()
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertNull(headers[HttpHeaders.Depth])
@@ -129,7 +130,7 @@ class DavCalendarTest {
         val engine = minimalMultiStatus()
         val url1 = Url("http://127.0.0.1/dav/cal1.ics")
         val url2 = Url("http://127.0.0.1/dav/cal2.ics")
-        davCalendar(engine).multiget(listOf(url1, url2)) { _, _ -> }
+        davCalendar(engine).multiget(listOf(url1, url2)).toList()
         val body = requestBody(engine)
         assertTrue(body.contains("CAL:calendar-multiget"))
         assertTrue(body.contains("<href>/dav/cal1.ics</href>"))
@@ -141,7 +142,7 @@ class DavCalendarTest {
     @Test
     fun `multiget with contentType adds attributes to calendar-data`() = runTest {
         val engine = minimalMultiStatus()
-        davCalendar(engine).multiget(listOf(sampleUrl), contentType = "text/calendar", version = "2.0") { _, _ -> }
+        davCalendar(engine).multiget(listOf(sampleUrl), contentType = "text/calendar", version = "2.0").toList()
         val body = requestBody(engine)
         assertTrue(body.contains("content-type=\"text/calendar\""))
         assertTrue(body.contains("version=\"2.0\""))

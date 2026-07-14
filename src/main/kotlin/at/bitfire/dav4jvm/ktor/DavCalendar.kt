@@ -25,6 +25,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import kotlinx.coroutines.flow.Flow
 import java.io.StringWriter
 import java.time.Instant
 import java.time.ZoneOffset
@@ -47,22 +48,19 @@ class DavCalendar(
      * @param start     time-range filter: start date (optional)
      * @param end       time-range filter: end date (optional)
      * @param props     requested WebDAV properties for results (default: only [WebDAV.GetETag]; use [CalDAV.CalendarData] to receive full iCalendars)
-     * @param callback  called for every WebDAV response XML element in the result
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun calendarQuery(
+    fun calendarQuery(
         component: String,
         start: Instant?,
         end: Instant?,
-        props: Set<Property.Name> = setOf(WebDAV.GetETag),
-        callback: MultiResponseCallback
-    ): List<Property> {
+        props: Set<Property.Name> = setOf(WebDAV.GetETag)
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
                                       DAV:prop)?, filter, timezone?)>
@@ -108,7 +106,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -118,34 +116,29 @@ class DavCalendar(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, callback)
         }
     }
 
     /**
-     * Sends a calendar-multiget REPORT to the resource. Received responses are sent
-     * to the callback, whether they are successful (2xx) or not.
+     * Sends a calendar-multiget REPORT to the resource. Received responses are emitted
+     * whether they are successful (2xx) or not.
      *
      * @param urls         list of iCalendar URLs to be requested
      * @param contentType  MIME type of requested format; may be "text/calendar" for iCalendar or
      *                     "application/calendar+json" for jCard. *null*: don't request specific representation type
      * @param version      Version subtype of the requested format, like "2.0" for iCalendar 2. *null*: don't request specific version
-     * @param callback     called for every WebDAV response XML element in the result
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun multiget(
+    fun multiget(
         urls: List<Url>,
         contentType: String? = null,
-        version: String? = null,
-        callback: MultiResponseCallback
-    ): List<Property> {
+        version: String? = null
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
                                         DAV:prop)?, DAV:href+)>
@@ -175,7 +168,7 @@ class DavCalendar(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -183,8 +176,6 @@ class DavCalendar(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, callback)
         }
     }
 

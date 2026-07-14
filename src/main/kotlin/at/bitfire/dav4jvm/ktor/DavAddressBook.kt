@@ -10,7 +10,6 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.property.carddav.AddressData
@@ -25,6 +24,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
 import io.ktor.http.contentType
+import kotlinx.coroutines.flow.Flow
 import java.io.StringWriter
 import java.util.logging.Logger
 
@@ -32,21 +32,18 @@ class DavAddressBook(
     httpClient: HttpClient,
     location: Url,
     logger: Logger = Logger.getLogger(javaClass.name)
-): DavCollection(httpClient, location, logger) {
+) : DavCollection(httpClient, location, logger) {
 
     /**
      * Sends an addressbook-query REPORT request to the resource.
      *
-     * @param callback called for every WebDAV response XML element in the result
-     *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun addressbookQuery(callback: MultiResponseCallback): List<Property> {
+    fun addressbookQuery(): Flow<MultiStatusItem> {
         /* <!ELEMENT addressbook-query ((DAV:allprop |
                                          DAV:propname |
                                          DAV:prop)?, filter, limit?)>
@@ -66,7 +63,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -76,8 +73,6 @@ class DavAddressBook(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, callback)
         }
     }
 
@@ -89,21 +84,18 @@ class DavAddressBook(
      *                     "application/vcard+json" for jCard. *null*: don't request specific representation type
      * @param version      vCard version subtype of the requested format. Should only be specified together with a [contentType] of "text/vcard".
      *                     Currently only useful value: "4.0" for vCard 4. *null*: don't request specific version
-     * @param callback     called for every WebDAV response XML element in the result
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws java.io.IOException on I/O error
      * @throws at.bitfire.dav4jvm.ktor.exception.HttpException on HTTP error
      * @throws at.bitfire.dav4jvm.ktor.exception.DavException on WebDAV error
      */
-    suspend fun multiget(
+    fun multiget(
         urls: List<Url>,
         contentType: String? = null,
-        version: String? = null,
-        callback: MultiResponseCallback
-    ): List<Property> {
+        version: String? = null
+    ): Flow<MultiStatusItem> {
         /* <!ELEMENT addressbook-multiget ((DAV:allprop |
                                             DAV:propname |
                                             DAV:prop)?,
@@ -133,7 +125,7 @@ class DavAddressBook(
         }
         serializer.endDocument()
 
-        return followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
 
@@ -143,8 +135,6 @@ class DavAddressBook(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, callback)
         }
     }
 

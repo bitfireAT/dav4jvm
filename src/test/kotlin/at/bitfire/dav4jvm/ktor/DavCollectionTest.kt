@@ -33,6 +33,7 @@ import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.http.withCharset
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -57,6 +58,11 @@ class DavCollectionTest {
 
     private suspend fun requestBody(engine: MockEngine) =
         engine.requestHistory.last().body.toByteArray().toString(Charsets.UTF_8)
+
+    private fun List<MultiStatusItem>.syncToken(): SyncToken? =
+        filterIsInstance<MultiStatusItem.ExtraProperty>().map { it.property }
+            .filterIsInstance<SyncToken>()
+            .firstOrNull()
 
 
     @Test
@@ -118,8 +124,11 @@ class DavCollectionTest {
             )
         }
         val collection = davCollection(mockEngine)
+        val items = collection.reportChanges(null, false, null, WebDAV.GetETag).toList()
+
         var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
+        items.filterIsInstance<MultiStatusItem.Response>().forEach { item ->
+            val (response, relation) = item
             when (response.href) {
                 sampleUrl.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
@@ -150,7 +159,8 @@ class DavCollectionTest {
             }
         }
         assertEquals(3, nrCalled)
-        assertEquals("http://example.com/ns/sync/1234", result.filterIsInstance<SyncToken>().first().token)
+
+        assertEquals("http://example.com/ns/sync/1234", items.syncToken()?.token)
     }
 
     @Test
@@ -193,8 +203,11 @@ class DavCollectionTest {
             )
         }
         val collection = davCollection(mockEngine)
+        val items = collection.reportChanges(null, false, null, WebDAV.GetETag).toList()
+
         var nrCalled = 0
-        val result = collection.reportChanges(null, false, null, WebDAV.GetETag) { response, relation ->
+        items.filterIsInstance<MultiStatusItem.Response>().forEach { item ->
+            val (response, relation) = item
             when (response.href) {
                 sampleUrl.resolve("/dav/test.doc") -> {
                     assertTrue(response.isSuccess())
@@ -229,8 +242,9 @@ class DavCollectionTest {
                 }
             }
         }
-        assertEquals("http://example.com/ns/sync/1233", result.filterIsInstance<SyncToken>().first().token)
         assertEquals(4, nrCalled)
+
+        assertEquals("http://example.com/ns/sync/1233", items.syncToken()?.token)
     }
 
     @Test
@@ -247,7 +261,7 @@ class DavCollectionTest {
         }
         val collection = davCollection(mockEngine)
         try {
-            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag) { _, _ -> }
+            collection.reportChanges("http://example.com/ns/sync/1232", false, 100, WebDAV.GetETag).toList()
             fail("Expected HttpException")
         } catch (e: HttpException) {
             assertEquals(HttpStatusCode.InsufficientStorage.value, e.statusCode)
@@ -259,7 +273,7 @@ class DavCollectionTest {
     @Test
     fun `reportChanges sends proper request`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag).toList()
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
@@ -271,7 +285,7 @@ class DavCollectionTest {
     @Test
     fun `reportChanges null sync token sends empty sync-token element`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, null, WebDAV.GetETag).toList()
         val body = requestBody(engine)
         assertTrue(body.contains("<sync-token />"))
         assertTrue(body.contains("<sync-level>1</sync-level>"))
@@ -282,21 +296,21 @@ class DavCollectionTest {
     @Test
     fun `reportChanges non-null sync token included in body`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges("http://example.com/ns/sync/42", false, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges("http://example.com/ns/sync/42", false, null, WebDAV.GetETag).toList()
         assertTrue(requestBody(engine).contains("<sync-token>http://example.com/ns/sync/42</sync-token>"))
     }
 
     @Test
     fun `reportChanges infiniteDepth sends sync-level infinite`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, true, null, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, true, null, WebDAV.GetETag).toList()
         assertTrue(requestBody(engine).contains("<sync-level>infinite</sync-level>"))
     }
 
     @Test
     fun `reportChanges with limit includes nresults element`() = runTest {
         val engine = minimalMultiStatus()
-        davCollection(engine).reportChanges(null, false, 50, WebDAV.GetETag) { _, _ -> }
+        davCollection(engine).reportChanges(null, false, 50, WebDAV.GetETag).toList()
         assertTrue(requestBody(engine).contains("<nresults>50</nresults>"))
     }
 

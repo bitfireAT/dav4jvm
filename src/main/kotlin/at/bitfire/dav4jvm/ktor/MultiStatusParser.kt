@@ -10,12 +10,12 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlReader
 import at.bitfire.dav4jvm.XmlUtils.propertyName
 import at.bitfire.dav4jvm.property.webdav.SyncToken
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import io.ktor.http.Url
+import kotlinx.coroutines.flow.FlowCollector
 import org.xmlpull.v1.XmlPullParser
 
 /**
@@ -24,12 +24,10 @@ import org.xmlpull.v1.XmlPullParser
  * @param location  location of the request (used to resolve possible relative `<href>` in responses)
  */
 class MultiStatusParser(
-    private val location: Url,
-    private val callback: MultiResponseCallback
+    private val location: Url
 ) {
 
-    suspend fun parseResponse(parser: XmlPullParser): List<Property> {
-        val responseProperties = mutableListOf<Property>()
+    suspend fun parseResponse(parser: XmlPullParser, collector: FlowCollector<MultiStatusItem>) {
         val responseParser = ResponseParser(location)
 
         // <!ELEMENT multistatus (response*, responsedescription?,
@@ -37,19 +35,19 @@ class MultiStatusParser(
         val depth = parser.depth
         var eventType = parser.eventType
         while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
-            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1)
-                when (parser.propertyName()) {
+            if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
+                val item = when (parser.propertyName()) {
                     WebDAV.Response ->
-                        responseParser.parseResponse(parser, callback)
+                        responseParser.parseResponse(parser)
                     WebDAV.SyncToken ->
-                        XmlReader(parser).readText()?.let {
-                            responseProperties += SyncToken(it)
-                        }
+                        XmlReader(parser).readText()?.let { MultiStatusItem.ExtraProperty(SyncToken(it)) }
+                    else -> null
                 }
+                if (item != null)
+                    collector.emit(item)
+            }
             eventType = parser.next()
         }
-
-        return responseProperties
     }
 
 }
