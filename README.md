@@ -123,6 +123,7 @@ before calling other dav4jvm methods.
 This helps us estimating whether the project is actually used by someone and how proper we want to do
 releases etc.
 
+- [Seedvault](https://github.com/seedvault-app/seedvault/#seedvault) Android Backup
 - (add your project/reference here)
 
 There are also noticable forks:
