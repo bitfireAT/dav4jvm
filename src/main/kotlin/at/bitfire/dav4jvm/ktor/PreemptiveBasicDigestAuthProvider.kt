@@ -40,9 +40,17 @@ class PreemptiveBasicDigestAuthProvider(
     private val basicAuthProvider = BasicAuthProvider(
         credentials = { BasicAuthCredentials(username, password) }
     )
-    private val digestAuthProvider = DigestAuthProvider(
-        credentials = { DigestAuthCredentials(username, password) }
-    )
+    private val digestAuthProvider by lazy {
+        // DigestAuthProvider uses generateNonceBlocking, which starts a coroutine on Dispatchers.Default and then
+        // blocks until it receives a value from that coroutine. If every thread in the (CPU-core-sized)
+        // Dispatchers.Default pool is already busy, the nonce generator has nowhere to run, and construction stalls
+        // until a thread frees up. See DigestAuthProviderCongestionTest for a test that reproduces this.
+        // Initializing lazily makes sure this class can be constructed without issues.
+        // Then, in isApplicable, we only use it if necessary (basicAuthProvider is not applicable)
+        DigestAuthProvider(
+            credentials = { DigestAuthCredentials(username, password) }
+        )
+    }
 
     /* Basic is used preemptively by default; switched to Digest once a WWW-Authenticate challenge
     from the server requests that. Only consulted for preemptive sends (no authHeader to inspect). */
@@ -57,15 +65,16 @@ class PreemptiveBasicDigestAuthProvider(
     override fun sendWithoutRequest(request: HttpRequestBuilder): Boolean = true
 
     override fun isApplicable(auth: HttpAuthHeader): Boolean = when {
-        digestAuthProvider.isApplicable(auth) -> {
-            // server requested Digest auth, switch to Digest auth
-            preemptiveProvider = digestAuthProvider
-            true
-        }
-
+        // Check for basicAuthProvider first so that we do not construct digestAuthProvider if not needed
         basicAuthProvider.isApplicable(auth) -> {
             // server requested Basic auth, switch (back) to Basic auth
             preemptiveProvider = basicAuthProvider
+            true
+        }
+
+        digestAuthProvider.isApplicable(auth) -> {
+            // server requested Digest auth, switch to Digest auth
+            preemptiveProvider = digestAuthProvider
             true
         }
 
