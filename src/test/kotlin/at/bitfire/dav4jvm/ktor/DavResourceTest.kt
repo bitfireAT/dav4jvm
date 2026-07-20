@@ -99,9 +99,8 @@ class DavResourceTest {
     fun `copy 201 Created`() = runTest {
         val engine = mockEngine(HttpStatusCode.Created, sampleText, headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()))
         val dav = davResource(engine)
-        var called = false
-        dav.copy(sampleDestination, false) { called = true }
-        assertTrue(called)
+        val result = dav.copy(sampleDestination, false) { "result" }
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("COPY"), method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
@@ -114,9 +113,8 @@ class DavResourceTest {
     fun `copy 204 No Content`() = runTest {
         val engine = mockEngine(HttpStatusCode.NoContent, sampleText, headersOf(HttpHeaders.ContentType, ContentType.Text.Plain.toString()))
         val dav = davResource(engine)
-        var called = false
-        dav.copy(sampleDestination, true) { called = true }
-        assertTrue(called)
+        val result = dav.copy(sampleDestination, true) { "result" }
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(sampleDestination.toString(), headers[HttpHeaders.Destination])
             assertNull(headers[HttpHeaders.Overwrite])
@@ -139,9 +137,8 @@ class DavResourceTest {
     fun `delete 204 No Content`() = runTest {
         val engine = mockEngine(HttpStatusCode.NoContent, sampleText)
         val dav = davResource(engine)
-        var called = false
-        dav.delete { called = true }
-        assertTrue(called)
+        val result = dav.delete { "result" }
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.Delete, method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
@@ -153,9 +150,8 @@ class DavResourceTest {
     fun `delete with If-Match header`() = runTest {
         val engine = MockEngine { respondOk(content = sampleText) }
         val dav = davResource(engine)
-        var called = false
-        dav.delete(headersOf("If-Match", "\"SomeETag\"")) { called = true }
-        assertTrue(called)
+        val result = dav.delete(headersOf("If-Match", "\"SomeETag\"")) { "result" }
+        assertEquals("result", result)
         assertEquals("\"SomeETag\"", engine.requestHistory.last().headers[HttpHeaders.IfMatch])
     }
 
@@ -170,9 +166,8 @@ class DavResourceTest {
             }
         }
         val dav = davResource(engine)
-        var called = false
-        dav.delete(null) { called = true }
-        assertTrue(called)
+        val result = dav.delete(null) { "result" }
+        assertEquals("result", result)
     }
 
     @Test
@@ -219,16 +214,15 @@ class DavResourceTest {
     fun `get 200 OK`() = runTest {
         val engine = getEngine(HttpStatusCode.OK, eTag = "W/\"My Weak ETag\"")
         val dav = davResource(engine)
-        var called = false
-        dav.get { response ->
-            called = true
+        val result = dav.get { response ->
             assertEquals(sampleText, response.bodyAsText())
             val eTag = GetETag.fromHttpResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
             assertEquals(ContentType.parse("application/x-test-result"), response.contentType())
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.Get, method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
@@ -255,40 +249,37 @@ class DavResourceTest {
             }
         }
         val dav = davResource(engine)
-        var called = false
-        dav.get { response ->
-            called = true
+        val result = dav.get { response ->
             assertEquals(sampleText, response.bodyAsText())
             val eTag = GetETag(response.headers[HttpHeaders.ETag])
             assertEquals("StrongETag", eTag.eTag)
             assertFalse(eTag.weak)
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         assertEquals("/target", engine.requestHistory.last().url.fullPath)
     }
 
     @Test
     fun `get 200 OK without ETag`() = runTest {
         val dav = davResource(getEngine(HttpStatusCode.OK))
-        var called = false
-        dav.get { response ->
-            called = true
+        val result = dav.get { response ->
             assertNull(response.headers[HttpHeaders.ETag])
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
     }
 
     @Test
     fun `getRange 206 Partial Content`() = runTest {
         val engine = mockEngine(HttpStatusCode.PartialContent)
         val dav = davResource(engine)
-        var called = false
-        dav.getRange(100, 342) { response ->
+        val result = dav.getRange(100, 342) { response ->
             assertEquals(HttpMethod.Get, response.request.method)
             assertEquals("bytes=100-441", response.request.headers[HttpHeaders.Range])
-            called = true
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
     }
 
     @Test
@@ -300,16 +291,15 @@ class DavResourceTest {
             }.build())
         }
         val dav = davResource(engine)
-        var called = false
-        dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
-            called = true
+        val result = dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
             assertEquals(sampleText, response.bodyAsText())
             val eTag = GetETag.fromHttpResponse(response)
             assertEquals("My Weak ETag", eTag!!.eTag)
             assertTrue(eTag.weak)
             assertEquals(ContentType.parse("application/x-test-result"), response.contentType())
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.Post, method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
@@ -328,36 +318,33 @@ class DavResourceTest {
             }
         }
         val dav = davResource(engine)
-        var called = false
-        dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
-            called = true
+        val result = dav.post(TextContent("body", ContentType.parse("application/x-test-result"))) { response ->
             assertEquals(sampleText, response.bodyAsText())
             val eTag = GetETag(response.headers[HttpHeaders.ETag])
             assertEquals("StrongETag", eTag.eTag)
             assertFalse(eTag.weak)
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         assertEquals("/target", engine.requestHistory.last().url.encodedPath)
     }
 
     @Test
     fun `post 200 OK without ETag`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.OK, sampleText))
-        var called = false
-        dav.post(TextContent("body", ContentType.Text.Plain)) { response ->
-            called = true
+        val result = dav.post(TextContent("body", ContentType.Text.Plain)) { response ->
             assertNull(response.headers[HttpHeaders.ETag])
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
     }
 
     @Test
     fun `move 201 Created`() = runTest {
         val engine = mockEngine(HttpStatusCode.Created)
         val dav = davResource(engine)
-        var called = false
-        dav.move(sampleDestination, false) { called = true }
-        assertTrue(called)
+        val result = dav.move(sampleDestination, false) { "result" }
+        assertEquals("result", result)
         assertEquals(sampleDestination, dav.location)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("MOVE"), method)
@@ -371,9 +358,8 @@ class DavResourceTest {
     fun `move 204 No Content`() = runTest {
         val engine = mockEngine(HttpStatusCode.NoContent)
         val dav = davResource(engine)
-        var called = false
-        dav.move(sampleDestination, true) { called = true }
-        assertTrue(called)
+        val result = dav.move(sampleDestination, true) { "result" }
+        assertEquals("result", result)
         assertEquals(sampleDestination, dav.location)
         with(engine.requestHistory.last()) {
             assertEquals(sampleDestination.toString(), headers[HttpHeaders.Destination])
@@ -409,9 +395,8 @@ class DavResourceTest {
     fun `mkCol null body sends proper request`() = runTest {
         val engine = mockEngine(HttpStatusCode.Created)
         val dav = davResource(engine)
-        var called = false
-        dav.mkCol(null) { called = true }
-        assertTrue(called)
+        val result = dav.mkCol(null) { "result" }
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("MKCOL"), method)
             assertNull(headers[HttpHeaders.ContentType])
@@ -834,15 +819,14 @@ class DavResourceTest {
     fun `put 201 Created`() = runTest {
         val engine = MockEngine { respond(" ", HttpStatusCode.Created, headersOf(HttpHeaders.ETag, "W/\"Weak PUT ETag\"")) }
         val dav = davResource(engine)
-        var called = false
-        dav.put(TextContent(sampleText, ContentType.Text.Plain)) { response ->
-            called = true
+        val result = dav.put(TextContent(sampleText, ContentType.Text.Plain)) { response ->
             val eTag = GetETag.fromHttpResponse(response)!!
             assertEquals("Weak PUT ETag", eTag.eTag)
             assertTrue(eTag.weak)
             assertEquals(response.request.url, dav.location)
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.Put, method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)
@@ -862,13 +846,12 @@ class DavResourceTest {
             }
         }
         val dav = davResource(engine)
-        var called = false
-        dav.put(TextContent(sampleText, ContentType.Text.Plain), headersOf(HttpHeaders.IfNoneMatch, "*")) { response ->
-            called = true
+        val result = dav.put(TextContent(sampleText, ContentType.Text.Plain), headersOf(HttpHeaders.IfNoneMatch, "*")) { response ->
             assertEquals(sampleUrl.resolve("/target"), response.request.url)
             assertNull(GetETag.fromHttpResponse(response))
+            "result"
         }
-        assertTrue(called)
+        assertEquals("result", result)
         assertEquals("*", engine.requestHistory.last().headers[HttpHeaders.IfNoneMatch])
     }
 
