@@ -50,6 +50,9 @@ import io.ktor.http.withCharset
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.peek
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.flow
 import kotlinx.io.bytestring.encodeToByteString
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -58,7 +61,6 @@ import java.io.IOException
 import java.io.StringWriter
 import java.util.logging.Level
 import java.util.logging.Logger
-
 
 /**
  * Represents a WebDAV resource at the given location and allows WebDAV
@@ -141,7 +143,10 @@ open class DavResource(
     }
 
     /**
-     * URL of this resource (changes when being redirected by server)
+     * URL of this resource (changes when being redirected by server).
+     *
+     * `Flow`-returning methods read this lazily at collection time — collecting several flows
+     * concurrently can race withs redirects, see #209.
      */
     var location: Url = location
         private set             // allow internal modification only (for redirects)
@@ -154,6 +159,8 @@ open class DavResource(
         get() = HttpUtils.fileName(location)
 
 
+    data class OptionsResponse(val davCapabilities: Set<String>, val headers: Headers)
+
     /**
      * Sends an OPTIONS request to this resource. Follows up to [MAX_REDIRECTS] redirects when set.
      *
@@ -161,20 +168,21 @@ open class DavResource(
      * broken compression support for OPTIONS responses.
      *
      * @param followRedirects   whether redirects should be followed (default: *false*)
-     * @param callback          called with server response on success
+     *
+     * @return An instance of [OptionsResponse] with the capabilities and headers responded by the server.
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on HTTPS -> HTTP redirect
      */
-    suspend fun options(followRedirects: Boolean = false, callback: CapabilitiesCallback) {
-        if (followRedirects)
+    suspend fun options(followRedirects: Boolean = false): OptionsResponse {
+        return if (followRedirects)
             followRedirects(prepareRequest = ::prepareOptionsRequest) { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         else {
             prepareOptionsRequest().execute { response ->
-                processOptionsResponse(response, callback)
+                processOptionsResponse(response)
             }
         }
     }
@@ -187,14 +195,14 @@ open class DavResource(
             header(HttpHeaders.AcceptEncoding, "identity")
         }
 
-    private suspend fun processOptionsResponse(response: HttpResponse, callback: CapabilitiesCallback) {
+    private suspend fun processOptionsResponse(response: HttpResponse): OptionsResponse {
         // check for success
         checkStatus(response)
 
         val capabilities = HttpUtils.listHeader(response, "DAV")
-        callback.onCapabilities(
-            capabilities.map { it.trim() }.toSet(),
-            response
+        return OptionsResponse(
+            davCapabilities = capabilities.map { it.trim() }.toSet(),
+            headers = response.headers
         )
     }
 
@@ -474,13 +482,14 @@ open class DavResource(
      *
      * @param depth    "Depth" header to send (-1 for `infinity`)
      * @param reqProp  properties to request
-     * @param callback called for every XML response element in the Multi-Status response
+     *
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    suspend fun propfind(depth: Int, vararg reqProp: Property.Name, callback: MultiResponseCallback) {
+    fun propfind(depth: Int, vararg reqProp: Property.Name): Flow<MultiStatusItem> {
         // build XML request body
         val serializer = XmlUtils.newSerializer()
         val writer = StringWriter()
@@ -497,7 +506,7 @@ open class DavResource(
         }
         serializer.endDocument()
 
-        followRedirects(prepareRequest = {
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPFIND")
 
@@ -507,8 +516,6 @@ open class DavResource(
                 contentType(MIME_XML_UTF8)
                 setBody(writer.toString())
             }
-        }) { response ->
-            processMultiStatus(response, callback)
         }
     }
 
@@ -522,20 +529,23 @@ open class DavResource(
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
-     * @param callback          called for every XML response element in the Multi-Status response
+     *
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    suspend fun proppatch(
+    fun proppatch(
         setProperties: Map<Property.Name, String>,
-        removeProperties: List<Property.Name>,
-        callback: MultiResponseCallback
-    ) {
+        removeProperties: List<Property.Name>
+    ): Flow<MultiStatusItem> {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
-        followRedirects(prepareRequest = {
+        // room for further improvement: handle not only 207 Multi-Status
+        // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
+
+        return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
 
@@ -543,11 +553,6 @@ open class DavResource(
                 contentType(MIME_XML_UTF8)
                 setBody(rqBody)
             }
-        }) { response ->
-            // room for further improvement: handle not only 207 Multi-Status
-            // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
-
-            processMultiStatus(response, callback)
         }
     }
 
@@ -559,23 +564,20 @@ open class DavResource(
      * Expects a 207 Multi-Status response.
      *
      * @param search    search request body (in XML format; like `DAV:searchrequest` or `DAV:query-schema-discovery`)
-     * @param callback  called for every XML response element in the Multi-Status response
+     *
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
      */
-    suspend fun search(search: String, callback: MultiResponseCallback) {
-        followRedirects(prepareRequest = {
-            httpClient.prepareRequest(location) {
-                method = HttpMethod.parse("SEARCH")
+    fun search(search: String): Flow<MultiStatusItem> = multiStatusFlow {
+        httpClient.prepareRequest(location) {
+            method = HttpMethod.parse("SEARCH")
 
-                acceptXml()
-                contentType(MIME_XML_UTF8)
-                setBody(search)
-            }
-        }) { response ->
-            processMultiStatus(response, callback)
+            acceptXml()
+            contentType(MIME_XML_UTF8)
+            setBody(search)
         }
     }
 
@@ -721,17 +723,19 @@ open class DavResource(
     /**
      * Processes a Multi-Status response.
      *
-     * @param response unconsumed response which is expected to contain a Multi-Status response
-     * @param callback called for every XML response element in the Multi-Status response
+     * The [response] must still be open (its body not yet closed) while [collector] is being fed —
+     * call this from within the block that received [response], before it returns.
      *
-     * @return list of properties which have been received in the Multi-Status response, but
-     * are not part of response XML elements (like `sync-token` which is returned as [SyncToken])
+     * @param response  unconsumed response which is expected to contain a Multi-Status response
+     * @param collector collector that every [MultiStatusItem] found in the Multi-Status response is
+     *                  emitted into (both `<response>` elements and extra properties like `sync-token`,
+     *                  emitted as [MultiStatusItem.ExtraProperty] holding a [SyncToken])
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
      * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
      */
-    protected suspend fun processMultiStatus(response: HttpResponse, callback: MultiResponseCallback): List<Property> {
+    protected suspend fun processMultiStatus(response: HttpResponse, collector: FlowCollector<MultiStatusItem>) {
         checkStatus(response)
         val bodyChannel = response.bodyAsChannel()
 
@@ -748,7 +752,8 @@ open class DavResource(
                 while (eventType != XmlPullParser.END_DOCUMENT) {
                     if (eventType == XmlPullParser.START_TAG && parser.depth == 1)
                         if (parser.propertyName() == WebDAV.MultiStatus) {
-                            return MultiStatusParser(location, callback).parseResponse(parser)
+                            MultiStatusParser(location).parseResponse(parser, collector)
+                            return
                             // further <multistatus> elements are ignored
                         }
 
@@ -762,6 +767,22 @@ open class DavResource(
             throw DavException("Incomplete multistatus XML element", cause = e)
         } catch (e: XmlPullParserException) {
             throw DavException("Couldn't parse multistatus XML element", cause = e)
+        }
+    }
+
+    /**
+     * Executes a request and processes the response as a flow of multi-status items. Follows redirects.
+     *
+     * @param prepareRequest A suspending function that prepares and returns an HttpStatement for the request.
+     * @return A Flow emitting MultiStatusItem objects from the response.
+     *
+     * @throws IOException on I/O error
+     * @throws HttpException on HTTP error
+     * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
+     */
+    protected fun multiStatusFlow(prepareRequest: suspend () -> HttpStatement): Flow<MultiStatusItem> = flow {
+        followRedirects(prepareRequest) { response ->
+            processMultiStatus(response, this)
         }
     }
 

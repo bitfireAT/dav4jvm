@@ -27,7 +27,10 @@ are located in the `at.bitfire.dav4jvm.ktor` package.
 
 ## Roadmap
 
-Currently no big changes are planned. There's the idea of making XML processing
+**4.0:** API change: [Replace callback pattern by suspending functions /
+`Flow`s](https://github.com/bitfireAT/dav4jvm/issues/200)
+
+Besides from that, no big changes are currently planned. There's the idea of making XML processing
 multiplatform-capable too at some time, but no specific plans. Maybe it will be renamed then
 to dav4kmp or something like that.
 
@@ -70,7 +73,9 @@ val httpClient = HttpClient(CIO) {
 }
 ```
 
-All dav4jvm request methods are `suspend` functions, so call them from a coroutine.
+Most dav4jvm request methods are `suspend` functions, so call them from a coroutine. Methods that
+process a WebDAV Multi-Status response (like `propfind`) return a `Flow` instead; the request is
+only sent (and errors only thrown) once that `Flow` is collected.
 
 
 ### Files
@@ -97,9 +102,11 @@ To list a folder's contents, you need to pass in which properties to fetch:
 val location = Url("https://example.com/webdav/")
 val davCollection = DavCollection(httpClient, location)
 
-davCollection.propfind(depth = 1, DisplayName.NAME, GetLastModified.NAME) { response, relation ->
-    // This callback will be called for every file in the folder.
-    // Use `response.properties` to access the successfully retrieved properties.
+davCollection.propfind(depth = 1, DisplayName.NAME, GetLastModified.NAME).collect { item ->
+    if (item is MultiStatusItem.Response) {
+        // This is called for every file in the folder.
+        // Use `item.response.properties` to access the successfully retrieved properties.
+    }
 }
 ```
 
@@ -116,6 +123,7 @@ before calling other dav4jvm methods.
 This helps us estimating whether the project is actually used by someone and how proper we want to do
 releases etc.
 
+- [Seedvault](https://github.com/seedvault-app/seedvault/#seedvault) Android Backup
 - (add your project/reference here)
 
 There are also noticable forks:

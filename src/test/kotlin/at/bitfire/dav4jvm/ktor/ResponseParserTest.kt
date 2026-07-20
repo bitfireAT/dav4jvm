@@ -12,9 +12,8 @@ package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.XmlUtils
 import io.ktor.http.Url
-import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.StringReader
 
@@ -25,7 +24,7 @@ class ResponseParserTest {
 
 
     @Test
-    fun `parseResponse relation=SELF`() = runTest {
+    fun `parseResponse relation=SELF`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(StringReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                 "<multistatus xmlns=\"DAV:\">\n" +
@@ -46,14 +45,14 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/"), response.href)
-            assertEquals(Response.HrefRelation.SELF, relation)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/"), item.response.href)
+        assertEquals(Response.HrefRelation.SELF, item.relation)
     }
 
     @Test
-    fun `parseResponse relation=MEMBER`() = runTest {
+    fun `parseResponse relation=MEMBER`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(StringReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                 "<multistatus xmlns=\"DAV:\">\n" +
@@ -77,14 +76,14 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/front.html"), response.href)
-            assertEquals(Response.HrefRelation.MEMBER, relation)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/front.html"), item.response.href)
+        assertEquals(Response.HrefRelation.MEMBER, item.relation)
     }
 
     @Test
-    fun `parseResponse relation=OTHER`() = runTest {
+    fun `parseResponse relation=OTHER`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(StringReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
                 "<multistatus xmlns=\"DAV:\">\n" +
@@ -108,14 +107,14 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://other.example.com/was-not-requested"), response.href)
-            assertEquals(Response.HrefRelation.OTHER, relation)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://other.example.com/was-not-requested"), item.response.href)
+        assertEquals(Response.HrefRelation.OTHER, item.relation)
     }
 
     @Test
-    fun `parseResponse collection href gets trailing slash`() = runTest {
+    fun `parseResponse collection href gets trailing slash`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(
             StringReader(
@@ -134,14 +133,14 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, relation ->
-            assertEquals(Url("http://www.example.com/container/"), response.href)
-            assertEquals(Response.HrefRelation.SELF, relation)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/"), item.response.href)
+        assertEquals(Response.HrefRelation.SELF, item.relation)
     }
 
     @Test
-    fun `parseResponse non-collection href unchanged`() = runTest {
+    fun `parseResponse non-collection href unchanged`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(
             StringReader(
@@ -160,13 +159,13 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, _ ->
-            assertEquals(Url("http://www.example.com/container/file.txt"), response.href)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(Url("http://www.example.com/container/file.txt"), item.response.href)
     }
 
     @Test
-    fun `parseResponse without href does not call callback`() = runTest {
+    fun `parseResponse without href returns null`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(
             StringReader(
@@ -182,13 +181,11 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        var called = false
-        parser.parseResponse(xml) { _, _ -> called = true }
-        assertFalse(called)
+        assertNull(parser.parseResponse(xml))
     }
 
     @Test
-    fun `parseResponse multiple propstats`() = runTest {
+    fun `parseResponse multiple propstats`() {
         val xml = XmlUtils.newPullParser()
         xml.setInput(
             StringReader(
@@ -209,9 +206,9 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        parser.parseResponse(xml) { response, _ ->
-            assertEquals(2, response.propstat.size)
-        }
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals(2, item.response.propstat.size)
     }
 
 
