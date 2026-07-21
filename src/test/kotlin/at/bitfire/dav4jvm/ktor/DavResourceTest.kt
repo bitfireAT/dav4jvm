@@ -509,9 +509,9 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType).single() as MultiStatusItem.Response
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertEquals(HttpStatusCode.InternalServerError, item.response.status)
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType).responsesWithRelation().single()
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertEquals(HttpStatusCode.InternalServerError, response.status)
     }
 
     @Test
@@ -526,9 +526,9 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType).single() as MultiStatusItem.Response
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertEquals(HttpStatusCode.Forbidden, item.response.status)
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType).responsesWithRelation().single()
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertEquals(HttpStatusCode.Forbidden, response.status)
     }
 
     @Test
@@ -546,9 +546,9 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType).single() as MultiStatusItem.Response
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertTrue(item.response.properties.filterIsInstance<ResourceType>().isEmpty())
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType).responsesWithRelation().single()
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertTrue(response.properties.filterIsInstance<ResourceType>().isEmpty())
     }
 
     @Test
@@ -569,10 +569,10 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType).single() as MultiStatusItem.Response
-        assertTrue(item.response.isSuccess())
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertEquals(0, item.response.properties.size)
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType).responsesWithRelation().single()
+        assertTrue(response.isSuccess())
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertEquals(0, response.properties.size)
     }
 
     @Test
@@ -593,10 +593,12 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName).single() as MultiStatusItem.Response
-        assertTrue(item.response.isSuccess())
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertEquals("My DAV Collection", item.response[DisplayName::class.java]?.displayName)
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName)
+            .responsesWithRelation()
+            .single()
+        assertTrue(response.isSuccess())
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertEquals("My DAV Collection", response[DisplayName::class.java]?.displayName)
     }
 
     @Test
@@ -656,9 +658,8 @@ class DavResourceTest {
             )
         )
         var nrCalled = 0
-        val items = dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName).toList()
-        items.filterIsInstance<MultiStatusItem.Response>().forEach { item ->
-            val (response, relation) = item
+        val items = dav.propfind(1, WebDAV.ResourceType, WebDAV.DisplayName).responsesWithRelation().toList()
+        items.forEach { (response, relation) ->
             when (response.href) {
                 sampleUrl.resolve("/dav/") -> {
                     assertTrue(response.isSuccess())
@@ -723,8 +724,9 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName).single() as MultiStatusItem.Response
-        val (response, relation) = item
+        val (response, relation) = dav.propfind(0, WebDAV.ResourceType, WebDAV.DisplayName)
+            .responsesWithRelation()
+            .single()
         assertTrue(response.isSuccess())
         assertEquals(Response.HrefRelation.SELF, relation)
         assertEquals(sampleUrl.resolve("/dav/"), response.href)
@@ -746,9 +748,9 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.propfind(0, WebDAV.DisplayName).single() as MultiStatusItem.Response
-        assertEquals(200, item.response.propstat.first().status.value)
-        assertEquals("Without Status", item.response[DisplayName::class.java]?.displayName)
+        val response = dav.propfind(0, WebDAV.DisplayName).responses().single()
+        assertEquals(200, response.propstat.first().status.value)
+        assertEquals("Without Status", response[DisplayName::class.java]?.displayName)
     }
 
     @Test
@@ -782,11 +784,11 @@ class DavResourceTest {
                         "</multistatus>"
             )
         )
-        val item = dav.proppatch(
+        val (_, relation) = dav.proppatch(
             setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
             removeProperties = listOf(Property.Name("sample", "removeThis"))
-        ).single() as MultiStatusItem.Response
-        assertEquals(Response.HrefRelation.SELF, item.relation)
+        ).responsesWithRelation().single()
+        assertEquals(Response.HrefRelation.SELF, relation)
     }
 
     @Test
@@ -889,9 +891,9 @@ class DavResourceTest {
                     "</multistatus>"
         )
         val dav = davResource(engine)
-        val item = dav.search("<TEST/>").single() as MultiStatusItem.Response
-        assertEquals(Response.HrefRelation.SELF, item.relation)
-        assertEquals("Found something", item.response[DisplayName::class.java]?.displayName)
+        val (response, relation) = dav.search("<TEST/>").responsesWithRelation().single()
+        assertEquals(Response.HrefRelation.SELF, relation)
+        assertEquals("Found something", response[DisplayName::class.java]?.displayName)
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("SEARCH"), method)
             assertEquals(sampleUrl.encodedPath, url.encodedPath)

@@ -46,8 +46,16 @@ sealed interface MultiStatusItem {
  * Filters a [Flow] of [MultiStatusItem]s down to the [Response]s it contains, i.e.
  * the result contains only the parsed `<response>` elements of the `<multistatus>`.
  */
-fun Flow<MultiStatusItem>.filterResponses(): Flow<Response> =
+fun Flow<MultiStatusItem>.responses(): Flow<Response> =
     filterIsInstance<MultiStatusItem.Response>().map { it.response }
+
+/**
+ * Filters a [Flow] of [MultiStatusItem]s down to the [Response]s (together with their
+ * [Response.HrefRelation]) it contains, i.e. the result contains only the parsed `<response>`
+ * elements of the `<multistatus>`.
+ */
+fun Flow<MultiStatusItem>.responsesWithRelation(): Flow<Pair<Response, Response.HrefRelation>> =
+    filterIsInstance<MultiStatusItem.Response>().map { it.response to it.relation }
 
 /**
  * Filters a [Flow] of [MultiStatusItem]s down to the first [Response] whose relation is
@@ -55,7 +63,7 @@ fun Flow<MultiStatusItem>.filterResponses(): Flow<Response> =
  * `<response>` element (in the `<multistatus>` stream) that contains a
  * `<href>` that points to the requested resource.
  */
-suspend fun Flow<MultiStatusItem>.filterSelfResponse(): Response? =
+suspend fun Flow<MultiStatusItem>.selfResponse(): Response? =
     filterIsInstance<MultiStatusItem.Response>()
         .firstOrNull { it.relation == Response.HrefRelation.SELF }
         ?.response
