@@ -34,53 +34,88 @@ class MultiStatusItemTest {
         MultiStatusItem.Response(response(href), relation)
 
 
-    // filterResponses
+    // responses
 
     @Test
-    fun `filterResponses() with only Response items returns all of them in order`() = runTest {
+    fun `responses() with only Response items returns all of them in order`() = runTest {
         val self = item("http://example.com/dav/", Response.HrefRelation.SELF)
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
 
-        val result = flowOf(self, member).filterResponses().toList()
+        val result = flowOf(self, member).responses().toList()
         assertEquals(listOf(self.response, member.response), result)
     }
 
     @Test
-    fun `filterResponses() drops ExtraProperty items`() = runTest {
+    fun `responses() drops ExtraProperty items`() = runTest {
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
-        val result = flowOf(extra, member, extra).filterResponses().toList()
+        val result = flowOf(extra, member, extra).responses().toList()
         assertEquals(listOf(member.response), result)
     }
 
     @Test
-    fun `filterResponses() on a flow without Response items returns an empty flow`() = runTest {
+    fun `responses() on a flow without Response items returns an empty flow`() = runTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
-        val result = flowOf<MultiStatusItem>(extra).filterResponses().toList()
+        val result = flowOf<MultiStatusItem>(extra).responses().toList()
         assertTrue(result.isEmpty())
     }
 
 
-    // filterSelfResponse
+    // responsesWithRelation
 
     @Test
-    fun `filterSelfResponse() returns the SELF response when present`() = runTest {
+    fun `responsesWithRelation() with only Response items returns all of them together with their relation in order`() = runTest {
+        val self = item("http://example.com/dav/", Response.HrefRelation.SELF)
+        val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
+
+        val result = flowOf(self, member).responsesWithRelation().toList()
+        assertEquals(
+            listOf(
+                self.response to Response.HrefRelation.SELF,
+                member.response to Response.HrefRelation.MEMBER
+            ),
+            result
+        )
+    }
+
+    @Test
+    fun `responsesWithRelation() drops ExtraProperty items`() = runTest {
+        val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
+        val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
+
+        val result = flowOf(extra, member, extra).responsesWithRelation().toList()
+        assertEquals(listOf(member.response to Response.HrefRelation.MEMBER), result)
+    }
+
+    @Test
+    fun `responsesWithRelation() on a flow without Response items returns an empty flow`() = runTest {
+        val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
+
+        val result = flowOf<MultiStatusItem>(extra).responsesWithRelation().toList()
+        assertTrue(result.isEmpty())
+    }
+
+
+    // selfResponse
+
+    @Test
+    fun `selfResponse() returns the SELF response when present`() = runTest {
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
         val self = item("http://example.com/dav/", Response.HrefRelation.SELF)
 
-        // SELF is not the first item — filterSelfResponse() must not just take the first Response
-        val result = flowOf(member, self).filterSelfResponse()
+        // SELF is not the first item — selfResponse() must not just take the first Response
+        val result = flowOf(member, self).selfResponse()
         assertEquals(self.response, result)
     }
 
     @Test
-    fun `filterSelfResponse() returns null when no SELF item is present`() = runTest {
+    fun `selfResponse() returns null when no SELF item is present`() = runTest {
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
-        val result = flowOf(extra, member).filterSelfResponse()
+        val result = flowOf(extra, member).selfResponse()
         assertNull(result)
     }
 
