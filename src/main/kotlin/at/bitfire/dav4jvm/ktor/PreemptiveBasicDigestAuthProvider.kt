@@ -40,9 +40,15 @@ class PreemptiveBasicDigestAuthProvider(
     private val basicAuthProvider = BasicAuthProvider(
         credentials = { BasicAuthCredentials(username, password) }
     )
-    private val digestAuthProvider = DigestAuthProvider(
-        credentials = { DigestAuthCredentials(username, password) }
-    )
+    private val digestAuthProvider by lazy {
+        // DigestAuthProvider blocks the thread if the default dispatcher's pool is full.
+        // See DigestAuthProviderCongestionTest for a test that reproduces this.
+        // Then, in isApplicable, we only use it if necessary (basicAuthProvider is not applicable)
+        // Bug report: https://youtrack.jetbrains.com/issue/KTOR-9722/DigestAuthProvider-cannot-be-initialized-with-a-congested-Dispatchers.Default-pool
+        DigestAuthProvider(
+            credentials = { DigestAuthCredentials(username, password) }
+        )
+    }
 
     /* Basic is used preemptively by default; switched to Digest once a WWW-Authenticate challenge
     from the server requests that. Only consulted for preemptive sends (no authHeader to inspect). */
@@ -57,15 +63,16 @@ class PreemptiveBasicDigestAuthProvider(
     override fun sendWithoutRequest(request: HttpRequestBuilder): Boolean = true
 
     override fun isApplicable(auth: HttpAuthHeader): Boolean = when {
-        digestAuthProvider.isApplicable(auth) -> {
-            // server requested Digest auth, switch to Digest auth
-            preemptiveProvider = digestAuthProvider
-            true
-        }
-
+        // Check for basicAuthProvider first so that we do not construct digestAuthProvider if not needed
         basicAuthProvider.isApplicable(auth) -> {
             // server requested Basic auth, switch (back) to Basic auth
             preemptiveProvider = basicAuthProvider
+            true
+        }
+
+        digestAuthProvider.isApplicable(auth) -> {
+            // server requested Digest auth, switch to Digest auth
+            preemptiveProvider = digestAuthProvider
             true
         }
 
