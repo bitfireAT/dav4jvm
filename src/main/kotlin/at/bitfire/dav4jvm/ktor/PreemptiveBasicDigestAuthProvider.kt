@@ -41,12 +41,10 @@ class PreemptiveBasicDigestAuthProvider(
         credentials = { BasicAuthCredentials(username, password) }
     )
     private val digestAuthProvider by lazy {
-        // DigestAuthProvider uses generateNonceBlocking, which starts a coroutine on Dispatchers.Default and then
-        // blocks until it receives a value from that coroutine. If every thread in the (CPU-core-sized)
-        // Dispatchers.Default pool is already busy, the nonce generator has nowhere to run, and construction stalls
-        // until a thread frees up. See DigestAuthProviderCongestionTest for a test that reproduces this.
-        // Initializing lazily makes sure this class can be constructed without issues.
+        // DigestAuthProvider blocks the thread if the default dispatcher's pool is full.
+        // See DigestAuthProviderCongestionTest for a test that reproduces this.
         // Then, in isApplicable, we only use it if necessary (basicAuthProvider is not applicable)
+        // Bug report: https://youtrack.jetbrains.com/issue/KTOR-9722/DigestAuthProvider-cannot-be-initialized-with-a-congested-Dispatchers.Default-pool
         DigestAuthProvider(
             credentials = { DigestAuthCredentials(username, password) }
         )

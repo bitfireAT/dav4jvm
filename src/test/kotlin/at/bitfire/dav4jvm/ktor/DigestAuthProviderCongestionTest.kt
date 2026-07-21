@@ -21,7 +21,10 @@ import org.junit.Test
 /**
  * Kept in its own class: the reproduction only works reliably as the first thing in the JVM to
  * construct a `DigestAuthProvider`, since ktor's nonce buffer is a process-wide singleton that
- * other tests can warm up. Run in isolation, e.g. `./gradlew test --tests "*.DigestAuthProviderCongestionTest"`.
+ * other tests can warm up.
+ * Run in isolation, e.g. `./gradlew test --tests "*.DigestAuthProviderCongestionTest"`.
+ * `DigestAuthProvider` is not used anywhere else, so this is safe to run.
+ * @see <a href="https://youtrack.jetbrains.com/issue/KTOR-9722/DigestAuthProvider-cannot-be-initialized-with-a-congested-Dispatchers.Default-pool">Ktor bug report</a>
  */
 class DigestAuthProviderCongestionTest {
 
