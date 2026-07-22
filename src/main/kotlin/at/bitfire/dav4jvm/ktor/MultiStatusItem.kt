@@ -54,8 +54,8 @@ fun Flow<MultiStatusItem>.responses(): Flow<Response> =
  * [Response.HrefRelation]) it contains, i.e. the result contains only the parsed `<response>`
  * elements of the `<multistatus>`.
  */
-fun Flow<MultiStatusItem>.responsesWithRelation(): Flow<Pair<Response, Response.HrefRelation>> =
-    filterIsInstance<MultiStatusItem.Response>().map { it.response to it.relation }
+fun Flow<MultiStatusItem>.responsesWithRelation(): Flow<MultiStatusItem.Response> =
+    filterIsInstance<MultiStatusItem.Response>()
 
 /**
  * Filters a [Flow] of [MultiStatusItem]s down to the first [Response] whose relation is
