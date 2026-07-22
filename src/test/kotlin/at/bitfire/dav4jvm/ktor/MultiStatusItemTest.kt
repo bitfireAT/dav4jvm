@@ -73,8 +73,8 @@ class MultiStatusItemTest {
         val result = flowOf(self, member).responsesWithRelation().toList()
         assertEquals(
             listOf(
-                self.response to Response.HrefRelation.SELF,
-                member.response to Response.HrefRelation.MEMBER
+                MultiStatusItem.Response(self.response, Response.HrefRelation.SELF),
+                MultiStatusItem.Response(member.response, Response.HrefRelation.MEMBER)
             ),
             result
         )
@@ -86,7 +86,10 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf(extra, member, extra).responsesWithRelation().toList()
-        assertEquals(listOf(member.response to Response.HrefRelation.MEMBER), result)
+        assertEquals(
+            listOf(MultiStatusItem.Response(member.response, Response.HrefRelation.MEMBER)),
+            result
+        )
     }
 
     @Test
