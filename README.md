@@ -27,10 +27,7 @@ are located in the `at.bitfire.dav4jvm.ktor` package.
 
 ## Roadmap
 
-**4.0:** API change: [Replace callback pattern by suspending functions /
-`Flow`s](https://github.com/bitfireAT/dav4jvm/issues/200)
-
-Besides from that, no big changes are currently planned. There's the idea of making XML processing
+No big changes are currently planned. There's the idea of making XML processing
 multiplatform-capable too at some time, but no specific plans. Maybe it will be renamed then
 to dav4kmp or something like that.
 
