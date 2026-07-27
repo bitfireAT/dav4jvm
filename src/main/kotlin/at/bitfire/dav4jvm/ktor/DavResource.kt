@@ -66,12 +66,9 @@ import java.util.logging.Logger
  * Represents a WebDAV resource at the given location and allows WebDAV
  * requests to be performed on this resource.
  *
- * Requests are executed synchronously (blocking). If no error occurs, the given
- * callback will be called. Otherwise, an exception is thrown. *These callbacks
- * don't need to close the response.*
- *
- * To cancel a request, interrupt the thread. This will cause the requests to
- * throw `InterruptedException` or `InterruptedIOException`.
+ * The caller never needs to close the response or flow — but the [HttpResponse] passed
+ * to a callback lambda is only valid inside that lambda, and a `Flow` must be fully
+ * collected while the [httpClient] is still open.
  *
  * ATTENTION: dav4jvm handles redirects itself. Make sure followRedirects is set to FALSE for the httpClient.
  *
