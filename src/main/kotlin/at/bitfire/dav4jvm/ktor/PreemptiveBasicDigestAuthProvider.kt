@@ -19,6 +19,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.auth.AuthScheme
 import io.ktor.http.auth.HttpAuthHeader
+import io.ktor.http.encodedPath
 
 /**
  * An [AuthProvider] that tries Basic auth preemptively and switches to Digest auth (remembered
@@ -50,10 +51,20 @@ class PreemptiveBasicDigestAuthProvider(
         )
     }
 
-    /* Basic is used preemptively by default; switched to Digest once a WWW-Authenticate challenge
-    from the server requests that. Only consulted for preemptive sends (no authHeader to inspect). */
+    /* The last Digest challenge received from the server, or null when Basic auth is to be used
+    preemptively (the default, until the server challenges for Digest).
+
+    [digestAuthProvider] is only ever asked to build a header in response to a challenge (since its sendWithoutRequest
+    method always returns false - it basically declines preemptive use itself), and takes the realm straight from that
+    challenge. But because we report sendWithoutRequest = true for both basic and digest schemes and then delegate to
+    the correct scheme, we DO(!) use [digestAuthProvider] preemptively. That is, we would hand it a null challenge,
+    making it compute HA1 over the literal string "null" instead of the realm and omit the realm parameter, so the
+    server rejects the request.
+
+    We can prevent this by remembering the challenge and replaying it. Only the realm is taken from it; nonce/qop/opaque
+    come from the state the provider itself stored in isApplicable(). */
     @Volatile
-    private var preemptiveProvider: AuthProvider = basicAuthProvider
+    private var preemptiveDigestChallenge: HttpAuthHeader? = null
 
     @Suppress("OverridingDeprecatedMember", "DEPRECATION_ERROR")
     @Deprecated("Please use sendWithoutRequest function instead", level = DeprecationLevel.ERROR)
@@ -66,13 +77,13 @@ class PreemptiveBasicDigestAuthProvider(
         // Check for basicAuthProvider first so that we do not construct digestAuthProvider if not needed
         basicAuthProvider.isApplicable(auth) -> {
             // server requested Basic auth, switch (back) to Basic auth
-            preemptiveProvider = basicAuthProvider
+            preemptiveDigestChallenge = null
             true
         }
 
         digestAuthProvider.isApplicable(auth) -> {
             // server requested Digest auth, switch to Digest auth
-            preemptiveProvider = digestAuthProvider
+            preemptiveDigestChallenge = auth
             true
         }
 
@@ -88,14 +99,24 @@ class PreemptiveBasicDigestAuthProvider(
         before calling this method. Always clear it first so we never send two Authorization headers. */
         request.headers.remove(HttpHeaders.Authorization)
 
-        /* For a retry, authHeader tells us exactly which scheme this response challenged for.
-        Only fall back to preemptiveProvider when there's no challenge to go on, i.e. a purely preemptive send. */
-        val provider = when {
-            authHeader == null -> preemptiveProvider
-            authHeader.authScheme.equals(AuthScheme.Digest, ignoreCase = true) -> digestAuthProvider
-            else -> basicAuthProvider
-        }
-        provider.addRequestHeaders(request, authHeader)
+        /* Ktor's DigestAuthProvider takes both the "uri" parameter and HA2 from request.url.fullPath,
+        which remains empty for a URL without a path  (like https://example.com where the trailing slash is missing and
+        as it can be entered by the user during login). It would then send auth param uri="" to the server and hash over
+        "PROPFIND:", but the actual request being sent is "PROPFIND / HTTP/1.1" – so the server's hash can never match
+        ours. Normalizing the path here makes both agree, and doesn't change what is sent.
+        See https://github.com/bitfireAT/dav4jvm/issues/219 */
+        if (request.url.encodedPath.isEmpty())
+            request.url.encodedPath = "/"
+
+        /* On a retry, authHeader tells us exactly which scheme (basic vs digest) this response challenged for. Digest
+        needs a challenge to read the realm from, see [preemptiveDigestChallenge]. Basic ignores it. */
+        val challenge = authHeader ?: preemptiveDigestChallenge
+        val provider =
+            if (challenge != null && challenge.authScheme.equals(AuthScheme.Digest, ignoreCase = true))
+                digestAuthProvider
+            else
+                basicAuthProvider
+        provider.addRequestHeaders(request, challenge)
     }
 
 }
