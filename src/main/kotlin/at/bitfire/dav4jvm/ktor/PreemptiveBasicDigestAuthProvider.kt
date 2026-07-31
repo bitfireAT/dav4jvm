@@ -51,13 +51,16 @@ class PreemptiveBasicDigestAuthProvider(
         )
     }
 
-    /* The last Digest challenge received from the server, or null when Basic auth is to be used
-    preemptively (the default, until the server challenges for Digest).
-
-    [digestAuthProvider] takes the realm straight from the challenge it is passed, because it never expects to be used
-    preemptively (its sendWithoutRequest always returns false). We do use it preemptively though, so we have to replay
-    the remembered challenge – otherwise it would compute HA1 over the literal string "null" and omit the realm
-    parameter. Only the realm is taken from it; nonce/qop/opaque come from the state it stored in isApplicable(). */
+    /**
+     *  The last Digest challenge received from the server, or null when Basic auth is to be used
+     *  preemptively (the default, until the server challenges for Digest).
+     *
+     *  [digestAuthProvider] takes the realm straight from the challenge it is passed, because it never expects to be
+     *  used preemptively (its sendWithoutRequest always returns false). We do use it preemptively though, so we have
+     *  to replay the remembered challenge – otherwise it would compute HA1 over the literal string "null" and omit the
+     *  realm parameter. Only the realm is taken from it; nonce/qop/opaque come from the state it stored in
+     *  isApplicable().
+     */
     @Volatile
     private var preemptiveDigestChallenge: HttpAuthHeader? = null
 
