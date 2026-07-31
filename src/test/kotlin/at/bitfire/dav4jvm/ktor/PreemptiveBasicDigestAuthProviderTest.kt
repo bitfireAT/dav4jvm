@@ -15,6 +15,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.URLProtocol
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
+import io.ktor.http.encodedPath
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -173,6 +174,23 @@ class PreemptiveBasicDigestAuthProviderTest {
         val digest =
             parseAuthorizationHeader(request.headers[HttpHeaders.Authorization]!!) as HttpAuthHeader.Parameterized
         assertEquals("/", digest.parameter("uri"))
+    }
+
+    @Test
+    fun `addRequestHeaders() leaves the URL untouched for Basic`() = runTest {
+        // the empty-path normalization is a workaround for a ktor Digest bug, so it must not affect Basic requests
+        val authProvider = PreemptiveBasicDigestAuthProvider(
+            username = "user",
+            password = "password"
+        )
+        val request = HttpRequestBuilder().apply {
+            url.protocol = URLProtocol.HTTPS
+            url.host = "domain.example"
+        }
+
+        authProvider.addRequestHeaders(request, authHeader = null)
+
+        assertEquals("", request.url.encodedPath)
     }
 
 }
