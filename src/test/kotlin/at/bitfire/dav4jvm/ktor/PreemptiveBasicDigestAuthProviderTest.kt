@@ -13,7 +13,9 @@ package at.bitfire.dav4jvm.ktor
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLProtocol
+import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
+import io.ktor.http.encodedPath
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -145,7 +147,50 @@ class PreemptiveBasicDigestAuthProviderTest {
 
         val authorizationHeaders = request.headers.getAll(HttpHeaders.Authorization)!!
         assertEquals(1, authorizationHeaders.size)
-        assertTrue("""nonce="md5-nonce"""" in authorizationHeaders.single())
+        val digest = parseAuthorizationHeader(authorizationHeaders.single()) as HttpAuthHeader.Parameterized
+        // the realm has to be taken from the remembered challenge, and must not be null
+        assertEquals("realm", digest.parameter("realm"))
+        assertEquals("md5-nonce", digest.parameter("nonce"))
+    }
+
+    @Test
+    fun `addRequestHeaders() authenticates for slash when the URL has no path`() = runTest {
+        val authProvider = PreemptiveBasicDigestAuthProvider(
+            username = "user",
+            password = "password"
+        )
+        val authHeader = parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
+        assertTrue(authProvider.isApplicable(authHeader))
+
+        // URL without any path, as it can be entered by the user during login
+        val request = HttpRequestBuilder().apply {
+            url.protocol = URLProtocol.HTTPS
+            url.host = "domain.example"
+        }
+
+        authProvider.addRequestHeaders(request, authHeader)
+
+        // the request line on the wire is "GET / HTTP/1.1", so we have to authenticate for "/" and not for ""
+        val digest =
+            parseAuthorizationHeader(request.headers[HttpHeaders.Authorization]!!) as HttpAuthHeader.Parameterized
+        assertEquals("/", digest.parameter("uri"))
+    }
+
+    @Test
+    fun `addRequestHeaders() leaves the URL untouched for Basic`() = runTest {
+        // the empty-path normalization is a workaround for a ktor Digest bug, so it must not affect Basic requests
+        val authProvider = PreemptiveBasicDigestAuthProvider(
+            username = "user",
+            password = "password"
+        )
+        val request = HttpRequestBuilder().apply {
+            url.protocol = URLProtocol.HTTPS
+            url.host = "domain.example"
+        }
+
+        authProvider.addRequestHeaders(request, authHeader = null)
+
+        assertEquals("", request.url.encodedPath)
     }
 
 }
