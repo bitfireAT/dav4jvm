@@ -7,7 +7,7 @@ kotlin = "2.4.10"
 kotlin-coroutines = "1.11.0"
 spotbugs = "4.10.3"
 xpp3Version = "1.1.6"
-ktor = "3.5.1"
+ktor = "3.5.2"
 
 [libraries]
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
