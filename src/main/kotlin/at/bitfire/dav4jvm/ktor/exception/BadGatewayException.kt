@@ -22,8 +22,9 @@ class BadGatewayException internal constructor(
 ) {
 
     init {
-        if (responseInfo.status != HttpStatusCode.BadGateway)
-            throw IllegalArgumentException("Status must be ${HttpStatusCode.BadGateway}")
+        require(responseInfo.status == HttpStatusCode.BadGateway) {
+            "Status must be ${HttpStatusCode.BadGateway}"
+        }
     }
 
 }
