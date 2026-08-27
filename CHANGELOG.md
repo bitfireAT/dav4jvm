@@ -3,7 +3,7 @@ For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Ex
 
 ### 4.0.2 (not released)
 - Add `BadGatewayException` that is thrown for HTTP 502 responses.
-  _This is may be required because some servers may be temporarily not available, and clients may treat it as a soft error and retry the request later._
+  _DAV Services are often hosted behind a reverse proxy that will respond with a HTTP 502 status code when the actual service is temporarily not available. In most cases clients want to treat this as a soft error and retry the request later._
 
 ### 4.0.0
 
