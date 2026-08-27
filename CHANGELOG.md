@@ -2,7 +2,8 @@
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
 ### 4.0.1 (not released)
-- Add `BadGatewayException` that is thrown for HTTP 502 responses ([#225](https://github.com/bitfireAT/dav4jvm/pull/225)).
+- Add `BadGatewayException` that is thrown for HTTP 502 responses.
+  _This is may be required because some servers may be temporarily not available, and clients may treat it as a soft error and retry the request later._
 
 ### 4.0.0
 
