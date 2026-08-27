@@ -82,6 +82,9 @@ open class HttpException internal constructor(
                 HttpStatusCode.PreconditionFailed ->    // 412 Precondition failed
                     PreconditionFailedException(responseInfo)
 
+                HttpStatusCode.BadGateway ->            // 502 Bad Gateway
+                    BadGatewayException(responseInfo)
+
                 HttpStatusCode.ServiceUnavailable ->    // 503 Service Unavailable
                     ServiceUnavailableException(
                         responseInfo,
