@@ -40,7 +40,7 @@ data class ContentUpdate(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        WebDAV.SyncLevel -> contentUpdate = contentUpdate.copy(
+                        WebDAV.Depth -> contentUpdate = contentUpdate.copy(
                             depth = Depth.Factory.create(parser)
                         )
                         WebDAV.SyncToken -> contentUpdate = contentUpdate.copy(

@@ -12,6 +12,7 @@ package at.bitfire.dav4jvm.property.push
 
 import at.bitfire.dav4jvm.property.PropertyTest
 import at.bitfire.dav4jvm.property.push.WebDAVPush.NS_WEBDAV_PUSH
+import at.bitfire.dav4jvm.property.webdav.Depth
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -86,9 +87,12 @@ class WebPushTest : PropertyTest() {
             <P:push-message xmlns:D="DAV:" xmlns:P="$NS_WEBDAV_PUSH">
               <P:topic>O7M1nQ7cKkKTKsoS_j6Z3w</P:topic>
               <P:content-update>
+                <D:depth>1</D:depth>
                 <D:sync-token>http://example.com/sync/10</D:sync-token>
               </P:content-update>
-              <P:property-update />
+              <P:property-update>
+                <D:depth>infinity</D:depth>
+              </P:property-update>
             </P:push-message>
             """.trimIndent()
         )
@@ -100,12 +104,14 @@ class WebPushTest : PropertyTest() {
 
         val contentUpdate = message.contentUpdate
         assertNotNull(contentUpdate)
+        assertEquals(1, contentUpdate?.depth?.depth)
         val syncToken = contentUpdate?.syncToken
         assertNotNull(syncToken)
         assertEquals("http://example.com/sync/10", syncToken?.token)
 
         val propertyUpdate = message.propertyUpdate
         assertNotNull(propertyUpdate)
+        assertEquals(Depth.INFINITY, propertyUpdate?.depth?.depth)
     }
 
 }
