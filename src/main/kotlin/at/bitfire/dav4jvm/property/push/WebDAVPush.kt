@@ -23,6 +23,7 @@ object WebDAVPush {
     const val NS_WEBDAV_PUSH = "https://bitfire.at/webdav-push"
 
     val AuthSecret = Property.Name(NS_WEBDAV_PUSH, "auth-secret")
+    val ContentEncoding = Property.Name(NS_WEBDAV_PUSH, "content-encoding")
     val ContentUpdate = Property.Name(NS_WEBDAV_PUSH, "content-update")
     val Expires = Property.Name(NS_WEBDAV_PUSH, "expires")
     val PropertyUpdate = Property.Name(NS_WEBDAV_PUSH, "property-update")
