@@ -27,6 +27,7 @@ class WebPushTest: PropertyTest() {
             "  <subscription>" +
             "    <web-push-subscription>\n" +
             "      <push-resource>https://up.example.net/yohd4yai5Phiz1wi</push-resource>\n" +
+                    "      <content-encoding>aes128gcm</content-encoding>\n" +
             "      <subscription-public-key type=\"p256dh\">BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4</subscription-public-key>\n" +
             "      <auth-secret>BTBZMqHH6r4Tts7J_aSIgg</auth-secret>" +
             "    </web-push-subscription>\n" +
@@ -37,6 +38,7 @@ class WebPushTest: PropertyTest() {
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
         val subscription = result.subscription?.webPushSubscription
         assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri?.toString())
+        assertEquals(ContentEncoding.AES128GCM, subscription?.contentEncoding?.encoding)
         assertEquals("BTBZMqHH6r4Tts7J_aSIgg", subscription?.authSecret?.secret)
 
         val publicKey = subscription?.subscriptionPublicKey

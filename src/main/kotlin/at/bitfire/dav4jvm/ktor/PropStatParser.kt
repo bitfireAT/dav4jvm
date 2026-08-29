@@ -21,6 +21,12 @@ object PropStatParser {
 
     private val ASSUMING_OK = HttpStatusCode(200, "Assuming OK")
 
+    /**
+     * Parses a WebDAV propstat XML element from the given XML pull parser.
+     *
+     * @param parser the XML pull parser positioned at the start of the propstat element
+     * @return the parsed [PropStat] object, with a default status of 200 OK if no status element is present
+     */
     fun parse(parser: XmlPullParser): PropStat {
         val depth = parser.depth
 

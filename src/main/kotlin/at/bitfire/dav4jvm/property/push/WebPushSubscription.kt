@@ -22,6 +22,7 @@ import org.xmlpull.v1.XmlPullParser
  */
 data class WebPushSubscription(
     val pushResource: PushResource? = null,
+    val contentEncoding: ContentEncoding = ContentEncoding(),
     val subscriptionPublicKey: SubscriptionPublicKey? = null,
     val authSecret: AuthSecret? = null
 ): Property {
@@ -38,6 +39,8 @@ data class WebPushSubscription(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
+                        WebDAVPush.ContentEncoding ->
+                            subscription = subscription.copy(contentEncoding = ContentEncoding.Factory.create(parser))
                         WebDAVPush.PushResource ->
                             subscription = subscription.copy(pushResource = PushResource.Factory.create(parser))
                         WebDAVPush.SubscriptionPublicKey ->
