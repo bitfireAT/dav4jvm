@@ -13,7 +13,7 @@ package at.bitfire.dav4jvm.property.push
 import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.PropertyFactory
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.property.webdav.SyncLevel
+import at.bitfire.dav4jvm.property.webdav.Depth
 import at.bitfire.dav4jvm.property.webdav.WebDAV
 import org.xmlpull.v1.XmlPullParser
 
@@ -23,7 +23,7 @@ import org.xmlpull.v1.XmlPullParser
  * Experimental! See https://github.com/bitfireAT/webdav-push/
  */
 data class PropertyUpdate(
-    val syncLevel: SyncLevel? = null,
+    val depth: Depth? = null
 ): Property {
 
     object Factory: PropertyFactory {
@@ -38,8 +38,8 @@ data class PropertyUpdate(
             while (!(eventType == XmlPullParser.END_TAG && parser.depth == depth)) {
                 if (eventType == XmlPullParser.START_TAG && parser.depth == depth + 1) {
                     when (parser.propertyName()) {
-                        WebDAV.SyncLevel -> propertyUpdate = propertyUpdate.copy(
-                            syncLevel = SyncLevel.Factory.create(parser)
+                        WebDAV.Depth -> propertyUpdate = propertyUpdate.copy(
+                            depth = Depth.Factory.create(parser)
                         )
                     }
                 }
