@@ -1,9 +1,10 @@
 
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
-### 4.0.2 (not released)
+### 4.1.0
 - Add `BadGatewayException` that is thrown for HTTP 502 responses.
   _DAV Services are often hosted behind a reverse proxy that will respond with a HTTP 502 status code when the actual service is temporarily not available. In most cases clients want to treat this as a soft error and retry the request later._
+- Add `content-encoding` and fix `Depth` for WebDAV-Push
 
 ### 4.0.0
 
