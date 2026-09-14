@@ -114,6 +114,16 @@ class DavCalendarTest {
     }
 
     @Test
+    fun `calendarQuery sends additionalHeaders`() = runTest {
+        val engine = minimalMultiStatus()
+        davCalendar(engine).calendarQuery(
+            "VEVENT", start = null, end = null,
+            additionalHeaders = headersOf("CalDAV-Timezones", "F")
+        ).toList()
+        assertEquals("F", engine.requestHistory.last().headers["CalDAV-Timezones"])
+    }
+
+    @Test
     fun `multiget sends proper request`() = runTest {
         val engine = minimalMultiStatus()
         davCalendar(engine).multiget(listOf(sampleUrl)).toList()
@@ -146,6 +156,23 @@ class DavCalendarTest {
         val body = requestBody(engine)
         assertTrue(body.contains("content-type=\"text/calendar\""))
         assertTrue(body.contains("version=\"2.0\""))
+    }
+
+    @Test
+    fun `multiget sends additionalHeaders`() = runTest {
+        val engine = minimalMultiStatus()
+        davCalendar(engine).multiget(
+            listOf(sampleUrl),
+            additionalHeaders = headersOf("CalDAV-Timezones", "F")
+        ).toList()
+        assertEquals("F", engine.requestHistory.last().headers["CalDAV-Timezones"])
+    }
+
+    @Test
+    fun `multiget without additionalHeaders doesn't send them`() = runTest {
+        val engine = minimalMultiStatus()
+        davCalendar(engine).multiget(listOf(sampleUrl)).toList()
+        assertNull(engine.requestHistory.last().headers["CalDAV-Timezones"])
     }
 
 }

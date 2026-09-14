@@ -1,6 +1,10 @@
 
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
+### 4.2.0
+- `DavCalendar.calendarQuery()` and `DavCalendar.multiget()` now accept `additionalHeaders`.
+  _Needed so that clients can send the `CalDAV-Timezones` request header (RFC 7809) on the REPORTs that return iCalendar data._
+
 ### 4.1.0
 - Add `BadGatewayException` that is thrown for HTTP 502 responses.
   _DAV Services are often hosted behind a reverse proxy that will respond with a HTTP 502 status code when the actual service is temporarily not available. In most cases clients want to treat this as a soft error and retry the request later._

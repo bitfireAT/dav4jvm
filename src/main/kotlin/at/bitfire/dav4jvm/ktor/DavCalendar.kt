@@ -21,6 +21,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.Url
@@ -44,10 +45,11 @@ class DavCalendar(
     /**
      * Sends a calendar-query REPORT to the resource.
      *
-     * @param component requested component name (like VEVENT or VTODO)
-     * @param start     time-range filter: start date (optional)
-     * @param end       time-range filter: end date (optional)
-     * @param props     requested WebDAV properties for results (default: only [WebDAV.GetETag]; use [CalDAV.CalendarData] to receive full iCalendars)
+     * @param component         requested component name (like VEVENT or VTODO)
+     * @param start             time-range filter: start date (optional)
+     * @param end               time-range filter: end date (optional)
+     * @param props             requested WebDAV properties for results (default: only [WebDAV.GetETag]; use [CalDAV.CalendarData] to receive full iCalendars)
+     * @param additionalHeaders additional headers to send (like `CalDAV-Timezones` from RFC 7809)
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
@@ -59,7 +61,8 @@ class DavCalendar(
         component: String,
         start: Instant?,
         end: Instant?,
-        props: Set<Property.Name> = setOf(WebDAV.GetETag)
+        props: Set<Property.Name> = setOf(WebDAV.GetETag),
+        additionalHeaders: Headers? = null
     ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-query ((DAV:allprop |
                                       DAV:propname |
@@ -111,6 +114,8 @@ class DavCalendar(
                 method = HttpMethod.parse("REPORT")
 
                 header(HttpHeaders.Depth, "1")
+                if (additionalHeaders != null)
+                    headers.appendAll(additionalHeaders)
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
@@ -123,10 +128,11 @@ class DavCalendar(
      * Sends a calendar-multiget REPORT to the resource. Received responses are emitted
      * whether they are successful (2xx) or not.
      *
-     * @param urls         list of iCalendar URLs to be requested
-     * @param contentType  MIME type of requested format; may be "text/calendar" for iCalendar or
-     *                     "application/calendar+json" for jCard. *null*: don't request specific representation type
-     * @param version      Version subtype of the requested format, like "2.0" for iCalendar 2. *null*: don't request specific version
+     * @param urls              list of iCalendar URLs to be requested
+     * @param contentType       MIME type of requested format; may be "text/calendar" for iCalendar or
+     *                          "application/calendar+json" for jCard. *null*: don't request specific representation type
+     * @param version           Version subtype of the requested format, like "2.0" for iCalendar 2. *null*: don't request specific version
+     * @param additionalHeaders additional headers to send (like `CalDAV-Timezones` from RFC 7809)
      *
      * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
      *
@@ -137,7 +143,8 @@ class DavCalendar(
     fun multiget(
         urls: List<Url>,
         contentType: String? = null,
-        version: String? = null
+        version: String? = null,
+        additionalHeaders: Headers? = null
     ): Flow<MultiStatusItem> {
         /* <!ELEMENT calendar-multiget ((DAV:allprop |
                                         DAV:propname |
@@ -171,6 +178,9 @@ class DavCalendar(
         return multiStatusFlow {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("REPORT")
+
+                if (additionalHeaders != null)
+                    headers.appendAll(additionalHeaders)
 
                 acceptXml()
                 contentType(MIME_XML_UTF8)
