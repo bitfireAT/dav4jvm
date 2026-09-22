@@ -101,32 +101,11 @@ class PreemptiveBasicDigestAuthProvider(
         needs a challenge to read the realm from, see [preemptiveDigestChallenge]. Basic ignores it. */
         val challenge = authHeader ?: preemptiveDigestChallenge
         val provider =
-            if (challenge != null && challenge.authScheme.equals(AuthScheme.Digest, ignoreCase = true)) {
-                request.workaroundKtorEmptyDigestUri()
+            if (challenge != null && challenge.authScheme.equals(AuthScheme.Digest, ignoreCase = true))
                 digestAuthProvider
-            } else
+            else
                 basicAuthProvider
         provider.addRequestHeaders(request, challenge)
     }
 
-}
-
-/**
- * Workaround for KTOR-9760: ktor's [DigestAuthProvider] takes both the `uri` auth parameter and HA2 from
- * `Url.fullPath`, which is empty for a URL without a path (like `https://example.com`, where the trailing slash is
- * missing – as it can be entered by the user during login). It then sends `uri=""` and hashes over `"PROPFIND:"`,
- * while the request actually sent is `PROPFIND / HTTP/1.1` (required by RFC 9112 3.2.1) – so the server's hash can
- * never match ours.
- *
- * Normalizing the path here makes both agree, and doesn't change what is sent.
- *
- * Remove this function together with its call site as soon as the ktor bug is fixed. `KtorDigestEmptyPathTest` pins
- * the buggy ktor behavior and starts to fail once it is.
- *
- * @see <a href="https://youtrack.jetbrains.com/issue/KTOR-9760">ktor bug report</a>
- * @see <a href="https://github.com/bitfireAT/dav4jvm/issues/219">dav4jvm issue</a>
- */
-private fun HttpRequestBuilder.workaroundKtorEmptyDigestUri() {
-    if (url.encodedPath.isEmpty())
-        url.encodedPath = "/"
 }
