@@ -174,7 +174,11 @@ class ResponseParser(
         }
 
         if (!preserve)      // drop segments that are "./"
-            urlBuilder.pathSegments = urlBuilder.pathSegments.filterNot { it == "." }
+            /* Operate on the encoded path segments so that the href is returned in exactly the
+               form the server provided it in. Some servers (e.g. Stalwart) only accept
+               report/multiget hrefs that match their own (percent-encoded) href form and
+               would return 404 otherwise. */
+            urlBuilder.encodedPathSegments = urlBuilder.encodedPathSegments.filterNot { it == "." }
 
         return urlBuilder.build()
     }

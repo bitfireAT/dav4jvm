@@ -157,6 +157,17 @@ class DavCalendarTest {
     }
 
     @Test
+    fun `multiget request body keeps percent-encoded hrefs`() = runTest {
+        /* hrefs with percent-encoding (as returned by some servers) must not be
+           decoded when sent back, see RFC 4918 6.4 */
+        val engine = minimalMultiStatus()
+        val url = Url("http://127.0.0.1/dav/user%40example.com/event%40name.ics")
+        davCalendar(engine).multiget(listOf(url)).toList()
+        val body = requestBody(engine)
+        assertTrue(body.contains("<href>/dav/user%40example.com/event%40name.ics</href>"))
+    }
+
+    @Test
     fun `multiget with contentType adds attributes to calendar-data`() = runTest {
         val engine = minimalMultiStatus()
         davCalendar(engine).multiget(listOf(sampleUrl), contentType = "text/calendar", version = "2.0").toList()
