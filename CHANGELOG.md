@@ -1,16 +1,14 @@
 
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
-### Unreleased
-- `ResponseParser` now keeps server-provided hrefs in exactly the percent-encoded form they were returned in
-  (and so do `Url.parent()`, `Url.withTrailingSlash()` and `Url.omitTrailingSlash()`).
-  _Some servers (for instance Stalwart) only accept report hrefs that match their own href form exactly and
-  would return 404 otherwise, causing members to be skipped silently._
-
 ### 5.0.0
 - `DavCalendar.calendarQuery()` and `DavCalendar.multiget()` now accept `additionalHeaders`.
   _Needed so that clients can send the `CalDAV-Timezones` request header (RFC 7809) on the REPORTs that return iCalendar data._
   _Source-compatible, but binary-incompatible: callers must be recompiled._
+- `ResponseParser` now keeps server-provided hrefs in exactly the percent-encoded form they were returned in
+  (and so do `Url.parent()`, `Url.withTrailingSlash()` and `Url.omitTrailingSlash()`).
+  _Some servers (for instance Stalwart) only accept report hrefs that match their own href form exactly and
+  would return 404 otherwise, causing members to be skipped silently._
 
 ### 4.1.0
 - Add `BadGatewayException` that is thrown for HTTP 502 responses.
