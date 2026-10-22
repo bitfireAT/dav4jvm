@@ -52,16 +52,20 @@ fun Url.hasTrailingSlash(): Boolean =
  * Ensures that a given URL doesn't have a trailing slash after member names.
  * If the path is the root path (`/`), the slash is preserved.
  *
+ * The percent-encoding of the path is not touched.
+ *
  * @return URL without trailing slash (except when the path is the root path), e.g. `http://host/test1`
  */
 fun Url.omitTrailingSlash(): Url =
     if (hasTrailingSlash())
-        URLBuilder(this).apply { pathSegments = pathSegments.dropLast(1) }.build()
+        URLBuilder(this).apply { encodedPathSegments = encodedPathSegments.dropLast(1) }.build()
     else
         this
 
 /**
  * Ensures that a given URL has a trailing slash after member names.
+ *
+ * The percent-encoding of the path is not touched.
  *
  * @return URL with trailing slash, e.g. `http://host/test1/`
  */
@@ -69,10 +73,12 @@ fun Url.withTrailingSlash(): Url =
     if (hasTrailingSlash())
         this
     else
-        URLBuilder(this).apply { pathSegments += "" }.build()
+        URLBuilder(this).apply { encodedPathSegments += "" }.build()
 
 /**
  * Returns parent URL (parent folder). Always with trailing slash.
+ *
+ * The percent-encoding of the path is not touched.
  */
 fun Url.parent(): Url {
     val segments = this.rawSegments
@@ -81,12 +87,18 @@ fun Url.parent(): Url {
         return if (segments.lastOrNull() == "")
             this
         else
-            URLBuilder(this).apply { pathSegments = listOf("") }.build()
+            URLBuilder(this).apply { encodedPath = "/" }.build()
     }
-    return if (segments.last() == "")
-        URLBuilder(this).apply { pathSegments = segments.dropLast(2) + "" }.build()
-    else
-        URLBuilder(this).apply { pathSegments = segments.dropLast(1) + "" }.build()
+    /* rawSegments are decoded, so take the encoded segments from the encoded path
+       (rawSegments and encoded path segments have the same structure) */
+    val encodedSegments = encodedPath.split('/')
+    val parentPath = (
+        if (segments.last() == "")
+            encodedSegments.dropLast(2)
+        else
+            encodedSegments.dropLast(1)
+    ).joinToString("/")
+    return URLBuilder(this).apply { encodedPath = "$parentPath/" }.build()
 }
 
 /**

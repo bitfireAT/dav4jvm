@@ -59,6 +59,22 @@ class UrlUtilsTest {
     }
 
     @Test
+    fun `testOmitTrailingSlash keeps percent-encoding`() {
+        assertEquals(
+            "/dav/user%40example.com/event%40name.ics",
+            Url("http://host/dav/user%40example.com/event%40name.ics/").omitTrailingSlash().encodedPath
+        )
+    }
+
+    @Test
+    fun `testWithTrailingSlash keeps percent-encoding`() {
+        assertEquals(
+            "/dav/user%40example.com/",
+            Url("http://host/dav/user%40example.com").withTrailingSlash().encodedPath
+        )
+    }
+
+    @Test
     fun testUrl_Parent() {
         // Root URL - should return itself
         assertEquals(Url("http://host/"), Url("http://host/").parent())
@@ -83,6 +99,14 @@ class UrlUtilsTest {
         // With query parameters
         assertEquals(Url("http://host/?q=1"), Url("http://host/folder/?q=1").parent())
         assertEquals(Url("http://host/folder/?q=1"), Url("http://host/folder/subfolder/?q=1").parent())
+    }
+
+    @Test
+    fun `testUrl_Parent keeps percent-encoding`() {
+        assertEquals(
+            "/dav/user%40example.com/",
+            Url("http://host/dav/user%40example.com/calendar%40name/").parent().encodedPath
+        )
     }
 
 

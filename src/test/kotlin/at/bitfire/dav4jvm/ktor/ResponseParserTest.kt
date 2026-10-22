@@ -244,4 +244,36 @@ class ResponseParserTest {
         )
     }
 
+    @Test
+    fun `resolveHref keeps percent-encoding`() {
+        /* Some servers (e.g. Stalwart) only accept report hrefs in exactly the form they
+           returned them and would reply 404 otherwise, see RFC 4918 6.4 (hrefs must be
+           treated as opaque). */
+        val resolved = parser.resolveHref("/container/user%40example.com/event%40name.ics")
+        assertEquals("/container/user%40example.com/event%40name.ics", resolved?.encodedPath)
+    }
+
+    @Test
+    fun `parseResponse member with differently encoded href`() {
+        /* location with literal "@", but server href (absolute path) with "%40" */
+        val parser = ResponseParser(Url("http://www.example.com/dav/user@example.com/"))
+        val xml = XmlUtils.newPullParser()
+        xml.setInput(StringReader("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                "<multistatus xmlns=\"DAV:\">\n" +
+                "<response>\n" +
+                "  <href>/dav/user%40example.com/event.ics</href>\n" +
+                "  <propstat>\n" +
+                "    <prop><getetag>\"abc\"</getetag></prop>\n" +
+                "    <status>HTTP/1.1 200 OK</status>\n" +
+                "  </propstat>\n" +
+                "</response>"
+        ))
+        xml.nextTag()   // multistatus
+        xml.nextTag()   // response
+        val item = parser.parseResponse(xml)
+        item as MultiStatusItem.Response
+        assertEquals("/dav/user%40example.com/event.ics", item.response.href.encodedPath)
+        assertEquals(Response.HrefRelation.MEMBER, item.relation)
+    }
+
 }
