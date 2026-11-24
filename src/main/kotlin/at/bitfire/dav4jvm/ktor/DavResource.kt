@@ -14,7 +14,6 @@ import at.bitfire.dav4jvm.Property
 import at.bitfire.dav4jvm.XmlUtils
 import at.bitfire.dav4jvm.XmlUtils.insertTag
 import at.bitfire.dav4jvm.XmlUtils.propertyName
-import at.bitfire.dav4jvm.ktor.DavResource.Companion.MAX_REDIRECTS
 import at.bitfire.dav4jvm.ktor.exception.DavException
 import at.bitfire.dav4jvm.ktor.exception.HttpException
 import at.bitfire.dav4jvm.property.caldav.CalDAV
@@ -522,13 +521,14 @@ open class DavResource(
      * Follows up to [MAX_REDIRECTS] redirects.
      *
      * A 207 Multi-Status response yields a flow of the parsed [MultiStatusItem]s; other 2xx answers
-     * (like the 204 No Content of some servers) yield an empty flow, and [allSuccessful] can be used
+     * (like the 204 No Content of some servers) yield an empty flow, so [allSuccessful] can be used
      * to check whether all properties have been set/removed as requested.
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
      *
-     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable; see [location])
+     * @return cold flow of [MultiStatusItem]s found in the Multi-Status response (collect while [httpClient] is usable;
+     * see [location]) – empty flow if server returned non-207 success code (like 204)
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error

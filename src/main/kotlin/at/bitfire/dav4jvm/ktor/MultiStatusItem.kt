@@ -73,11 +73,13 @@ suspend fun Flow<MultiStatusItem>.selfResponse(): Response? =
 /**
  * Collects the [Flow] and returns whether all requests it contains were successful, i.e.
  * whether all responses (and all their propstats) have a 2xx status; an empty flow is
- * considered successful. For PROPPATCH, a non-2xx propstat means that no property has
- * been set or removed at all (RFC 4918 9.2).
+ * considered successful.
  *
  * Intended for single-resource flows like PROPPATCH; not suitable for PROPFIND/REPORT,
  * where 404 propstats are normal (property not found).
+ *
+ * @return *true* if the flow is empty or contains only 2xx responses with only 2xx propstat elements;
+ * *false* if the flow contains at least one non-2xx response or one non-2xx propstat element
  */
 suspend fun Flow<MultiStatusItem>.allSuccessful(): Boolean =
     responses().all { response ->
