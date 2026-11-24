@@ -540,6 +540,8 @@ open class DavResource(
     ): Flow<MultiStatusItem> {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
+        // PROPPATCH requires a 207 Multi-Status response (RFC 4918 9.2);
+        // accepting other 2xx answers increases compatibility with non-conforming servers
         return multiStatusFlow(acceptSuccessCode = true) {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
