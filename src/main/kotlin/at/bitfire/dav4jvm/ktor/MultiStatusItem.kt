@@ -11,7 +11,9 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.Property
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.all
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -67,3 +69,17 @@ suspend fun Flow<MultiStatusItem>.selfResponse(): Response? =
     filterIsInstance<MultiStatusItem.Response>()
         .firstOrNull { it.relation == Response.HrefRelation.SELF }
         ?.response
+
+/**
+ * Collects the [Flow] and returns whether all requests it contains were successful, i.e.
+ * whether all responses (and all their propstats) have a 2xx status; an empty flow is
+ * considered successful. For PROPPATCH, a non-2xx propstat means that no property has
+ * been set or removed at all (RFC 4918 9.2).
+ *
+ * Intended for single-resource flows like PROPPATCH; not suitable for PROPFIND/REPORT,
+ * where 404 propstats are normal (property not found).
+ */
+suspend fun Flow<MultiStatusItem>.allSuccessful(): Boolean =
+    responses().all { response ->
+        response.isSuccess() && response.propstat.all { it.status.isSuccess() }
+    }

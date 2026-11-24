@@ -766,6 +766,126 @@ class DavResourceTest {
     }
 
     @Test
+    fun `proppatch 207 with all propstat status codes 2xx has succeeded`() = runTest {
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop><s:removeThis/></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        ).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 207 with a non-2xx propstat status has failed`() = runTest {
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop><s:removeThis/></prop>" +
+                        "      <status>HTTP/1.1 403 Forbidden</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        ).allSuccessful()
+
+        assertFalse(success)
+    }
+
+    @Test
+    fun `proppatch 207 with propstat without status assumes it successful`() = runTest {
+        // status is REQUIRED in propstat (RFC 4918 14.22), but the parser assumes 200 OK for broken servers
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = emptyList()
+        ).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 204 No Content has succeeded`() = runTest {
+        val dav = davResource(mockEngine(HttpStatusCode.NoContent))
+
+        val success = dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 204 with Multi-Status body does not parse the body`() = runTest {
+        // the decision is based on the status code alone; the body must be ignored
+        val dav = davResource(
+            mockEngine(
+                HttpStatusCode.NoContent,
+                "<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat><status>HTTP/1.1 200 OK</status></propstat>" +
+                        "  </response>" +
+                        "</multistatus>",
+                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
+            )
+        )
+
+        val items = dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).toList()
+
+        assertTrue(items.isEmpty())
+    }
+
+    @Test
+    fun `proppatch 500 Internal Server Error throws HttpException`() = runTest {
+        val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
+        try {
+            dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).toList()
+            fail("Expected HttpException")
+        } catch (_: HttpException) {
+        }
+    }
+
+    @Test
     fun `proppatch response with propstat`() = runTest {
         val dav = davResource(
             propfindEngine(

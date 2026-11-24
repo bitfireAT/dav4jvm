@@ -46,6 +46,18 @@ Tests live in `src/test/kotlin/at/bitfire/dav4jvm/` and mirror the main source l
 - `ktor/` — Ktor backend tests (use Ktor MockEngine)
 - Root-level — shared utilities (HttpUtils, XmlReader, Property parsing)
 
+Write test bodies in the AAA pattern (Arrange–Act–Assert): three blocks separated by empty lines, even if a block is only one line.
+
+```kotlin
+fun `withdraw() reduces balance by the requested amount`() {
+    val account = Account(balance = 100)
+
+    val result = account.withdraw(30)
+
+    assertEquals(70, result.balance)
+}
+```
+
 Run all tests with `./gradlew test`.
 
 ## Build and publishing

@@ -521,8 +521,9 @@ open class DavResource(
      *
      * Follows up to [MAX_REDIRECTS] redirects.
      *
-     * Currently expects a 207 Multi-Status response although servers are allowed to
-     * return other values, too.
+     * A 207 Multi-Status response yields a flow of the parsed [MultiStatusItem]s; other 2xx answers
+     * (like the 204 No Content of some servers) yield an empty flow, and [allSuccessful] can be used
+     * to check whether all properties have been set/removed as requested.
      *
      * @param setProperties     map of properties that shall be set (values currently have to be strings)
      * @param removeProperties  list of names of properties that shall be removed
@@ -531,7 +532,7 @@ open class DavResource(
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (like no 207 Multi-Status response) or HTTPS -> HTTP redirect
+     * @throws DavException on WebDAV error (like a malformed or non-XML Multi-Status response) or HTTPS -> HTTP redirect
      */
     fun proppatch(
         setProperties: Map<Property.Name, String>,
@@ -539,10 +540,7 @@ open class DavResource(
     ): Flow<MultiStatusItem> {
         val rqBody = createProppatchXml(setProperties, removeProperties)
 
-        // room for further improvement: handle not only 207 Multi-Status
-        // http://www.webdav.org/specs/rfc4918.html#PROPPATCH-status
-
-        return multiStatusFlow {
+        return multiStatusFlow(acceptSuccessCode = true) {
             httpClient.prepareRequest(location) {
                 method = HttpMethod.parse("PROPPATCH")
 
@@ -770,15 +768,24 @@ open class DavResource(
     /**
      * Executes a request and processes the response as a flow of multi-status items. Follows redirects.
      *
-     * @param prepareRequest A suspending function that prepares and returns an HttpStatement for the request.
+     * @param acceptSuccessCode whether any 2xx answer other than 207 Multi-Status is accepted as
+     *                          success, yielding an empty flow (any response body is ignored)
+     * @param prepareRequest    A suspending function that prepares and returns an HttpStatement for the request.
      * @return A Flow emitting MultiStatusItem objects from the response.
      *
      * @throws IOException on I/O error
      * @throws HttpException on HTTP error
-     * @throws DavException on WebDAV error (for instance, when the response is not a Multi-Status response)
+     * @throws DavException on WebDAV error, like a non-XML response body (unless [acceptSuccessCode]
+     * is *true* and the response is a 2xx answer other than 207 Multi-Status)
      */
-    protected fun multiStatusFlow(prepareRequest: suspend () -> HttpStatement): Flow<MultiStatusItem> = flow {
+    protected fun multiStatusFlow(
+        acceptSuccessCode: Boolean = false,
+        prepareRequest: suspend () -> HttpStatement
+    ): Flow<MultiStatusItem> = flow {
         followRedirects(prepareRequest) { response ->
+            if (acceptSuccessCode && response.status.isSuccess() && response.status != HttpStatusCode.MultiStatus)
+                return@followRedirects     // 2xx success code accepted as success, response body ignored
+
             processMultiStatus(response, this)
         }
     }
