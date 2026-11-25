@@ -17,9 +17,6 @@ import at.bitfire.dav4jvm.property.webdav.DisplayName
 import at.bitfire.dav4jvm.property.webdav.GetETag
 import at.bitfire.dav4jvm.property.webdav.ResourceType
 import at.bitfire.dav4jvm.property.webdav.WebDAV
-import io.kotest.assertions.fail
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -43,6 +40,8 @@ import io.ktor.http.contentType
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.http.withCharset
+import kotlin.test.assertFailsWith
+import kotlin.test.fail
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -126,7 +125,7 @@ class DavResourceTest {
     @Test
     fun `copy 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus, sampleText))
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.copy(sampleDestination, false) { fail("callback must not be called") }
         }
         assertEquals(207, e.statusCode)
@@ -172,7 +171,7 @@ class DavResourceTest {
     @Test
     fun `delete 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.MultiStatus) })
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.delete(null) { fail("callback must not be called") }
         }
         assertEquals(207, e.statusCode)
@@ -366,7 +365,7 @@ class DavResourceTest {
     @Test
     fun `move 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus))
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.move(sampleDestination, false) { fail("callback must not be called") }
         }
         assertEquals(207, e.statusCode)
@@ -375,7 +374,7 @@ class DavResourceTest {
     @Test
     fun `mkCol 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus))
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.mkCol("") { fail("callback must not be called") }
         }
         assertEquals(207, e.statusCode)
@@ -433,7 +432,7 @@ class DavResourceTest {
     @Test
     fun `propfind 500 Internal Server Error throws HttpException`() = runTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
         }
         assertEquals(500, e.statusCode)
@@ -442,9 +441,10 @@ class DavResourceTest {
     @Test
     fun `propfind 200 OK throws DavException`() = runTest {
         val dav = davResource(MockEngine { respondOk() })
-        shouldThrowWithMessage<DavException>("Expected 207 Multi-Status, got 200 OK") {
+        val e = assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
         }
+        assertEquals("Expected 207 Multi-Status, got 200 OK", e.message)
     }
 
     @Test
@@ -452,9 +452,10 @@ class DavResourceTest {
         val dav = davResource(MockEngine {
             respond("<html></html>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString()))
         })
-        shouldThrowWithMessage<DavException>("Received non-XML 207 Multi-Status") {
+        val e = assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
         }
+        assertEquals("Received non-XML 207 Multi-Status", e.message)
     }
 
     @Test
@@ -465,7 +466,7 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )
         })
-        shouldThrow<DavException> {
+        assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
         }
     }
@@ -473,7 +474,7 @@ class DavResourceTest {
     @Test
     fun `propfind no multistatus root throws DavException`() = runTest {
         val dav = davResource(propfindEngine("<test></test>"))
-        shouldThrow<DavException> {
+        assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
         }
     }
@@ -859,7 +860,7 @@ class DavResourceTest {
     @Test
     fun `proppatch 500 Internal Server Error throws HttpException`() = runTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).toList()
         }
         assertEquals(500, e.statusCode)
@@ -961,7 +962,7 @@ class DavResourceTest {
     fun `put 412 Precondition Failed throws HttpException`() = runTest {
         val engine = mockEngine(HttpStatusCode.PreconditionFailed)
         val dav = davResource(engine)
-        val e = shouldThrow<HttpException> {
+        val e = assertFailsWith<HttpException> {
             dav.put(TextContent(sampleText, ContentType.Text.Plain), headersOf(HttpHeaders.IfMatch, "\"ExistingETag\"")) {
                 fail("callback must not be called")
             }
