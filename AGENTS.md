@@ -37,7 +37,7 @@ Root level: DAV error parsing, HTTP header helpers, `Property` interface and `Na
 | Ktor Client Encoding | Content-encoding support for Ktor |
 | XPP3 | XML Pull Parser (provided by Android; explicit dep on plain JVM) |
 
-Test-only: Ktor Client Mock, Ktor Client Auth, JUnit 4, kotlinx-coroutines-test.
+Test-only: Ktor Client Mock, Ktor Client Auth, JUnit 4, kotlinx-coroutines-test, Kotest Assertions Core.
 
 ## Testing
 
@@ -47,6 +47,10 @@ Tests live in `src/test/kotlin/at/bitfire/dav4jvm/` and mirror the main source l
 - Root-level — shared utilities (HttpUtils, XmlReader, Property parsing)
 
 Write test bodies in the AAA pattern (Arrange–Act–Assert): three blocks separated by empty lines, even if a block is only one line.
+
+For exception assertions (including suspending code), use Kotest's `shouldThrow<Exception> { … }` instead of JUnit's `assertThrows` — JUnit's lambda is not suspend-aware.
+
+In assertions, prefer explicit values (e.g. `207`) over derived constants (e.g. `HttpStatusCode.MultiStatus.value`).
 
 ```kotlin
 fun `withdraw() reduces balance by the requested amount`() {
