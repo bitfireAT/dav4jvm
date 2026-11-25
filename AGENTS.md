@@ -37,7 +37,7 @@ Root level: DAV error parsing, HTTP header helpers, `Property` interface and `Na
 | Ktor Client Encoding | Content-encoding support for Ktor |
 | XPP3 | XML Pull Parser (provided by Android; explicit dep on plain JVM) |
 
-Test-only: Ktor Client Mock, Ktor Client Auth, JUnit 4, kotlinx-coroutines-test.
+Test-only: Ktor Client Mock, Ktor Client Auth, JUnit 4, kotlinx-coroutines-test, kotlin-test-junit.
 
 ## Testing
 
@@ -45,6 +45,22 @@ Tests live in `src/test/kotlin/at/bitfire/dav4jvm/` and mirror the main source l
 
 - `ktor/` — Ktor backend tests (use Ktor MockEngine)
 - Root-level — shared utilities (HttpUtils, XmlReader, Property parsing)
+
+Write test bodies in the AAA pattern (Arrange–Act–Assert): three blocks separated by empty lines, even if a block is only one line.
+
+For exception assertions (including suspending code), use kotlin.test's `assertFailsWith<Exception> { … }` instead of JUnit's `assertThrows`. It is `inline`, so suspend calls work inside the block; JUnit's lambda is not suspend-aware.
+
+In assertions, prefer explicit values (e.g. `207`) over derived constants (e.g. `HttpStatusCode.MultiStatus.value`).
+
+```kotlin
+fun `withdraw() reduces balance by the requested amount`() {
+    val account = Account(balance = 100)
+
+    val result = account.withdraw(30)
+
+    assertEquals(70, result.balance)
+}
+```
 
 Run all tests with `./gradlew test`.
 

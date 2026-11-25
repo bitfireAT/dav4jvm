@@ -72,5 +72,6 @@ dependencies {
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlin.coroutines.test)
+    testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.client.mock)
 }

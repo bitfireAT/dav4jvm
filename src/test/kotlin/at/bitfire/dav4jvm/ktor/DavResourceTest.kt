@@ -40,6 +40,8 @@ import io.ktor.http.contentType
 import io.ktor.http.fullPath
 import io.ktor.http.headersOf
 import io.ktor.http.withCharset
+import kotlin.test.assertFailsWith
+import kotlin.test.fail
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -47,7 +49,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Test
 
 /*
@@ -124,13 +125,10 @@ class DavResourceTest {
     @Test
     fun `copy 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus, sampleText))
-        var called = false
-        try {
-            dav.copy(sampleDestination, false) { called = true }
-            fail("Expected HttpException")
-        } catch (_: HttpException) {
-            assertFalse(called)
+        val e = assertFailsWith<HttpException> {
+            dav.copy(sampleDestination, false) { fail("callback must not be called") }
         }
+        assertEquals(207, e.statusCode)
     }
 
     @Test
@@ -173,13 +171,10 @@ class DavResourceTest {
     @Test
     fun `delete 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.MultiStatus) })
-        var called = false
-        try {
-            dav.delete(null) { called = true }
-            fail("Expected HttpException")
-        } catch (_: HttpException) {
-            assertFalse(called)
+        val e = assertFailsWith<HttpException> {
+            dav.delete(null) { fail("callback must not be called") }
         }
+        assertEquals(207, e.statusCode)
     }
 
     @Test
@@ -370,25 +365,19 @@ class DavResourceTest {
     @Test
     fun `move 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus))
-        var called = false
-        try {
-            dav.move(sampleDestination, false) { called = true }
-            fail("Expected HttpException")
-        } catch (_: HttpException) {
-            assertFalse(called)
+        val e = assertFailsWith<HttpException> {
+            dav.move(sampleDestination, false) { fail("callback must not be called") }
         }
+        assertEquals(207, e.statusCode)
     }
 
     @Test
     fun `mkCol 207 Multi-Status throws HttpException`() = runTest {
         val dav = davResource(mockEngine(HttpStatusCode.MultiStatus))
-        var called = false
-        try {
-            dav.mkCol("") { called = true }
-            fail("Expected HttpException")
-        } catch (_: HttpException) {
-            assertFalse(called)
+        val e = assertFailsWith<HttpException> {
+            dav.mkCol("") { fail("callback must not be called") }
         }
+        assertEquals(207, e.statusCode)
     }
 
     @Test
@@ -443,21 +432,19 @@ class DavResourceTest {
     @Test
     fun `propfind 500 Internal Server Error throws HttpException`() = runTest {
         val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
-        try {
+        val e = assertFailsWith<HttpException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
-            fail("Expected HttpException")
-        } catch (_: HttpException) {
         }
+        assertEquals(500, e.statusCode)
     }
 
     @Test
     fun `propfind 200 OK throws DavException`() = runTest {
         val dav = davResource(MockEngine { respondOk() })
-        try {
+        val e = assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
-            fail("Expected DavException")
-        } catch (_: DavException) {
         }
+        assertEquals("Expected 207 Multi-Status, got 200 OK", e.message)
     }
 
     @Test
@@ -465,11 +452,10 @@ class DavResourceTest {
         val dav = davResource(MockEngine {
             respond("<html></html>", HttpStatusCode.MultiStatus, headersOf(HttpHeaders.ContentType, ContentType.Text.Html.toString()))
         })
-        try {
+        val e = assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
-            fail("Expected DavException")
-        } catch (_: DavException) {
         }
+        assertEquals("Received non-XML 207 Multi-Status", e.message)
     }
 
     @Test
@@ -480,20 +466,16 @@ class DavResourceTest {
                 headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.withCharset(Charsets.UTF_8).toString())
             )
         })
-        try {
+        assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
-            fail("Expected DavException")
-        } catch (_: DavException) {
         }
     }
 
     @Test
     fun `propfind no multistatus root throws DavException`() = runTest {
         val dav = davResource(propfindEngine("<test></test>"))
-        try {
+        assertFailsWith<DavException> {
             dav.propfind(0, WebDAV.ResourceType).toList()
-            fail("Expected DavException")
-        } catch (_: DavException) {
         }
     }
 
@@ -766,6 +748,125 @@ class DavResourceTest {
     }
 
     @Test
+    fun `proppatch 207 with all propstat status codes 2xx has succeeded`() = runTest {
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop><s:removeThis/></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        ).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 207 with a non-2xx propstat status has failed`() = runTest {
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "      <status>HTTP/1.1 200 OK</status>" +
+                        "    </propstat>" +
+                        "    <propstat>" +
+                        "      <prop><s:removeThis/></prop>" +
+                        "      <status>HTTP/1.1 403 Forbidden</status>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = listOf(Property.Name("sample", "removeThis"))
+        ).allSuccessful()
+
+        assertFalse(success)
+    }
+
+    @Test
+    fun `proppatch 207 with propstat without status assumes it successful`() = runTest {
+        // status is REQUIRED in propstat (RFC 4918 14.22), but the parser assumes 200 OK for broken servers
+        val dav = davResource(
+            propfindEngine(
+                "<multistatus xmlns='DAV:' xmlns:s='sample'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat>" +
+                        "      <prop><s:setThis>Some Value</s:setThis></prop>" +
+                        "    </propstat>" +
+                        "  </response>" +
+                        "</multistatus>"
+            )
+        )
+
+        val success = dav.proppatch(
+            setProperties = mapOf(Pair(Property.Name("sample", "setThis"), "Some Value")),
+            removeProperties = emptyList()
+        ).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 204 No Content has succeeded`() = runTest {
+        val dav = davResource(mockEngine(HttpStatusCode.NoContent))
+
+        val success = dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).allSuccessful()
+
+        assertTrue(success)
+    }
+
+    @Test
+    fun `proppatch 204 with Multi-Status body does not parse the body`() = runTest {
+        // the decision is based on the status code alone; the body must be ignored
+        val dav = davResource(
+            mockEngine(
+                HttpStatusCode.NoContent,
+                "<multistatus xmlns='DAV:'>" +
+                        "  <response>" +
+                        "    <href>/dav</href>" +
+                        "    <propstat><status>HTTP/1.1 200 OK</status></propstat>" +
+                        "  </response>" +
+                        "</multistatus>",
+                headersOf(HttpHeaders.ContentType, ContentType.Application.Xml.toString())
+            )
+        )
+
+        val items = dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).toList()
+
+        assertTrue(items.isEmpty())
+    }
+
+    @Test
+    fun `proppatch 500 Internal Server Error throws HttpException`() = runTest {
+        val dav = davResource(MockEngine { respondError(HttpStatusCode.InternalServerError) })
+        val e = assertFailsWith<HttpException> {
+            dav.proppatch(setProperties = emptyMap(), removeProperties = emptyList()).toList()
+        }
+        assertEquals(500, e.statusCode)
+    }
+
+    @Test
     fun `proppatch response with propstat`() = runTest {
         val dav = davResource(
             propfindEngine(
@@ -861,17 +962,12 @@ class DavResourceTest {
     fun `put 412 Precondition Failed throws HttpException`() = runTest {
         val engine = mockEngine(HttpStatusCode.PreconditionFailed)
         val dav = davResource(engine)
-        var called = false
-        try {
+        val e = assertFailsWith<HttpException> {
             dav.put(TextContent(sampleText, ContentType.Text.Plain), headersOf(HttpHeaders.IfMatch, "\"ExistingETag\"")) {
-                called = true
+                fail("callback must not be called")
             }
-            fail("Expected HttpException")
-        } catch (e: HttpException) {
-            if (e.statusCode != HttpStatusCode.PreconditionFailed.value)
-                fail("Expected HTTP 412")
         }
-        assertFalse(called)
+        assertEquals(412, e.statusCode)
         with(engine.requestHistory.last()) {
             assertEquals("\"ExistingETag\"", headers[HttpHeaders.IfMatch])
             assertNull(headers[HttpHeaders.IfNoneMatch])

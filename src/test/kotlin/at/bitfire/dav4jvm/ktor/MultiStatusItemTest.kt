@@ -11,11 +11,13 @@
 package at.bitfire.dav4jvm.ktor
 
 import at.bitfire.dav4jvm.property.webdav.SyncToken
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -32,6 +34,12 @@ class MultiStatusItemTest {
 
     private fun item(href: String, relation: Response.HrefRelation) =
         MultiStatusItem.Response(response(href), relation)
+
+    private fun item(href: String, relation: Response.HrefRelation, status: HttpStatusCode) =
+        MultiStatusItem.Response(response(href).copy(status = status), relation)
+
+    private fun propstat(status: HttpStatusCode) =
+        PropStat(emptyList(), status)
 
 
     // responses
@@ -120,6 +128,67 @@ class MultiStatusItemTest {
 
         val result = flowOf(extra, member).selfResponse()
         assertNull(result)
+    }
+
+
+    // allSuccessful
+
+    @Test
+    fun `allSuccessful() is true when all responses and their propstats are successful`() = runTest {
+        val ok = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
+        val okWithPropstat = MultiStatusItem.Response(
+            response("http://example.com/dav/1.ics").copy(propstat = listOf(propstat(HttpStatusCode.OK))),
+            Response.HrefRelation.MEMBER
+        )
+
+        val result = flowOf<MultiStatusItem>(ok, okWithPropstat).allSuccessful()
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `allSuccessful() is false when a propstat status is not 2xx`() = runTest {
+        val setFailed = MultiStatusItem.Response(
+            response("http://example.com/dav/1.ics").copy(
+                propstat = listOf(
+                    propstat(HttpStatusCode.OK),
+                    propstat(HttpStatusCode.NotFound)
+                )
+            ),
+            Response.HrefRelation.MEMBER
+        )
+
+        val result = flowOf<MultiStatusItem>(setFailed).allSuccessful()
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `allSuccessful() is false when a response status is not 2xx`() = runTest {
+        val failed = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER, HttpStatusCode.NotFound)
+
+        val result = flowOf<MultiStatusItem>(failed).allSuccessful()
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun `allSuccessful() ignores extra properties`() = runTest {
+        val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
+        val ok = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
+
+        val result = flowOf<MultiStatusItem>(extra, ok).allSuccessful()
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `allSuccessful() on an empty flow is true`() = runTest {
+        val empty = flowOf<MultiStatusItem>()
+
+        val result = empty.allSuccessful()
+
+        assertTrue(result)
     }
 
 }
