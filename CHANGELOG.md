@@ -1,6 +1,11 @@
 
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
+### 6.0.0
+- `proppatch()` now accepts 2xx answers other than 207 Multi-Status (like the 204 No Content of some servers), yielding an empty flow instead of throwing `DavException`.
+  _New `Flow<MultiStatusItem>.allSuccessful()` tells whether all properties have been set/removed as requested._
+- `multiStatusFlow()` now has an `acceptSuccessCode` parameter.
+
 ### 5.0.0
 - `DavCalendar.calendarQuery()` and `DavCalendar.multiget()` now accept `additionalHeaders`.
   _Needed so that clients can send the `CalDAV-Timezones` request header (RFC 7809) on the REPORTs that return iCalendar data._
