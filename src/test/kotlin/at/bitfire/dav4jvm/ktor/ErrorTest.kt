@@ -33,53 +33,59 @@ class ErrorTest {
 
 
     @Test
-    fun testParseError_empty() {
+    fun `parseError() with empty error element`() {
         val errors = parseError("")
+
         assertEquals(0, errors.size)
     }
 
     @Test
-    fun testParseError_singleChild() {
+    fun `parseError() with single child`() {
         val errors = parseError("<valid-sync-token/>")
+
         assertEquals(1, errors.size)
         assertTrue(errors.contains(Error(WebDAV.ValidSyncToken)))
     }
 
     @Test
-    fun testParseError_multipleChildren() {
+    fun `parseError() with multiple children`() {
         val errors = parseError("<valid-sync-token/><lock-token-matches-request-uri/>")
+
         assertEquals(2, errors.size)
         assertTrue(errors.contains(Error(WebDAV.ValidSyncToken)))
         assertTrue(errors.contains(Error(Property.Name("DAV:", "lock-token-matches-request-uri"))))
     }
 
     @Test
-    fun testParseError_duplicatesDeduped() {
+    fun `parseError() removes duplicates`() {
         val errors = parseError("<valid-sync-token/><valid-sync-token/>")
+
         assertEquals(1, errors.size)
     }
 
     @Test
-    fun testParseError_customNamespace() {
+    fun `parseError() with custom namespace`() {
         val errors = parseError("<my-error xmlns='http://example.com/'/>")
+
         assertEquals(1, errors.size)
         assertTrue(errors.contains(Error(Property.Name("http://example.com/", "my-error"))))
     }
 
 
     @Test
-    fun testEquals() {
+    fun `equals() is true for same name`() {
         val errors = listOf(Error(Property.Name("DAV:", "valid-sync-token")))
+
         assertTrue(errors.contains(Error(WebDAV.ValidSyncToken)))
     }
 
     @Test
-    fun testNotEquals() {
+    fun `equals() is false for different names`() {
         assertFalse(Error(WebDAV.ValidSyncToken) == Error(Property.Name("DAV:", "other")))
     }
 
     @Test
-    fun testHashCode() {
+    fun `hashCode() is equal for same name`() {
         assertEquals(
             Error(WebDAV.ValidSyncToken).hashCode(),
             Error(Property.Name("DAV:", "valid-sync-token")).hashCode()

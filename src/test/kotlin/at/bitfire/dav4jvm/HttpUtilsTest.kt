@@ -19,46 +19,43 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.util.Calendar
-import java.util.TimeZone
 
 class HttpUtilsTest {
 
     @Test
-    fun formatDate() {
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-        cal.set(2023, 4, 11, 17, 26, 35)
-        cal.timeZone = TimeZone.getTimeZone("UTC")
-        assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", HttpUtils.formatDate(
-            ZonedDateTime.of(
-                LocalDate.of(1994, 11, 6),
-                LocalTime.of(8, 49, 37),
-                ZoneOffset.UTC
-            ).toInstant()
-        ))
+    fun `formatDate() formats as IMF-fixdate`() {
+        val date = ZonedDateTime.of(
+            LocalDate.of(1994, 11, 6),
+            LocalTime.of(8, 49, 37),
+            ZoneOffset.UTC
+        ).toInstant()
+
+        val result = HttpUtils.formatDate(date)
+
+        assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", result)
     }
 
 
     @Test
-    fun formatDate_timezone_is_GMT() {
+    fun `formatDate() uses GMT time zone`() {
         // See https://github.com/bitfireAT/dav4jvm/issues/22
         assertTrue(HttpUtils.formatDate(Instant.EPOCH).endsWith(" GMT"))
     }
 
     @Test
-    fun parseDate_IMF_FixDate() {
+    fun `parseDate() with IMF-fixdate`() {
         // RFC 7231 IMF-fixdate (preferred format)
         assertEquals(Instant.ofEpochSecond(784111777), HttpUtils.parseDate("Sun, 06 Nov 1994 08:49:37 GMT"))
     }
 
     @Test
-    fun parseDate_IMF_FixDate_GMT() {
+    fun `parseDate() with IMF-fixdate treats GMT as UTC`() {
         // See https://github.com/bitfireAT/dav4jvm/issues/22
         assertEquals(Instant.parse("2026-05-04T22:51:02Z"), HttpUtils.parseDate("Mon, 04 May 2026 22:51:02 GMT"))
     }
 
     @Test
-    fun parseDate_RFC850_1994() {
+    fun `parseDate() with RFC 850 date returns null`() {
         // obsolete RFC 850 format – 2-digit year cannot be parsed, returns null
         assertNull(HttpUtils.parseDate("Sun, 06-Nov-94 08:49:37 GMT"))
     }

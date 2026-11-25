@@ -20,7 +20,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class HttpUtilsTest {
@@ -42,7 +41,7 @@ class HttpUtilsTest {
 
 
     @Test
-    fun fileName() {
+    fun `fileName() returns last path segment`() {
         assertEquals("", HttpUtils.fileName(Url("https://example.com")))
         assertEquals("", HttpUtils.fileName(Url("https://example.com/")))
         assertEquals("file1", HttpUtils.fileName(Url("https://example.com/file1")))
@@ -56,7 +55,9 @@ class HttpUtilsTest {
     fun `listHeader with a single header value`() = runTest {
         // Verify that when a header name has a single value, it's returned as a single-element array.
         val httpClient = getMockEngineWithDAVHeaderValues(singleHeaderValue)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(singleHeaderValue, headersArray[0])
         assertEquals(1, headersArray.size)
     }
@@ -65,7 +66,9 @@ class HttpUtilsTest {
     fun `listHeader with multiple comma separated header values`() = runTest {
         // Verify that when a header name has multiple comma-separated values, they are correctly split into an array.
         val httpClient = getMockEngineWithDAVHeaderValues(multipleHeaderValues)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(4, headersArray.size)
         assertEquals("1", headersArray[0])
         assertEquals("2", headersArray[1])
@@ -77,7 +80,9 @@ class HttpUtilsTest {
     fun `listHeader with multiple distinct header entries for the same name`() = runTest {
         // Verify that if the same header name appears multiple times (e.g., 'Set-Cookie'), all values are joined by a comma and then split correctly.
         val httpClient = getMockEngineWithDAVHeaderValues(multipleHeaderValues, singleHeaderValue)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(5, headersArray.size)
         assertEquals("1", headersArray[0])
         assertEquals("2", headersArray[1])
@@ -90,7 +95,9 @@ class HttpUtilsTest {
     fun `listHeader with a header name that does not exist`() = runTest {
         // Verify that when a requested header name is not present in the response, an empty array is returned.
         val httpClient = getMockEngineWithDAVHeaderValues(multipleHeaderValues, singleHeaderValue)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "other")
+
         assertEquals(0, headersArray.size)
     }
 
@@ -98,7 +105,9 @@ class HttpUtilsTest {
     fun `listHeader with an empty header value`() = runTest {
         // Verify that if a header exists but its value is an empty string, an empty array is returned (due to filter { it.isNotEmpty() }).
         val httpClient = getMockEngineWithDAVHeaderValues("", "", "")
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(0, headersArray.size)
     }
 
@@ -106,7 +115,9 @@ class HttpUtilsTest {
     fun `listHeader with a header value containing only commas`() = runTest {
         // Verify that if a header value consists only of commas (e.g., ',,,') an empty array is returned.
         val httpClient = getMockEngineWithDAVHeaderValues(",", ",", ",")
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(0, headersArray.size)
     }
 
@@ -115,7 +126,9 @@ class HttpUtilsTest {
     fun `listHeader with header values that are themselves empty after splitting`() = runTest {
         // Verify that if a header value is like 'value1,,value2', the empty string between commas is filtered out, resulting in ['value1', 'value2'].
         val httpClient = getMockEngineWithDAVHeaderValues("   ", singleHeaderValue, ", ")
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "DAV")
+
         assertEquals(1, headersArray.size)
         assertEquals(singleHeaderValue, headersArray[0])
     }
@@ -124,7 +137,9 @@ class HttpUtilsTest {
     fun `listHeader with a case insensitive header name`() = runTest {
         // HTTP header names are case-insensitive. Verify that `response.headers.getAll(name)` correctly retrieves the header regardless of the casing used for `name` (e.g., 'Content-Type' vs 'content-type').
         val httpClient = getMockEngineWithDAVHeaderValues(singleHeaderValue)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "dav")
+
         assertEquals(singleHeaderValue, headersArray[0])
         assertEquals(1, headersArray.size)
     }
@@ -133,7 +148,9 @@ class HttpUtilsTest {
     fun `listHeader with an empty string as header name`() = runTest {
         // Test what happens if an empty string is passed as the header name. This depends on how `response.headers.getAll` handles empty keys.
         val httpClient = getMockEngineWithDAVHeaderValues(singleHeaderValue)
+
         val headersArray = HttpUtils.listHeader(httpClient.get(sampleUrl), "")
+
         assertEquals(0, headersArray.size)
     }
 

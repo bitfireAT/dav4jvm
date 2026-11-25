@@ -34,7 +34,9 @@ class PreemptiveBasicDigestAuthProviderTest {
             url.host = "domain.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test
@@ -45,13 +47,14 @@ class PreemptiveBasicDigestAuthProviderTest {
         )
         val authHeader = parseAuthorizationHeader("""Digest algorithm=MD5, realm="realm", nonce="md5-nonce"""")!!
         authProvider.isApplicable(authHeader)
-
         val request = HttpRequestBuilder().apply {
             url.protocol = URLProtocol.HTTPS
             url.host = "domain.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test

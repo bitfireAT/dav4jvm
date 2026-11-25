@@ -106,7 +106,9 @@ class DomainAuthProviderTest {
             url.host = "domain.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test
@@ -117,7 +119,9 @@ class DomainAuthProviderTest {
             url.host = "domain.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test
@@ -128,7 +132,9 @@ class DomainAuthProviderTest {
             url.host = "DOMAIN.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test
@@ -139,7 +145,9 @@ class DomainAuthProviderTest {
             url.host = "subdomain.domain.example"
         }
 
-        assertTrue(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertTrue(result)
     }
 
     @Test
@@ -150,7 +158,9 @@ class DomainAuthProviderTest {
             url.host = "other-domain.example"
         }
 
-        assertFalse(authProvider.sendWithoutRequest(request))
+        val result = authProvider.sendWithoutRequest(request)
+
+        assertFalse(result)
     }
 
 }

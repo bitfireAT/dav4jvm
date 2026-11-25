@@ -36,7 +36,7 @@ class DavExceptionTest {
     private val sampleUrl = Url("https://127.0.0.1/dav/")
 
     @Test
-    fun fromResponse() = runTest {
+    fun `fromResponse() creates exception with response details`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.OK,
@@ -47,6 +47,7 @@ class DavExceptionTest {
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
         val cause = Exception()
+
         val result = DavException.fromResponse("Unexpected response", response, cause = cause)
 
         assertEquals("Unexpected response", result.message)
@@ -79,17 +80,18 @@ class DavExceptionTest {
         }
 
         // deserialize
-        ByteArrayInputStream(blob).use { bais ->
+        val actual = ByteArrayInputStream(blob).use { bais ->
             ObjectInputStream(bais).use { ois ->
-                val actual = ois.readObject() as DavException
-                assertEquals(ex.message, actual.message)
-                assertEquals(ex.statusCode, actual.statusCode)
-                assertEquals(ex.requestExcerpt, actual.requestExcerpt)
-                assertEquals(ex.responseExcerpt, actual.responseExcerpt)
-                assertEquals(ex.errors, actual.errors)
-                assertTrue(actual.cause is FileNotFoundException)
+                ois.readObject() as DavException
             }
         }
+
+        assertEquals(ex.message, actual.message)
+        assertEquals(ex.statusCode, actual.statusCode)
+        assertEquals(ex.requestExcerpt, actual.requestExcerpt)
+        assertEquals(ex.responseExcerpt, actual.responseExcerpt)
+        assertEquals(ex.errors, actual.errors)
+        assertTrue(actual.cause is FileNotFoundException)
     }
 
 }

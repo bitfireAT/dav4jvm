@@ -19,45 +19,51 @@ import org.junit.Test
 class OwnerTest: PropertyTest() {
 
     @Test
-    fun testOwner_Empty() {
+    fun `Owner with empty element yields no property`() {
         val results = parseProperty("<owner></owner>")
+
         assertTrue(results.isEmpty())
     }
 
     @Test
-    fun testOwner_PlainText() {
+    fun `Owner with plain text has no href`() {
         val results = parseProperty("<owner xmlns=\"DAV:\">https://example.com</owner>")
         val owner = results.first() as Owner
+
         assertNull(owner.href)
     }
 
     @Test
-    fun testOwner_PlainTextAndHref() {
+    fun `Owner with plain text and href`() {
         val results = parseProperty("<owner xmlns=\"DAV:\">Principal Name. <href>mailto:owner@example.com</href> (test)</owner>")
         val owner = results.first() as Owner
+
         assertEquals("mailto:owner@example.com", owner.href)
     }
 
     @Test
-    fun testOwner_Href() {
+    fun `Owner with href`() {
         val results = parseProperty("<owner xmlns=\"DAV:\"><href>https://example.com</href></owner>")
         val owner = results.first() as Owner
+
         assertEquals("https://example.com", owner.href)
     }
 
     @Test
-    fun testOwner_TwoHrefs() {
+    fun `Owner with two hrefs uses first href`() {
         val results = parseProperty("<owner xmlns=\"DAV:\">" +
                 "<href>https://example.com/owner1</href>" +
                 "<href>https://example.com/owner2</href>" +
                 "</owner>")
         val owner = results.first() as Owner
+
         assertEquals("https://example.com/owner1", owner.href)
     }
 
     @Test
-    fun testOwner_WithoutHref() {
+    fun `Owner without href yields no property`() {
         val results = parseProperty("<owner>invalid</owner>")
+
         assertTrue(results.isEmpty())
     }
 

@@ -49,7 +49,9 @@ class HttpResponseInfoTest {
             contentType(ContentType.Application.OctetStream)
             setBody(ByteArray(6))
         }
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals("POST $sampleUrl\n\n<request body with 6 byte(s)>", result.requestExcerpt)
     }
 
@@ -60,7 +62,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals("GET $sampleUrl", result.requestExcerpt)
     }
 
@@ -74,7 +78,9 @@ class HttpResponseInfoTest {
             contentType(ContentType.Text.Plain)
             setBody("Sample".toByteArray())
         }
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals("POST $sampleUrl\n\nSample", result.requestExcerpt)
     }
 
@@ -84,12 +90,13 @@ class HttpResponseInfoTest {
             respondError(HttpStatusCode.InternalServerError)
         }
         val httpClient = HttpClient(mockEngine)
-        val result = httpClient.post(sampleUrl) {
+        val response = httpClient.post(sampleUrl) {
             contentType(ContentType.Text.CSS)
             setBody("*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE * 2))
-        }.let { response ->
-            HttpResponseInfo.fromResponse(response)
         }
+
+        val result = HttpResponseInfo.fromResponse(response)
+
         val truncatedText = "*".repeat(HttpResponseInfo.MAX_EXCERPT_SIZE)
         assertEquals("POST $sampleUrl\n\n$truncatedText", result.requestExcerpt)
     }
@@ -110,7 +117,9 @@ class HttpResponseInfoTest {
         httpClient.prepareGet(sampleUrl).execute { response ->
             response.bodyAsChannel()
             // body is now already consumed
+
             val result = HttpResponseInfo.fromResponse(response)
+
             assertNull(result.responseExcerpt)
         }
     }
@@ -126,7 +135,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertNull(result.responseExcerpt)
     }
 
@@ -141,7 +152,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals("Interesting details about error", result.responseExcerpt)
     }
 
@@ -158,7 +171,9 @@ class HttpResponseInfoTest {
         httpClient.prepareGet(sampleUrl).execute { response ->
             val channel = response.bodyAsChannel()
             // body is now already consumed, but existing channel can be used
+
             val result = HttpResponseInfo.fromResponse(response, channel)
+
             assertEquals("Interesting details about error", result.responseExcerpt)
         }
     }
@@ -174,7 +189,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals(
             "0123456789".repeat(2 * 1024),    // limited to 20 kB
             result.responseExcerpt
@@ -190,7 +207,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertNull(result.responseExcerpt)
     }
 
@@ -204,7 +223,6 @@ class HttpResponseInfoTest {
                 </D:lock-token-submitted>
             </D:error>
             """.trimIndent()
-
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.OK,
@@ -214,7 +232,9 @@ class HttpResponseInfoTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpResponseInfo.fromResponse(response)
+
         assertEquals(xml, result.responseExcerpt)
         assertEquals(
             listOf(

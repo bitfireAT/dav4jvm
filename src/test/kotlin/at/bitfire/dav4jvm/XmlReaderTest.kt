@@ -21,34 +21,36 @@ import java.time.Instant
 class XmlReaderTest {
 
     @Test
-    fun testProcessTag_Root() {
+    fun `processTag() on root element`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test></test>"))
         // now on START_DOCUMENT [0]
-
         var processed = false
+
         XmlReader(parser).processTag(Property.Name("", "test")) {
             processed = true
         }
+
         assertTrue(processed)
     }
 
     @Test
-    fun testProcessTag_Depth1() {
+    fun `processTag() on depth 1`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test></test></root>"))
         parser.next()       // now on START_TAG <root>
-
         var processed = false
+
         XmlReader(parser).processTag(Property.Name("", "test")) {
             processed = true
         }
+
         assertTrue(processed)
     }
 
 
     @Test
-    fun testReadText() {
+    fun `readText() ignores child elements`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>Test 1</test><test><garbage/>Test 2</test></root>"))
         parser.next()
@@ -64,23 +66,26 @@ class XmlReaderTest {
     }
 
     @Test
-    fun testReadText_CDATA() {
+    fun `readText() with CDATA`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><![CDATA[Test 1</test><test><garbage/>Test 2]]></test>"))
         parser.next()       // now on START_TAG <test>
 
-        assertEquals("Test 1</test><test><garbage/>Test 2", XmlReader(parser).readText())
+        val result = XmlReader(parser).readText()
+
+        assertEquals("Test 1</test><test><garbage/>Test 2", result)
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
     }
 
     @Test
-    fun testReadText_PropertyRoot() {
+    fun `readTextPropertyList() on root element`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><entry>Test 1</entry><entry>Test 2</entry></root>"))
         parser.next()        // now on START_TAG <root>
-
         val entries = mutableListOf<String>()
+
         XmlReader(parser).readTextPropertyList(Property.Name("", "entry"), entries)
+
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
 
@@ -90,13 +95,14 @@ class XmlReaderTest {
 
 
     @Test
-    fun testReadTextPropertyList_Depth1() {
+    fun `readTextPropertyList() on depth 1`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test><entry>Test 1</entry><entry>Test 2</entry></test>"))
         parser.next()       // now on START_TAG <test> [1]
-
         val entries = mutableListOf<String>()
+
         XmlReader(parser).readTextPropertyList(Property.Name("", "entry"), entries)
+
         assertEquals("Test 1", entries[0])
         assertEquals("Test 2", entries[1])
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
@@ -105,7 +111,7 @@ class XmlReaderTest {
 
 
     @Test
-    fun testReadLong() {
+    fun `readLong() with valid and invalid numbers`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>1</test><test><garbage/>2</test><test><garbage/>a</test></root>"))
         parser.next()
@@ -126,7 +132,7 @@ class XmlReaderTest {
 
 
     @Test
-    fun testReadHttpDate() {
+    fun `readHttpDate() with valid and invalid dates`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>Sun, 06 Nov 1994 08:49:37 GMT</test><test><garbage/>invalid</test></root>"))
         parser.next()
@@ -147,14 +153,15 @@ class XmlReaderTest {
 
 
     @Test
-    fun testReadContentTypes() {
+    fun `readContentTypes() reads content-type attributes`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<root><test content-type=\"text/plain\">text</test><test content-type=\"application/json\">{}</test></root>"))
         parser.next()
         val reader = XmlReader(parser)
-
         val types = mutableListOf<String>()
+
         reader.readContentTypes(Property.Name("", "test"), types::add)
+
         assertEquals(2, types.size)
         assertEquals("text/plain", types[0])
         assertEquals("application/json", types[1])

@@ -16,12 +16,12 @@ import org.junit.Test
 class XmlUtilsTest {
 
     @Test
-    fun newPullParser() {
+    fun `newPullParser() creates parser`() {
         assertNotNull(XmlUtils.newPullParser())
     }
 
     @Test
-    fun newSerializer() {
+    fun `newSerializer() creates serializer`() {
         assertNotNull(XmlUtils.newSerializer())
     }
 

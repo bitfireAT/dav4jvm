@@ -16,14 +16,14 @@ import org.junit.Test
 class QuotedStringUtilsTest {
 
     @Test
-    fun testAsQuotedString() {
+    fun `asQuotedString() quotes and escapes`() {
         assertEquals("\"\"", QuotedStringUtils.asQuotedString(""))
         assertEquals("\"\\\"\"", QuotedStringUtils.asQuotedString("\""))
         assertEquals("\"\\\\\"", QuotedStringUtils.asQuotedString("\\"))
     }
 
     @Test
-    fun testDecodeQuotedString() {
+    fun `decodeQuotedString() unquotes and unescapes`() {
         assertEquals("\"", QuotedStringUtils.decodeQuotedString("\""))
         assertEquals("\\", QuotedStringUtils.decodeQuotedString("\"\\\""))
         assertEquals("\"test", QuotedStringUtils.decodeQuotedString("\"test"))
