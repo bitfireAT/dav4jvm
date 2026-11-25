@@ -10,14 +10,17 @@
 
 package at.bitfire.dav4jvm.ktor
 
-import io.ktor.http.*
-import org.junit.Assert.*
+import io.ktor.http.Url
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UrlUtilsTest {
 
     @Test
-    fun testHostToDomain() {
+    fun `hostToDomain() strips subdomains and dots`() {
         assertNull(UrlUtils.hostToDomain(null))
         assertEquals("", UrlUtils.hostToDomain("."))
         assertEquals("com", UrlUtils.hostToDomain("com"))
@@ -33,7 +36,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun `testHostToDomain does not truncate IP addresses`() {
+    fun `hostToDomain() does not truncate IP addresses`() {
         assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1"))
         assertEquals("127.0.0.1", UrlUtils.hostToDomain("127.0.0.1."))
         assertEquals("2001:db8::1", UrlUtils.hostToDomain("2001:db8::1"))
@@ -41,7 +44,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun testOmitTrailingSlash() {
+    fun `omitTrailingSlash() removes trailing slash`() {
         assertEquals(Url("http://host/resource"), Url("http://host/resource").omitTrailingSlash())
         assertEquals(Url("http://host/resource"), Url("http://host/resource/").omitTrailingSlash())
         assertEquals(Url("http://host"), Url("http://host").omitTrailingSlash())
@@ -50,7 +53,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun testWithTrailingSlash() {
+    fun `withTrailingSlash() adds trailing slash`() {
         assertEquals(Url("http://host/resource/"), Url("http://host/resource").withTrailingSlash())
         assertEquals(Url("http://host/resource/"), Url("http://host/resource/").withTrailingSlash())
         assertEquals(Url("http://host/"), Url("http://host").withTrailingSlash())
@@ -59,7 +62,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun `testOmitTrailingSlash keeps percent-encoding`() {
+    fun `omitTrailingSlash() keeps percent-encoding`() {
         assertEquals(
             "/dav/user%40example.com/event%40name.ics",
             Url("http://host/dav/user%40example.com/event%40name.ics/").omitTrailingSlash().encodedPath
@@ -67,7 +70,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun `testWithTrailingSlash keeps percent-encoding`() {
+    fun `withTrailingSlash() keeps percent-encoding`() {
         assertEquals(
             "/dav/user%40example.com/",
             Url("http://host/dav/user%40example.com").withTrailingSlash().encodedPath
@@ -75,7 +78,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun testUrl_Parent() {
+    fun `parent() returns parent collection`() {
         // Root URL - should return itself
         assertEquals(Url("http://host/"), Url("http://host/").parent())
         assertEquals(Url("http://host/"), Url("http://host").parent())
@@ -102,7 +105,7 @@ class UrlUtilsTest {
     }
 
     @Test
-    fun `testUrl_Parent keeps percent-encoding`() {
+    fun `parent() keeps percent-encoding`() {
         assertEquals(
             "/dav/user%40example.com/",
             Url("http://host/dav/user%40example.com/calendar%40name/").parent().encodedPath
@@ -111,7 +114,7 @@ class UrlUtilsTest {
 
 
     @Test
-    fun testHttpUrl_EqualsForWebDAV() {
+    fun `equalsForWebDAV() ignores default port, host case, encoding and fragment`() {
         assertTrue(Url("http://host/resource").equalsForWebDAV(Url("http://host/resource")))
         assertTrue(Url("http://host:80/resource").equalsForWebDAV(Url("http://host/resource")))
         assertTrue(Url("https://HOST:443/resource").equalsForWebDAV(Url("https://host/resource")))

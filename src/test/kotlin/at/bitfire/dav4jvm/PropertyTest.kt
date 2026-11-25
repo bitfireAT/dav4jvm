@@ -20,7 +20,7 @@ import java.io.StringReader
 class PropertyTest {
 
     @Test
-    fun testParse_InvalidProperty() {
+    fun `parse() with invalid property`() {
         val parser = XmlPullParserFactory.newInstance().apply {
             isNamespaceAware = true
         }.newPullParser()
@@ -34,18 +34,17 @@ class PropertyTest {
         assertEquals("multistatus", parser.name)
 
         // parse invalid DAV:getetag
-        Property.Companion.parse(parser).let {
-            assertEquals(1, it.size)
-            assertEquals(GetETag(null), it[0])
-        }
+        val result = Property.Companion.parse(parser)
 
+        assertEquals(1, result.size)
+        assertEquals(GetETag(null), result[0])
         // we're now at the end of <multistatus>
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("multistatus", parser.name)
     }
 
     @Test
-    fun testParse_ValidProperty() {
+    fun `parse() with valid property`() {
         val parser = XmlPullParserFactory.newInstance().apply {
             isNamespaceAware = true
         }.newPullParser()
@@ -59,8 +58,8 @@ class PropertyTest {
         assertEquals("multistatus", parser.name)
 
         val etag = Property.Companion.parse(parser).first()
-        assertEquals(GetETag("12345"), etag)
 
+        assertEquals(GetETag("12345"), etag)
         // we're now at the end of <multistatus>
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("multistatus", parser.name)

@@ -50,6 +50,7 @@ class MultiStatusItemTest {
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
 
         val result = flowOf(self, member).responses().toList()
+
         assertEquals(listOf(self.response, member.response), result)
     }
 
@@ -59,6 +60,7 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf(extra, member, extra).responses().toList()
+
         assertEquals(listOf(member.response), result)
     }
 
@@ -67,6 +69,7 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf<MultiStatusItem>(extra).responses().toList()
+
         assertTrue(result.isEmpty())
     }
 
@@ -79,6 +82,7 @@ class MultiStatusItemTest {
         val member = item("http://example.com/dav/1.ics", Response.HrefRelation.MEMBER)
 
         val result = flowOf(self, member).responsesWithRelation().toList()
+
         assertEquals(
             listOf(
                 MultiStatusItem.Response(self.response, Response.HrefRelation.SELF),
@@ -94,6 +98,7 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf(extra, member, extra).responsesWithRelation().toList()
+
         assertEquals(
             listOf(MultiStatusItem.Response(member.response, Response.HrefRelation.MEMBER)),
             result
@@ -105,6 +110,7 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf<MultiStatusItem>(extra).responsesWithRelation().toList()
+
         assertTrue(result.isEmpty())
     }
 
@@ -118,6 +124,7 @@ class MultiStatusItemTest {
 
         // SELF is not the first item — selfResponse() must not just take the first Response
         val result = flowOf(member, self).selfResponse()
+
         assertEquals(self.response, result)
     }
 
@@ -127,6 +134,7 @@ class MultiStatusItemTest {
         val extra = MultiStatusItem.ExtraProperty(SyncToken("http://sync/1"))
 
         val result = flowOf(extra, member).selfResponse()
+
         assertNull(result)
     }
 

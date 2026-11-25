@@ -32,53 +32,60 @@ class PropertyTest {
 
 
     @Test
-    fun testParse_emptyElement() {
+    fun `parse() with empty element`() {
         val parser = XmlUtils.newPullParser()
         parser.setInput(StringReader("<test xmlns='DAV:'></test>"))
         parser.nextTag()
+
         val result = Property.parse(parser)
+
         assertEquals(0, result.size)
         assertEquals(XmlPullParser.END_TAG, parser.eventType)
         assertEquals("test", parser.name)
     }
 
     @Test
-    fun testParse_missingEtagValue() {
+    fun `parse() with getetag without value`() {
         val result = parseProperty("<getetag xmlns='DAV:'/>")
+
         assertEquals(1, result.size)
         assertEquals(GetETag(null), result[0])
     }
 
     @Test
-    fun testParse_etagWithValue() {
+    fun `parse() with getetag with value`() {
         val result = parseProperty("<getetag xmlns='DAV:'>12345</getetag>")
+
         assertEquals(GetETag("12345"), result.first())
     }
 
     @Test
-    fun testParse_unknownProperty() {
+    fun `parse() ignores unknown property`() {
         val result = parseProperty("<unknown xmlns='http://ns.example.com/'/>")
+
         assertEquals(0, result.size)
     }
 
     @Test
-    fun testParse_multipleProperties() {
+    fun `parse() with multiple properties`() {
         val result = parseProperty(
             "<getetag xmlns='DAV:'>\"v1\"</getetag>" +
                     "<displayname xmlns='DAV:'>My Calendar</displayname>"
         )
+
         assertEquals(2, result.size)
         assertEquals(GetETag("\"v1\""), result.filterIsInstance<GetETag>().first())
         assertEquals(DisplayName("My Calendar"), result.filterIsInstance<DisplayName>().first())
     }
 
     @Test
-    fun testParse_knownAndUnknownMixed() {
+    fun `parse() with known and unknown properties`() {
         val result = parseProperty(
             "<getetag xmlns='DAV:'>\"abc\"</getetag>" +
                     "<unknown xmlns='http://ns.example.com/'/>" +
                     "<displayname xmlns='DAV:'>X</displayname>"
         )
+
         assertEquals(2, result.size)
         assertEquals(GetETag("\"abc\""), result.filterIsInstance<GetETag>().first())
         assertEquals(DisplayName("X"), result.filterIsInstance<DisplayName>().first())

@@ -22,7 +22,7 @@ import java.time.Instant
 class WebPushTest : PropertyTest() {
 
     @Test
-    fun testPushRegister() {
+    fun `PushRegister with Web Push subscription`() {
         val results = parseProperty(
             "<push-register xmlns=\"$NS_WEBDAV_PUSH\">" +
                     "  <subscription>" +
@@ -37,6 +37,7 @@ class WebPushTest : PropertyTest() {
                     "</push-register>"
         )
         val result = results.first() as PushRegister
+
         assertEquals(Instant.ofEpochSecond(1703066611), result.expires)
         val subscription = result.subscription?.webPushSubscription
         assertEquals("https://up.example.net/yohd4yai5Phiz1wi", subscription?.pushResource?.uri?.toString())
@@ -52,7 +53,7 @@ class WebPushTest : PropertyTest() {
     }
 
     @Test
-    fun testServiceDetection() {
+    fun `PushTransports and Topic for service detection`() {
         val results = parseProperty(
             "<transports xmlns=\"$NS_WEBDAV_PUSH\">" +
                     "  <something><else/></something>" +
@@ -81,7 +82,7 @@ class WebPushTest : PropertyTest() {
     }
 
     @Test
-    fun testMessage() {
+    fun `PushMessage with content and property update`() {
         val results = parseProperty(
             """
             <P:push-message xmlns:D="DAV:" xmlns:P="$NS_WEBDAV_PUSH">

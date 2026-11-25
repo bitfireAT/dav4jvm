@@ -17,9 +17,10 @@ import org.junit.Test
 class CalendarDescriptionTest: PropertyTest() {
 
     @Test
-    fun testCalendarDescription() {
+    fun `CalendarDescription with text`() {
         val results = parseProperty("<calendar-description xmlns=\"urn:ietf:params:xml:ns:caldav\">My Calendar</calendar-description>")
         val result = results.first() as CalendarDescription
+
         assertEquals("My Calendar", result.description)
     }
 

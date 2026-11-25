@@ -49,7 +49,9 @@ class DavAddressBookTest {
     @Test
     fun `addressbookQuery sends proper request`() = runTest {
         val engine = minimalMultiStatus()
+
         davAddressBook(engine).addressbookQuery().toList()
+
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("1", headers[HttpHeaders.Depth])
@@ -61,7 +63,9 @@ class DavAddressBookTest {
     @Test
     fun `addressbookQuery request body contains query and filter`() = runTest {
         val engine = minimalMultiStatus()
+
         davAddressBook(engine).addressbookQuery().toList()
+
         val body = requestBody(engine)
         assertTrue(body.contains("CARD:addressbook-query"))
         assertTrue(body.contains("<getetag />"))
@@ -71,7 +75,9 @@ class DavAddressBookTest {
     @Test
     fun `multiget sends proper request`() = runTest {
         val engine = minimalMultiStatus()
+
         davAddressBook(engine).multiget(listOf(sampleUrl)).toList()
+
         with(engine.requestHistory.last()) {
             assertEquals(HttpMethod.parse("REPORT"), method)
             assertEquals("0", headers[HttpHeaders.Depth])
@@ -85,7 +91,9 @@ class DavAddressBookTest {
         val engine = minimalMultiStatus()
         val url1 = Url("http://127.0.0.1/dav/contact1.vcf")
         val url2 = Url("http://127.0.0.1/dav/contact2.vcf")
+
         davAddressBook(engine).multiget(listOf(url1, url2)).toList()
+
         val body = requestBody(engine)
         assertTrue(body.contains("CARD:addressbook-multiget"))
         assertTrue(body.contains("<href>/dav/contact1.vcf</href>"))
@@ -99,7 +107,9 @@ class DavAddressBookTest {
     @Test
     fun `multiget with contentType adds attributes to address-data`() = runTest {
         val engine = minimalMultiStatus()
+
         davAddressBook(engine).multiget(listOf(sampleUrl), contentType = "text/vcard", version = "4.0").toList()
+
         val body = requestBody(engine)
         assertTrue(body.contains("content-type=\"text/vcard\""))
         assertTrue(body.contains("version=\"4.0\""))

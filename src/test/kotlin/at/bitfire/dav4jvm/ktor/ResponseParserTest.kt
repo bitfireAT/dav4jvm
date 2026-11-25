@@ -45,8 +45,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(Url("http://www.example.com/container/"), item.response.href)
         assertEquals(Response.HrefRelation.SELF, item.relation)
     }
@@ -76,8 +78,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(Url("http://www.example.com/container/front.html"), item.response.href)
         assertEquals(Response.HrefRelation.MEMBER, item.relation)
     }
@@ -107,8 +111,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(Url("http://other.example.com/was-not-requested"), item.response.href)
         assertEquals(Response.HrefRelation.OTHER, item.relation)
     }
@@ -133,8 +139,10 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(Url("http://www.example.com/container/"), item.response.href)
         assertEquals(Response.HrefRelation.SELF, item.relation)
     }
@@ -159,8 +167,10 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(Url("http://www.example.com/container/file.txt"), item.response.href)
     }
 
@@ -181,7 +191,10 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
-        assertNull(parser.parseResponse(xml))
+
+        val item = parser.parseResponse(xml)
+
+        assertNull(item)
     }
 
     @Test
@@ -206,8 +219,10 @@ class ResponseParserTest {
         )
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals(2, item.response.propstat.size)
     }
 
@@ -250,6 +265,7 @@ class ResponseParserTest {
            returned them and would reply 404 otherwise, see RFC 4918 6.4 (hrefs must be
            treated as opaque). */
         val resolved = parser.resolveHref("/container/user%40example.com/event%40name.ics")
+
         assertEquals("/container/user%40example.com/event%40name.ics", resolved?.encodedPath)
     }
 
@@ -270,8 +286,10 @@ class ResponseParserTest {
         ))
         xml.nextTag()   // multistatus
         xml.nextTag()   // response
+
         val item = parser.parseResponse(xml)
         item as MultiStatusItem.Response
+
         assertEquals("/dav/user%40example.com/event.ics", item.response.href.encodedPath)
         assertEquals(Response.HrefRelation.MEMBER, item.relation)
     }

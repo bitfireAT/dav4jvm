@@ -32,19 +32,21 @@ class ServiceUnavailableExceptionTest {
     private val sampleUrl = Url("http://www.example.com")
 
     @Test
-    fun testRetryAfter_NoTime() = runTest {
+    fun `retryAfter is null without Retry-After header`() = runTest {
         val mockEngine = MockEngine {
             respondError(HttpStatusCode.ServiceUnavailable)  // 503
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+
         assertNull(ex.retryAfter)
         assertNull(ex.retryAfterAbs)
     }
 
     @Test
-    fun testRetryAfter_Seconds() = runTest {
+    fun `retryAfter with seconds`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 content = "",
@@ -53,15 +55,16 @@ class ServiceUnavailableExceptionTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-
         val response = httpClient.get(sampleUrl)
+
         val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+
         assertNotNull(ex.retryAfter)
         assertTrue(withinTimeRange(ex.retryAfterAbs!!, 120))
     }
 
     @Test
-    fun testRetryAfter_Date() = runTest {
+    fun `retryAfter with HTTP date`() = runTest {
         val after30min = Instant.now().plusSeconds(30*60)
         val mockEngine = MockEngine {
             respondError(
@@ -70,9 +73,10 @@ class ServiceUnavailableExceptionTest {
             )
         }
         val httpClient = HttpClient(mockEngine)
-
         val response = httpClient.get(sampleUrl)
+
         val ex = HttpException.fromResponse(response) as ServiceUnavailableException
+
         assertNotNull(ex.retryAfter)
         assertTrue(withinTimeRange(ex.retryAfterAbs!!, 30*60))
     }

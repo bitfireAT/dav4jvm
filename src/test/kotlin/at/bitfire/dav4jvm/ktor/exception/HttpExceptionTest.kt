@@ -36,7 +36,7 @@ class HttpExceptionTest {
     private val sampleUrl = "https://example.com"
 
     @Test
-    fun message() = runTest {
+    fun `message contains status code and description`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.Forbidden,
@@ -45,13 +45,14 @@ class HttpExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpException.fromResponse(response)
 
         assertEquals("HTTP 403 Forbidden", result.message)
     }
 
     @Test
-    fun isRedirect() = runTest {
+    fun `isRedirect is true for 302 Found`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.Found,
@@ -61,6 +62,7 @@ class HttpExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpException.fromResponse(response)
 
         assertTrue(result.isRedirect)
@@ -69,7 +71,7 @@ class HttpExceptionTest {
     }
 
     @Test
-    fun isClientError() = runTest {
+    fun `isClientError is true for 404 Not Found`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.NotFound,
@@ -79,6 +81,7 @@ class HttpExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpException.fromResponse(response)
 
         assertFalse(result.isRedirect)
@@ -87,7 +90,7 @@ class HttpExceptionTest {
     }
 
     @Test
-    fun isServerError() = runTest {
+    fun `isServerError is true for 500 Internal Server Error`() = runTest {
         val mockEngine = MockEngine {
             respond(
                 status = HttpStatusCode.InternalServerError,
@@ -97,6 +100,7 @@ class HttpExceptionTest {
         }
         val httpClient = HttpClient(mockEngine)
         val response = httpClient.get(sampleUrl)
+
         val result = HttpException.fromResponse(response)
 
         assertFalse(result.isRedirect)
@@ -124,17 +128,18 @@ class HttpExceptionTest {
         }
 
         // deserialize
-        ByteArrayInputStream(blob).use { bais ->
+        val actual = ByteArrayInputStream(blob).use { bais ->
             ObjectInputStream(bais).use { ois ->
-                val actual = ois.readObject() as HttpException
-                assertEquals(ex.message, actual.message)
-                assertEquals(ex.statusCode, actual.statusCode)
-                assertEquals(ex.requestExcerpt, actual.requestExcerpt)
-                assertEquals(ex.responseExcerpt, actual.responseExcerpt)
-                assertEquals(ex.errors, actual.errors)
-                assertNull(actual.cause)
+                ois.readObject() as HttpException
             }
         }
+
+        assertEquals(ex.message, actual.message)
+        assertEquals(ex.statusCode, actual.statusCode)
+        assertEquals(ex.requestExcerpt, actual.requestExcerpt)
+        assertEquals(ex.responseExcerpt, actual.responseExcerpt)
+        assertEquals(ex.errors, actual.errors)
+        assertNull(actual.cause)
     }
 
     @Test
