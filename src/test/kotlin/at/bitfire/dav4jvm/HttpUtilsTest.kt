@@ -55,9 +55,66 @@ class HttpUtilsTest {
     }
 
     @Test
-    fun `parseDate() with RFC 850 date returns null`() {
-        // obsolete RFC 850 format – 2-digit year cannot be parsed, returns null
-        assertNull(HttpUtils.parseDate("Sun, 06-Nov-94 08:49:37 GMT"))
+    fun `parseDate() with non-standard date supported by Ktor`() {
+        val result = HttpUtils.parseDate("Sun, 06-Nov-1994 08:49:37 GMT")
+
+        assertEquals(Instant.ofEpochSecond(784111777), result)
+    }
+
+    @Test
+    fun `parseDate() with RFC 5322 date and zero offset`() {
+        val result = HttpUtils.parseDate("Mon, 09 Nov 2026 09:07:23 +0000")
+
+        assertEquals(Instant.parse("2026-11-09T09:07:23Z"), result)
+    }
+
+    @Test
+    fun `parseDate() with RFC 5322 date and non-zero offset`() {
+        val result = HttpUtils.parseDate("Mon, 09 Nov 2026 10:07:23 +0100")
+
+        assertEquals(Instant.parse("2026-11-09T09:07:23Z"), result)
+    }
+
+    @Test
+    fun `parseDate() with RFC 850 date`() {
+        val result = HttpUtils.parseDate("Sunday, 06-Nov-94 08:49:37 GMT")
+
+        assertEquals(Instant.ofEpochSecond(784111777), result)
+    }
+
+    @Test
+    fun `parseDate() with RFC 850 date and 2-digit year more than 50 years ahead uses past century`() {
+        val result = HttpUtils.parseDate("Sunday, 06-Nov-94 08:49:37 GMT")
+
+        assertEquals(1994, result!!.atZone(ZoneOffset.UTC).year)
+    }
+
+    @Test
+    fun `parseDate() with RFC 850 date and 2-digit year within 50 years uses current century`() {
+        val result = HttpUtils.parseDate("Monday, 04-May-26 22:51:02 GMT")
+
+        assertEquals(Instant.parse("2026-05-04T22:51:02Z"), result)
+    }
+
+    @Test
+    fun `parseDate() with asctime date`() {
+        val result = HttpUtils.parseDate("Sun Nov  6 08:49:37 1994")
+
+        assertEquals(Instant.ofEpochSecond(784111777), result)
+    }
+
+    @Test
+    fun `parseDate() with asctime date and 2-digit day`() {
+        val result = HttpUtils.parseDate("Thu May 14 22:51:02 2026")
+
+        assertEquals(Instant.parse("2026-05-14T22:51:02Z"), result)
+    }
+
+    @Test
+    fun `parseDate() with invalid date returns null`() {
+        val result = HttpUtils.parseDate("not a date")
+
+        assertNull(result)
     }
 
 }
