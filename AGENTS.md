@@ -39,6 +39,11 @@ Root level: DAV error parsing, HTTP header helpers, `Property` interface and `Na
 
 Test-only: Ktor Client Mock, Ktor Client Auth, JUnit 4, kotlinx-coroutines-test, kotlin-test-junit.
 
+## Code conventions
+
+Don't mention specific implementations (servers, clients, products) in code, comments or tests. Describe the behavior
+instead (e.g. "RFC 5322 date with numeric offset").
+
 ## Testing
 
 Tests live in `src/test/kotlin/at/bitfire/dav4jvm/` and mirror the main source layout:
@@ -69,3 +74,4 @@ Run all tests with `./gradlew test`.
 - **Build system:** Gradle (single `build.gradle.kts` at root)
 - **Publishing:** Maven via JitPack (`com.github.bitfireAT:dav4jvm:<tag>`)
 - **Docs:** Dokka KDoc, published to GitHub Pages via CI
+- **Changelog:** `CHANGELOG.md` must be updated before a release. Isolated changes that lead to a release can update the CHANGELOG directly; otherwise the CHANGELOG is updated during the release.

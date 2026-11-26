@@ -14,9 +14,12 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Url
 
+/**
+ * Ktor-specific HTTP utilities
+ */
 object HttpUtils {
 
-    val INVALID_STATUS = HttpStatusCode( 500, "Invalid status line")
+    val INVALID_STATUS = HttpStatusCode(500, "Invalid status line")
 
     /**
      * Gets the resource name (the last segment of the path) from an URL.
@@ -93,4 +96,5 @@ object HttpUtils {
             INVALID_STATUS
         }
     }
+
 }
