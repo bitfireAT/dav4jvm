@@ -74,4 +74,4 @@ Run all tests with `./gradlew test`.
 - **Build system:** Gradle (single `build.gradle.kts` at root)
 - **Publishing:** Maven via JitPack (`com.github.bitfireAT:dav4jvm:<tag>`)
 - **Docs:** Dokka KDoc, published to GitHub Pages via CI
-- **Changelog:** `CHANGELOG.md` is written when a release is made. Don't add entries as part of normal changes.
+- **Changelog:** `CHANGELOG.md` must be updated before a release. Isolated changes that lead to a release can update the CHANGELOG directly; otherwise the CHANGELOG is updated during the release.
