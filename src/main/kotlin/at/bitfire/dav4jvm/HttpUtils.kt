@@ -75,7 +75,7 @@ object HttpUtils {
         // RFC 9110 5.6.7 obsolete RFC 850 format: Sunday, 06-Nov-94 08:49:37 GMT
         DateTimeFormatterBuilder()
             .appendPattern("EEEE, dd-MMM-")
-            // 2-digit year more than 50 years in the future means the most recent past year
+            // 2-digit year: pick the year within [now - 49, now + 50] (RFC 9110 5.6.7)
             .appendValueReduced(ChronoField.YEAR, 2, 2, LocalDate.now(ZoneOffset.UTC).minusYears(49))
             .appendPattern(" HH:mm:ss 'GMT'")
             .toFormatter(Locale.US)

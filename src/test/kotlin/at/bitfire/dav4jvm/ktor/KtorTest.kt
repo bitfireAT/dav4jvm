@@ -13,7 +13,6 @@ package at.bitfire.dav4jvm.ktor
 import io.ktor.http.fromHttpToGmtDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import kotlin.test.assertFailsWith
 
 /**
  * Test class to reproduce Ktor behavior.
@@ -26,28 +25,21 @@ class KtorTest {
     As soon as they fail, the RFC 850 and asctime DateTimeFormatters can be removed from
     `at.bitfire.dav4jvm.HttpUtils.fallbackDateFormats` because Ktor then handles those formats. */
 
-    @Test
+    @Test(expected = IllegalStateException::class)
     fun rfc850() {
-        assertFailsWith(IllegalStateException::class) {
-            // date string copied from https://www.rfc-editor.org/info/rfc9110/#section-5.6.7
-            assertEquals(784111777000L, "Sunday, 06-Nov-94 08:49:37 GMT".fromHttpToGmtDate().timestamp)
-        }
+        // date string copied from https://www.rfc-editor.org/info/rfc9110/#section-5.6.7
+        assertEquals(784111777000L, "Sunday, 06-Nov-94 08:49:37 GMT".fromHttpToGmtDate().timestamp)
     }
 
-    @Test
+    @Test(expected = IllegalStateException::class)
     fun asctime() {
-        assertFailsWith(IllegalStateException::class) {
-            // date string copied from https://www.rfc-editor.org/info/rfc9110/#section-5.6.7
-            assertEquals(784111777000L, "Sun Nov  6 08:49:37 1994".fromHttpToGmtDate().timestamp)
-        }
+        // date string copied from https://www.rfc-editor.org/info/rfc9110/#section-5.6.7
+        assertEquals(784111777000L, "Sun Nov  6 08:49:37 1994".fromHttpToGmtDate().timestamp)
     }
 
-    @Test
-    fun asctimeTwoDigitDay() {  // FAILS
-        assertFailsWith(IllegalStateException::class) {
-            // date string with two digits
-            assertEquals(1778799062000L, "Thu May 14 22:51:02 2026".fromHttpToGmtDate().timestamp)
-        }
+    @Test(expected = IllegalStateException::class)
+    fun asctimeTwoDigitDay() {
+        assertEquals(1778799062000L, "Thu May 14 22:51:02 2026".fromHttpToGmtDate().timestamp)
     }
 
 }
