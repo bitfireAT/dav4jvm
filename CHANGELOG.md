@@ -1,6 +1,9 @@
 
 For more detailed changes, see https://github.com/bitfireAT/dav4jvm/compare/. Example: https://github.com/bitfireAT/dav4jvm/compare/2.1.2...2.1.3
 
+### 6.0.1
+- `HttpUtils.parseDate()` now also parses RFC 5322 dates with numeric offset, and the obsolete RFC 850 and `asctime()` formats, which were previously ignored.
+
 ### 6.0.0
 - `proppatch()` now accepts 2xx answers other than 207 Multi-Status (like the 204 No Content of some servers), yielding an empty flow instead of throwing `DavException`.
   _New `Flow<MultiStatusItem>.allSuccessful()` tells whether all properties have been set/removed as requested._
